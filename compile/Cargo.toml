@@ -19,11 +19,18 @@ license = "MIT"
 
 [workspace.dependencies]
 proto-packet = { path = "../dep/dep-rust" }             # todo -- path dependency
+proto-packet-gen = { path = "proto-packet-gen" }        # todo -- path dependency
+proto-packet-link = { path = "proto-packet-link" }      # todo -- path dependency
 proto-packet-parse = { path = "proto-packet-parse" }    # todo -- path dependency
 proto-packet-tree = { path = "proto-packet-tree" }      # todo -- path dependency
+proto-packet-validate = { path = "proto-packet-validate" } # todo -- path dependency
 
 clerr = "0.11.0-rc.3"                       # todo -- release candidate
 code-gen = "0.10.0"
 colored = "3.1.1"
 custom-string = "0.11.0-rc.2"               # todo -- release candidate
+file-storage = "0.8.0"
 lex = "0.16.0-rc.1"                         # todo -- release candidate
+serde = "1"
+serde_json = "1"
+serde_yaml = "0.9"

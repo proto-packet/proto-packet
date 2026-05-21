@@ -8,3 +8,18 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[dependencies]
+proto-packet-gen = { workspace = true, features = ["rust"] }
+proto-packet-link = { workspace = true }
+proto-packet-parse = { workspace = true }
+proto-packet-tree = { workspace = true }
+proto-packet-validate = { workspace = true }
+
+clerr = { workspace = true }
+code-gen = { workspace = true }
+colored = { workspace = true }
+file-storage = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
