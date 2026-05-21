@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
+    "proto-packet-gen",
     "proto-packet-link",
     "proto-packet-parse",
     "proto-packet-tree",

@@ -1,0 +1,10 @@
+[package]
+name = "proto-packet-gen"
+description = "This library aids in generating code from ProtoPacket schemas."
+homepage = "https://github.com/proto-packet/proto-packet/tree/master/compile/proto-packet-gen"
+readme = "README.md"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
