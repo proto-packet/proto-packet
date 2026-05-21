@@ -18,7 +18,8 @@ edition = "2024"
 license = "MIT"
 
 [workspace.dependencies]
-proto-packet = { path = "../dep/dep-rust" } # todo -- path dependency
+proto-packet = { path = "../dep/dep-rust" }         # todo -- path dependency
+proto-packet-tree = { path = "proto-packet-tree" }  # todo -- path dependency
 
 clerr = "0.11.0-rc.3"                       # todo -- release candidate
 custom-string = "0.11.0-rc.2"               # todo -- release candidate
