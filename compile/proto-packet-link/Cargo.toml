@@ -8,3 +8,9 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[dependencies]
+proto-packet = { workspace = true }
+proto-packet-tree = { workspace = true }
+
+clerr = { workspace = true }
