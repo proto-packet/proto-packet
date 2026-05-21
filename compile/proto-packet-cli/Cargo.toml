@@ -1,0 +1,10 @@
+[package]
+name = "proto-packet-cli"
+description = "This crate provides the ProtoPacket command-line interface."
+homepage = "https://github.com/proto-packet/proto-packet/tree/master/compile/proto-packet-cli"
+readme = "README.md"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
