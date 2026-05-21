@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "proto-packet-cli",
+    "proto-packet-compile",
     "proto-packet-gen",
     "proto-packet-link",
     "proto-packet-parse",
