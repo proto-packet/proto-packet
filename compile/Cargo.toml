@@ -1,0 +1,12 @@
+[workspace]
+resolver = "3"
+members = [
+    "proto-packet-tree",
+]
+
+[workspace.package]
+version = "0.0.0"
+authors = ["Nik Deapen <nik@deapen.com>"]
+repository = "https://github.com/proto-packet/proto-packet"
+edition = "2024"
+license = "MIT"

@@ -1,0 +1,10 @@
+[package]
+name = "proto-packet-tree"
+description = "This library provides the ProtoPacket semantic schema tree."
+homepage = "https://github.com/proto-packet/proto-packet/tree/master/compile/proto-packet-tree"
+readme = "README.md"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
