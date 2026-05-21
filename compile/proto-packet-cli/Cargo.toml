@@ -8,3 +8,13 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[dependencies]
+proto-packet-parse = { workspace = true }
+proto-packet-tree = { workspace = true }
+proto-packet-validate = { workspace = true }
+proto-packet-compile = { workspace = true }
+
+clap = { workspace = true, features = ["derive"] }
+clerr = { workspace = true }
+file-storage = { workspace = true }
