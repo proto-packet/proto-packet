@@ -16,3 +16,10 @@ authors = ["Nik Deapen <nik@deapen.com>"]
 repository = "https://github.com/proto-packet/proto-packet"
 edition = "2024"
 license = "MIT"
+
+[workspace.dependencies]
+proto-packet = { path = "../dep/dep-rust" } # todo -- path dependency
+
+clerr = "0.11.0-rc.3"                       # todo -- release candidate
+custom-string = "0.11.0-rc.2"               # todo -- release candidate
+lex = "0.16.0-rc.1"                         # todo -- release candidate
