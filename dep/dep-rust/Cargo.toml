@@ -1,0 +1,10 @@
+[package]
+name = "proto-packet"
+version = "0.0.0"
+description = "This library provides the dependencies for generated ProtoPacket code."
+readme = "README.md"
+repository = "https://github.com/proto-packet/proto-packet"
+homepage = "https://github.com/proto-packet/proto-packet/tree/master/dep/dep-rust"
+authors = ["Nik Deapen <nik@deapen.com>"]
+edition = "2024"
+license = "MIT"
