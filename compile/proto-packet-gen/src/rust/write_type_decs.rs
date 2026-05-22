@@ -34,6 +34,7 @@ impl GenRust<'_> {
     fn gen_type_dec(self, type_dec: &TypeDec) -> Vec<(ModName, Block)> {
         match type_dec {
             TypeDec::Struct(s) => self.gen_struct(s),
+            TypeDec::Message(m) => self.gen_message(m),
             _ => todo!(),
         }
     }

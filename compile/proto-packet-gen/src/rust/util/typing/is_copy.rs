@@ -19,7 +19,7 @@ impl GenRust<'_> {
                 if let Some(type_dec) = schema_file.type_dec_with_type_name(named.type_name()) {
                     match type_dec {
                         TypeDec::Struct(s) => self.is_copy_struct(s),
-                        TypeDec::Message(_) => todo!(),
+                        TypeDec::Message(_) => false,
                         TypeDec::Variant(_) => todo!(),
                         TypeDec::Enum(_) => todo!(),
                     }

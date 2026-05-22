@@ -1,0 +1,44 @@
+// A message with a single boolean field.
+message BooleanField {
+
+    // A `bool` field.
+    one: bool = 1;
+}
+
+// A message with unsigned integer fields.
+message UnsignedIntFields {
+
+    // A `u8` field.
+    one: u8 = 1;
+
+    // A `u16` field.
+    two: u16 = 2;
+
+    // A `u32` field.
+    three: u32 = 3;
+
+    // A `u64` field.
+    four: u64 = 4;
+
+    // A `u128` field.
+    five: u128 = 5;
+}
+
+// A message with signed integer fields.
+message SignedIntFields {
+
+    // An `i8` field.
+    one: i8 = 1;
+
+    // An `i16` field.
+    two: i16 = 2;
+
+    // An `i32` field.
+    three: i32 = 3;
+
+    // An `i64` field.
+    four: i64 = 4;
+
+    // An `i128` field.
+    five: i128 = 5;
+}
