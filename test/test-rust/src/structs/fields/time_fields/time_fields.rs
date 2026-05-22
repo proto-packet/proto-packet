@@ -4,24 +4,28 @@
 ///    
 ///     // A `timestamp` field.
 ///     one: timestamp;
+///    
+///     // A `date` field.
+///     two: date;
 /// }
 /// ```
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct TimeFields {
     one: i64,
+    two: proto_packet::types::Date,
 }
 
 impl TimeFields {
     //! Construction
 
     /// Creates a new [TimeFields].
-    pub const fn new(one: i64) -> Self {
-        Self { one }
+    pub const fn new(one: i64, two: proto_packet::types::Date) -> Self {
+        Self { one, two }
     }
 
     /// Creates a new [TimeFields].
-    pub fn from<F1>(one: F1) -> Self where F1: Into<i64> {
-        Self::new(one.into())
+    pub fn from<F1, F2>(one: F1, two: F2) -> Self where F1: Into<i64>, F2: Into<proto_packet::types::Date> {
+        Self::new(one.into(), two.into())
     }
 }
 
@@ -43,6 +47,28 @@ impl TimeFields {
     #[must_use]
     pub fn with_one(mut self, one: i64) -> Self {
         self.set_one(one);
+        self
+    }
+}
+
+impl TimeFields {
+    //! Field: `two`
+
+    /// Gets the field: `two`.
+    #[must_use]
+    pub fn two(&self) -> proto_packet::types::Date {
+        self.two
+    }
+
+    /// Sets the field: `two`. Returns the previous value.
+    pub fn set_two(&mut self, two: proto_packet::types::Date) -> proto_packet::types::Date {
+        std::mem::replace(&mut self.two, two)
+    }
+
+    /// Sets the field: `two`. Returns the struct itself.
+    #[must_use]
+    pub fn with_two(mut self, two: proto_packet::types::Date) -> Self {
+        self.set_two(two);
         self
     }
 }

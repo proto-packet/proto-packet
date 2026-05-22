@@ -68,4 +68,7 @@ variant TimeCases {
 
     // A `timestamp` case.
     One: timestamp = 1;
+
+    // A `date` case.
+    Two: date = 2;
 }

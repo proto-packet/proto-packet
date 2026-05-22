@@ -10,4 +10,5 @@ edition = "2024"
 license = "MIT"
 
 [dependencies]
+chrono = { version = "0.4", default-features = false }
 uuid = "1"

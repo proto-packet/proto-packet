@@ -7,6 +7,9 @@ use std::str::FromStr;
 pub enum TimeType {
     /// A point in time represented as Unix epoch milliseconds in a 64-bit signed integer.
     Timestamp,
+
+    /// A calendar date (year, month, day) without a time or timezone.
+    Date,
 }
 
 impl TimeType {
@@ -23,6 +26,7 @@ impl AsRef<str> for TimeType {
     fn as_ref(&self) -> &str {
         match self {
             Self::Timestamp => "timestamp",
+            Self::Date => "date",
         }
     }
 }
@@ -45,6 +49,7 @@ impl FromStr for TimeType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             "timestamp" => Self::Timestamp,
+            "date" => Self::Date,
             _ => return Err(()),
         })
     }

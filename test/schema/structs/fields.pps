@@ -68,4 +68,7 @@ struct TimeFields {
 
     // A `timestamp` field.
     one: timestamp;
+
+    // A `date` field.
+    two: date;
 }

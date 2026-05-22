@@ -50,6 +50,7 @@ impl GenRust<'_> {
             },
             TypeTag::Time(time) => match time {
                 TimeType::Timestamp => RustPrimitive::SignedInt64.to_rust_type(),
+                TimeType::Date => RustType::from("proto_packet::types::Date"),
             },
             TypeTag::Named(name) => RustType::Named(self.rust_name(name.to_ref())),
         }

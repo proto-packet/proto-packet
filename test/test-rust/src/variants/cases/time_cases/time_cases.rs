@@ -3,4 +3,7 @@
 pub enum TimeCases {
     /// A `timestamp` case.
     One(i64),
+    
+    /// A `date` case.
+    Two(proto_packet::types::Date),
 }

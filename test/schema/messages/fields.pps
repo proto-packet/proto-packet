@@ -68,4 +68,7 @@ message TimeFields {
 
     // A `timestamp` field.
     one: timestamp = 1;
+
+    // A `date` field.
+    two: date = 2;
 }
