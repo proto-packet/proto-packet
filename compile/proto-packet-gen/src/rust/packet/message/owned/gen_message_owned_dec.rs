@@ -23,7 +23,7 @@ impl GenRust<'_> {
         result.set_access(Public);
         for field in m.fields() {
             let name: String = self.field_name(field);
-            let tag: RustType = self.field_type(field, true);
+            let tag: RustType = self.field_type(field, true, true);
             result.add_field((name, tag));
         }
         result

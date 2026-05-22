@@ -17,7 +17,7 @@ impl GenRust<'_> {
         self.gen_derives(false, false, &mut result);
         result.set_access(Public);
         for case in v.cases() {
-            let tag: RustType = self.field_type(case, false);
+            let tag: RustType = self.field_type(case, false, true);
             let mut rust_case: RustEnumCase = RustEnumCase::from(self.case_name(case))
                 .with_fields(EnumFields::Unnamed(vec![tag]));
             for comment in case.comments() {

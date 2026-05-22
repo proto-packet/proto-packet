@@ -8,3 +8,6 @@ version = "0.0.0"
 authors = ["Nik Deapen <nik@deapen.com>"]
 edition = "2024"
 license = "MIT"
+
+[dependencies]
+proto-packet = { path = "../../dep/dep-rust" }

@@ -11,7 +11,10 @@ impl GenRust<'_> {
         F: WithFieldName + WithTypeTag,
     {
         match field.type_tag() {
-            TypeTag::Primitive(_) => format!("self.{}", self.field_name(field)),
+            TypeTag::Primitive(_) => {
+                let name: String = self.field_name(field);
+                self.into_expression(field, is_optional, &format!("self.{name}"))
+            }
             TypeTag::Named(name) => {
                 // todo -- named copy types
                 let rust_name: String = self.rust_name(name.to_ref());

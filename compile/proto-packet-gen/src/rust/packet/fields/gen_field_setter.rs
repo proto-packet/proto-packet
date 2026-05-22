@@ -16,20 +16,20 @@ impl GenRust<'_> {
         F: WithFieldName + WithTypeTag,
     {
         let field_name: String = self.field_name(field);
-        let field_type: RustType = self.field_type(field, is_optional);
+        let field_type: RustType = self.field_type(field, is_optional, false);
         let signature: Signature = Signature::from(format!("set_{}", field_name))
             .with_receiver(Receiver::BorrowedMut)
             .with_param((field_name.clone(), field_type.clone()))
             .with_result(field_type);
+        let stored: String = self.into_expression(field, is_optional, &field_name);
+        let replace: String = format!("std::mem::replace(&mut self.{field_name}, {stored})");
+        let body: String = self.into_expression(field, is_optional, &replace);
         Function::from(signature)
             .with_access(Public)
             .with_comment(format!(
                 " Sets the field: `{}`. Returns the previous value.",
                 field.field_name()
             ))
-            .with_literal(format!(
-                "std::mem::replace(&mut self.{}, {})",
-                field_name, field_name
-            ))
+            .with_literal(body)
     }
 }

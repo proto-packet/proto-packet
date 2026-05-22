@@ -42,3 +42,13 @@ message SignedIntFields {
     // An `i128` field.
     five: i128 = 5;
 }
+
+// A message with floating point fields.
+message FloatFields {
+
+    // An `f32` field.
+    one: f32 = 1;
+
+    // An `f64` field.
+    two: f64 = 2;
+}

@@ -42,3 +42,13 @@ variant SignedIntCases {
     // An `i128` case.
     Five: i128 = 5;
 }
+
+// A variant with floating point cases.
+variant FloatCases {
+
+    // An `f32` case.
+    One: f32 = 1;
+
+    // An `f64` case.
+    Two: f64 = 2;
+}

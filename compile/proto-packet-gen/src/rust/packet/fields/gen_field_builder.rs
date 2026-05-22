@@ -16,7 +16,7 @@ impl GenRust<'_> {
         F: WithFieldName + WithTypeTag,
     {
         let field_name: String = self.field_name(field);
-        let field_type: RustType = self.field_type(field, is_optional);
+        let field_type: RustType = self.field_type(field, is_optional, false);
         let signature: Signature = Signature::from(format!("with_{field_name}"))
             .with_receiver(OwnedMut)
             .with_param((field_name.clone(), field_type))

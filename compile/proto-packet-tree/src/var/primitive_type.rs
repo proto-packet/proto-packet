@@ -37,6 +37,12 @@ pub enum PrimitiveType {
 
     /// A signed 128-bit integer.
     SignedInt128,
+
+    /// A 32-bit IEEE 754 floating point number.
+    Float32,
+
+    /// A 64-bit IEEE 754 floating point number.
+    Float64,
 }
 
 impl PrimitiveType {
@@ -63,6 +69,8 @@ impl AsRef<str> for PrimitiveType {
             Self::SignedInt32 => "i32",
             Self::SignedInt64 => "i64",
             Self::SignedInt128 => "i128",
+            Self::Float32 => "f32",
+            Self::Float64 => "f64",
         }
     }
 }
@@ -95,6 +103,8 @@ impl FromStr for PrimitiveType {
             "i32" => Self::SignedInt32,
             "i64" => Self::SignedInt64,
             "i128" => Self::SignedInt128,
+            "f32" => Self::Float32,
+            "f64" => Self::Float64,
             _ => return Err(()),
         })
     }

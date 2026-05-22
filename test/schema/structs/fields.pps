@@ -42,3 +42,13 @@ struct SignedIntFields {
     // An `i128` field.
     five: i128;
 }
+
+// A struct with floating point fields.
+struct FloatFields {
+
+    // An `f32` field.
+    one: f32;
+
+    // An `f64` field.
+    two: f64;
+}
