@@ -5,7 +5,7 @@ use code_gen::rust::{
     Function, Receiver, Reference, RustType, Signature, WithAccess, WithAttributes, WithComments,
     WithReceiver, WithResult,
 };
-use proto_packet_tree::{WithFieldName, WithTypeTag};
+use proto_packet_tree::{SpecialType, TypeTag, WithFieldName, WithTypeTag};
 
 impl GenRust<'_> {
     //! Gen Field Getter
@@ -16,8 +16,16 @@ impl GenRust<'_> {
         F: WithFieldName + WithTypeTag,
     {
         let field_name: String = self.field_name(field);
+        let is_string: bool = matches!(field.type_tag(), TypeTag::Special(SpecialType::String));
         let is_copy: bool = self.is_copy(field);
-        let result_type: RustType = if is_copy {
+        let result_type: RustType = if is_string {
+            let inner: RustType = RustType::from("str").to_ref(Reference::default());
+            if is_optional {
+                RustType::from("Option").with_generic(inner)
+            } else {
+                inner
+            }
+        } else if is_copy {
             self.field_type(field, is_optional, false)
         } else {
             let inner: RustType = self
@@ -29,7 +37,13 @@ impl GenRust<'_> {
                 inner
             }
         };
-        let body: String = if is_copy {
+        let body: String = if is_string {
+            if is_optional {
+                format!("self.{field_name}.as_deref()")
+            } else {
+                format!("self.{field_name}.as_str()")
+            }
+        } else if is_copy {
             self.reference_expression(field, is_optional)
         } else if is_optional {
             format!("self.{field_name}.as_ref()")
