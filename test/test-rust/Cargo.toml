@@ -1,0 +1,10 @@
+[package]
+name = "proto-packet-test"
+description = "This library aids in testing generated ProtoPacket code."
+repository = "https://github.com/proto-packet/proto-packet"
+homepage = "https://github.com/proto-packet/proto-packet/blob/master/test/test-rust"
+readme = "README.md"
+version = "0.0.0"
+authors = ["Nik Deapen <nik@deapen.com>"]
+edition = "2024"
+license = "MIT"

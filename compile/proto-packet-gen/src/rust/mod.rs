@@ -7,4 +7,5 @@ mod rust_generator;
 mod util;
 
 mod packet;
+mod write_mod_files;
 mod write_type_decs;

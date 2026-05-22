@@ -2,6 +2,8 @@
   <dictionary name="project">
     <words>
       <w>decs</w>
+      <w>partialeq</w>
+      <w>partialord</w>
     </words>
   </dictionary>
 </component>

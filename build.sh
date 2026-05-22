@@ -8,3 +8,5 @@ cargo test   --manifest-path "$ROOT_DIR/dep/dep-rust/Cargo.toml"
 
 cargo fmt    --manifest-path "$ROOT_DIR/compile/Cargo.toml" --all
 cargo test   --manifest-path "$ROOT_DIR/compile/Cargo.toml" --all-features
+
+"$ROOT_DIR/test/build.sh"

@@ -2,8 +2,8 @@ use crate::rust::GenRust;
 use code_gen::WithStatements;
 use code_gen::rust::Access::Public;
 use code_gen::rust::{
-    Function, ImplBlock, RustType, Signature, WithAccess, WithComments, WithFunctions, WithResult,
-    WithVarParams,
+    Function, ImplBlock, RustType, Signature, WithAccess, WithComments, WithFnGenerics,
+    WithFunctions, WithResult, WithVarParams,
 };
 use proto_packet_tree::Struct;
 
@@ -18,55 +18,46 @@ impl GenRust<'_> {
     }
 
     fn gen_struct_owned_construct_new(self, s: &Struct) -> Function {
-        let mut sig: Signature = Signature::from("new").with_result(RustType::from("Self"));
+        let mut signature: Signature = Signature::from("new").with_result(RustType::from("Self"));
         for field in s.fields() {
             let name: String = self.field_name(field);
             let tag: RustType = self.field_type(field, false);
-            sig = sig.with_param((name, tag));
+            signature = signature.with_param((name, tag));
         }
-        Function::from(sig)
+        Function::from(signature)
             .with_comment(format!(" Creates a new [{}].", self.type_name(s)))
             .with_access(Public)
             .with_const(true)
-            .with_literal(self.gen_struct_owned_construct_new_body(s))
-    }
-
-    fn gen_struct_owned_construct_new_body(self, s: &Struct) -> String {
-        let inits: Vec<String> = s.fields().iter().map(|f| self.field_name(f)).collect();
-        if inits.is_empty() {
-            String::from("Self {}")
-        } else {
-            format!("Self {{ {} }}", inits.join(", "))
-        }
+            .with_literal(format!(
+                "Self {{ {} }}",
+                s.fields()
+                    .iter()
+                    .map(|field| self.field_name(field))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ))
     }
 
     fn gen_struct_owned_construct_from(self, s: &Struct) -> Function {
-        let mut sig: Signature = Signature::from("from").with_result(RustType::from("Self"));
-        for field in s.fields() {
+        let mut signature: Signature = Signature::from("from").with_result(RustType::from("Self"));
+        s.fields().iter().enumerate().for_each(|(i, field)| {
+            let generic: String = format!("F{}", i + 1);
             let name: String = self.field_name(field);
             let tag: RustType = self.field_type(field, false);
-            let into_tag: RustType = RustType::from("impl Into").with_generic(tag);
-            sig = sig.with_param((name, into_tag));
-        }
-        Function::from(sig)
+            signature.add_generic((generic.clone(), RustType::from("Into").with_generic(tag)));
+            signature.add_param((name, generic));
+        });
+        Function::from(signature)
             .with_comment(format!(" Creates a new [{}].", self.type_name(s)))
             .with_access(Public)
-            .with_literal(self.gen_struct_owned_construct_from_body(s))
-    }
-
-    fn gen_struct_owned_construct_from_body(self, s: &Struct) -> String {
-        let inits: Vec<String> = s
-            .fields()
-            .iter()
-            .map(|f| {
-                let name: String = self.field_name(f);
-                format!("{name}: {name}.into()")
-            })
-            .collect();
-        if inits.is_empty() {
-            String::from("Self {}")
-        } else {
-            format!("Self {{ {} }}", inits.join(", "))
-        }
+            .with_literal(format!(
+                "Self::new({})",
+                s.fields()
+                    .iter()
+                    .map(|field| self.field_name(field))
+                    .map(|name| format!("{}.into()", name))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ))
     }
 }
