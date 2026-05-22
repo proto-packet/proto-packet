@@ -19,12 +19,19 @@ impl FloatFields {
     //! Construction
 
     /// Creates a new [FloatFields].
-    pub const fn new(one: Vec<proto_packet::types::Float32>, two: Vec<proto_packet::types::Float64>) -> Self {
+    pub const fn new(
+        one: Vec<proto_packet::types::Float32>,
+        two: Vec<proto_packet::types::Float64>,
+    ) -> Self {
         Self { one, two }
     }
 
     /// Creates a new [FloatFields].
-    pub fn from<F1, F2>(one: F1, two: F2) -> Self where F1: Into<Vec<proto_packet::types::Float32>>, F2: Into<Vec<proto_packet::types::Float64>> {
+    pub fn from<F1, F2>(one: F1, two: F2) -> Self
+    where
+        F1: Into<Vec<proto_packet::types::Float32>>,
+        F2: Into<Vec<proto_packet::types::Float64>>,
+    {
         Self::new(one.into(), two.into())
     }
 }
@@ -39,7 +46,10 @@ impl FloatFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Vec<proto_packet::types::Float32>) -> Vec<proto_packet::types::Float32> {
+    pub fn set_one(
+        &mut self,
+        one: Vec<proto_packet::types::Float32>,
+    ) -> Vec<proto_packet::types::Float32> {
         std::mem::replace(&mut self.one, one)
     }
 
@@ -61,7 +71,10 @@ impl FloatFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(&mut self, two: Vec<proto_packet::types::Float64>) -> Vec<proto_packet::types::Float64> {
+    pub fn set_two(
+        &mut self,
+        two: Vec<proto_packet::types::Float64>,
+    ) -> Vec<proto_packet::types::Float64> {
         std::mem::replace(&mut self.two, two)
     }
 

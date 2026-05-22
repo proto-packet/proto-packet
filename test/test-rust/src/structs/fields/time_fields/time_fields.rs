@@ -24,7 +24,11 @@ impl TimeFields {
     }
 
     /// Creates a new [TimeFields].
-    pub fn from<F1, F2>(one: F1, two: F2) -> Self where F1: Into<i64>, F2: Into<proto_packet::types::Date> {
+    pub fn from<F1, F2>(one: F1, two: F2) -> Self
+    where
+        F1: Into<i64>,
+        F2: Into<proto_packet::types::Date>,
+    {
         Self::new(one.into(), two.into())
     }
 }

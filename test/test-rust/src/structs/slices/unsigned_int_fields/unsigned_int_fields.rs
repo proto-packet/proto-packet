@@ -31,13 +31,38 @@ impl UnsignedIntFields {
     //! Construction
 
     /// Creates a new [UnsignedIntFields].
-    pub const fn new(one: Vec<u8>, two: Vec<u16>, three: Vec<u32>, four: Vec<u64>, five: Vec<u128>) -> Self {
-        Self { one, two, three, four, five }
+    pub const fn new(
+        one: Vec<u8>,
+        two: Vec<u16>,
+        three: Vec<u32>,
+        four: Vec<u64>,
+        five: Vec<u128>,
+    ) -> Self {
+        Self {
+            one,
+            two,
+            three,
+            four,
+            five,
+        }
     }
 
     /// Creates a new [UnsignedIntFields].
-    pub fn from<F1, F2, F3, F4, F5>(one: F1, two: F2, three: F3, four: F4, five: F5) -> Self where F1: Into<Vec<u8>>, F2: Into<Vec<u16>>, F3: Into<Vec<u32>>, F4: Into<Vec<u64>>, F5: Into<Vec<u128>> {
-        Self::new(one.into(), two.into(), three.into(), four.into(), five.into())
+    pub fn from<F1, F2, F3, F4, F5>(one: F1, two: F2, three: F3, four: F4, five: F5) -> Self
+    where
+        F1: Into<Vec<u8>>,
+        F2: Into<Vec<u16>>,
+        F3: Into<Vec<u32>>,
+        F4: Into<Vec<u64>>,
+        F5: Into<Vec<u128>>,
+    {
+        Self::new(
+            one.into(),
+            two.into(),
+            three.into(),
+            four.into(),
+            five.into(),
+        )
     }
 }
 

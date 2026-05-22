@@ -20,11 +20,18 @@ impl FloatFields {
 
     /// Creates a new [FloatFields].
     pub const fn new(one: f32, two: f64) -> Self {
-        Self { one: proto_packet::types::Float32::new(one), two: proto_packet::types::Float64::new(two) }
+        Self {
+            one: proto_packet::types::Float32::new(one),
+            two: proto_packet::types::Float64::new(two),
+        }
     }
 
     /// Creates a new [FloatFields].
-    pub fn from<F1, F2>(one: F1, two: F2) -> Self where F1: Into<f32>, F2: Into<f64> {
+    pub fn from<F1, F2>(one: F1, two: F2) -> Self
+    where
+        F1: Into<f32>,
+        F2: Into<f64>,
+    {
         Self::new(one.into(), two.into())
     }
 }

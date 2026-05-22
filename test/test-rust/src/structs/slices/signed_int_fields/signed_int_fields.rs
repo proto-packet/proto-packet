@@ -31,13 +31,38 @@ impl SignedIntFields {
     //! Construction
 
     /// Creates a new [SignedIntFields].
-    pub const fn new(one: Vec<i8>, two: Vec<i16>, three: Vec<i32>, four: Vec<i64>, five: Vec<i128>) -> Self {
-        Self { one, two, three, four, five }
+    pub const fn new(
+        one: Vec<i8>,
+        two: Vec<i16>,
+        three: Vec<i32>,
+        four: Vec<i64>,
+        five: Vec<i128>,
+    ) -> Self {
+        Self {
+            one,
+            two,
+            three,
+            four,
+            five,
+        }
     }
 
     /// Creates a new [SignedIntFields].
-    pub fn from<F1, F2, F3, F4, F5>(one: F1, two: F2, three: F3, four: F4, five: F5) -> Self where F1: Into<Vec<i8>>, F2: Into<Vec<i16>>, F3: Into<Vec<i32>>, F4: Into<Vec<i64>>, F5: Into<Vec<i128>> {
-        Self::new(one.into(), two.into(), three.into(), four.into(), five.into())
+    pub fn from<F1, F2, F3, F4, F5>(one: F1, two: F2, three: F3, four: F4, five: F5) -> Self
+    where
+        F1: Into<Vec<i8>>,
+        F2: Into<Vec<i16>>,
+        F3: Into<Vec<i32>>,
+        F4: Into<Vec<i64>>,
+        F5: Into<Vec<i128>>,
+    {
+        Self::new(
+            one.into(),
+            two.into(),
+            three.into(),
+            four.into(),
+            five.into(),
+        )
     }
 }
 

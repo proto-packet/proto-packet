@@ -47,7 +47,10 @@ impl TimeFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(&mut self, two: Option<proto_packet::types::Date>) -> Option<proto_packet::types::Date> {
+    pub fn set_two(
+        &mut self,
+        two: Option<proto_packet::types::Date>,
+    ) -> Option<proto_packet::types::Date> {
         std::mem::replace(&mut self.two, two)
     }
 

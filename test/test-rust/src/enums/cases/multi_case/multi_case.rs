@@ -3,10 +3,10 @@
 pub enum MultiCase {
     /// The first case.
     One,
-    
+
     /// The second case.
     Two,
-    
+
     /// The third case.
     Three,
 }

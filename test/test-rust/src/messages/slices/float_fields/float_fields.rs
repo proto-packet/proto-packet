@@ -25,7 +25,10 @@ impl FloatFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Option<Vec<proto_packet::types::Float32>>) -> Option<Vec<proto_packet::types::Float32>> {
+    pub fn set_one(
+        &mut self,
+        one: Option<Vec<proto_packet::types::Float32>>,
+    ) -> Option<Vec<proto_packet::types::Float32>> {
         std::mem::replace(&mut self.one, one)
     }
 
@@ -47,7 +50,10 @@ impl FloatFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(&mut self, two: Option<Vec<proto_packet::types::Float64>>) -> Option<Vec<proto_packet::types::Float64>> {
+    pub fn set_two(
+        &mut self,
+        two: Option<Vec<proto_packet::types::Float64>>,
+    ) -> Option<Vec<proto_packet::types::Float64>> {
         std::mem::replace(&mut self.two, two)
     }
 

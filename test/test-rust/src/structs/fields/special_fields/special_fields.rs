@@ -24,7 +24,11 @@ impl SpecialFields {
     }
 
     /// Creates a new [SpecialFields].
-    pub fn from<F1, F2>(one: F1, two: F2) -> Self where F1: Into<proto_packet::types::Uuid>, F2: Into<String> {
+    pub fn from<F1, F2>(one: F1, two: F2) -> Self
+    where
+        F1: Into<proto_packet::types::Uuid>,
+        F2: Into<String>,
+    {
         Self::new(one.into(), two.into())
     }
 }

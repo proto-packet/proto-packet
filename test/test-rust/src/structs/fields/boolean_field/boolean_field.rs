@@ -20,7 +20,10 @@ impl BooleanField {
     }
 
     /// Creates a new [BooleanField].
-    pub fn from<F1>(one: F1) -> Self where F1: Into<bool> {
+    pub fn from<F1>(one: F1) -> Self
+    where
+        F1: Into<bool>,
+    {
         Self::new(one.into())
     }
 }

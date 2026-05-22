@@ -24,7 +24,11 @@ impl TimeFields {
     }
 
     /// Creates a new [TimeFields].
-    pub fn from<F1, F2>(one: F1, two: F2) -> Self where F1: Into<Vec<i64>>, F2: Into<Vec<proto_packet::types::Date>> {
+    pub fn from<F1, F2>(one: F1, two: F2) -> Self
+    where
+        F1: Into<Vec<i64>>,
+        F2: Into<Vec<proto_packet::types::Date>>,
+    {
         Self::new(one.into(), two.into())
     }
 }
@@ -61,7 +65,10 @@ impl TimeFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(&mut self, two: Vec<proto_packet::types::Date>) -> Vec<proto_packet::types::Date> {
+    pub fn set_two(
+        &mut self,
+        two: Vec<proto_packet::types::Date>,
+    ) -> Vec<proto_packet::types::Date> {
         std::mem::replace(&mut self.two, two)
     }
 

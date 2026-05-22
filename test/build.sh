@@ -9,4 +9,5 @@ TARGET_DIR="$TEST_DIR/test-rust/src"
 cargo run --quiet --manifest-path "$ROOT_DIR/compile/Cargo.toml" --bin proto-packet-cli -- \
     compile rust "$SCHEMA_DIR" "$TARGET_DIR"
 
+cargo fmt  --manifest-path "$TEST_DIR/test-rust/Cargo.toml"
 cargo test --manifest-path "$TEST_DIR/test-rust/Cargo.toml"

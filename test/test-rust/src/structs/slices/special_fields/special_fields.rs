@@ -24,7 +24,11 @@ impl SpecialFields {
     }
 
     /// Creates a new [SpecialFields].
-    pub fn from<F1, F2>(one: F1, two: F2) -> Self where F1: Into<Vec<proto_packet::types::Uuid>>, F2: Into<Vec<String>> {
+    pub fn from<F1, F2>(one: F1, two: F2) -> Self
+    where
+        F1: Into<Vec<proto_packet::types::Uuid>>,
+        F2: Into<Vec<String>>,
+    {
         Self::new(one.into(), two.into())
     }
 }
@@ -39,7 +43,10 @@ impl SpecialFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Vec<proto_packet::types::Uuid>) -> Vec<proto_packet::types::Uuid> {
+    pub fn set_one(
+        &mut self,
+        one: Vec<proto_packet::types::Uuid>,
+    ) -> Vec<proto_packet::types::Uuid> {
         std::mem::replace(&mut self.one, one)
     }
 

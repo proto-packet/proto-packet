@@ -25,7 +25,10 @@ impl SpecialFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Option<proto_packet::types::Uuid>) -> Option<proto_packet::types::Uuid> {
+    pub fn set_one(
+        &mut self,
+        one: Option<proto_packet::types::Uuid>,
+    ) -> Option<proto_packet::types::Uuid> {
         std::mem::replace(&mut self.one, one)
     }
 
