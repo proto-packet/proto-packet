@@ -136,7 +136,9 @@ impl<'a> TreeErrorHelper<'a> {
                             m.fields_with_name(field_name, self.source);
                         Self::spans_to_entries(fields.iter().map(|f| f.field_name), self)
                     }
-                    TypeDecTree::Variant(_) | TypeDecTree::Enum(_) => Vec::default(),
+                    TypeDecTree::Variant(_) | TypeDecTree::Enum(_) | TypeDecTree::Service(_) => {
+                        Vec::default()
+                    }
                 }
             }
             TreeError::DuplicateCaseName {
@@ -161,7 +163,9 @@ impl<'a> TreeErrorHelper<'a> {
                         let cases: Vec<&EnumCaseTree> = e.cases_with_name(case_name, self.source);
                         Self::spans_to_entries(cases.iter().map(|c| c.case_name), self)
                     }
-                    TypeDecTree::Struct(_) | TypeDecTree::Message(_) => Vec::default(),
+                    TypeDecTree::Struct(_) | TypeDecTree::Message(_) | TypeDecTree::Service(_) => {
+                        Vec::default()
+                    }
                 }
             }
             TreeError::DuplicateCallName { .. } => todo!(),
@@ -206,7 +210,7 @@ impl<'a> TreeErrorHelper<'a> {
                             .collect();
                         Self::spans_to_entries(spans, self)
                     }
-                    TypeDecTree::Struct(_) => Vec::default(),
+                    TypeDecTree::Struct(_) | TypeDecTree::Service(_) => Vec::default(),
                 }
             }
             TreeError::DuplicateTypeDecName { type_name } => {

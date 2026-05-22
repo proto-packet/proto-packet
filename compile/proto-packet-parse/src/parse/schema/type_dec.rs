@@ -1,6 +1,6 @@
 use crate::parse::{
-    EnumTree, MessageTree, StructTree, VariantTree, parse_enum, parse_message, parse_struct,
-    parse_variant,
+    EnumTree, MessageTree, ServiceTree, StructTree, VariantTree, parse_enum, parse_message,
+    parse_service, parse_struct, parse_variant,
 };
 use crate::{Kind, ParseError, ParseErrorReason};
 use ::lex::lexer::Span;
@@ -13,6 +13,7 @@ pub enum TypeDecTree {
     Message(MessageTree),
     Variant(VariantTree),
     Enum(EnumTree),
+    Service(ServiceTree),
 }
 
 impl TypeDecTree {
@@ -25,6 +26,7 @@ impl TypeDecTree {
             Self::Message(m) => m.type_name,
             Self::Variant(v) => v.type_name,
             Self::Enum(e) => e.type_name,
+            Self::Service(s) => s.type_name,
         }
     }
 }
@@ -39,6 +41,8 @@ pub fn parse_type_dec(p: &mut Parser<Kind>) -> Result<TypeDecTree, ParseError> {
         Ok(TypeDecTree::Variant(parse_variant(p)?))
     } else if p.check(Kind::Enum) {
         Ok(TypeDecTree::Enum(parse_enum(p)?))
+    } else if p.check(Kind::Service) {
+        Ok(TypeDecTree::Service(parse_service(p)?))
     } else {
         Err(ParseError::new(
             p.peek().span(),

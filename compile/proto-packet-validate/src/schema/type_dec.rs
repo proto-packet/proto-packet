@@ -9,5 +9,6 @@ pub fn validate_type_dec(tree: &TypeDecTree, source: &str) -> Result<TypeDec, Va
         TypeDecTree::Message(m) => Ok(TypeDec::from(validate_message(m, source)?)),
         TypeDecTree::Variant(v) => Ok(TypeDec::from(validate_variant(v, source)?)),
         TypeDecTree::Enum(e) => Ok(TypeDec::from(validate_enum(e, source)?)),
+        TypeDecTree::Service(_) => todo!(),
     }
 }

@@ -21,6 +21,8 @@ lexer! {
         Message: keyword!("message"),
         Enum: keyword!("enum"),
         Variant: keyword!("variant"),
+        Service: keyword!("service"),
+        Returns: keyword!("returns"),
 
         Ident: ident,
         Integer: digits,

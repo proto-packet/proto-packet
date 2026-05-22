@@ -30,8 +30,12 @@ pub enum ParseErrorReason {
     ExpectedFieldName,
     /// Expected the case's name.
     ExpectedCaseName,
+    /// Expected the call's name.
+    ExpectedCallName,
     /// Expected an integer for the tag number.
     ExpectedTagNumber,
+    /// Expected the `returns` keyword.
+    ExpectedReturns,
 
     // Schema file
     /// Expected an identifier in the import path.
@@ -58,7 +62,9 @@ impl ParseErrorReason {
             Self::ExpectedTypeDecName => "expected the type's name",
             Self::ExpectedFieldName => "expected the field's name",
             Self::ExpectedCaseName => "expected the case's name",
+            Self::ExpectedCallName => "expected the call's name",
             Self::ExpectedTagNumber => "expected an integer tag number",
+            Self::ExpectedReturns => "expected the `returns` keyword",
             Self::ExpectedImportIdent => "expected an identifier in the import path",
             Self::ImportAfterTypeDeclaration => "imports must appear before type declarations",
         }
@@ -79,7 +85,9 @@ impl ParseErrorReason {
             Self::ExpectedTypeDecName => "EXPECTED_TYPE_DEC_NAME",
             Self::ExpectedFieldName => "EXPECTED_FIELD_NAME",
             Self::ExpectedCaseName => "EXPECTED_CASE_NAME",
+            Self::ExpectedCallName => "EXPECTED_CALL_NAME",
             Self::ExpectedTagNumber => "EXPECTED_TAG_NUMBER",
+            Self::ExpectedReturns => "EXPECTED_RETURNS",
             Self::ExpectedImportIdent => "EXPECTED_IMPORT_IDENT",
             Self::ImportAfterTypeDeclaration => "IMPORT_AFTER_TYPE_DEC",
         }
