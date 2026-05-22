@@ -37,7 +37,7 @@ impl GenRust<'_> {
             TypeDec::Message(m) => self.gen_message(m),
             TypeDec::Variant(v) => self.gen_variant(v),
             TypeDec::Enum(e) => self.gen_enum(e),
-            TypeDec::Service(_) => todo!(),
+            TypeDec::Service(s) => self.gen_service(s),
         }
     }
 }
