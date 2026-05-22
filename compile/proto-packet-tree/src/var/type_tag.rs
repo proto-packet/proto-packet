@@ -1,4 +1,4 @@
-use crate::{PrimitiveType, QualifiedName, SpecialType, WithTypeTag};
+use crate::{PrimitiveType, QualifiedName, SpecialType, TimeType, WithTypeTag};
 use std::fmt::{Debug, Display, Formatter};
 
 /// A type tag.
@@ -9,6 +9,9 @@ pub enum TypeTag {
 
     /// A special type.
     Special(SpecialType),
+
+    /// A time type.
+    Time(TimeType),
 
     /// A named type.
     Named(QualifiedName),
@@ -23,6 +26,12 @@ impl From<PrimitiveType> for TypeTag {
 impl From<SpecialType> for TypeTag {
     fn from(special: SpecialType) -> Self {
         Self::Special(special)
+    }
+}
+
+impl From<TimeType> for TypeTag {
+    fn from(time: TimeType) -> Self {
+        Self::Time(time)
     }
 }
 
@@ -49,6 +58,7 @@ impl Display for TypeTag {
         match self {
             Self::Primitive(primitive) => write!(f, "{}", primitive),
             Self::Special(special) => write!(f, "{}", special),
+            Self::Time(time) => write!(f, "{}", time),
             Self::Named(name) => write!(f, "{}", name),
         }
     }

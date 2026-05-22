@@ -62,3 +62,10 @@ message SpecialFields {
     // A `string` field.
     two: string = 2;
 }
+
+// A message with time fields.
+message TimeFields {
+
+    // A `timestamp` field.
+    one: timestamp = 1;
+}

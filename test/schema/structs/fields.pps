@@ -62,3 +62,10 @@ struct SpecialFields {
     // A `string` field.
     two: string;
 }
+
+// A struct with time fields.
+struct TimeFields {
+
+    // A `timestamp` field.
+    one: timestamp;
+}

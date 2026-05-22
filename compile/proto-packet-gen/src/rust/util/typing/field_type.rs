@@ -1,6 +1,6 @@
 use crate::rust::GenRust;
 use code_gen::rust::{RustPrimitive, RustType};
-use proto_packet_tree::{PrimitiveType, SpecialType, TypeTag, WithTypeTag};
+use proto_packet_tree::{PrimitiveType, SpecialType, TimeType, TypeTag, WithTypeTag};
 
 impl GenRust<'_> {
     //! Typing: Field Type
@@ -47,6 +47,9 @@ impl GenRust<'_> {
             TypeTag::Special(special) => match special {
                 SpecialType::Uuid => RustType::from("proto_packet::types::Uuid"),
                 SpecialType::String => RustType::from("String"),
+            },
+            TypeTag::Time(time) => match time {
+                TimeType::Timestamp => RustPrimitive::SignedInt64.to_rust_type(),
             },
             TypeTag::Named(name) => RustType::Named(self.rust_name(name.to_ref())),
         }

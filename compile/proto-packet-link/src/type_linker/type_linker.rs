@@ -35,6 +35,7 @@ impl TypeLinker<'_> {
         match tag {
             TypeTag::Primitive(primitive) => Ok(TypeTag::Primitive(*primitive)),
             TypeTag::Special(special) => Ok(TypeTag::Special(*special)),
+            TypeTag::Time(time) => Ok(TypeTag::Time(*time)),
             TypeTag::Named(name) => Ok(TypeTag::Named(self.resolver.resolve(name.to_ref())?)),
         }
     }

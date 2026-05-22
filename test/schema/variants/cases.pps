@@ -62,3 +62,10 @@ variant SpecialCases {
     // A `string` case.
     Two: string = 2;
 }
+
+// A variant with time cases.
+variant TimeCases {
+
+    // A `timestamp` case.
+    One: timestamp = 1;
+}

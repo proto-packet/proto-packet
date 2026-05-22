@@ -1,7 +1,7 @@
 use crate::{Kind, ParseError, ParseErrorReason};
 use lex::lexer::Span;
 use lex::parser::Parser;
-use proto_packet_tree::{PrimitiveType, SpecialType};
+use proto_packet_tree::{PrimitiveType, SpecialType, TimeType};
 
 /// A parsed type tag.
 #[derive(Clone, Eq, PartialEq, Debug)]
@@ -11,6 +11,9 @@ pub enum TypeTagTree {
 
     /// A special type with its parsed value.
     Special(SpecialType),
+
+    /// A time type with its parsed value.
+    Time(TimeType),
 
     /// A named type referenced by the span of its identifier.
     Named(Span),
@@ -28,6 +31,10 @@ pub fn parse_type_tag(p: &mut Parser<Kind>) -> Result<TypeTagTree, ParseError> {
         if let Ok(special) = text.parse::<SpecialType>() {
             p.advance();
             return Ok(TypeTagTree::Special(special));
+        }
+        if let Ok(time) = text.parse::<TimeType>() {
+            p.advance();
+            return Ok(TypeTagTree::Time(time));
         }
         p.advance();
         return Ok(TypeTagTree::Named(span));

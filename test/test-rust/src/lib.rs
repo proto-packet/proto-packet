@@ -1,4 +1,4 @@
-pub mod enums;
+pub mod messages;
 pub mod variants;
 pub mod structs;
-pub mod messages;
+pub mod enums;

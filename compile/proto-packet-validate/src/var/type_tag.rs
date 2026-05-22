@@ -7,6 +7,7 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
     match tree {
         TypeTagTree::Primitive(primitive) => Ok(TypeTag::Primitive(*primitive)),
         TypeTagTree::Special(special) => Ok(TypeTag::Special(*special)),
+        TypeTagTree::Time(time) => Ok(TypeTag::Time(*time)),
         TypeTagTree::Named(span) => {
             let text: &str = span.text(source);
             let name: QualifiedName =
