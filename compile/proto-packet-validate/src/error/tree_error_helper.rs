@@ -2,7 +2,8 @@ use clerr::{Code, Report, Severity, TokenInfo};
 use colored::ColoredString;
 use lex::lexer::Span;
 use proto_packet_parse::{
-    EnumCaseTree, MessageFieldTree, SchemaFileTree, StructFieldTree, TypeDecTree, VariantCaseTree,
+    EnumCaseTree, MessageFieldTree, SchemaFileTree, ServiceCallTree, StructFieldTree, TypeDecTree,
+    VariantCaseTree,
 };
 use proto_packet_tree::TreeError;
 
@@ -168,7 +169,30 @@ impl<'a> TreeErrorHelper<'a> {
                     }
                 }
             }
-            TreeError::DuplicateCallName { .. } => todo!(),
+            TreeError::DuplicateCallName {
+                call_name,
+                type_name,
+            } => {
+                let Some(type_dec) = self
+                    .tree
+                    .type_decs_with_name(type_name, self.source)
+                    .first()
+                    .copied()
+                else {
+                    return Vec::default();
+                };
+                match type_dec {
+                    TypeDecTree::Service(s) => {
+                        let calls: Vec<&ServiceCallTree> =
+                            s.calls_with_name(call_name, self.source);
+                        Self::spans_to_entries(calls.iter().map(|c| c.call_name), self)
+                    }
+                    TypeDecTree::Struct(_)
+                    | TypeDecTree::Message(_)
+                    | TypeDecTree::Variant(_)
+                    | TypeDecTree::Enum(_) => Vec::default(),
+                }
+            }
             TreeError::DuplicateTagNumber {
                 type_name,
                 tag_number,
