@@ -58,6 +58,7 @@ impl TreeErrorHelper<'_> {
         let s: &str = match self.error {
             TreeError::DuplicateFieldName { .. } => "DUP_FIELD_NAME",
             TreeError::DuplicateCaseName { .. } => "DUP_CASE_NAME",
+            TreeError::DuplicateCallName { .. } => "DUP_CALL_NAME",
             TreeError::DuplicateTagNumber { .. } => "DUP_TAG_NUMBER",
             TreeError::DuplicateTypeDecName { .. } => "DUP_TYPE_DEC_NAME",
             TreeError::DuplicateImportName { .. } => "DUP_IMPORT_NAME",
@@ -82,6 +83,10 @@ impl TreeErrorHelper<'_> {
                 case_name,
                 type_name,
             } => format!("duplicate case name `{}` in `{}`", case_name, type_name),
+            TreeError::DuplicateCallName {
+                call_name,
+                type_name,
+            } => format!("duplicate call name `{}` in `{}`", call_name, type_name),
             TreeError::DuplicateTagNumber {
                 type_name,
                 tag_number,
@@ -159,6 +164,7 @@ impl<'a> TreeErrorHelper<'a> {
                     TypeDecTree::Struct(_) | TypeDecTree::Message(_) => Vec::default(),
                 }
             }
+            TreeError::DuplicateCallName { .. } => todo!(),
             TreeError::DuplicateTagNumber {
                 type_name,
                 tag_number,

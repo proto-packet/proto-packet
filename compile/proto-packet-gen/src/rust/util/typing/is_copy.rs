@@ -28,6 +28,7 @@ impl GenRust<'_> {
                         TypeDec::Message(_) => false,
                         TypeDec::Variant(_) => false,
                         TypeDec::Enum(_) => true,
+                        TypeDec::Service(_) => todo!(),
                     }
                 } else {
                     unreachable!(

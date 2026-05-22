@@ -23,6 +23,7 @@ impl TypeLinker<'_> {
             TypeDec::Message(m) => TypeDec::Message(self.link_message(m)?),
             TypeDec::Variant(v) => TypeDec::Variant(self.link_variant(v)?),
             TypeDec::Enum(e) => TypeDec::Enum(e.clone()),
+            TypeDec::Service(_) => todo!(),
         })
     }
 }
