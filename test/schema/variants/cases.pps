@@ -1,17 +1,44 @@
-// A signed or unsigned integer.
-variant Integer {
+// A variant with a single boolean case.
+variant BooleanCase {
 
-    // A signed 64-bit integer.
-    Signed: i64 = 1;
-
-    // An unsigned 64-bit integer.
-    Unsigned: u64 = 2;
+    // A `bool` case.
+    One: bool = 1;
 }
 
-// A numeric value of varying precision.
-variant Number {
+// A variant with unsigned integer cases.
+variant UnsignedIntCases {
 
-    Small: u8 = 1;
-    Medium: u32 = 2;
-    Large: u128 = 3;
+    // A `u8` case.
+    One: u8 = 1;
+
+    // A `u16` case.
+    Two: u16 = 2;
+
+    // A `u32` case.
+    Three: u32 = 3;
+
+    // A `u64` case.
+    Four: u64 = 4;
+
+    // A `u128` case.
+    Five: u128 = 5;
+}
+
+// A variant with signed integer cases.
+variant SignedIntCases {
+
+    // An `i8` case.
+    One: i8 = 1;
+
+    // An `i16` case.
+    Two: i16 = 2;
+
+    // An `i32` case.
+    Three: i32 = 3;
+
+    // An `i64` case.
+    Four: i64 = 4;
+
+    // An `i128` case.
+    Five: i128 = 5;
 }

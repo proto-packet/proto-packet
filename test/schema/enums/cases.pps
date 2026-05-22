@@ -1,21 +1,19 @@
-// A color of the rainbow.
-enum Color {
+// An enum with a single case.
+enum SingleCase {
 
-    // The color red.
-    Red = 1;
-
-    // The color green.
-    Green = 2;
-
-    // The color blue.
-    Blue = 3;
+    // The single case.
+    One = 1;
 }
 
-// A cardinal direction.
-enum Direction {
+// An enum with multiple cases.
+enum MultiCase {
 
-    North = 1;
-    South = 2;
-    East = 3;
-    West = 4;
+    // The first case.
+    One = 1;
+
+    // The second case.
+    Two = 2;
+
+    // The third case.
+    Three = 3;
 }
