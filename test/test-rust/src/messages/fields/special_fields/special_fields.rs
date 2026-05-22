@@ -4,11 +4,15 @@
 ///    
 ///     // A `uuid` field.
 ///     one: uuid = 1;
+///    
+///     // A `string` field.
+///     two: string = 2;
 /// }
 /// ```
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct SpecialFields {
     one: Option<proto_packet::types::Uuid>,
+    two: Option<String>,
 }
 
 impl SpecialFields {
@@ -29,6 +33,28 @@ impl SpecialFields {
     #[must_use]
     pub fn with_one(mut self, one: Option<proto_packet::types::Uuid>) -> Self {
         self.set_one(one);
+        self
+    }
+}
+
+impl SpecialFields {
+    //! Field: `two`
+
+    /// Gets the field: `two`.
+    #[must_use]
+    pub fn two(&self) -> Option<&String> {
+        self.two.as_ref()
+    }
+
+    /// Sets the field: `two`. Returns the previous value.
+    pub fn set_two(&mut self, two: Option<String>) -> Option<String> {
+        std::mem::replace(&mut self.two, two)
+    }
+
+    /// Sets the field: `two`. Returns the struct itself.
+    #[must_use]
+    pub fn with_two(mut self, two: Option<String>) -> Self {
+        self.set_two(two);
         self
     }
 }

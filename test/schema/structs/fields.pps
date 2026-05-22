@@ -58,4 +58,7 @@ struct SpecialFields {
 
     // A `uuid` field.
     one: uuid;
+
+    // A `string` field.
+    two: string;
 }

@@ -58,4 +58,7 @@ message SpecialFields {
 
     // A `uuid` field.
     one: uuid = 1;
+
+    // A `string` field.
+    two: string = 2;
 }

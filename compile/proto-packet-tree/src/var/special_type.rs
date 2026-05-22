@@ -7,6 +7,9 @@ use std::str::FromStr;
 pub enum SpecialType {
     /// A 16-byte identifier.
     Uuid,
+
+    /// A UTF-8 byte sequence.
+    String,
 }
 
 impl SpecialType {
@@ -23,6 +26,7 @@ impl AsRef<str> for SpecialType {
     fn as_ref(&self) -> &str {
         match self {
             Self::Uuid => "uuid",
+            Self::String => "string",
         }
     }
 }
@@ -45,6 +49,7 @@ impl FromStr for SpecialType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             "uuid" => Self::Uuid,
+            "string" => Self::String,
             _ => return Err(()),
         })
     }

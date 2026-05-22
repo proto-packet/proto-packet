@@ -58,4 +58,7 @@ variant SpecialCases {
 
     // A `uuid` case.
     One: uuid = 1;
+
+    // A `string` case.
+    Two: string = 2;
 }

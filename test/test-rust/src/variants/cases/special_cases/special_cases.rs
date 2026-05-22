@@ -3,4 +3,7 @@
 pub enum SpecialCases {
     /// A `uuid` case.
     One(proto_packet::types::Uuid),
+    
+    /// A `string` case.
+    Two(String),
 }

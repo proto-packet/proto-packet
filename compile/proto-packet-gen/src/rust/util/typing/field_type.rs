@@ -46,6 +46,7 @@ impl GenRust<'_> {
             },
             TypeTag::Special(special) => match special {
                 SpecialType::Uuid => RustType::from("proto_packet::types::Uuid"),
+                SpecialType::String => RustType::from("String"),
             },
             TypeTag::Named(name) => RustType::Named(self.rust_name(name.to_ref())),
         }

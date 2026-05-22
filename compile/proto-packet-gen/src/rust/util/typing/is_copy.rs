@@ -1,5 +1,5 @@
 use crate::rust::GenRust;
-use proto_packet_tree::{QualifiedNameRef, Struct, TypeDec, TypeTag, WithTypeTag};
+use proto_packet_tree::{QualifiedNameRef, SpecialType, Struct, TypeDec, TypeTag, WithTypeTag};
 
 impl GenRust<'_> {
     //! Typing: Is Copy
@@ -8,7 +8,10 @@ impl GenRust<'_> {
     pub fn is_copy(&self, tag: &impl WithTypeTag) -> bool {
         match tag.type_tag() {
             TypeTag::Primitive(_primitive) => true,
-            TypeTag::Special(_special) => true,
+            TypeTag::Special(special) => match special {
+                SpecialType::Uuid => true,
+                SpecialType::String => false,
+            },
             TypeTag::Named(name) => self.is_copy_named(name.to_ref()),
         }
     }
