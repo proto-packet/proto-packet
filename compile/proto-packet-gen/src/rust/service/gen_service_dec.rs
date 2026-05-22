@@ -1,40 +1,42 @@
 use crate::rust::GenRust;
-use code_gen::rust::Access::Public;
-use code_gen::rust::{
-    Receiver, RustType, Signature, SignatureDec, Trait as RustTrait, WithAccess,
-    WithComments as RustWithComments, WithReceiver, WithResult, WithTraitFunctions, WithVarParams,
-};
-use proto_packet_tree::{Service, ServiceCall, WithComments};
+use code_gen::rust::RustType;
+use proto_packet_tree::{Service, ServiceCall, WithCallName, WithComments};
 
 impl GenRust<'_> {
-    //! Gen Service: Declaration
+    //! Gen Service: Trait Text
 
-    pub(super) fn gen_service_dec(self, s: &Service) -> RustTrait {
-        let mut result: RustTrait = RustTrait::from(self.type_name(s));
+    pub(super) fn gen_service_trait_text(self, s: &Service) -> String {
+        let mut out: String = String::new();
         for comment in s.comments() {
-            result.add_comment(comment);
+            out.push_str(&format!("///{}\n", comment));
         }
-        result.set_access(Public);
-        for call in s.calls() {
-            result.add_signature_dec(self.gen_service_call_signature_dec(call));
+        out.push_str(&format!(
+            "pub trait {}: Send + Sync {{\n",
+            self.type_name(s)
+        ));
+        for (i, call) in s.calls().iter().enumerate() {
+            if i > 0 {
+                out.push('\n');
+            }
+            out.push_str(&self.gen_service_call_signature_text(call));
         }
-        result
+        out.push_str("}\n");
+        out
     }
 
-    fn gen_service_call_signature_dec(self, call: &ServiceCall) -> SignatureDec {
-        let request_type: RustType = self.field_type(call.request(), false, false);
-        let response_type: RustType = self.field_type(call.response(), false, false);
-        let result_type: RustType = RustType::from("Result")
-            .with_generic(response_type)
-            .with_generic(RustType::from("proto_packet::service::ServiceError"));
-        let signature: Signature = Signature::from(self.call_name(call))
-            .with_receiver(Receiver::Borrowed)
-            .with_param(("request", request_type))
-            .with_result(result_type);
-        let mut dec: SignatureDec = SignatureDec::from(signature);
+    fn gen_service_call_signature_text(self, call: &ServiceCall) -> String {
+        let request: RustType = self.field_type(call.request(), false, false);
+        let response: RustType = self.field_type(call.response(), false, false);
+        let mut out: String = String::new();
         for comment in call.comments() {
-            dec.add_comment(comment);
+            out.push_str(&format!("    ///{}\n", comment));
         }
-        dec
+        out.push_str(&format!(
+            "    fn {}(\n        &self,\n        request: {},\n    ) -> impl ::std::future::Future<\n        Output = ::std::result::Result<{}, ::proto_packet::service::ServiceError>,\n    > + Send + '_;\n",
+            call.call_name(),
+            request,
+            response,
+        ));
+        out
     }
 }

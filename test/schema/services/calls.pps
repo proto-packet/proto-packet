@@ -1,0 +1,20 @@
+// A greeting request.
+message GreetRequest {
+
+    // The name to greet.
+    name: string = 1;
+}
+
+// A greeting response.
+message GreetResponse {
+
+    // The full greeting text.
+    greeting: string = 1;
+}
+
+// A simple greeter service.
+service Greeter {
+
+    // Returns a greeting for the given name.
+    greet: GreetRequest returns GreetResponse;
+}

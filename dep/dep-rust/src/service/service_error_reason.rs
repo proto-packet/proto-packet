@@ -1,9 +1,10 @@
+use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
 /// The reason a [crate::service::ServiceError] was raised.
 ///
 /// Variants map to common HTTP status codes used in API responses.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
 pub enum ServiceErrorReason {
     /// 400 Bad Request.
     BadRequest,
