@@ -20,7 +20,7 @@ impl GenRust<'_> {
                     match type_dec {
                         TypeDec::Struct(s) => self.is_copy_struct(s),
                         TypeDec::Message(_) => false,
-                        TypeDec::Variant(_) => todo!(),
+                        TypeDec::Variant(_) => false,
                         TypeDec::Enum(_) => true,
                     }
                 } else {

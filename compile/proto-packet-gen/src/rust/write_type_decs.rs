@@ -35,8 +35,8 @@ impl GenRust<'_> {
         match type_dec {
             TypeDec::Struct(s) => self.gen_struct(s),
             TypeDec::Message(m) => self.gen_message(m),
+            TypeDec::Variant(v) => self.gen_variant(v),
             TypeDec::Enum(e) => self.gen_enum(e),
-            _ => todo!(),
         }
     }
 }

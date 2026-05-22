@@ -1,0 +1,17 @@
+// A signed or unsigned integer.
+variant Integer {
+
+    // A signed 64-bit integer.
+    Signed: i64 = 1;
+
+    // An unsigned 64-bit integer.
+    Unsigned: u64 = 2;
+}
+
+// A numeric value of varying precision.
+variant Number {
+
+    Small: u8 = 1;
+    Medium: u32 = 2;
+    Large: u128 = 3;
+}
