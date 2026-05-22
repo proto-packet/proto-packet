@@ -1,7 +1,16 @@
 /// A variant with floating point slice cases.
 #[derive(
-    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+    Clone,
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Debug,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
+#[serde(crate = "proto_packet::serde")]
 pub enum FloatCases {
     /// An `f32` slice case.
     One(Vec<proto_packet::types::Float32>),

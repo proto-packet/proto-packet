@@ -10,8 +10,18 @@
 /// }
 /// ```
 #[derive(
-    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+    Copy,
+    Clone,
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Debug,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
+#[serde(crate = "proto_packet::serde")]
 pub struct FloatFields {
     one: proto_packet::types::Float32,
     two: proto_packet::types::Float64,

@@ -12,4 +12,3 @@ license = "MIT"
 [dependencies]
 proto-packet = { path = "../../dep/dep-rust" }
 axum = "0.8"
-serde = { version = "1", features = ["derive"] }

@@ -1,7 +1,16 @@
 /// A variant with signed integer slice cases.
 #[derive(
-    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+    Clone,
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Debug,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
+#[serde(crate = "proto_packet::serde")]
 pub enum SignedIntCases {
     /// An `i8` slice case.
     One(Vec<i8>),

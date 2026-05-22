@@ -10,8 +10,17 @@
 /// }
 /// ```
 #[derive(
-    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+    Clone,
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Debug,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
+#[serde(crate = "proto_packet::serde")]
 pub struct TimeFields {
     one: Vec<i64>,
     two: Vec<proto_packet::types::Date>,

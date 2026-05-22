@@ -27,9 +27,10 @@
     Hash,
     Debug,
     Default,
-    serde::Serialize,
-    serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
+#[serde(crate = "proto_packet::serde")]
 pub struct UnsignedIntFields {
     one: Option<Vec<u8>>,
     two: Option<Vec<u16>>,

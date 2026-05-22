@@ -18,9 +18,10 @@
     Hash,
     Debug,
     Default,
-    serde::Serialize,
-    serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
+#[serde(crate = "proto_packet::serde")]
 pub struct FloatFields {
     one: Option<Vec<proto_packet::types::Float32>>,
     two: Option<Vec<proto_packet::types::Float64>>,

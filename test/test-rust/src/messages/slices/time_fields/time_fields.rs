@@ -18,9 +18,10 @@
     Hash,
     Debug,
     Default,
-    serde::Serialize,
-    serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
+#[serde(crate = "proto_packet::serde")]
 pub struct TimeFields {
     one: Option<Vec<i64>>,
     two: Option<Vec<proto_packet::types::Date>>,

@@ -21,7 +21,8 @@ impl GenRust<'_> {
         if is_default {
             result.add_derive("Default");
         }
-        result.add_derive("serde::Serialize");
-        result.add_derive("serde::Deserialize");
+        result.add_derive("proto_packet::serde::Serialize");
+        result.add_derive("proto_packet::serde::Deserialize");
+        result.add_attribute("serde(crate = \"proto_packet::serde\")");
     }
 }
