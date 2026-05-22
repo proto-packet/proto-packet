@@ -6,6 +6,7 @@ use proto_packet_tree::{QualifiedName, TypeTag};
 pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, ValidateError> {
     match tree {
         TypeTagTree::Primitive(primitive) => Ok(TypeTag::Primitive(*primitive)),
+        TypeTagTree::Special(special) => Ok(TypeTag::Special(*special)),
         TypeTagTree::Named(span) => {
             let text: &str = span.text(source);
             let name: QualifiedName =

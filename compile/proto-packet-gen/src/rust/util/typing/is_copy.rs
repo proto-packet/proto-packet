@@ -8,6 +8,7 @@ impl GenRust<'_> {
     pub fn is_copy(&self, tag: &impl WithTypeTag) -> bool {
         match tag.type_tag() {
             TypeTag::Primitive(_primitive) => true,
+            TypeTag::Special(_special) => true,
             TypeTag::Named(name) => self.is_copy_named(name.to_ref()),
         }
     }

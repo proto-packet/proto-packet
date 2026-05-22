@@ -20,7 +20,7 @@ impl FloatFields {
 
     /// Creates a new [FloatFields].
     pub const fn new(one: f32, two: f64) -> Self {
-        Self { one: one.into(), two: two.into() }
+        Self { one: proto_packet::types::Float32::new(one), two: proto_packet::types::Float64::new(two) }
     }
 
     /// Creates a new [FloatFields].

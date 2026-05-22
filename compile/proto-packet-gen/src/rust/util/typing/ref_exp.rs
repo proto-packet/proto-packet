@@ -11,7 +11,7 @@ impl GenRust<'_> {
         F: WithFieldName + WithTypeTag,
     {
         match field.type_tag() {
-            TypeTag::Primitive(_) => {
+            TypeTag::Primitive(_) | TypeTag::Special(_) => {
                 let name: String = self.field_name(field);
                 self.into_expression(field, is_optional, &format!("self.{name}"))
             }

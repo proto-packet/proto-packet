@@ -34,6 +34,7 @@ impl TypeLinker<'_> {
     pub(in crate::type_linker) fn link_type_tag(self, tag: &TypeTag) -> Result<TypeTag, LinkError> {
         match tag {
             TypeTag::Primitive(primitive) => Ok(TypeTag::Primitive(*primitive)),
+            TypeTag::Special(special) => Ok(TypeTag::Special(*special)),
             TypeTag::Named(name) => Ok(TypeTag::Named(self.resolver.resolve(name.to_ref())?)),
         }
     }

@@ -52,3 +52,10 @@ struct FloatFields {
     // An `f64` field.
     two: f64;
 }
+
+// A struct with special fields.
+struct SpecialFields {
+
+    // A `uuid` field.
+    one: uuid;
+}

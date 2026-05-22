@@ -1,4 +1,4 @@
-use crate::{PrimitiveType, QualifiedName, WithTypeTag};
+use crate::{PrimitiveType, QualifiedName, SpecialType, WithTypeTag};
 use std::fmt::{Debug, Display, Formatter};
 
 /// A type tag.
@@ -7,6 +7,9 @@ pub enum TypeTag {
     /// A primitive type.
     Primitive(PrimitiveType),
 
+    /// A special type.
+    Special(SpecialType),
+
     /// A named type.
     Named(QualifiedName),
 }
@@ -14,6 +17,12 @@ pub enum TypeTag {
 impl From<PrimitiveType> for TypeTag {
     fn from(primitive: PrimitiveType) -> Self {
         Self::Primitive(primitive)
+    }
+}
+
+impl From<SpecialType> for TypeTag {
+    fn from(special: SpecialType) -> Self {
+        Self::Special(special)
     }
 }
 
@@ -39,6 +48,7 @@ impl Display for TypeTag {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Primitive(primitive) => write!(f, "{}", primitive),
+            Self::Special(special) => write!(f, "{}", special),
             Self::Named(name) => write!(f, "{}", name),
         }
     }

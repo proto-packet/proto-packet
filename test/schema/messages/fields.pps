@@ -52,3 +52,10 @@ message FloatFields {
     // An `f64` field.
     two: f64 = 2;
 }
+
+// A message with special fields.
+message SpecialFields {
+
+    // A `uuid` field.
+    one: uuid = 1;
+}

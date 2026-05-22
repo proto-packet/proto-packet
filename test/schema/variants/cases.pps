@@ -52,3 +52,10 @@ variant FloatCases {
     // An `f64` case.
     Two: f64 = 2;
 }
+
+// A variant with special cases.
+variant SpecialCases {
+
+    // A `uuid` case.
+    One: uuid = 1;
+}
