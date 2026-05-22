@@ -18,7 +18,9 @@
 ///     five: i128;
 /// }
 /// ```
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub struct SignedIntFields {
     one: i8,
     two: i16,

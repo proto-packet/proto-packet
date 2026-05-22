@@ -1,5 +1,7 @@
 /// A variant with unsigned integer cases.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub enum UnsignedIntCases {
     /// A `u8` case.
     One(u8),

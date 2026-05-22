@@ -9,7 +9,9 @@
 ///     two: []string;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub struct SpecialFields {
     one: Vec<proto_packet::types::Uuid>,
     two: Vec<String>,

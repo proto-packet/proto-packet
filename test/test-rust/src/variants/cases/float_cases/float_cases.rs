@@ -1,5 +1,7 @@
 /// A variant with floating point cases.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub enum FloatCases {
     /// An `f32` case.
     One(proto_packet::types::Float32),

@@ -1,5 +1,7 @@
 /// A variant with unsigned integer slice cases.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub enum UnsignedIntCases {
     /// A `u8` slice case.
     One(Vec<u8>),

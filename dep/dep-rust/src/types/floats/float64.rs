@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
@@ -10,7 +11,8 @@ use std::hash::{Hash, Hasher};
 /// 1. All NaN bit patterns collapse to a single canonical NaN.
 /// 2. Negative zero (`-0.0`) collapses to positive zero (`+0.0`).
 #[repr(transparent)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct Float64 {
     value: f64,
 }

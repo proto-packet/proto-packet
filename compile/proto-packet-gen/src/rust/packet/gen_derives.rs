@@ -21,5 +21,7 @@ impl GenRust<'_> {
         if is_default {
             result.add_derive("Default");
         }
+        result.add_derive("serde::Serialize");
+        result.add_derive("serde::Deserialize");
     }
 }

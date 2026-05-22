@@ -1,5 +1,7 @@
 /// A variant with signed integer slice cases.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub enum SignedIntCases {
     /// An `i8` slice case.
     One(Vec<i8>),

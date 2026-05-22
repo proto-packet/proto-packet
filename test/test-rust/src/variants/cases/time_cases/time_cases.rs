@@ -1,5 +1,7 @@
 /// A variant with time cases.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub enum TimeCases {
     /// A `timestamp` case.
     One(i64),

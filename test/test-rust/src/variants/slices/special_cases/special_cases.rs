@@ -1,5 +1,7 @@
 /// A variant with special slice cases.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub enum SpecialCases {
     /// A `uuid` slice case.
     One(Vec<proto_packet::types::Uuid>),

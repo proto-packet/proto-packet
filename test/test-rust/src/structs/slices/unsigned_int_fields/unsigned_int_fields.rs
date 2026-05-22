@@ -18,7 +18,9 @@
 ///     five: []u128;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub struct UnsignedIntFields {
     one: Vec<u8>,
     two: Vec<u16>,

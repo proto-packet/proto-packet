@@ -9,7 +9,9 @@
 ///     two: []f64;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub struct FloatFields {
     one: Vec<proto_packet::types::Float32>,
     two: Vec<proto_packet::types::Float64>,

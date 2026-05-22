@@ -9,7 +9,9 @@
 ///     two: date;
 /// }
 /// ```
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub struct TimeFields {
     one: i64,
     two: proto_packet::types::Date,

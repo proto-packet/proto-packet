@@ -9,7 +9,9 @@
 ///     two: []date;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub struct TimeFields {
     one: Vec<i64>,
     two: Vec<proto_packet::types::Date>,

@@ -1,5 +1,7 @@
 /// A variant with signed integer cases.
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub enum SignedIntCases {
     /// An `i8` case.
     One(i8),

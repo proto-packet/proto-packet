@@ -6,7 +6,9 @@
 ///     one: bool;
 /// }
 /// ```
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, serde::Serialize, serde::Deserialize,
+)]
 pub struct BooleanField {
     one: bool,
 }
