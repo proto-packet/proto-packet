@@ -53,6 +53,10 @@ impl GenRust<'_> {
                 TimeType::Date => RustType::from("proto_packet::types::Date"),
             },
             TypeTag::Named(name) => RustType::Named(self.rust_name(name.to_ref())),
+            TypeTag::Slice { base } => {
+                let base_type: RustType = self.field_type_direct(&**base, true);
+                RustType::from("Vec").with_generic(base_type)
+            }
         }
     }
 }

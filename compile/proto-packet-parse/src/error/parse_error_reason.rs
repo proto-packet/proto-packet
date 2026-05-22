@@ -12,6 +12,8 @@ pub enum ParseErrorReason {
     ExpectedSemicolon,
     /// Expected `=`.
     ExpectedEqual,
+    /// Expected `]`.
+    ExpectedCloseBracket,
 
     // Type tags
     /// An unrecognized type tag.
@@ -50,6 +52,7 @@ impl ParseErrorReason {
             Self::ExpectedColon => "expected a `:`",
             Self::ExpectedSemicolon => "expected a `;`",
             Self::ExpectedEqual => "expected a `=`",
+            Self::ExpectedCloseBracket => "expected a `]`",
             Self::UnrecognizedTypeTag => "unrecognized type tag",
             Self::ExpectedTypeDeclaration => "expected a type declaration",
             Self::ExpectedTypeDecName => "expected the type's name",
@@ -70,6 +73,7 @@ impl ParseErrorReason {
             Self::ExpectedColon => "EXPECTED_COLON",
             Self::ExpectedSemicolon => "EXPECTED_SEMI",
             Self::ExpectedEqual => "EXPECTED_EQUAL",
+            Self::ExpectedCloseBracket => "EXPECTED_CLOSE_BRACKET",
             Self::UnrecognizedTypeTag => "UNRECOGNIZED_TYPE_TAG",
             Self::ExpectedTypeDeclaration => "EXPECTED_TYPE_DEC",
             Self::ExpectedTypeDecName => "EXPECTED_TYPE_DEC_NAME",

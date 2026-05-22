@@ -17,11 +17,24 @@ pub enum TypeTagTree {
 
     /// A named type referenced by the span of its identifier.
     Named(Span),
+
+    /// A slice type wrapping another type tag (parsed `[]T`).
+    Slice { base: Box<TypeTagTree> },
 }
 
 /// Parses a type tag.
 pub fn parse_type_tag(p: &mut Parser<Kind>) -> Result<TypeTagTree, ParseError> {
     let span: Span = p.peek().span();
+    if p.check(Kind::LBracket) {
+        p.advance();
+        p.expect(Kind::RBracket).ok_or_else(|| {
+            ParseError::new(p.peek().span(), ParseErrorReason::ExpectedCloseBracket)
+        })?;
+        let base: TypeTagTree = parse_type_tag(p)?;
+        return Ok(TypeTagTree::Slice {
+            base: Box::new(base),
+        });
+    }
     if p.check(Kind::Ident) {
         let text: &str = p.text(span);
         if let Ok(primitive) = text.parse::<PrimitiveType>() {

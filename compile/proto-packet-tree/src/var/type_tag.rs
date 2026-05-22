@@ -15,6 +15,9 @@ pub enum TypeTag {
 
     /// A named type.
     Named(QualifiedName),
+
+    /// A slice type.
+    Slice { base: Box<TypeTag> },
 }
 
 impl From<PrimitiveType> for TypeTag {
@@ -41,6 +44,17 @@ impl From<QualifiedName> for TypeTag {
     }
 }
 
+impl TypeTag {
+    //! Slices
+
+    /// Converts the type tag to a slice of itself.
+    pub fn to_slice(self) -> Self {
+        Self::Slice {
+            base: Box::new(self),
+        }
+    }
+}
+
 impl WithTypeTag for TypeTag {
     fn type_tag(&self) -> &TypeTag {
         self
@@ -60,6 +74,7 @@ impl Display for TypeTag {
             Self::Special(special) => write!(f, "{}", special),
             Self::Time(time) => write!(f, "{}", time),
             Self::Named(name) => write!(f, "{}", name),
+            Self::Slice { base } => write!(f, "[]{}", base),
         }
     }
 }

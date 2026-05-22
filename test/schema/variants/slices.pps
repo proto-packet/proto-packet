@@ -1,0 +1,74 @@
+// A variant with a single boolean slice case.
+variant BooleanCase {
+
+    // A `bool` slice case.
+    One: []bool = 1;
+}
+
+// A variant with unsigned integer slice cases.
+variant UnsignedIntCases {
+
+    // A `u8` slice case.
+    One: []u8 = 1;
+
+    // A `u16` slice case.
+    Two: []u16 = 2;
+
+    // A `u32` slice case.
+    Three: []u32 = 3;
+
+    // A `u64` slice case.
+    Four: []u64 = 4;
+
+    // A `u128` slice case.
+    Five: []u128 = 5;
+}
+
+// A variant with signed integer slice cases.
+variant SignedIntCases {
+
+    // An `i8` slice case.
+    One: []i8 = 1;
+
+    // An `i16` slice case.
+    Two: []i16 = 2;
+
+    // An `i32` slice case.
+    Three: []i32 = 3;
+
+    // An `i64` slice case.
+    Four: []i64 = 4;
+
+    // An `i128` slice case.
+    Five: []i128 = 5;
+}
+
+// A variant with floating point slice cases.
+variant FloatCases {
+
+    // An `f32` slice case.
+    One: []f32 = 1;
+
+    // An `f64` slice case.
+    Two: []f64 = 2;
+}
+
+// A variant with special slice cases.
+variant SpecialCases {
+
+    // A `uuid` slice case.
+    One: []uuid = 1;
+
+    // A `string` slice case.
+    Two: []string = 2;
+}
+
+// A variant with time slice cases.
+variant TimeCases {
+
+    // A `timestamp` slice case.
+    One: []timestamp = 1;
+
+    // A `date` slice case.
+    Two: []date = 2;
+}

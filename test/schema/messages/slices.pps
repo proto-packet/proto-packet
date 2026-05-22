@@ -1,0 +1,74 @@
+// A message with a single boolean slice field.
+message BooleanField {
+
+    // A `bool` slice field.
+    one: []bool = 1;
+}
+
+// A message with unsigned integer slice fields.
+message UnsignedIntFields {
+
+    // A `u8` slice field.
+    one: []u8 = 1;
+
+    // A `u16` slice field.
+    two: []u16 = 2;
+
+    // A `u32` slice field.
+    three: []u32 = 3;
+
+    // A `u64` slice field.
+    four: []u64 = 4;
+
+    // A `u128` slice field.
+    five: []u128 = 5;
+}
+
+// A message with signed integer slice fields.
+message SignedIntFields {
+
+    // An `i8` slice field.
+    one: []i8 = 1;
+
+    // An `i16` slice field.
+    two: []i16 = 2;
+
+    // An `i32` slice field.
+    three: []i32 = 3;
+
+    // An `i64` slice field.
+    four: []i64 = 4;
+
+    // An `i128` slice field.
+    five: []i128 = 5;
+}
+
+// A message with floating point slice fields.
+message FloatFields {
+
+    // An `f32` slice field.
+    one: []f32 = 1;
+
+    // An `f64` slice field.
+    two: []f64 = 2;
+}
+
+// A message with special slice fields.
+message SpecialFields {
+
+    // A `uuid` slice field.
+    one: []uuid = 1;
+
+    // A `string` slice field.
+    two: []string = 2;
+}
+
+// A message with time slice fields.
+message TimeFields {
+
+    // A `timestamp` slice field.
+    one: []timestamp = 1;
+
+    // A `date` slice field.
+    two: []date = 2;
+}

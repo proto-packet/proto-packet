@@ -1,0 +1,74 @@
+// A struct with a single boolean slice field.
+struct BooleanField {
+
+    // A `bool` slice field.
+    one: []bool;
+}
+
+// A struct with unsigned integer slice fields.
+struct UnsignedIntFields {
+
+    // A `u8` slice field.
+    one: []u8;
+
+    // A `u16` slice field.
+    two: []u16;
+
+    // A `u32` slice field.
+    three: []u32;
+
+    // A `u64` slice field.
+    four: []u64;
+
+    // A `u128` slice field.
+    five: []u128;
+}
+
+// A struct with signed integer slice fields.
+struct SignedIntFields {
+
+    // An `i8` slice field.
+    one: []i8;
+
+    // An `i16` slice field.
+    two: []i16;
+
+    // An `i32` slice field.
+    three: []i32;
+
+    // An `i64` slice field.
+    four: []i64;
+
+    // An `i128` slice field.
+    five: []i128;
+}
+
+// A struct with floating point slice fields.
+struct FloatFields {
+
+    // An `f32` slice field.
+    one: []f32;
+
+    // An `f64` slice field.
+    two: []f64;
+}
+
+// A struct with special slice fields.
+struct SpecialFields {
+
+    // A `uuid` slice field.
+    one: []uuid;
+
+    // A `string` slice field.
+    two: []string;
+}
+
+// A struct with time slice fields.
+struct TimeFields {
+
+    // A `timestamp` slice field.
+    one: []timestamp;
+
+    // A `date` slice field.
+    two: []date;
+}

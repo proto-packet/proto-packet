@@ -37,6 +37,7 @@ impl TypeLinker<'_> {
             TypeTag::Special(special) => Ok(TypeTag::Special(*special)),
             TypeTag::Time(time) => Ok(TypeTag::Time(*time)),
             TypeTag::Named(name) => Ok(TypeTag::Named(self.resolver.resolve(name.to_ref())?)),
+            TypeTag::Slice { base } => Ok(self.link_type_tag(base)?.to_slice()),
         }
     }
 }

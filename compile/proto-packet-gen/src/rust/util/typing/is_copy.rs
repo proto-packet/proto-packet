@@ -14,6 +14,7 @@ impl GenRust<'_> {
             },
             TypeTag::Time(_time) => true,
             TypeTag::Named(name) => self.is_copy_named(name.to_ref()),
+            TypeTag::Slice { .. } => false,
         }
     }
 

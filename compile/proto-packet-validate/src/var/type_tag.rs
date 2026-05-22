@@ -17,5 +17,9 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
                 })?;
             Ok(TypeTag::Named(name))
         }
+        TypeTagTree::Slice { base } => {
+            let base: TypeTag = validate_type_tag(base, source)?;
+            Ok(base.to_slice())
+        }
     }
 }
