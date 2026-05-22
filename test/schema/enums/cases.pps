@@ -1,0 +1,21 @@
+// A color of the rainbow.
+enum Color {
+
+    // The color red.
+    Red = 1;
+
+    // The color green.
+    Green = 2;
+
+    // The color blue.
+    Blue = 3;
+}
+
+// A cardinal direction.
+enum Direction {
+
+    North = 1;
+    South = 2;
+    East = 3;
+    West = 4;
+}

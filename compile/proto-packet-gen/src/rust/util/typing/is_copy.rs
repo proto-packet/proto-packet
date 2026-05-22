@@ -21,7 +21,7 @@ impl GenRust<'_> {
                         TypeDec::Struct(s) => self.is_copy_struct(s),
                         TypeDec::Message(_) => false,
                         TypeDec::Variant(_) => todo!(),
-                        TypeDec::Enum(_) => todo!(),
+                        TypeDec::Enum(_) => true,
                     }
                 } else {
                     unreachable!(
