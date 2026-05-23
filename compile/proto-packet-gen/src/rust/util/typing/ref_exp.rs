@@ -1,5 +1,4 @@
 use crate::rust::GenRust;
-use code_gen::rust::{Reference, RustType};
 use proto_packet_tree::{TypeTag, WithFieldName, WithTypeTag};
 
 impl GenRust<'_> {
@@ -19,16 +18,9 @@ impl GenRust<'_> {
                 let name: String = self.field_name(field);
                 format!("self.{name}")
             }
-            TypeTag::Named(name) => {
-                // todo -- named copy types
-                let rust_name: String = self.rust_name(name.to_ref());
-                let tag: RustType = RustType::from(rust_name).to_ref(Reference::default());
-                if is_optional {
-                    RustType::from("Option").with_generic(tag)
-                } else {
-                    tag
-                }
-                .to_string()
+            TypeTag::Named(_) => {
+                let name: String = self.field_name(field);
+                format!("self.{name}")
             }
         }
     }
