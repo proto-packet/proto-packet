@@ -28,8 +28,8 @@ impl GreetResponse {
 
     /// Gets the field: `greeting`.
     #[must_use]
-    pub fn greeting(&self) -> Option<&String> {
-        self.greeting.as_ref()
+    pub fn greeting(&self) -> Option<&str> {
+        self.greeting.as_deref()
     }
 
     /// Sets the field: `greeting`. Returns the previous value.

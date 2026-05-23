@@ -28,8 +28,8 @@ impl GreetRequest {
 
     /// Gets the field: `name`.
     #[must_use]
-    pub fn name(&self) -> Option<&String> {
-        self.name.as_ref()
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
     }
 
     /// Sets the field: `name`. Returns the previous value.

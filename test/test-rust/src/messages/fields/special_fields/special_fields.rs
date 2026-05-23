@@ -57,8 +57,8 @@ impl SpecialFields {
 
     /// Gets the field: `two`.
     #[must_use]
-    pub fn two(&self) -> Option<&String> {
-        self.two.as_ref()
+    pub fn two(&self) -> Option<&str> {
+        self.two.as_deref()
     }
 
     /// Sets the field: `two`. Returns the previous value.

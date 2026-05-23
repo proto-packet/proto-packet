@@ -71,8 +71,8 @@ impl SpecialFields {
 
     /// Gets the field: `two`.
     #[must_use]
-    pub fn two(&self) -> &String {
-        &self.two
+    pub fn two(&self) -> &str {
+        self.two.as_str()
     }
 
     /// Sets the field: `two`. Returns the previous value.
