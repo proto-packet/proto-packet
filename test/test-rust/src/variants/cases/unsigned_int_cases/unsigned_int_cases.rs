@@ -11,6 +11,7 @@
     proto_packet::serde::Deserialize,
 )]
 #[serde(crate = "proto_packet::serde")]
+#[serde(tag = "var", content = "val")]
 pub enum UnsignedIntCases {
     /// A `u8` case.
     One(u8),

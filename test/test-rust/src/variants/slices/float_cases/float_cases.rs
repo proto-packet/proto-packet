@@ -11,6 +11,7 @@
     proto_packet::serde::Deserialize,
 )]
 #[serde(crate = "proto_packet::serde")]
+#[serde(tag = "var", content = "val")]
 pub enum FloatCases {
     /// An `f32` slice case.
     One(Vec<proto_packet::types::Float32>),

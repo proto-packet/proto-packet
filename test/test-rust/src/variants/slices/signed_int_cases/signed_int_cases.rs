@@ -11,6 +11,7 @@
     proto_packet::serde::Deserialize,
 )]
 #[serde(crate = "proto_packet::serde")]
+#[serde(tag = "var", content = "val")]
 pub enum SignedIntCases {
     /// An `i8` slice case.
     One(Vec<i8>),

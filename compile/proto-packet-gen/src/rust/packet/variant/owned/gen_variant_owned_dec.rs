@@ -1,7 +1,7 @@
 use crate::rust::GenRust;
 use code_gen::rust::Access::Public;
 use code_gen::rust::{
-    Enum as RustEnum, EnumCase as RustEnumCase, EnumFields, RustType, WithAccess,
+    Enum as RustEnum, EnumCase as RustEnumCase, EnumFields, RustType, WithAccess, WithAttributes,
     WithComments as RustWithComments,
 };
 use proto_packet_tree::{Variant, WithComments};
@@ -15,6 +15,7 @@ impl GenRust<'_> {
             result.add_comment(comment);
         }
         self.gen_derives(false, false, &mut result);
+        result.add_attribute("serde(tag = \"var\", content = \"val\")");
         result.set_access(Public);
         for case in v.cases() {
             let tag: RustType = self.field_type(case, false, true);
