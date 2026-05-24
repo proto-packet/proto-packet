@@ -49,13 +49,20 @@ impl SignedIntFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Option<i8>) -> Option<i8> {
+    pub fn set_one<F>(&mut self, one: F) -> Option<i8>
+    where
+        F: Into<Option<i8>>,
+    {
+        let one: Option<i8> = one.into();
         std::mem::replace(&mut self.one, one)
     }
 
     /// Sets the field: `one`. Returns the struct itself.
     #[must_use]
-    pub fn with_one(mut self, one: Option<i8>) -> Self {
+    pub fn with_one<F>(mut self, one: F) -> Self
+    where
+        F: Into<Option<i8>>,
+    {
         self.set_one(one);
         self
     }
@@ -71,13 +78,20 @@ impl SignedIntFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(&mut self, two: Option<i16>) -> Option<i16> {
+    pub fn set_two<F>(&mut self, two: F) -> Option<i16>
+    where
+        F: Into<Option<i16>>,
+    {
+        let two: Option<i16> = two.into();
         std::mem::replace(&mut self.two, two)
     }
 
     /// Sets the field: `two`. Returns the struct itself.
     #[must_use]
-    pub fn with_two(mut self, two: Option<i16>) -> Self {
+    pub fn with_two<F>(mut self, two: F) -> Self
+    where
+        F: Into<Option<i16>>,
+    {
         self.set_two(two);
         self
     }
@@ -93,13 +107,20 @@ impl SignedIntFields {
     }
 
     /// Sets the field: `three`. Returns the previous value.
-    pub fn set_three(&mut self, three: Option<i32>) -> Option<i32> {
+    pub fn set_three<F>(&mut self, three: F) -> Option<i32>
+    where
+        F: Into<Option<i32>>,
+    {
+        let three: Option<i32> = three.into();
         std::mem::replace(&mut self.three, three)
     }
 
     /// Sets the field: `three`. Returns the struct itself.
     #[must_use]
-    pub fn with_three(mut self, three: Option<i32>) -> Self {
+    pub fn with_three<F>(mut self, three: F) -> Self
+    where
+        F: Into<Option<i32>>,
+    {
         self.set_three(three);
         self
     }
@@ -115,13 +136,20 @@ impl SignedIntFields {
     }
 
     /// Sets the field: `four`. Returns the previous value.
-    pub fn set_four(&mut self, four: Option<i64>) -> Option<i64> {
+    pub fn set_four<F>(&mut self, four: F) -> Option<i64>
+    where
+        F: Into<Option<i64>>,
+    {
+        let four: Option<i64> = four.into();
         std::mem::replace(&mut self.four, four)
     }
 
     /// Sets the field: `four`. Returns the struct itself.
     #[must_use]
-    pub fn with_four(mut self, four: Option<i64>) -> Self {
+    pub fn with_four<F>(mut self, four: F) -> Self
+    where
+        F: Into<Option<i64>>,
+    {
         self.set_four(four);
         self
     }
@@ -137,13 +165,20 @@ impl SignedIntFields {
     }
 
     /// Sets the field: `five`. Returns the previous value.
-    pub fn set_five(&mut self, five: Option<i128>) -> Option<i128> {
+    pub fn set_five<F>(&mut self, five: F) -> Option<i128>
+    where
+        F: Into<Option<i128>>,
+    {
+        let five: Option<i128> = five.into();
         std::mem::replace(&mut self.five, five)
     }
 
     /// Sets the field: `five`. Returns the struct itself.
     #[must_use]
-    pub fn with_five(mut self, five: Option<i128>) -> Self {
+    pub fn with_five<F>(mut self, five: F) -> Self
+    where
+        F: Into<Option<i128>>,
+    {
         self.set_five(five);
         self
     }

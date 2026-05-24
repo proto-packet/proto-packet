@@ -37,13 +37,20 @@ impl FloatFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Option<f32>) -> Option<f32> {
+    pub fn set_one<F>(&mut self, one: F) -> Option<f32>
+    where
+        F: Into<Option<f32>>,
+    {
+        let one: Option<f32> = one.into();
         std::mem::replace(&mut self.one, one.map(Into::into)).map(Into::into)
     }
 
     /// Sets the field: `one`. Returns the struct itself.
     #[must_use]
-    pub fn with_one(mut self, one: Option<f32>) -> Self {
+    pub fn with_one<F>(mut self, one: F) -> Self
+    where
+        F: Into<Option<f32>>,
+    {
         self.set_one(one);
         self
     }
@@ -59,13 +66,20 @@ impl FloatFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(&mut self, two: Option<f64>) -> Option<f64> {
+    pub fn set_two<F>(&mut self, two: F) -> Option<f64>
+    where
+        F: Into<Option<f64>>,
+    {
+        let two: Option<f64> = two.into();
         std::mem::replace(&mut self.two, two.map(Into::into)).map(Into::into)
     }
 
     /// Sets the field: `two`. Returns the struct itself.
     #[must_use]
-    pub fn with_two(mut self, two: Option<f64>) -> Self {
+    pub fn with_two<F>(mut self, two: F) -> Self
+    where
+        F: Into<Option<f64>>,
+    {
         self.set_two(two);
         self
     }

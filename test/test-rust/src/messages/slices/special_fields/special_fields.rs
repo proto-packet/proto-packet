@@ -37,16 +37,20 @@ impl SpecialFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(
-        &mut self,
-        one: Option<Vec<proto_packet::types::Uuid>>,
-    ) -> Option<Vec<proto_packet::types::Uuid>> {
+    pub fn set_one<F>(&mut self, one: F) -> Option<Vec<proto_packet::types::Uuid>>
+    where
+        F: Into<Option<Vec<proto_packet::types::Uuid>>>,
+    {
+        let one: Option<Vec<proto_packet::types::Uuid>> = one.into();
         std::mem::replace(&mut self.one, one)
     }
 
     /// Sets the field: `one`. Returns the struct itself.
     #[must_use]
-    pub fn with_one(mut self, one: Option<Vec<proto_packet::types::Uuid>>) -> Self {
+    pub fn with_one<F>(mut self, one: F) -> Self
+    where
+        F: Into<Option<Vec<proto_packet::types::Uuid>>>,
+    {
         self.set_one(one);
         self
     }
@@ -62,13 +66,20 @@ impl SpecialFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(&mut self, two: Option<Vec<String>>) -> Option<Vec<String>> {
+    pub fn set_two<F>(&mut self, two: F) -> Option<Vec<String>>
+    where
+        F: Into<Option<Vec<String>>>,
+    {
+        let two: Option<Vec<String>> = two.into();
         std::mem::replace(&mut self.two, two)
     }
 
     /// Sets the field: `two`. Returns the struct itself.
     #[must_use]
-    pub fn with_two(mut self, two: Option<Vec<String>>) -> Self {
+    pub fn with_two<F>(mut self, two: F) -> Self
+    where
+        F: Into<Option<Vec<String>>>,
+    {
         self.set_two(two);
         self
     }

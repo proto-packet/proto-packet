@@ -37,13 +37,20 @@ impl TimeFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Option<i64>) -> Option<i64> {
+    pub fn set_one<F>(&mut self, one: F) -> Option<i64>
+    where
+        F: Into<Option<i64>>,
+    {
+        let one: Option<i64> = one.into();
         std::mem::replace(&mut self.one, one)
     }
 
     /// Sets the field: `one`. Returns the struct itself.
     #[must_use]
-    pub fn with_one(mut self, one: Option<i64>) -> Self {
+    pub fn with_one<F>(mut self, one: F) -> Self
+    where
+        F: Into<Option<i64>>,
+    {
         self.set_one(one);
         self
     }
@@ -59,16 +66,20 @@ impl TimeFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(
-        &mut self,
-        two: Option<proto_packet::types::Date>,
-    ) -> Option<proto_packet::types::Date> {
+    pub fn set_two<F>(&mut self, two: F) -> Option<proto_packet::types::Date>
+    where
+        F: Into<Option<proto_packet::types::Date>>,
+    {
+        let two: Option<proto_packet::types::Date> = two.into();
         std::mem::replace(&mut self.two, two)
     }
 
     /// Sets the field: `two`. Returns the struct itself.
     #[must_use]
-    pub fn with_two(mut self, two: Option<proto_packet::types::Date>) -> Self {
+    pub fn with_two<F>(mut self, two: F) -> Self
+    where
+        F: Into<Option<proto_packet::types::Date>>,
+    {
         self.set_two(two);
         self
     }

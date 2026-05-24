@@ -37,13 +37,20 @@ impl TimeFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Option<Vec<i64>>) -> Option<Vec<i64>> {
+    pub fn set_one<F>(&mut self, one: F) -> Option<Vec<i64>>
+    where
+        F: Into<Option<Vec<i64>>>,
+    {
+        let one: Option<Vec<i64>> = one.into();
         std::mem::replace(&mut self.one, one)
     }
 
     /// Sets the field: `one`. Returns the struct itself.
     #[must_use]
-    pub fn with_one(mut self, one: Option<Vec<i64>>) -> Self {
+    pub fn with_one<F>(mut self, one: F) -> Self
+    where
+        F: Into<Option<Vec<i64>>>,
+    {
         self.set_one(one);
         self
     }
@@ -59,16 +66,20 @@ impl TimeFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(
-        &mut self,
-        two: Option<Vec<proto_packet::types::Date>>,
-    ) -> Option<Vec<proto_packet::types::Date>> {
+    pub fn set_two<F>(&mut self, two: F) -> Option<Vec<proto_packet::types::Date>>
+    where
+        F: Into<Option<Vec<proto_packet::types::Date>>>,
+    {
+        let two: Option<Vec<proto_packet::types::Date>> = two.into();
         std::mem::replace(&mut self.two, two)
     }
 
     /// Sets the field: `two`. Returns the struct itself.
     #[must_use]
-    pub fn with_two(mut self, two: Option<Vec<proto_packet::types::Date>>) -> Self {
+    pub fn with_two<F>(mut self, two: F) -> Self
+    where
+        F: Into<Option<Vec<proto_packet::types::Date>>>,
+    {
         self.set_two(two);
         self
     }

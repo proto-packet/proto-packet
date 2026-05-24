@@ -49,13 +49,20 @@ impl UnsignedIntFields {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Option<Vec<u8>>) -> Option<Vec<u8>> {
+    pub fn set_one<F>(&mut self, one: F) -> Option<Vec<u8>>
+    where
+        F: Into<Option<Vec<u8>>>,
+    {
+        let one: Option<Vec<u8>> = one.into();
         std::mem::replace(&mut self.one, one)
     }
 
     /// Sets the field: `one`. Returns the struct itself.
     #[must_use]
-    pub fn with_one(mut self, one: Option<Vec<u8>>) -> Self {
+    pub fn with_one<F>(mut self, one: F) -> Self
+    where
+        F: Into<Option<Vec<u8>>>,
+    {
         self.set_one(one);
         self
     }
@@ -71,13 +78,20 @@ impl UnsignedIntFields {
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two(&mut self, two: Option<Vec<u16>>) -> Option<Vec<u16>> {
+    pub fn set_two<F>(&mut self, two: F) -> Option<Vec<u16>>
+    where
+        F: Into<Option<Vec<u16>>>,
+    {
+        let two: Option<Vec<u16>> = two.into();
         std::mem::replace(&mut self.two, two)
     }
 
     /// Sets the field: `two`. Returns the struct itself.
     #[must_use]
-    pub fn with_two(mut self, two: Option<Vec<u16>>) -> Self {
+    pub fn with_two<F>(mut self, two: F) -> Self
+    where
+        F: Into<Option<Vec<u16>>>,
+    {
         self.set_two(two);
         self
     }
@@ -93,13 +107,20 @@ impl UnsignedIntFields {
     }
 
     /// Sets the field: `three`. Returns the previous value.
-    pub fn set_three(&mut self, three: Option<Vec<u32>>) -> Option<Vec<u32>> {
+    pub fn set_three<F>(&mut self, three: F) -> Option<Vec<u32>>
+    where
+        F: Into<Option<Vec<u32>>>,
+    {
+        let three: Option<Vec<u32>> = three.into();
         std::mem::replace(&mut self.three, three)
     }
 
     /// Sets the field: `three`. Returns the struct itself.
     #[must_use]
-    pub fn with_three(mut self, three: Option<Vec<u32>>) -> Self {
+    pub fn with_three<F>(mut self, three: F) -> Self
+    where
+        F: Into<Option<Vec<u32>>>,
+    {
         self.set_three(three);
         self
     }
@@ -115,13 +136,20 @@ impl UnsignedIntFields {
     }
 
     /// Sets the field: `four`. Returns the previous value.
-    pub fn set_four(&mut self, four: Option<Vec<u64>>) -> Option<Vec<u64>> {
+    pub fn set_four<F>(&mut self, four: F) -> Option<Vec<u64>>
+    where
+        F: Into<Option<Vec<u64>>>,
+    {
+        let four: Option<Vec<u64>> = four.into();
         std::mem::replace(&mut self.four, four)
     }
 
     /// Sets the field: `four`. Returns the struct itself.
     #[must_use]
-    pub fn with_four(mut self, four: Option<Vec<u64>>) -> Self {
+    pub fn with_four<F>(mut self, four: F) -> Self
+    where
+        F: Into<Option<Vec<u64>>>,
+    {
         self.set_four(four);
         self
     }
@@ -137,13 +165,20 @@ impl UnsignedIntFields {
     }
 
     /// Sets the field: `five`. Returns the previous value.
-    pub fn set_five(&mut self, five: Option<Vec<u128>>) -> Option<Vec<u128>> {
+    pub fn set_five<F>(&mut self, five: F) -> Option<Vec<u128>>
+    where
+        F: Into<Option<Vec<u128>>>,
+    {
+        let five: Option<Vec<u128>> = five.into();
         std::mem::replace(&mut self.five, five)
     }
 
     /// Sets the field: `five`. Returns the struct itself.
     #[must_use]
-    pub fn with_five(mut self, five: Option<Vec<u128>>) -> Self {
+    pub fn with_five<F>(mut self, five: F) -> Self
+    where
+        F: Into<Option<Vec<u128>>>,
+    {
         self.set_five(five);
         self
     }

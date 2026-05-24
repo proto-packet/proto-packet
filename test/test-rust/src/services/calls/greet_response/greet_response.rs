@@ -33,13 +33,20 @@ impl GreetResponse {
     }
 
     /// Sets the field: `greeting`. Returns the previous value.
-    pub fn set_greeting(&mut self, greeting: Option<String>) -> Option<String> {
+    pub fn set_greeting<F>(&mut self, greeting: F) -> Option<String>
+    where
+        F: Into<Option<String>>,
+    {
+        let greeting: Option<String> = greeting.into();
         std::mem::replace(&mut self.greeting, greeting)
     }
 
     /// Sets the field: `greeting`. Returns the struct itself.
     #[must_use]
-    pub fn with_greeting(mut self, greeting: Option<String>) -> Self {
+    pub fn with_greeting<F>(mut self, greeting: F) -> Self
+    where
+        F: Into<Option<String>>,
+    {
         self.set_greeting(greeting);
         self
     }

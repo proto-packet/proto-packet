@@ -33,13 +33,20 @@ impl BooleanField {
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one(&mut self, one: Option<Vec<bool>>) -> Option<Vec<bool>> {
+    pub fn set_one<F>(&mut self, one: F) -> Option<Vec<bool>>
+    where
+        F: Into<Option<Vec<bool>>>,
+    {
+        let one: Option<Vec<bool>> = one.into();
         std::mem::replace(&mut self.one, one)
     }
 
     /// Sets the field: `one`. Returns the struct itself.
     #[must_use]
-    pub fn with_one(mut self, one: Option<Vec<bool>>) -> Self {
+    pub fn with_one<F>(mut self, one: F) -> Self
+    where
+        F: Into<Option<Vec<bool>>>,
+    {
         self.set_one(one);
         self
     }

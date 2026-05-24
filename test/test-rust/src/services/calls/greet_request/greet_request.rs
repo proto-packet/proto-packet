@@ -33,13 +33,20 @@ impl GreetRequest {
     }
 
     /// Sets the field: `name`. Returns the previous value.
-    pub fn set_name(&mut self, name: Option<String>) -> Option<String> {
+    pub fn set_name<F>(&mut self, name: F) -> Option<String>
+    where
+        F: Into<Option<String>>,
+    {
+        let name: Option<String> = name.into();
         std::mem::replace(&mut self.name, name)
     }
 
     /// Sets the field: `name`. Returns the struct itself.
     #[must_use]
-    pub fn with_name(mut self, name: Option<String>) -> Self {
+    pub fn with_name<F>(mut self, name: F) -> Self
+    where
+        F: Into<Option<String>>,
+    {
         self.set_name(name);
         self
     }
