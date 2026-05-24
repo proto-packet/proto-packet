@@ -14,7 +14,7 @@ impl GenRust<'_> {
         let route_prefix: String = format!("/{}.{}", schema_path.as_ref(), s.type_name());
         let mut out: String = String::new();
         out.push_str(&format!(
-            "pub fn router<S>(service: ::std::sync::Arc<S>) -> ::axum::Router\nwhere\n    S: {} + 'static,\n{{\n    ::axum::Router::new()\n",
+            "pub fn router<S>(service: ::std::sync::Arc<S>) -> ::proto_packet::axum::Router\nwhere\n    S: {} + 'static,\n{{\n    ::proto_packet::axum::Router::new()\n",
             trait_name,
         ));
         for call in s.calls() {
@@ -28,7 +28,7 @@ impl GenRust<'_> {
         let name: String = self.call_name(call);
         let request: RustType = self.field_type(call.request(), false, false);
         format!(
-            "        .route(\n            \"{route_prefix}/{name}\",\n            ::axum::routing::post({{\n                let service = service.clone();\n                move |::axum::Json(request): ::axum::Json<{request}>| {{\n                    let service = service.clone();\n                    async move {{ service.{name}(request).await.map(::axum::Json) }}\n                }}\n            }}),\n        )\n"
+            "        .route(\n            \"{route_prefix}/{name}\",\n            ::proto_packet::axum::routing::post({{\n                let service = service.clone();\n                move |::proto_packet::axum::Json(request): ::proto_packet::axum::Json<{request}>| {{\n                    let service = service.clone();\n                    async move {{ service.{name}(request).await.map(::proto_packet::axum::Json) }}\n                }}\n            }}),\n        )\n"
         )
     }
 }

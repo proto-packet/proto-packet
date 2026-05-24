@@ -13,17 +13,19 @@ pub trait Greeter: Send + Sync {
     + '_;
 }
 
-pub fn router<S>(service: ::std::sync::Arc<S>) -> ::axum::Router
+pub fn router<S>(service: ::std::sync::Arc<S>) -> ::proto_packet::axum::Router
 where
     S: Greeter + 'static,
 {
-    ::axum::Router::new().route(
+    ::proto_packet::axum::Router::new().route(
         "/services.calls.Greeter/greet",
-        ::axum::routing::post({
+        ::proto_packet::axum::routing::post({
             let service = service.clone();
-            move |::axum::Json(request): ::axum::Json<crate::services::calls::GreetRequest>| {
+            move |::proto_packet::axum::Json(request): ::proto_packet::axum::Json<
+                crate::services::calls::GreetRequest,
+            >| {
                 let service = service.clone();
-                async move { service.greet(request).await.map(::axum::Json) }
+                async move { service.greet(request).await.map(::proto_packet::axum::Json) }
             }
         }),
     )
