@@ -21,6 +21,7 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct BooleanField {
+    #[serde(skip_serializing_if = "Option::is_none")]
     one: Option<Vec<bool>>,
 }
 

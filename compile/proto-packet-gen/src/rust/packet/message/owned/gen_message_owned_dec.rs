@@ -1,6 +1,8 @@
 use crate::rust::GenRust;
 use code_gen::rust::Access::Public;
-use code_gen::rust::{RustType, Struct as RustStruct, WithAccess, WithStructFields};
+use code_gen::rust::{
+    RustType, Struct as RustStruct, StructField, WithAccess, WithAttributes, WithStructFields,
+};
 use proto_packet::io::WithTagNumber;
 use proto_packet_tree::Message;
 
@@ -24,7 +26,9 @@ impl GenRust<'_> {
         for field in m.fields() {
             let name: String = self.field_name(field);
             let tag: RustType = self.field_type(field, true, true);
-            result.add_field((name, tag));
+            let field: StructField = StructField::from((name, tag))
+                .with_attribute("serde(skip_serializing_if = \"Option::is_none\")");
+            result.add_field(field);
         }
         result
     }

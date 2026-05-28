@@ -24,7 +24,9 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct FloatFields {
+    #[serde(skip_serializing_if = "Option::is_none")]
     one: Option<proto_packet::types::Float32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     two: Option<proto_packet::types::Float64>,
 }
 

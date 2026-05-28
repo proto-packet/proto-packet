@@ -33,10 +33,15 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct UnsignedIntFields {
+    #[serde(skip_serializing_if = "Option::is_none")]
     one: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     two: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     three: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     four: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     five: Option<u128>,
 }
 

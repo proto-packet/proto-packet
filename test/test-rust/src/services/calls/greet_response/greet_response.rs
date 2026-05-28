@@ -21,6 +21,7 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct GreetResponse {
+    #[serde(skip_serializing_if = "Option::is_none")]
     greeting: Option<String>,
 }
 

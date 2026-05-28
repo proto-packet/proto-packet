@@ -24,7 +24,9 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct TimeFields {
+    #[serde(skip_serializing_if = "Option::is_none")]
     one: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     two: Option<proto_packet::types::Date>,
 }
 

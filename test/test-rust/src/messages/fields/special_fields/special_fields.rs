@@ -24,7 +24,9 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct SpecialFields {
+    #[serde(skip_serializing_if = "Option::is_none")]
     one: Option<proto_packet::types::Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     two: Option<String>,
 }
 
