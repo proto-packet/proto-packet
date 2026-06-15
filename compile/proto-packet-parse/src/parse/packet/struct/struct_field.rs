@@ -15,13 +15,13 @@ pub struct StructFieldTree {
 /// Parses a struct field.
 pub fn parse_struct_field(p: &mut Parser<Kind>) -> Result<StructFieldTree, ParseError> {
     let comments: Vec<Span> = p.leading_comments();
-    let is_optional: bool = p.accept(Kind::Optional).is_some();
     let field_name: Span = p
         .expect(Kind::Ident)
         .ok_or_else(|| ParseError::new(p.peek().span(), ParseErrorReason::ExpectedFieldName))?
         .span();
     p.expect(Kind::Colon)
         .ok_or_else(|| ParseError::new(p.peek().span(), ParseErrorReason::ExpectedColon))?;
+    let is_optional: bool = p.accept(Kind::Optional).is_some();
     let type_tag: TypeTagTree = parse_type_tag(p)?;
     p.expect(Kind::Semi)
         .ok_or_else(|| ParseError::new(p.peek().span(), ParseErrorReason::ExpectedSemicolon))?;

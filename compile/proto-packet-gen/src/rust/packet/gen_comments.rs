@@ -70,10 +70,10 @@ impl GenRust<'_> {
         let prefix: &str = if is_optional { "optional " } else { "" };
         let suffix: String = tag_number.map(|n| format!(" = {n}")).unwrap_or_default();
         result.add_comment(format!(
-            " {}{}{}: {}{};",
+            " {}{}: {}{}{};",
             Self::FOUR_SPACES,
-            prefix,
             field.field_name(),
+            prefix,
             field.type_tag(),
             suffix,
         ));
