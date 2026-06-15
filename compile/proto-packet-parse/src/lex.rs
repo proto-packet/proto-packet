@@ -24,6 +24,8 @@ lexer! {
         Service: keyword!("service"),
         Returns: keyword!("returns"),
 
+        Optional: keyword!("optional"),
+
         Ident: ident,
         Integer: digits,
 

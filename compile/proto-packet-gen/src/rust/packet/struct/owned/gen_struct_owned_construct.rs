@@ -21,7 +21,7 @@ impl GenRust<'_> {
         let mut signature: Signature = Signature::from("new").with_result(RustType::from("Self"));
         for field in s.fields() {
             let name: String = self.field_name(field);
-            let tag: RustType = self.field_type(field, false, false);
+            let tag: RustType = self.field_type(field, field.is_optional(), false);
             signature = signature.with_param((name, tag));
         }
         Function::from(signature)
@@ -34,7 +34,8 @@ impl GenRust<'_> {
                     .iter()
                     .map(|field| {
                         let name: String = self.field_name(field);
-                        let stored: String = self.into_expression_const(field, false, &name);
+                        let stored: String =
+                            self.into_expression_const(field, field.is_optional(), &name);
                         if stored == name {
                             name
                         } else {
@@ -51,7 +52,7 @@ impl GenRust<'_> {
         s.fields().iter().enumerate().for_each(|(i, field)| {
             let generic: String = format!("F{}", i + 1);
             let name: String = self.field_name(field);
-            let tag: RustType = self.field_type(field, false, false);
+            let tag: RustType = self.field_type(field, field.is_optional(), false);
             signature.add_generic((generic.clone(), RustType::from("Into").with_generic(tag)));
             signature.add_param((name, generic));
         });

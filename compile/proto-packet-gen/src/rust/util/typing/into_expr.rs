@@ -33,13 +33,17 @@ impl GenRust<'_> {
     ) -> String {
         match (field.type_tag(), is_optional) {
             (TypeTag::Primitive(PrimitiveType::Float32), true) => {
-                format!("{expr}.map(proto_packet::types::Float32::new)")
+                format!(
+                    "match {expr} {{ Some(v) => Some(proto_packet::types::Float32::new(v)), None => None }}"
+                )
             }
             (TypeTag::Primitive(PrimitiveType::Float32), false) => {
                 format!("proto_packet::types::Float32::new({expr})")
             }
             (TypeTag::Primitive(PrimitiveType::Float64), true) => {
-                format!("{expr}.map(proto_packet::types::Float64::new)")
+                format!(
+                    "match {expr} {{ Some(v) => Some(proto_packet::types::Float64::new(v)), None => None }}"
+                )
             }
             (TypeTag::Primitive(PrimitiveType::Float64), false) => {
                 format!("proto_packet::types::Float64::new({expr})")

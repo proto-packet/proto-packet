@@ -7,6 +7,7 @@ use ::lex::parser::Parser;
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct StructFieldTree {
     pub comments: Vec<Span>,
+    pub is_optional: bool,
     pub field_name: Span,
     pub type_tag: TypeTagTree,
 }
@@ -14,6 +15,7 @@ pub struct StructFieldTree {
 /// Parses a struct field.
 pub fn parse_struct_field(p: &mut Parser<Kind>) -> Result<StructFieldTree, ParseError> {
     let comments: Vec<Span> = p.leading_comments();
+    let is_optional: bool = p.accept(Kind::Optional).is_some();
     let field_name: Span = p
         .expect(Kind::Ident)
         .ok_or_else(|| ParseError::new(p.peek().span(), ParseErrorReason::ExpectedFieldName))?
@@ -25,6 +27,7 @@ pub fn parse_struct_field(p: &mut Parser<Kind>) -> Result<StructFieldTree, Parse
         .ok_or_else(|| ParseError::new(p.peek().span(), ParseErrorReason::ExpectedSemicolon))?;
     Ok(StructFieldTree {
         comments,
+        is_optional,
         field_name,
         type_tag,
     })

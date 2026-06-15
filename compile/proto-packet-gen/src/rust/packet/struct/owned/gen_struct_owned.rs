@@ -12,7 +12,7 @@ impl GenRust<'_> {
             .with_statement(self.gen_struct_owned_construct(s));
         for field in s.fields() {
             block.add_empty_line();
-            block.add_statement(self.gen_field_impl(s, field, false))
+            block.add_statement(self.gen_field_impl(s, field, field.is_optional()))
         }
         block
     }

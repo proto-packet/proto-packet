@@ -36,15 +36,21 @@ impl GenRust<'_> {
         self,
         fields: &[F],
         tag_numbers: &[Option<TagNumber>],
+        optional_flags: &[bool],
         result: &mut R,
     ) where
         F: WithComments + WithFieldName + WithTypeTag,
         R: RustWithComments,
     {
         debug_assert_eq!(fields.len(), tag_numbers.len());
-        for (field, tag_number) in fields.iter().zip(tag_numbers.iter().copied()) {
+        debug_assert_eq!(fields.len(), optional_flags.len());
+        for ((field, tag_number), is_optional) in fields
+            .iter()
+            .zip(tag_numbers.iter().copied())
+            .zip(optional_flags.iter().copied())
+        {
             result.add_comment(Self::FOUR_SPACES);
-            self.gen_comments_field(field, tag_number, result);
+            self.gen_comments_field(field, tag_number, is_optional, result);
         }
     }
 
@@ -52,6 +58,7 @@ impl GenRust<'_> {
         self,
         field: &F,
         tag_number: Option<TagNumber>,
+        is_optional: bool,
         result: &mut R,
     ) where
         F: WithComments + WithFieldName + WithTypeTag,
@@ -60,10 +67,12 @@ impl GenRust<'_> {
         for comment in field.comments() {
             result.add_comment(format!(" {}//{}", Self::FOUR_SPACES, comment));
         }
+        let prefix: &str = if is_optional { "optional " } else { "" };
         let suffix: String = tag_number.map(|n| format!(" = {n}")).unwrap_or_default();
         result.add_comment(format!(
-            " {}{}: {}{};",
+            " {}{}{}: {}{};",
             Self::FOUR_SPACES,
+            prefix,
             field.field_name(),
             field.type_tag(),
             suffix,

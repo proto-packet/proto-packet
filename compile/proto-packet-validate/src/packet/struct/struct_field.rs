@@ -15,6 +15,7 @@ pub fn validate_struct_field(
     let type_tag: TypeTag = validate_type_tag(&tree.type_tag, source)?;
 
     let mut field: StructField = StructField::new(field_name, type_tag);
+    field.set_optional(tree.is_optional);
     for comment in &tree.comments {
         field.add_comment(comment.text(source));
     }

@@ -1,6 +1,8 @@
 use crate::rust::GenRust;
 use code_gen::rust::Access::Public;
-use code_gen::rust::{RustType, Struct as RustStruct, WithAccess, WithStructFields};
+use code_gen::rust::{
+    RustType, Struct as RustStruct, StructField, WithAccess, WithAttributes, WithStructFields,
+};
 use proto_packet_tree::Struct;
 
 impl GenRust<'_> {
@@ -12,6 +14,10 @@ impl GenRust<'_> {
             self.gen_comments_fields(
                 s.fields(),
                 &s.fields().iter().map(|_| None).collect::<Vec<_>>(),
+                &s.fields()
+                    .iter()
+                    .map(|f| f.is_optional())
+                    .collect::<Vec<_>>(),
                 result,
             )
         });
@@ -19,8 +25,14 @@ impl GenRust<'_> {
         result.set_access(Public);
         for field in s.fields() {
             let name: String = self.field_name(field);
-            let tag: RustType = self.field_type(field, false, true);
-            result.add_field((name, tag));
+            let tag: RustType = self.field_type(field, field.is_optional(), true);
+            if field.is_optional() {
+                let field: StructField = StructField::from((name, tag))
+                    .with_attribute("serde(skip_serializing_if = \"Option::is_none\")");
+                result.add_field(field);
+            } else {
+                result.add_field((name, tag));
+            }
         }
         result
     }

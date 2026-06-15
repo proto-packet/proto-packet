@@ -26,6 +26,7 @@ impl TypeLinker<'_> {
     fn link_struct_field(self, field: &StructField) -> Result<StructField, LinkError> {
         let type_tag: TypeTag = self.link_type_tag(field.type_tag())?;
         let mut linked: StructField = StructField::new(field.field_name(), type_tag);
+        linked.set_optional(field.is_optional());
         for comment in field.comments() {
             linked.add_comment(comment);
         }

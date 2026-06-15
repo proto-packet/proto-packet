@@ -18,6 +18,7 @@ impl GenRust<'_> {
                     .iter()
                     .map(|f| Some(f.tag_number()))
                     .collect::<Vec<_>>(),
+                &m.fields().iter().map(|_| false).collect::<Vec<_>>(),
                 result,
             )
         });
