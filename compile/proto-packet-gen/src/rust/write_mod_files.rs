@@ -58,7 +58,7 @@ impl GenRust<'_> {
     fn pub_mod_block(node: &ModTree) -> Block {
         let mut block: Block = Block::default();
         for (child_name, _) in node.children() {
-            block.add_semi(format!("pub mod {child_name}"));
+            block.add_semi(format!("pub mod {}", Self::mod_ident(child_name)));
         }
         block
     }
@@ -68,11 +68,11 @@ impl GenRust<'_> {
     fn flatten_block(names: &[ModName]) -> Block {
         let mut block: Block = Block::default();
         for name in names {
-            block.add_semi(format!("pub use {name}::*"));
+            block.add_semi(format!("pub use {}::*", Self::mod_ident(name)));
         }
         block.add_empty_line();
         for name in names {
-            block.add_semi(format!("mod {name}"));
+            block.add_semi(format!("mod {}", Self::mod_ident(name)));
         }
         block
     }

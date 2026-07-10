@@ -10,7 +10,7 @@ impl GenRust<'_> {
         s.push_str("crate::");
         if let Some(mod_path) = name.mod_path() {
             for mod_name in mod_path.mod_names() {
-                s.push_str(&mod_name);
+                s.push_str(Self::mod_ident(&mod_name).as_str());
                 s.push_str("::");
             }
         }
