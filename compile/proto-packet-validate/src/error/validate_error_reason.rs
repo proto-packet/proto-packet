@@ -11,6 +11,9 @@ pub enum ValidateErrorReason {
     /// An invalid tag number.
     InvalidTagNumber,
 
+    /// An import without a mod path. (ex: `import Foo;`)
+    ImportWithoutModPath,
+
     /// An error constructing the tree. (ex: a duplicate field name)
     Tree(TreeError),
 }
@@ -25,6 +28,7 @@ impl Display for ValidateErrorReason {
                 TagNumber::MIN,
                 TagNumber::MAX
             ),
+            Self::ImportWithoutModPath => f.write_str("imports must include a mod path"),
             Self::Tree(error) => Display::fmt(error, f),
         }
     }
