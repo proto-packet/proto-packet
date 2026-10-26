@@ -80,8 +80,12 @@ impl ModNode<'_> {
             if !is_snake_case(mod_name) {
                 code.push_str("#[allow(non_snake_case)]\n");
             }
+            let child_file_name: String = file_name(mod_name);
+            if dir.trim_end_matches('/').rsplit('/').next() == Some(child_file_name.as_str()) {
+                code.push_str("#[allow(clippy::module_inception)]\n");
+            }
             code.push_str(&format!("pub mod {};\n", ident(mod_name)));
-            let child_dir: String = format!("{}{}/", dir, file_name(mod_name));
+            let child_dir: String = format!("{}{}/", dir, child_file_name);
             child.generate(project, &child_dir, files)?;
         }
         let path: String = if dir.is_empty() {
