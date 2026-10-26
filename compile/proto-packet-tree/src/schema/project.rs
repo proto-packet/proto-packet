@@ -1,4 +1,4 @@
-use crate::{ModPath, SchemaFile, TreeError};
+use crate::{ModPath, QualifiedNameRef, SchemaFile, TreeError, TypeDec};
 use std::collections::BTreeMap;
 
 /// A project.
@@ -48,5 +48,17 @@ impl Project {
     ) -> Result<Self, TreeError> {
         self.add_schema_file(mod_path, schema_file)?;
         Ok(self)
+    }
+}
+
+impl Project {
+    //! Type Declarations
+
+    /// Gets the optional type dec with the qualified `name`.
+    ///
+    /// Returns `None` if the `name` has no mod path.
+    pub fn type_dec_with_name(&self, name: QualifiedNameRef<'_>) -> Option<&TypeDec> {
+        self.schema_file_with_mod_path(name.mod_path()?)?
+            .type_dec_with_type_name(name.type_name())
     }
 }
