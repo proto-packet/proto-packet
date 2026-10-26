@@ -28,6 +28,15 @@ pub enum TreeError {
         type_name: TypeName,
         tag_number: TagNumber,
     },
+
+    /// An import with the same effective name already exists. (schema files)
+    DuplicateImportName { type_name: TypeName },
+
+    /// A type declaration with the same name already exists. (schema files)
+    DuplicateTypeDecName { type_name: TypeName },
+
+    /// An import effective name matches a type declaration name. (schema files)
+    ImportNameConflictsWithTypeDec { type_name: TypeName },
 }
 
 impl Display for TreeError {
@@ -57,6 +66,19 @@ impl Display for TreeError {
                 "duplicate tag number `{}` in `{}`",
                 tag_number, type_name
             ),
+            Self::DuplicateImportName { type_name } => {
+                write!(f, "duplicate import name `{}`", type_name)
+            }
+            Self::DuplicateTypeDecName { type_name } => {
+                write!(f, "duplicate type name `{}`", type_name)
+            }
+            Self::ImportNameConflictsWithTypeDec { type_name } => {
+                write!(
+                    f,
+                    "import name `{}` conflicts with a type declaration",
+                    type_name
+                )
+            }
         }
     }
 }
