@@ -10,3 +10,10 @@ repository.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+proto-packet-parse = { workspace = true }
+proto-packet-tree = { workspace = true }
+
+custom-string = { workspace = true }
+lex = { workspace = true }
