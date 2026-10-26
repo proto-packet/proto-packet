@@ -9,6 +9,7 @@ pub struct MessageField {
     field_name: FieldName,
     type_tag: TypeTag,
     tag_number: TagNumber,
+    is_boxed: bool,
 }
 
 impl_with_comments!(MessageField);
@@ -27,7 +28,29 @@ impl MessageField {
             field_name: field_name.into(),
             type_tag: type_tag.into(),
             tag_number,
+            is_boxed: false,
         }
+    }
+}
+
+impl MessageField {
+    //! Boxing
+
+    /// Checks if the field is boxed. (it breaks a loop of types)
+    pub fn is_boxed(&self) -> bool {
+        self.is_boxed
+    }
+
+    /// Sets if the field is boxed.
+    pub fn set_boxed(&mut self, is_boxed: bool) {
+        self.is_boxed = is_boxed;
+    }
+
+    /// Sets if the field is boxed.
+    #[must_use]
+    pub fn with_boxed(mut self, is_boxed: bool) -> Self {
+        self.set_boxed(is_boxed);
+        self
     }
 }
 

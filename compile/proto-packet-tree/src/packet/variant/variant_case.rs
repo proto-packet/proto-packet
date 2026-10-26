@@ -9,6 +9,7 @@ pub struct VariantCase {
     case_name: CaseName,
     type_tag: TypeTag,
     tag_number: TagNumber,
+    is_boxed: bool,
 }
 
 impl_with_comments!(VariantCase);
@@ -27,7 +28,29 @@ impl VariantCase {
             case_name: case_name.into(),
             type_tag: type_tag.into(),
             tag_number,
+            is_boxed: false,
         }
+    }
+}
+
+impl VariantCase {
+    //! Boxing
+
+    /// Checks if the case is boxed. (it breaks a loop of types)
+    pub fn is_boxed(&self) -> bool {
+        self.is_boxed
+    }
+
+    /// Sets if the case is boxed.
+    pub fn set_boxed(&mut self, is_boxed: bool) {
+        self.is_boxed = is_boxed;
+    }
+
+    /// Sets if the case is boxed.
+    #[must_use]
+    pub fn with_boxed(mut self, is_boxed: bool) -> Self {
+        self.set_boxed(is_boxed);
+        self
     }
 }
 

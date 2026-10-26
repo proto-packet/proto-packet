@@ -8,6 +8,7 @@ pub struct StructField {
     field_name: FieldName,
     type_tag: TypeTag,
     is_optional: bool,
+    is_boxed: bool,
 }
 
 impl_with_comments!(StructField);
@@ -26,6 +27,7 @@ impl StructField {
             field_name: field_name.into(),
             type_tag: type_tag.into(),
             is_optional: false,
+            is_boxed: false,
         }
     }
 }
@@ -47,6 +49,27 @@ impl StructField {
     #[must_use]
     pub fn with_optional(mut self, is_optional: bool) -> Self {
         self.set_optional(is_optional);
+        self
+    }
+}
+
+impl StructField {
+    //! Boxing
+
+    /// Checks if the field is boxed. (it breaks a loop of types)
+    pub fn is_boxed(&self) -> bool {
+        self.is_boxed
+    }
+
+    /// Sets if the field is boxed.
+    pub fn set_boxed(&mut self, is_boxed: bool) {
+        self.is_boxed = is_boxed;
+    }
+
+    /// Sets if the field is boxed.
+    #[must_use]
+    pub fn with_boxed(mut self, is_boxed: bool) -> Self {
+        self.set_boxed(is_boxed);
         self
     }
 }
