@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter};
 /// An error constructing a semantic schema tree.
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum TreeError {
-    /// A field with the same name already exists. (structs)
+    /// A field with the same name already exists. (structs & messages)
     DuplicateFieldName {
         type_name: TypeName,
         field_name: FieldName,
@@ -17,7 +17,7 @@ pub enum TreeError {
         case_name: CaseName,
     },
 
-    /// A case with the same tag number already exists. (enums)
+    /// A field or case with the same tag number already exists. (messages & enums)
     DuplicateTagNumber {
         type_name: TypeName,
         tag_number: TagNumber,
