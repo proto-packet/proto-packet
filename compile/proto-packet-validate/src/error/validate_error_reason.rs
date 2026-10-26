@@ -18,6 +18,29 @@ pub enum ValidateErrorReason {
     Tree(TreeError),
 }
 
+impl ValidateErrorReason {
+    //! Properties
+
+    /// Gets the error code.
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::InvalidName { .. } => "V_INVALID_NAME",
+            Self::InvalidTagNumber => "V_INVALID_TAG_NUMBER",
+            Self::ImportWithoutModPath => "V_IMPORT_WITHOUT_MOD_PATH",
+            Self::Tree(error) => match error {
+                TreeError::DuplicateFieldName { .. } => "V_DUPLICATE_FIELD_NAME",
+                TreeError::DuplicateCaseName { .. } => "V_DUPLICATE_CASE_NAME",
+                TreeError::DuplicateCallName { .. } => "V_DUPLICATE_CALL_NAME",
+                TreeError::DuplicateTagNumber { .. } => "V_DUPLICATE_TAG_NUMBER",
+                TreeError::DuplicateImportName { .. } => "V_DUPLICATE_IMPORT_NAME",
+                TreeError::DuplicateTypeDecName { .. } => "V_DUPLICATE_TYPE_NAME",
+                TreeError::ImportNameConflictsWithTypeDec { .. } => "V_IMPORT_NAME_CONFLICT",
+                TreeError::DuplicateModPath { .. } => "V_DUPLICATE_MOD_PATH",
+            },
+        }
+    }
+}
+
 impl Display for ValidateErrorReason {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
