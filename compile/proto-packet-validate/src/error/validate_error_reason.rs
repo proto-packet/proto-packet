@@ -14,6 +14,9 @@ pub enum ValidateErrorReason {
     /// An import without a mod path. (ex: `import Foo;`)
     ImportWithoutModPath,
 
+    /// A boxed type that is not a named type. (ex: `box []Node`)
+    BoxedNonNamedType,
+
     /// An error constructing the tree. (ex: a duplicate field name)
     Tree(TreeError),
 }
@@ -27,6 +30,7 @@ impl ValidateErrorReason {
             Self::InvalidName { .. } => "V_INVALID_NAME",
             Self::InvalidTagNumber => "V_INVALID_TAG_NUMBER",
             Self::ImportWithoutModPath => "V_IMPORT_WITHOUT_MOD_PATH",
+            Self::BoxedNonNamedType => "V_BOXED_NON_NAMED_TYPE",
             Self::Tree(error) => match error {
                 TreeError::DuplicateFieldName { .. } => "V_DUPLICATE_FIELD_NAME",
                 TreeError::DuplicateCaseName { .. } => "V_DUPLICATE_CASE_NAME",
@@ -52,6 +56,7 @@ impl Display for ValidateErrorReason {
                 TagNumber::MAX
             ),
             Self::ImportWithoutModPath => f.write_str("imports must include a mod path"),
+            Self::BoxedNonNamedType => f.write_str("only named types can be boxed"),
             Self::Tree(error) => Display::fmt(error, f),
         }
     }

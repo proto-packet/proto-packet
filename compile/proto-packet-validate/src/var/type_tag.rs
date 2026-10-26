@@ -1,5 +1,6 @@
-use crate::ValidateError;
 use crate::naming::validate_name_text;
+use crate::{ValidateError, ValidateErrorReason};
+use lex::lexer::Span;
 use proto_packet_parse::{NameTree, TypeTagTree};
 use proto_packet_tree::{PrimitiveType, QualifiedName, SpecialType, TimeType, TypeTag};
 
@@ -28,5 +29,21 @@ fn validate_named_type(name: &NameTree, source: &str) -> Result<TypeTag, Validat
     } else {
         let name: QualifiedName = validate_name_text(&text, name.span())?;
         Ok(name.into())
+    }
+}
+
+/// Validates that a boxed `type_tag` is a named type. (the `span` is of its field or case name)
+pub(crate) fn validate_boxed(
+    is_boxed: bool,
+    type_tag: &TypeTag,
+    span: Span,
+) -> Result<(), ValidateError> {
+    if is_boxed && !matches!(type_tag, TypeTag::Named(_)) {
+        Err(ValidateError::new(
+            span,
+            ValidateErrorReason::BoxedNonNamedType,
+        ))
+    } else {
+        Ok(())
     }
 }
