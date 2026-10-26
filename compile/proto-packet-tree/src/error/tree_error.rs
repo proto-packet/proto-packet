@@ -1,4 +1,4 @@
-use crate::{CallName, CaseName, FieldName, TypeName};
+use crate::{CallName, CaseName, FieldName, ModPath, TypeName};
 use proto_packet::io::TagNumber;
 use std::fmt::{Display, Formatter};
 
@@ -37,6 +37,9 @@ pub enum TreeError {
 
     /// An import effective name matches a type declaration name. (schema files)
     ImportNameConflictsWithTypeDec { type_name: TypeName },
+
+    /// A schema file with the same mod path already exists. (projects)
+    DuplicateModPath { mod_path: ModPath },
 }
 
 impl Display for TreeError {
@@ -79,6 +82,7 @@ impl Display for TreeError {
                     type_name
                 )
             }
+            Self::DuplicateModPath { mod_path } => write!(f, "duplicate mod path `{}`", mod_path),
         }
     }
 }
