@@ -12,4 +12,6 @@ repository.workspace = true
 module_inception = "allow"
 
 [dependencies]
+proto-packet = { workspace = true }
+
 custom-string = { workspace = true }
