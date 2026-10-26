@@ -78,4 +78,27 @@ impl ParseErrorReason {
             Self::ExpectedTagNumber => "expected an integer tag number",
         }
     }
+
+    /// Gets the error code.
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::ExpectedName => "P_EXPECTED_NAME",
+            Self::ExpectedCloseBracket => "P_EXPECTED_CLOSE_BRACKET",
+            Self::ExpectedTypeTag => "P_EXPECTED_TYPE_TAG",
+            Self::ExpectedImport => "P_EXPECTED_IMPORT",
+            Self::ImportAfterTypeDeclaration => "P_IMPORT_AFTER_TYPE_DECLARATION",
+            Self::ExpectedTypeDeclaration => "P_EXPECTED_TYPE_DECLARATION",
+            Self::ExpectedTypeName => "P_EXPECTED_TYPE_NAME",
+            Self::ExpectedFieldName => "P_EXPECTED_FIELD_NAME",
+            Self::ExpectedCaseName => "P_EXPECTED_CASE_NAME",
+            Self::ExpectedCallName => "P_EXPECTED_CALL_NAME",
+            Self::ExpectedReturns => "P_EXPECTED_RETURNS",
+            Self::ExpectedOpenBrace => "P_EXPECTED_OPEN_BRACE",
+            Self::ExpectedCloseBrace => "P_EXPECTED_CLOSE_BRACE",
+            Self::ExpectedColon => "P_EXPECTED_COLON",
+            Self::ExpectedSemicolon => "P_EXPECTED_SEMICOLON",
+            Self::ExpectedEqual => "P_EXPECTED_EQUAL",
+            Self::ExpectedTagNumber => "P_EXPECTED_TAG_NUMBER",
+        }
+    }
 }

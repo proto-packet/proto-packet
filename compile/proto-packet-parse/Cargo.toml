@@ -12,4 +12,5 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+clerr = { workspace = true }
 lex = { workspace = true }
