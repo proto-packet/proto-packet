@@ -15,7 +15,8 @@ impl SchemaLinker<'_> {
             let location: Location = self.location(variant.type_name(), member);
             let type_tag: TypeTag = self.resolver.link_type_tag(case.type_tag(), &location)?;
             let mut linked_case: VariantCase =
-                VariantCase::new(case.case_name(), type_tag, case.tag_number());
+                VariantCase::new(case.case_name(), type_tag, case.tag_number())
+                    .with_boxed(case.is_boxed());
             copy_comments(case, &mut linked_case);
             linked
                 .add_case(linked_case)

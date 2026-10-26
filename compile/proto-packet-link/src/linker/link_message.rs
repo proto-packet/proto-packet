@@ -15,7 +15,8 @@ impl SchemaLinker<'_> {
             let location: Location = self.location(message.type_name(), member);
             let type_tag: TypeTag = self.resolver.link_type_tag(field.type_tag(), &location)?;
             let mut linked_field: MessageField =
-                MessageField::new(field.field_name(), type_tag, field.tag_number());
+                MessageField::new(field.field_name(), type_tag, field.tag_number())
+                    .with_boxed(field.is_boxed());
             copy_comments(field, &mut linked_field);
             linked
                 .add_field(linked_field)

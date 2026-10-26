@@ -17,7 +17,9 @@ fn link_report(error: &LinkError, sources: &[SchemaSource]) -> Report {
     let message: String = error.to_string();
     let code: Code = Code::error(code(error), message.as_str());
     let (mod_path, locate): (ModPathRef<'_>, Locate) = match error {
-        LinkError::UnresolvedType { location, .. } | LinkError::ServiceAsType { location, .. } => {
+        LinkError::UnresolvedType { location, .. }
+        | LinkError::ServiceAsType { location, .. }
+        | LinkError::UnboxedLoop { location, .. } => {
             (location.mod_path.to_ref(), Locate::TypeTag(location))
         }
         LinkError::UnresolvedImport { mod_path, name } => {
@@ -53,6 +55,7 @@ fn code(error: &LinkError) -> &'static str {
         LinkError::UnresolvedType { .. } => "L_UNRESOLVED_TYPE",
         LinkError::ServiceAsType { .. } => "L_SERVICE_AS_TYPE",
         LinkError::UnresolvedImport { .. } => "L_UNRESOLVED_IMPORT",
+        LinkError::UnboxedLoop { .. } => "L_UNBOXED_LOOP",
     }
 }
 

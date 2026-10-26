@@ -22,6 +22,12 @@ pub enum LinkError {
         mod_path: ModPath,
         name: QualifiedName,
     },
+
+    /// A loop of types without a `box`, closed at the location. (ex: `[a.A, a.B, a.A]`)
+    UnboxedLoop {
+        location: Location,
+        names: Vec<QualifiedName>,
+    },
 }
 
 impl Display for LinkError {
@@ -39,6 +45,15 @@ impl Display for LinkError {
             }
             Self::UnresolvedImport { mod_path, name } => {
                 write!(f, "unresolved import `{}` in `{}`", name, mod_path)
+            }
+            Self::UnboxedLoop { location, names } => {
+                let names: Vec<String> = names.iter().map(|name| format!("`{}`", name)).collect();
+                write!(
+                    f,
+                    "the types {} form a loop without a `box`, closed by {}",
+                    names.join(" -> "),
+                    location
+                )
             }
         }
     }
