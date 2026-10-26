@@ -1,5 +1,5 @@
 use crate::ValidateError;
-use crate::naming::validate_name;
+use crate::naming::validate_name_text;
 use proto_packet_parse::{NameTree, TypeTagTree};
 use proto_packet_tree::{PrimitiveType, QualifiedName, SpecialType, TimeType, TypeTag};
 
@@ -26,7 +26,7 @@ fn validate_named_type(name: &NameTree, source: &str) -> Result<TypeTag, Validat
     } else if let Some(time) = TimeType::from_name(&text) {
         Ok(time.into())
     } else {
-        let name: QualifiedName = validate_name(&text, name.span())?;
+        let name: QualifiedName = validate_name_text(&text, name.span())?;
         Ok(name.into())
     }
 }
