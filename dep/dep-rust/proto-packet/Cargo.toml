@@ -7,3 +7,10 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[features]
+default = ["types"]
+types = ["dep:serde"]
+
+[dependencies]
+serde = { workspace = true, optional = true }
