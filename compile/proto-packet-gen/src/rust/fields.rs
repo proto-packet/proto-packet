@@ -2,9 +2,9 @@ use crate::rust::naming::{ident, is_snake_case};
 use crate::rust::typing::{Typing, option};
 use code_gen::WithStatements;
 use code_gen::rust::{
-    Access, Function, ImplBlock, Receiver, RustType, Signature, StructField, Var, WithAccess,
-    WithAttributes, WithComments, WithFnGenerics, WithFunctions, WithReceiver, WithResult,
-    WithVarParams,
+    Access, Function, ImplBlock, Receiver, Reference, RustType, Signature, StructField, Var,
+    WithAccess, WithAttributes, WithComments, WithFnGenerics, WithFunctions, WithReceiver,
+    WithResult, WithVarParams,
 };
 use proto_packet_tree::{FieldNameRef, TypeTag};
 
@@ -14,6 +14,7 @@ pub(crate) struct Field<'a> {
     pub(crate) name: FieldNameRef<'a>,
     pub(crate) tag: &'a TypeTag,
     pub(crate) is_optional: bool,
+    pub(crate) is_boxed: bool,
 }
 
 impl Field<'_> {
@@ -29,9 +30,12 @@ impl Field<'_> {
         }
     }
 
-    /// Gets the storage type of the field. (optional fields are `Option`s)
+    /// Gets the storage type of the field. (boxed fields are `Box`es, optional fields `Option`s)
     pub(crate) fn storage_type(self, typing: Typing<'_>) -> RustType {
-        let storage_type: RustType = typing.storage_type(self.tag);
+        let mut storage_type: RustType = typing.storage_type(self.tag);
+        if self.is_boxed {
+            storage_type = RustType::from("::std::boxed::Box").with_generic(storage_type);
+        }
         if self.is_optional {
             option(storage_type)
         } else {
@@ -41,7 +45,13 @@ impl Field<'_> {
 
     /// Converts the value `expr` of the field to its storage type.
     pub(crate) fn storage_expr(self, typing: Typing<'_>, expr: &str) -> String {
-        if self.is_optional {
+        if self.is_boxed {
+            if self.is_optional {
+                format!("{}.map(::std::boxed::Box::new)", expr)
+            } else {
+                format!("::std::boxed::Box::new({})", expr)
+            }
+        } else if self.is_optional {
             typing.storage_expr_option(self.tag, expr)
         } else {
             typing.storage_expr(self.tag, expr)
@@ -50,10 +60,51 @@ impl Field<'_> {
 
     /// Converts the storage `expr` of the field to its value type.
     fn value_expr(self, typing: Typing<'_>, expr: &str) -> String {
-        if self.is_optional {
+        if self.is_boxed {
+            if self.is_optional {
+                format!("{}.map(|value| *value)", expr)
+            } else {
+                format!("*{}", expr)
+            }
+        } else if self.is_optional {
             typing.value_expr_option(self.tag, expr)
         } else {
             typing.value_expr(self.tag, expr)
+        }
+    }
+}
+
+impl Field<'_> {
+    //! Getters
+
+    /// Gets the return type & expression of the field's getter. (boxes are hidden)
+    fn getter(self, typing: Typing<'_>) -> (RustType, String) {
+        let field: String = format!("self.{}", ident(&self.name));
+        if !self.is_boxed {
+            return typing.getter(self.tag, &ident(&self.name), self.is_optional);
+        }
+        let (result, expr): (RustType, String) = if typing.is_copy(self.tag) {
+            let expr: String = if self.is_optional {
+                format!("{}.as_deref().copied()", field)
+            } else {
+                format!("*{}", field)
+            };
+            (typing.value_type(self.tag), expr)
+        } else {
+            let expr: String = if self.is_optional {
+                format!("{}.as_deref()", field)
+            } else {
+                format!("&{}", field)
+            };
+            (
+                typing.value_type(self.tag).to_ref(Reference::default()),
+                expr,
+            )
+        };
+        if self.is_optional {
+            (option(result), expr)
+        } else {
+            (result, expr)
         }
     }
 }
@@ -102,8 +153,7 @@ impl Field<'_> {
 
     /// Generates the getter of the field.
     fn gen_getter(self, typing: Typing<'_>) -> Function {
-        let (result, expr): (RustType, String) =
-            typing.getter(self.tag, &ident(&self.name), self.is_optional);
+        let (result, expr): (RustType, String) = self.getter(typing);
         let signature: Signature = Signature::from(ident(&self.name))
             .with_receiver(Receiver::Borrowed)
             .with_result(result);

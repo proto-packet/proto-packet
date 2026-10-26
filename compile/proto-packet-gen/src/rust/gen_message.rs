@@ -23,6 +23,7 @@ pub fn gen_message(project: &Project, message: &Message) -> String {
             name: field.field_name(),
             tag: field.type_tag(),
             is_optional: true,
+            is_boxed: field.is_boxed(),
         })
         .collect();
 
@@ -43,8 +44,9 @@ fn gen_dec(typing: Typing<'_>, message: &Message, fields: &[Field<'_>]) -> RustS
         .map(|field| PpsLine {
             comments: field.comments(),
             line: format!(
-                "{}: {} = {};",
+                "{}: {}{} = {};",
                 field.field_name(),
+                if field.is_boxed() { "box " } else { "" },
                 field.type_tag(),
                 field.tag_number()
             ),

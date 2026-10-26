@@ -3,7 +3,9 @@ use crate::rust::docs::add_docs;
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::typing::Typing;
 use code_gen::Statement;
-use code_gen::rust::{Access, Enum as RustEnum, EnumCase, EnumFields, WithAccess, WithAttributes};
+use code_gen::rust::{
+    Access, Enum as RustEnum, EnumCase, EnumFields, RustType, WithAccess, WithAttributes,
+};
 use proto_packet_tree::{Project, Variant, WithCaseName, WithComments, WithTypeName, WithTypeTag};
 
 /// Generates the Rust code of the `variant`.
@@ -23,7 +25,11 @@ pub fn gen_variant(project: &Project, variant: &Variant) -> String {
     }
     result.set_access(Access::Public);
     for case in variant.cases() {
-        let fields: EnumFields = EnumFields::Unnamed(vec![typing.storage_type(case.type_tag())]);
+        let mut case_type: RustType = typing.storage_type(case.type_tag());
+        if case.is_boxed() {
+            case_type = RustType::from("::std::boxed::Box").with_generic(case_type);
+        }
+        let fields: EnumFields = EnumFields::Unnamed(vec![case_type]);
         let mut rust_case: EnumCase = EnumCase::from(ident(&case.case_name())).with_fields(fields);
         add_docs(&mut rust_case, case.comments());
         result.add_case(rust_case);

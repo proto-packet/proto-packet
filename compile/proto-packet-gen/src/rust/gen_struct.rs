@@ -40,6 +40,7 @@ fn field(field: &SchemaField) -> Field<'_> {
         name: field.field_name(),
         tag: field.type_tag(),
         is_optional: field.is_optional(),
+        is_boxed: field.is_boxed(),
     }
 }
 
@@ -52,13 +53,14 @@ fn gen_dec(typing: Typing<'_>, structure: &Struct, fields: &[Field<'_>]) -> Rust
         .map(|schema_field| PpsLine {
             comments: schema_field.comments(),
             line: format!(
-                "{}: {}{};",
+                "{}: {}{}{};",
                 schema_field.field_name(),
                 if schema_field.is_optional() {
                     "optional "
                 } else {
                     ""
                 },
+                if schema_field.is_boxed() { "box " } else { "" },
                 schema_field.type_tag()
             ),
         })

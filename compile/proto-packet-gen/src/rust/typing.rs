@@ -135,7 +135,7 @@ impl Typing<'_> {
         structure
             .fields()
             .iter()
-            .all(|field| self.is_copy_visiting(field.type_tag(), visiting))
+            .all(|field| !field.is_boxed() && self.is_copy_visiting(field.type_tag(), visiting))
     }
 }
 
