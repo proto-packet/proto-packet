@@ -10,6 +10,9 @@ pub enum ParseErrorReason {
     /// Expected a type tag.
     ExpectedTypeTag,
 
+    /// Expected an import.
+    ExpectedImport,
+
     /// Expected a type declaration. (ex: `struct`)
     ExpectedTypeDeclaration,
 
@@ -56,6 +59,7 @@ impl ParseErrorReason {
             Self::ExpectedName => "expected a name",
             Self::ExpectedCloseBracket => "expected a `]`",
             Self::ExpectedTypeTag => "expected a type",
+            Self::ExpectedImport => "expected an import",
             Self::ExpectedTypeDeclaration => "expected a type declaration",
             Self::ExpectedTypeName => "expected the type's name",
             Self::ExpectedFieldName => "expected the field's name",
