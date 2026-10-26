@@ -9,6 +9,27 @@ pub enum ParseErrorReason {
 
     /// Expected a type tag.
     ExpectedTypeTag,
+
+    /// Expected a type declaration. (ex: `struct`)
+    ExpectedTypeDeclaration,
+
+    /// Expected the type's name.
+    ExpectedTypeName,
+
+    /// Expected the field's name.
+    ExpectedFieldName,
+
+    /// Expected a `{`.
+    ExpectedOpenBrace,
+
+    /// Expected a `}`.
+    ExpectedCloseBrace,
+
+    /// Expected a `:`.
+    ExpectedColon,
+
+    /// Expected a `;`.
+    ExpectedSemicolon,
 }
 
 impl ParseErrorReason {
@@ -20,6 +41,13 @@ impl ParseErrorReason {
             Self::ExpectedName => "expected a name",
             Self::ExpectedCloseBracket => "expected a `]`",
             Self::ExpectedTypeTag => "expected a type",
+            Self::ExpectedTypeDeclaration => "expected a type declaration",
+            Self::ExpectedTypeName => "expected the type's name",
+            Self::ExpectedFieldName => "expected the field's name",
+            Self::ExpectedOpenBrace => "expected a `{`",
+            Self::ExpectedCloseBrace => "expected a `}`",
+            Self::ExpectedColon => "expected a `:`",
+            Self::ExpectedSemicolon => "expected a `;`",
         }
     }
 }

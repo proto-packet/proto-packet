@@ -12,3 +12,15 @@ pub(crate) fn expect(
         .map(|token| token.span())
         .map_err(|error| ParseError::new(error.span(), reason))
 }
+
+/// Expects the contextual `keyword`, or fails with the `reason`.
+pub(crate) fn expect_keyword(
+    p: &mut Parser<'_, Kind>,
+    keyword: &str,
+    reason: ParseErrorReason,
+) -> Result<Span, ParseError> {
+    match p.accept_text(Kind::Ident, keyword) {
+        Some(token) => Ok(token.span()),
+        None => Err(ParseError::new(p.peek().span(), reason)),
+    }
+}
