@@ -10,3 +10,8 @@ repository.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+proto-packet-tree = { workspace = true }
+
+code-gen = { workspace = true, features = ["rust"] }

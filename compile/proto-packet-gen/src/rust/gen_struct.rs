@@ -1,0 +1,128 @@
+use crate::rust::derives::add_derives;
+use crate::rust::docs::{PpsLine, add_pps_docs};
+use crate::rust::fields::Field;
+use crate::rust::naming::{ident, is_upper_camel_case};
+use crate::rust::typing::Typing;
+use code_gen::rust::{
+    Access, Function, ImplBlock, Signature, Struct as RustStruct, StructField, Var, WithAccess,
+    WithAttributes, WithComments, WithFunctions, WithResult, WithStructFields, WithVarParams,
+};
+use code_gen::{Block, EmptyLine, Statement, WithStatements};
+use proto_packet_tree::{
+    Project, Struct, StructField as SchemaField, WithComments as _, WithFieldName, WithTypeName,
+    WithTypeTag,
+};
+
+/// The most constructor parameters before clippy's `too_many_arguments` lint.
+const MAX_ARGUMENTS: usize = 7;
+
+/// Generates the Rust code of the `structure`.
+pub fn gen_struct(project: &Project, structure: &Struct) -> String {
+    let typing: Typing = Typing::new(project);
+    let type_name: String = ident(&structure.type_name());
+    let fields: Vec<Field> = structure.fields().iter().map(field).collect();
+
+    let mut block: Block = Block::default().with_statement(gen_dec(typing, structure, &fields));
+    if !fields.is_empty() {
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_constructor(typing, &type_name, &fields));
+    }
+    for field in &fields {
+        block.add_statement(EmptyLine::default());
+        block.add_statement(field.gen_impl(typing, &type_name));
+    }
+    block.to_code()
+}
+
+/// Gets the generated field of the schema `field`.
+fn field(field: &SchemaField) -> Field<'_> {
+    Field {
+        name: field.field_name(),
+        tag: field.type_tag(),
+        is_optional: field.is_optional(),
+    }
+}
+
+/// Generates the declaration of the `structure`.
+fn gen_dec(typing: Typing<'_>, structure: &Struct, fields: &[Field<'_>]) -> RustStruct {
+    let mut result: RustStruct = RustStruct::from(ident(&structure.type_name()));
+    let lines: Vec<PpsLine> = structure
+        .fields()
+        .iter()
+        .map(|schema_field| PpsLine {
+            comments: schema_field.comments(),
+            line: format!(
+                "{}: {}{};",
+                schema_field.field_name(),
+                if schema_field.is_optional() {
+                    "optional "
+                } else {
+                    ""
+                },
+                schema_field.type_tag()
+            ),
+        })
+        .collect();
+    add_pps_docs(
+        &mut result,
+        "struct",
+        structure.type_name().value(),
+        structure.comments(),
+        &lines,
+    );
+    add_derives(
+        &mut result,
+        typing.is_copy_struct(structure),
+        fields.is_empty(),
+    );
+    if !is_upper_camel_case(&structure.type_name()) {
+        result.add_attribute("allow(non_camel_case_types)");
+    }
+    if fields.iter().any(|field| field.is_non_snake_case()) {
+        result.add_attribute("allow(non_snake_case)");
+    }
+    result.set_access(Access::Public);
+    for field in fields {
+        let var: Var = Var::from((ident(&field.name), field.storage_type(typing)));
+        let mut struct_field: StructField = StructField::from(var);
+        if field.is_optional {
+            struct_field
+                .add_attribute("serde(skip_serializing_if = \"::std::option::Option::is_none\")");
+        }
+        result.add_field(struct_field);
+    }
+    result
+}
+
+/// Generates the constructor of the struct with the `fields`.
+fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) -> ImplBlock {
+    let mut signature: Signature = Signature::from("new").with_result("Self");
+    for field in fields {
+        signature.add_param(Var::from((ident(&field.name), field.value_type(typing))));
+    }
+    let inits: Vec<String> = fields
+        .iter()
+        .map(|field| {
+            let name: String = ident(&field.name);
+            let value: String = field.storage_expr(typing, &name);
+            if value == name {
+                name
+            } else {
+                format!("{}: {}", name, value)
+            }
+        })
+        .collect();
+    let mut constructor: Function = Function::from(signature)
+        .with_comment(format!(" Creates a new [{}].", type_name))
+        .with_access(Access::Public)
+        .with_literal(format!("Self {{ {} }}", inits.join(", ")));
+    if fields.len() > MAX_ARGUMENTS {
+        constructor.add_attribute("allow(clippy::too_many_arguments)");
+    }
+    if fields.iter().any(|field| field.is_non_snake_case()) {
+        constructor.add_attribute("allow(non_snake_case)");
+    }
+    ImplBlock::from(type_name)
+        .with_comment(" Construction")
+        .with_function(constructor)
+}

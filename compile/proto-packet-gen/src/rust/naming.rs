@@ -1,5 +1,7 @@
 //! The Rust names of schema names.
 
+use proto_packet_tree::QualifiedNameRef;
+
 /// The Rust keywords that can be raw identifiers. (ex: `r#type`)
 const RAW_KEYWORDS: &[&str] = &[
     "abstract", "as", "async", "await", "become", "box", "break", "const", "continue", "do", "dyn",
@@ -47,4 +49,29 @@ pub fn snake_case(name: &str) -> String {
         snake_case.push(c.to_ascii_lowercase());
     }
     snake_case
+}
+
+/// Checks if the schema `name` is snake case for Rust. (it has no uppercase letters)
+pub fn is_snake_case(name: &str) -> bool {
+    !name.bytes().any(|c| c.is_ascii_uppercase())
+}
+
+/// Checks if the schema type `name` is upper camel case for Rust. (it has no underscores)
+pub fn is_upper_camel_case(name: &str) -> bool {
+    !name.contains('_')
+}
+
+/// Gets the Rust path of the fully qualified type `name`.
+///
+/// (ex: `a.move.Foo` -> `crate::a::r#move::Foo`)
+pub fn type_path(name: QualifiedNameRef<'_>) -> String {
+    let mut path: String = String::from("crate::");
+    if let Some(mod_path) = name.mod_path() {
+        for mod_name in mod_path.mod_names() {
+            path.push_str(&ident(&mod_name));
+            path.push_str("::");
+        }
+    }
+    path.push_str(&ident(&name.type_name()));
+    path
 }
