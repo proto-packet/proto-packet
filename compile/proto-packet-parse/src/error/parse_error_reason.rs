@@ -22,6 +22,12 @@ pub enum ParseErrorReason {
     /// Expected the case's name.
     ExpectedCaseName,
 
+    /// Expected the call's name.
+    ExpectedCallName,
+
+    /// Expected the `returns` keyword.
+    ExpectedReturns,
+
     /// Expected a `{`.
     ExpectedOpenBrace,
 
@@ -54,6 +60,8 @@ impl ParseErrorReason {
             Self::ExpectedTypeName => "expected the type's name",
             Self::ExpectedFieldName => "expected the field's name",
             Self::ExpectedCaseName => "expected the case's name",
+            Self::ExpectedCallName => "expected the call's name",
+            Self::ExpectedReturns => "expected the `returns` keyword",
             Self::ExpectedOpenBrace => "expected a `{`",
             Self::ExpectedCloseBrace => "expected a `}`",
             Self::ExpectedColon => "expected a `:`",
