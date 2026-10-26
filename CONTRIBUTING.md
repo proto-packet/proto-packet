@@ -14,7 +14,7 @@ There shouldn't be a description.
 
 ### Tags
 
-A tag is an area, narrowed when the change stays in one crate. (ex: `[compile/parse]`)
+A tag is an area, narrowed when the change stays in one part of it. (ex: `[compile/parse]`)
 
 The project:
 
@@ -30,3 +30,5 @@ The workspaces:
 - `[compile/parse]`: parsing schema files in `proto-packet-parse`.
 - `[compile/tree]`: the semantic schema tree in `proto-packet-tree`.
 - `[compile/validate]`: validating schema files in `proto-packet-validate`.
+- `[dep]`: the runtime libraries in `dep/`, typically anything focused outside a single language.
+- `[dep/rust]`: the Rust runtime library in `dep/dep-rust`.
