@@ -1,5 +1,15 @@
 use code_gen::rust::WithComments;
 
+/// Adds the schema `comments` to the `result` as doc comments.
+pub(crate) fn add_docs<R>(result: &mut R, comments: &[String])
+where
+    R: WithComments,
+{
+    for comment in comments {
+        result.add_comment(comment.as_str());
+    }
+}
+
 /// A schema member line of a pps doc block, with its comments. (ex: `name: string = 1;`)
 pub(crate) struct PpsLine<'a> {
     pub(crate) comments: &'a [String],
