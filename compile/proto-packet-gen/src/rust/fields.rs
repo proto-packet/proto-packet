@@ -2,8 +2,9 @@ use crate::rust::naming::{ident, is_snake_case};
 use crate::rust::typing::{Typing, option};
 use code_gen::WithStatements;
 use code_gen::rust::{
-    Access, Function, ImplBlock, Receiver, RustType, Signature, Var, WithAccess, WithAttributes,
-    WithComments, WithFnGenerics, WithFunctions, WithReceiver, WithResult, WithVarParams,
+    Access, Function, ImplBlock, Receiver, RustType, Signature, StructField, Var, WithAccess,
+    WithAttributes, WithComments, WithFnGenerics, WithFunctions, WithReceiver, WithResult,
+    WithVarParams,
 };
 use proto_packet_tree::{FieldNameRef, TypeTag};
 
@@ -54,6 +55,20 @@ impl Field<'_> {
         } else {
             typing.value_expr(self.tag, expr)
         }
+    }
+}
+
+impl Field<'_> {
+    //! Declaration
+
+    /// Generates the declaration of the field.
+    pub(crate) fn gen_dec(self, typing: Typing<'_>) -> StructField {
+        let var: Var = Var::from((ident(&self.name), self.storage_type(typing)));
+        let mut field: StructField = StructField::from(var);
+        if self.is_optional {
+            field.add_attribute("serde(skip_serializing_if = \"::std::option::Option::is_none\")");
+        }
+        field
     }
 }
 

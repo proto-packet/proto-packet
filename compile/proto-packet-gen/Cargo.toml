@@ -12,6 +12,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+proto-packet = { workspace = true }
 proto-packet-tree = { workspace = true }
 
 code-gen = { workspace = true, features = ["rust"] }

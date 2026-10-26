@@ -4,8 +4,8 @@ use crate::rust::fields::Field;
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
-    Access, Function, ImplBlock, Signature, Struct as RustStruct, StructField, Var, WithAccess,
-    WithAttributes, WithComments, WithFunctions, WithResult, WithStructFields, WithVarParams,
+    Access, Function, ImplBlock, Signature, Struct as RustStruct, Var, WithAccess, WithAttributes,
+    WithComments, WithFunctions, WithResult, WithStructFields, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet_tree::{
@@ -83,13 +83,7 @@ fn gen_dec(typing: Typing<'_>, structure: &Struct, fields: &[Field<'_>]) -> Rust
     }
     result.set_access(Access::Public);
     for field in fields {
-        let var: Var = Var::from((ident(&field.name), field.storage_type(typing)));
-        let mut struct_field: StructField = StructField::from(var);
-        if field.is_optional {
-            struct_field
-                .add_attribute("serde(skip_serializing_if = \"::std::option::Option::is_none\")");
-        }
-        result.add_field(struct_field);
+        result.add_field(field.gen_dec(typing));
     }
     result
 }
