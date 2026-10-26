@@ -6,6 +6,7 @@ members = [
     "proto-packet-gen",
     "proto-packet-link",
     "proto-packet-parse",
+    "proto-packet-tree",
 ]
 
 [workspace.package]
