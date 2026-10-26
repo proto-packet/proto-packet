@@ -12,6 +12,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+proto-packet-gen = { workspace = true }
 proto-packet-link = { workspace = true }
 proto-packet-parse = { workspace = true }
 proto-packet-tree = { workspace = true }
