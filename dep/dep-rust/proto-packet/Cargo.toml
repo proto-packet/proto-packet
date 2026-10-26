@@ -11,8 +11,10 @@ repository.workspace = true
 [features]
 default = ["types"]
 types = ["dep:chrono", "dep:serde", "dep:uuid"]
+service = ["types", "dep:axum"]
 
 [dependencies]
+axum = { workspace = true, optional = true }
 chrono = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 uuid = { workspace = true, optional = true }
