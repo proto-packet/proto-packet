@@ -5,6 +5,7 @@ members = [
     "proto-packet-compile",
     "proto-packet-gen",
     "proto-packet-link",
+    "proto-packet-parse",
 ]
 
 [workspace.package]
