@@ -2,6 +2,7 @@ use crate::ParseErrorReason;
 use clerr::{Code, Report, Severity, TokenInfo};
 use lex::lexer::Span;
 use std::fmt::{Display, Formatter};
+use std::ops::Range;
 
 /// A parse error.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -39,23 +40,10 @@ impl ParseError {
     /// Creates the command-line report for the error in the `source` of the `file_name` file.
     pub fn report(self, file_name: &str, source: &str) -> Report {
         let message: &'static str = self.reason.message();
-        let offset: usize = self.span.offset() as usize;
-        let line_start: usize = source[..offset].rfind('\n').map_or(0, |i| i + 1);
-        let line_text: &str = source[line_start..].lines().next().unwrap_or("");
-        let position: usize = source[line_start..offset].chars().count();
-        let token_len: usize = self
-            .span
-            .char_count(source)
-            .min(line_text.chars().count().saturating_sub(position));
-        Report::from(Code::error(self.reason.code(), message)).with_entry(TokenInfo {
-            severity: Severity::Error,
-            file_name,
-            line: source[..offset].matches('\n').count() + 1,
-            position: position + 1,
-            line_text,
-            token_len,
-            message,
-        })
+        let range: Range<usize> = self.span.offset() as usize..self.span.end() as usize;
+        let info: TokenInfo =
+            TokenInfo::from_source(Severity::Error, file_name, source, range, message);
+        Report::from(Code::error(self.reason.code(), message)).with_entry(info)
     }
 }
 
