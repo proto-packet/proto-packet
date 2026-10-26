@@ -16,6 +16,9 @@ repository = "https://github.com/proto-packet/proto-packet"
 edition = "2024"
 license = "MIT"
 
+[workspace.lints.clippy]
+module_inception = "allow"
+
 [workspace.dependencies]
 proto-packet = { path = "../dep/dep-rust/proto-packet" } # todo -- path dependency
 

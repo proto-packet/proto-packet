@@ -8,8 +8,8 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
-[lints.clippy]
-module_inception = "allow"
+[lints]
+workspace = true
 
 [dependencies]
 proto-packet = { workspace = true }
