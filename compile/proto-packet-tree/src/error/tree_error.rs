@@ -11,13 +11,13 @@ pub enum TreeError {
         field_name: FieldName,
     },
 
-    /// A case with the same name already exists. (enums)
+    /// A case with the same name already exists. (enums & variants)
     DuplicateCaseName {
         type_name: TypeName,
         case_name: CaseName,
     },
 
-    /// A field or case with the same tag number already exists. (messages & enums)
+    /// A field or case with the same tag number already exists. (messages, enums & variants)
     DuplicateTagNumber {
         type_name: TypeName,
         tag_number: TagNumber,
