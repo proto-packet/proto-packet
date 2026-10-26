@@ -13,6 +13,9 @@ pub enum ParseErrorReason {
     /// Expected an import.
     ExpectedImport,
 
+    /// An import after a type declaration. (imports come first)
+    ImportAfterTypeDeclaration,
+
     /// Expected a type declaration. (ex: `struct`)
     ExpectedTypeDeclaration,
 
@@ -60,6 +63,7 @@ impl ParseErrorReason {
             Self::ExpectedCloseBracket => "expected a `]`",
             Self::ExpectedTypeTag => "expected a type",
             Self::ExpectedImport => "expected an import",
+            Self::ImportAfterTypeDeclaration => "imports must come before type declarations",
             Self::ExpectedTypeDeclaration => "expected a type declaration",
             Self::ExpectedTypeName => "expected the type's name",
             Self::ExpectedFieldName => "expected the field's name",
