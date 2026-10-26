@@ -9,6 +9,26 @@ pub struct NameTree {
     pub idents: Vec<Span>,
 }
 
+impl NameTree {
+    //! Properties
+
+    /// Gets the span from the first to the last identifier.
+    ///
+    /// # Panics
+    /// Panics if there are no identifiers. (parsed names always have at least one)
+    pub fn span(&self) -> Span {
+        let first: Span = *self
+            .idents
+            .first()
+            .expect("names have at least one identifier");
+        let last: Span = *self
+            .idents
+            .last()
+            .expect("names have at least one identifier");
+        first.combine(last)
+    }
+}
+
 /// Parses a name, failing with the `reason` if there is no first identifier.
 pub fn parse_name(
     p: &mut Parser<'_, Kind>,
