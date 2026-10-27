@@ -137,3 +137,31 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
         .with_comment(" Construction")
         .with_function(constructor)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::GenError;
+    use crate::rust::gen_struct;
+    use proto_packet_tree::{
+        FieldName, ModPath, PrimitiveType, Project, Struct, StructField, TypeName,
+    };
+
+    #[test]
+    fn gen_struct_rejects_the_constructor_name() {
+        let mod_path: ModPath = ModPath::try_from("a").unwrap();
+        let field: StructField = StructField::new(
+            FieldName::try_from("new").unwrap(),
+            PrimitiveType::UnsignedInt32,
+        );
+        let structure: Struct = Struct::from(TypeName::try_from("Foo").unwrap())
+            .with_field(field)
+            .unwrap();
+        let result: Result<String, GenError> =
+            gen_struct(&Project::default(), mod_path.to_ref(), &structure);
+        let expected: GenError = GenError::FieldNameConflict {
+            type_name: "a.Foo".to_string(),
+            field_name: "new".to_string(),
+        };
+        assert_eq!(result, Err(expected));
+    }
+}
