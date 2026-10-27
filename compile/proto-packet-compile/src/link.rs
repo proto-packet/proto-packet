@@ -131,6 +131,7 @@ fn name_span(tag: &TypeTagTree) -> Span {
     match tag {
         TypeTagTree::Name(name) => name.span(),
         TypeTagTree::Slice { base } => name_span(base),
+        TypeTagTree::Map { .. } => todo!(),
     }
 }
 

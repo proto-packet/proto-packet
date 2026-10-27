@@ -17,8 +17,11 @@ lexer! {
         RBrace: literal!("}"),
         LBracket: literal!("["),
         RBracket: literal!("]"),
+        LAngle: literal!("<"),
+        RAngle: literal!(">"),
         Semi: literal!(";"),
         Colon: literal!(":"),
+        Comma: literal!(","),
         Dot: literal!("."),
         Equal: literal!("="),
     }
