@@ -30,6 +30,9 @@ service Echo {
     // Echoes a slice.
     bytes: []u8 returns []u8;
 
+    // Echoes a map.
+    counts: map<string, u32> returns map<string, u32>;
+
     // Echoes a struct.
     point: Point returns Point;
 

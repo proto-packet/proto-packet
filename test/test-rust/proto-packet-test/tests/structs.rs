@@ -6,10 +6,14 @@ use proto_packet_test::structs::arguments::EightFields;
 use proto_packet_test::structs::boxed::{BoxedFields, OptionalBoxedFields};
 use proto_packet_test::structs::copy::{CopyFields, NestedCopy, OptionalCopy};
 use proto_packet_test::structs::empty::Empty;
+use proto_packet_test::structs::maps::{
+    MapField, MapValues, NamedKeys, NestedKeys, OptionalMap, ScalarKeys,
+};
 use proto_packet_test::structs::named::{NamedFields, NamedSlices};
 use proto_packet_test::structs::optional::OptionalFields;
 use proto_packet_test::structs::{fields, slices};
 use proto_packet_test::types::{Color, Label, Path, Point, Shape};
+use std::collections::BTreeMap;
 
 /// Asserts the type `T` is `Copy`.
 fn assert_copy<T: Copy>() {}
@@ -199,6 +203,138 @@ fn slices_json() {
         &slices::NestedSlices::new(vec![vec![1, 2], vec![]], vec![vec!["a".to_string()]]),
         r#"{"one":[[1,2],[]],"two":[["a"]]}"#,
     );
+}
+
+/// Gets the test `ScalarKeys`.
+fn scalar_keys() -> ScalarKeys {
+    ScalarKeys::new(
+        BTreeMap::from([(true, 1), (false, 2)]),
+        BTreeMap::from([(u64::MAX, 3)]),
+        BTreeMap::from([(-1, 4)]),
+        BTreeMap::from([(Float64::new(-2.5), 5)]),
+        BTreeMap::from([(id(), 6)]),
+        BTreeMap::from([("b".to_string(), 7), ("a".to_string(), 8)]),
+        BTreeMap::from([(-1, 9)]),
+        BTreeMap::from([(day(), 10)]),
+    )
+}
+
+/// Gets the map with the single `value` at the key `a`.
+fn entry<V>(value: V) -> BTreeMap<String, V> {
+    BTreeMap::from([("a".to_string(), value)])
+}
+
+/// Gets the test `MapValues`.
+fn map_values() -> MapValues {
+    MapValues::new(
+        entry(Float32::new(1.5)),
+        entry("text".to_string()),
+        entry(point()),
+        entry(path()),
+        entry(label()),
+        entry(Color::Green),
+        entry(shape()),
+        entry(vec![1, 2]),
+        entry(BTreeMap::from([("b".to_string(), 1)])),
+    )
+}
+
+#[test]
+fn maps_getters() {
+    let scalar: ScalarKeys = scalar_keys();
+    let result: &BTreeMap<bool, u32> = scalar.boolean();
+    assert_eq!(result, &BTreeMap::from([(false, 2), (true, 1)]));
+    assert_eq!(scalar.unsigned().get(&u64::MAX), Some(&3));
+    assert_eq!(scalar.signed().get(&-1), Some(&4));
+    assert_eq!(scalar.float().get(&Float64::new(-2.5)), Some(&5));
+    assert_eq!(scalar.id().get(&id()), Some(&6));
+    let keys: Vec<&str> = scalar.text().keys().map(String::as_str).collect();
+    assert_eq!(keys, ["a", "b"]);
+    assert_eq!(scalar.time().get(&-1), Some(&9));
+    assert_eq!(scalar.day().get(&day()), Some(&10));
+
+    let named: NamedKeys = NamedKeys::new(
+        BTreeMap::from([(point(), 1)]),
+        BTreeMap::from([(path(), 2)]),
+        BTreeMap::from([(label(), 3)]),
+        BTreeMap::from([(Color::Green, 4)]),
+        BTreeMap::from([(shape(), 5)]),
+    );
+    assert_eq!(named.point().get(&point()), Some(&1));
+    assert_eq!(named.path().get(&path()), Some(&2));
+    assert_eq!(named.label().get(&label()), Some(&3));
+    assert_eq!(named.color().get(&Color::Green), Some(&4));
+    assert_eq!(named.shape().get(&shape()), Some(&5));
+
+    let nested: NestedKeys = NestedKeys::new(
+        BTreeMap::from([(vec![1, 2], 1)]),
+        BTreeMap::from([(BTreeMap::from([("a".to_string(), 1)]), 2)]),
+    );
+    assert_eq!(nested.slice().get([1, 2].as_slice()), Some(&1));
+    assert_eq!(
+        nested.nested().get(&BTreeMap::from([("a".to_string(), 1)])),
+        Some(&2)
+    );
+
+    let values: MapValues = map_values();
+    assert_eq!(values.float().get("a"), Some(&Float32::new(1.5)));
+    assert_eq!(values.text().get("a").map(String::as_str), Some("text"));
+    assert_eq!(values.point().get("a"), Some(&point()));
+    assert_eq!(values.path().get("a"), Some(&path()));
+    assert_eq!(values.label().get("a"), Some(&label()));
+    assert_eq!(values.color().get("a"), Some(&Color::Green));
+    assert_eq!(values.shape().get("a"), Some(&shape()));
+    assert_eq!(values.slice().get("a"), Some(&vec![1, 2]));
+    assert_eq!(
+        values.nested().get("a"),
+        Some(&BTreeMap::from([("b".to_string(), 1)]))
+    );
+}
+
+#[test]
+fn maps_json() {
+    assert_json(
+        &scalar_keys(),
+        &format!(
+            concat!(
+                r#"{{"boolean":{{"false":2,"true":1}},"unsigned":{{"{}":3}},"signed":{{"-1":4}},"#,
+                r#""float":{{"-2.5":5}},"id":{{{}:6}},"text":{{"a":8,"b":7}},"time":{{"-1":9}},"#,
+                r#""day":{{{}:10}}}}"#
+            ),
+            u64::MAX,
+            ID_JSON,
+            DAY_JSON
+        ),
+    );
+    assert_json(
+        &map_values(),
+        &format!(
+            concat!(
+                r#"{{"float":{{"a":1.5}},"text":{{"a":"text"}},"point":{{"a":{}}},"#,
+                r#""path":{{"a":{}}},"label":{{"a":{}}},"color":{{"a":"Green"}},"#,
+                r#""shape":{{"a":{}}},"slice":{{"a":[1,2]}},"nested":{{"a":{{"b":1}}}}}}"#
+            ),
+            POINT_JSON, PATH_JSON, LABEL_JSON, SHAPE_JSON
+        ),
+    );
+}
+
+#[test]
+fn optional_maps() {
+    let value: OptionalMap = OptionalMap::new(None);
+    assert_eq!(value.counts(), None);
+    assert_json(&value, "{}");
+
+    let value: OptionalMap = value.with_counts(BTreeMap::new());
+    assert_eq!(value.counts(), Some(&BTreeMap::new()));
+    assert_json(&value, r#"{"counts":{}}"#);
+}
+
+#[test]
+fn maps_named_map() {
+    let value: MapField = MapField::new(BTreeMap::from([("a".to_string(), 1)]));
+    assert_eq!(value.map().get("a"), Some(&1));
+    assert_json(&value, r#"{"map":{"a":1}}"#);
 }
 
 #[test]

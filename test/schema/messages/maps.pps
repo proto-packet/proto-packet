@@ -1,0 +1,15 @@
+import types.Color;
+import types.Point;
+
+// A message with map fields.
+message MapFields {
+
+    // A map of `string` keys & `u32` values.
+    counts: map<string, u32> = 1;
+
+    // A map of enum keys & struct values.
+    points: map<Color, Point> = 2;
+
+    // A map of struct keys & `string` values.
+    names: map<Point, string> = 3;
+}

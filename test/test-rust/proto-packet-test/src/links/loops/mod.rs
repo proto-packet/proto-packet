@@ -2,6 +2,7 @@
 pub use category::*;
 pub use expr::*;
 pub use folder::*;
+pub use graph_node::*;
 pub use list_node::*;
 pub use sum::*;
 pub use tree_node::*;
@@ -9,6 +10,7 @@ pub use tree_node::*;
 mod category;
 mod expr;
 mod folder;
+mod graph_node;
 mod list_node;
 mod sum;
 mod tree_node;

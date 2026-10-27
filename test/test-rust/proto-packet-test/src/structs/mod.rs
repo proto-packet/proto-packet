@@ -4,6 +4,7 @@ pub mod boxed;
 pub mod copy;
 pub mod empty;
 pub mod fields;
+pub mod maps;
 pub mod named;
 pub mod optional;
 pub mod slices;

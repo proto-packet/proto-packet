@@ -2,6 +2,7 @@
 pub mod boxed;
 pub mod empty;
 pub mod fields;
+pub mod maps;
 pub mod named;
 pub mod slices;
 pub mod tags;

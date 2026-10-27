@@ -4,10 +4,12 @@ use common::*;
 use proto_packet::types::{Float32, Float64};
 use proto_packet_test::messages::boxed::BoxedFields;
 use proto_packet_test::messages::empty::Empty;
+use proto_packet_test::messages::maps::MapFields;
 use proto_packet_test::messages::named::{NamedFields, NamedSlices};
 use proto_packet_test::messages::tags::{EdgeTags, UnorderedTags};
 use proto_packet_test::messages::{fields, slices};
 use proto_packet_test::types::{Color, Label, Path, Point, Shape};
+use std::collections::BTreeMap;
 
 #[test]
 fn fields_default_to_none() {
@@ -271,6 +273,55 @@ fn boxed_fields_json() {
         &format!(
             r#"{{"point":{},"path":{},"label":{},"color":"Blue","shape":{}}}"#,
             POINT_JSON, PATH_JSON, LABEL_JSON, SHAPE_JSON
+        ),
+    );
+}
+
+#[test]
+fn maps_default_to_none() {
+    let value: MapFields = MapFields::default();
+    assert_eq!(value.counts(), None);
+    assert_eq!(value.points(), None);
+    assert_eq!(value.names(), None);
+}
+
+#[test]
+fn maps_getters() {
+    let value: MapFields = MapFields::default()
+        .with_counts(BTreeMap::from([("a".to_string(), 1)]))
+        .with_points(BTreeMap::from([(Color::Green, point())]))
+        .with_names(BTreeMap::from([(point(), "p".to_string())]));
+    assert_eq!(
+        value.counts(),
+        Some(&BTreeMap::from([("a".to_string(), 1)]))
+    );
+    assert_eq!(
+        value.points().and_then(|points| points.get(&Color::Green)),
+        Some(&point())
+    );
+    assert_eq!(
+        value
+            .names()
+            .and_then(|names| names.get(&point()))
+            .map(String::as_str),
+        Some("p")
+    );
+}
+
+#[test]
+fn maps_json() {
+    assert_json(&MapFields::default(), "{}");
+    assert_json(
+        &MapFields::default().with_counts(BTreeMap::new()),
+        r#"{"counts":{}}"#,
+    );
+    assert_json(
+        &MapFields::default()
+            .with_counts(BTreeMap::from([("b".to_string(), 2), ("a".to_string(), 1)]))
+            .with_points(BTreeMap::from([(Color::Green, point())])),
+        &format!(
+            r#"{{"counts":{{"a":1,"b":2}},"points":{{"Green":{}}}}}"#,
+            POINT_JSON
         ),
     );
 }

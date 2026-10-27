@@ -18,6 +18,16 @@ struct TreeNode {
     children: []TreeNode;
 }
 
+// A graph node. (a struct loop through a map)
+struct GraphNode {
+
+    // The value.
+    value: u32;
+
+    // The child nodes by name.
+    children: map<string, GraphNode>;
+}
+
 // A category. (a message loop through a box)
 message Category {
 
