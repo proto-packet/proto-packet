@@ -15,5 +15,6 @@
 #[serde(tag = "var", content = "val")]
 pub enum KeywordVariant {
     /// A non-raw keyword case. (`Self_`)
+    #[serde(rename = "Self")]
     Self_(u32),
 }

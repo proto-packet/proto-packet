@@ -15,5 +15,6 @@
 #[serde(crate = "::proto_packet::serde")]
 pub enum KeywordEnum {
     /// A non-raw keyword case. (`Self_`)
+    #[serde(rename = "Self")]
     Self_,
 }

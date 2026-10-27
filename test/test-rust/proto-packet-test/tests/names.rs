@@ -49,11 +49,9 @@ fn keyword_fields_json_keeps_the_schema_names() {
 }
 
 #[test]
-fn keyword_cases() {
-    let result: KeywordEnum = KeywordEnum::Self_;
-    assert_eq!(result, KeywordEnum::Self_);
-    let result: KeywordVariant = KeywordVariant::Self_(1);
-    assert_eq!(result, KeywordVariant::Self_(1));
+fn keyword_cases_json_keeps_the_schema_names() {
+    assert_json(&KeywordEnum::Self_, r#""Self""#);
+    assert_json(&KeywordVariant::Self_(1), r#"{"var":"Self","val":1}"#);
 }
 
 #[test]
