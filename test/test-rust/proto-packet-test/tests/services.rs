@@ -9,6 +9,7 @@ use proto_packet_test::services::calls::{GreetRequest, GreetResponse, Greeter, g
 use proto_packet_test::services::empty::{Empty, empty_router};
 use proto_packet_test::services::types::{Echo, echo_router};
 use proto_packet_test::types::{Color, Label, Point, Shape};
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 /// A greeter that rejects empty names.
@@ -126,6 +127,13 @@ impl Echo for TestEcho {
         Ok(request)
     }
 
+    async fn counts(
+        &self,
+        request: BTreeMap<String, u32>,
+    ) -> Result<BTreeMap<String, u32>, ServiceError> {
+        Ok(request)
+    }
+
     async fn point(&self, request: Point) -> Result<Point, ServiceError> {
         Ok(request)
     }
@@ -155,6 +163,7 @@ async fn calls_of_each_kind_of_type() {
         ("time", "-1"),
         ("day", DAY_JSON),
         ("bytes", "[1,2]"),
+        ("counts", r#"{"a":1,"b":2}"#),
         ("point", POINT_JSON),
         ("label", LABEL_JSON),
         ("color", r#""Green""#),

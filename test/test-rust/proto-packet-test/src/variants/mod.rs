@@ -2,5 +2,6 @@
 pub mod boxed;
 pub mod cases;
 pub mod empty;
+pub mod maps;
 pub mod named;
 pub mod slices;

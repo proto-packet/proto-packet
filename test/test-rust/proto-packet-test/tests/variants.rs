@@ -4,8 +4,10 @@ use common::*;
 use proto_packet::types::{Float32, Float64};
 use proto_packet_test::types::Color;
 use proto_packet_test::variants::boxed::BoxedCases;
+use proto_packet_test::variants::maps::MapCases;
 use proto_packet_test::variants::named::{NamedCases, NamedSlices};
 use proto_packet_test::variants::{cases, slices};
+use std::collections::BTreeMap;
 
 #[test]
 fn cases_json() {
@@ -157,5 +159,17 @@ fn boxed_cases_json() {
     assert_json(
         &BoxedCases::Shape(Box::new(shape())),
         &format!(r#"{{"var":"Shape","val":{}}}"#, SHAPE_JSON),
+    );
+}
+
+#[test]
+fn maps_json() {
+    assert_json(
+        &MapCases::Counts(BTreeMap::from([("b".to_string(), 2), ("a".to_string(), 1)])),
+        r#"{"var":"Counts","val":{"a":1,"b":2}}"#,
+    );
+    assert_json(
+        &MapCases::Points(BTreeMap::from([(Color::Green, point())])),
+        &format!(r#"{{"var":"Points","val":{{"Green":{}}}}}"#, POINT_JSON),
     );
 }

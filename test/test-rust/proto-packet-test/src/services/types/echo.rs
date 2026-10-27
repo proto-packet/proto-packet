@@ -82,6 +82,18 @@ pub trait Echo: ::std::marker::Send + ::std::marker::Sync {
     > + ::std::marker::Send
     + '_;
 
+    /// Echoes a map.
+    fn counts(
+        &self,
+        request: ::std::collections::BTreeMap<::std::string::String, u32>,
+    ) -> impl ::std::future::Future<
+        Output = ::std::result::Result<
+            ::std::collections::BTreeMap<::std::string::String, u32>,
+            ::proto_packet::service::ServiceError,
+        >,
+    > + ::std::marker::Send
+    + '_;
+
     /// Echoes a struct.
     fn point(
         &self,
@@ -220,6 +232,23 @@ where
                 >| {
                     let service = service.clone();
                     async move { service.bytes(request).await.map(::proto_packet::axum::Json) }
+                }
+            }),
+        )
+        .route(
+            "/services.types.Echo/counts",
+            ::proto_packet::axum::routing::post({
+                let service = service.clone();
+                move |::proto_packet::axum::Json(request): ::proto_packet::axum::Json<
+                    ::std::collections::BTreeMap<::std::string::String, u32>,
+                >| {
+                    let service = service.clone();
+                    async move {
+                        service
+                            .counts(request)
+                            .await
+                            .map(::proto_packet::axum::Json)
+                    }
                 }
             }),
         )

@@ -1,0 +1,107 @@
+import types.Color;
+import types.Label;
+import types.Path;
+import types.Point;
+import types.Shape;
+
+// A struct with map fields of each kind of scalar key.
+struct ScalarKeys {
+
+    // A `bool` key.
+    boolean: map<bool, u32>;
+
+    // A `u64` key.
+    unsigned: map<u64, u32>;
+
+    // An `i64` key.
+    signed: map<i64, u32>;
+
+    // An `f64` key.
+    float: map<f64, u32>;
+
+    // A `uuid` key.
+    id: map<uuid, u32>;
+
+    // A `string` key.
+    text: map<string, u32>;
+
+    // A `timestamp` key.
+    time: map<timestamp, u32>;
+
+    // A `date` key.
+    day: map<date, u32>;
+}
+
+// A struct with map fields of each kind of named key.
+struct NamedKeys {
+
+    // A `Copy` struct key.
+    point: map<Point, u32>;
+
+    // A non-`Copy` struct key.
+    path: map<Path, u32>;
+
+    // A message key.
+    label: map<Label, u32>;
+
+    // An enum key.
+    color: map<Color, u32>;
+
+    // A variant key.
+    shape: map<Shape, u32>;
+}
+
+// A struct with map fields of slice & map keys.
+struct NestedKeys {
+
+    // A slice key.
+    slice: map<[]u8, u32>;
+
+    // A map key.
+    nested: map<map<string, u32>, u32>;
+}
+
+// A struct with map fields of each kind of value.
+struct MapValues {
+
+    // An `f32` value.
+    float: map<string, f32>;
+
+    // A `string` value.
+    text: map<string, string>;
+
+    // A `Copy` struct value.
+    point: map<string, Point>;
+
+    // A non-`Copy` struct value.
+    path: map<string, Path>;
+
+    // A message value.
+    label: map<string, Label>;
+
+    // An enum value.
+    color: map<string, Color>;
+
+    // A variant value.
+    shape: map<string, Shape>;
+
+    // A slice value.
+    slice: map<string, []u32>;
+
+    // A map value.
+    nested: map<string, map<string, u32>>;
+}
+
+// A struct with an optional map field.
+struct OptionalMap {
+
+    // The optional map.
+    counts: optional map<string, u32>;
+}
+
+// A struct with a map field named `map`. (`map` is only a keyword before a `<`)
+struct MapField {
+
+    // The map named `map`.
+    map: map<string, u32>;
+}

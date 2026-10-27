@@ -1,0 +1,15 @@
+import types.Color;
+import types.Point;
+
+// A variant with map cases.
+variant MapCases {
+
+    // A map of `string` keys & `u32` values.
+    Counts: map<string, u32> = 1;
+
+    // A map of enum keys & struct values.
+    Points: map<Color, Point> = 2;
+
+    // A map of struct keys & `string` values.
+    Names: map<Point, string> = 3;
+}

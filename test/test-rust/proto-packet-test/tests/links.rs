@@ -3,11 +3,12 @@ mod common;
 use common::*;
 use proto_packet_test::links::imports::ImportedFields;
 use proto_packet_test::links::local::{After, Before};
-use proto_packet_test::links::loops::{Category, Expr, Folder, ListNode, Sum, TreeNode};
+use proto_packet_test::links::loops::{Category, Expr, Folder, GraphNode, ListNode, Sum, TreeNode};
 use proto_packet_test::links::qualified::{Local, QualifiedFields};
 use proto_packet_test::mods::parent::child::Child;
 use proto_packet_test::names::r#move::MoveStruct;
 use proto_packet_test::names::r#type::self_::SelfStruct;
+use std::collections::BTreeMap;
 
 #[test]
 fn local_names() {
@@ -70,6 +71,19 @@ fn struct_loops_through_slices() {
     assert_json(
         &value,
         r#"{"value":1,"children":[{"value":2,"children":[]},{"value":3,"children":[]}]}"#,
+    );
+}
+
+#[test]
+fn struct_loops_through_maps() {
+    let value: GraphNode = GraphNode::new(
+        1,
+        BTreeMap::from([("leaf".to_string(), GraphNode::new(2, BTreeMap::new()))]),
+    );
+    assert_eq!(value.children().get("leaf").map(GraphNode::value), Some(2));
+    assert_json(
+        &value,
+        r#"{"value":1,"children":{"leaf":{"value":2,"children":{}}}}"#,
     );
 }
 
