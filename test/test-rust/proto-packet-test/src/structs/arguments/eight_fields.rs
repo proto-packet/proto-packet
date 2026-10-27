@@ -289,27 +289,27 @@ impl EightFields {
 impl EightFields {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 8 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 8,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            one: ::proto_packet::io::read_u8(bytes, 0),
-            two: ::proto_packet::io::read_u8(bytes, 1),
-            three: ::proto_packet::io::read_u8(bytes, 2),
-            four: ::proto_packet::io::read_u8(bytes, 3),
-            five: ::proto_packet::io::read_u8(bytes, 4),
-            six: ::proto_packet::io::read_u8(bytes, 5),
-            seven: ::proto_packet::io::read_u8(bytes, 6),
-            eight: ::proto_packet::io::read_u8(bytes, 7),
-        })
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -327,6 +327,176 @@ impl EightFields {
             six: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 5) },
             seven: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 6) },
             eight: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 7) },
+        }
+    }
+}
+
+/// The borrowed encoding of a [EightFields], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct EightFieldsRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> EightFieldsRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [EightFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [EightFields].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        EightFields::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [EightFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [EightFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> EightFieldsRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [EightFields].
+    #[must_use]
+    pub fn decode(&self) -> EightFields {
+        unsafe { EightFields::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> EightFieldsBuf {
+        EightFieldsBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> EightFieldsRef<'a> {
+    //! Fields
+
+    /// Gets the field: `one`.
+    #[must_use]
+    pub fn one(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 0) }
+    }
+
+    /// Gets the field: `two`.
+    #[must_use]
+    pub fn two(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 1) }
+    }
+
+    /// Gets the field: `three`.
+    #[must_use]
+    pub fn three(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 2) }
+    }
+
+    /// Gets the field: `four`.
+    #[must_use]
+    pub fn four(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 3) }
+    }
+
+    /// Gets the field: `five`.
+    #[must_use]
+    pub fn five(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 4) }
+    }
+
+    /// Gets the field: `six`.
+    #[must_use]
+    pub fn six(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 5) }
+    }
+
+    /// Gets the field: `seven`.
+    #[must_use]
+    pub fn seven(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 6) }
+    }
+
+    /// Gets the field: `eight`.
+    #[must_use]
+    pub fn eight(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 7) }
+    }
+}
+
+/// The owned encoding of a [EightFields], read in place.
+#[derive(Clone, Debug)]
+pub struct EightFieldsBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl EightFieldsBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [EightFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [EightFields].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        EightFields::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [EightFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [EightFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl EightFieldsBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> EightFieldsRef<'_> {
+        unsafe { EightFieldsRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [EightFields].
+    #[must_use]
+    pub fn decode(&self) -> EightFields {
+        unsafe { EightFields::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&EightFields> for EightFieldsBuf {
+    fn from(value: &EightFields) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

@@ -108,21 +108,27 @@ impl Point {
 impl Point {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 8 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 8,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            x: ::proto_packet::io::read_i32(bytes, 0),
-            y: ::proto_packet::io::read_i32(bytes, 4),
-        })
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -134,6 +140,140 @@ impl Point {
         Self {
             x: unsafe { ::proto_packet::io::read_i32_unchecked(bytes, 0) },
             y: unsafe { ::proto_packet::io::read_i32_unchecked(bytes, 4) },
+        }
+    }
+}
+
+/// The borrowed encoding of a [Point], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct PointRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> PointRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [Point] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Point].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Point::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [Point] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Point].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> PointRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [Point].
+    #[must_use]
+    pub fn decode(&self) -> Point {
+        unsafe { Point::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> PointBuf {
+        PointBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> PointRef<'a> {
+    //! Fields
+
+    /// Gets the field: `x`.
+    #[must_use]
+    pub fn x(&self) -> i32 {
+        unsafe { ::proto_packet::io::read_i32_unchecked(self.bytes, 0) }
+    }
+
+    /// Gets the field: `y`.
+    #[must_use]
+    pub fn y(&self) -> i32 {
+        unsafe { ::proto_packet::io::read_i32_unchecked(self.bytes, 4) }
+    }
+}
+
+/// The owned encoding of a [Point], read in place.
+#[derive(Clone, Debug)]
+pub struct PointBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl PointBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [Point] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Point].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Point::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [Point] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Point].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl PointBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> PointRef<'_> {
+        unsafe { PointRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [Point].
+    #[must_use]
+    pub fn decode(&self) -> Point {
+        unsafe { Point::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&Point> for PointBuf {
+    fn from(value: &Point) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

@@ -115,11 +115,11 @@ impl SpecialFields {
 impl SpecialFields {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() < 20 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 20,
@@ -134,14 +134,18 @@ impl SpecialFields {
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            one: ::proto_packet::types::Uuid::from_bytes(
-                ::proto_packet::io::read_u128(bytes, 0).to_le_bytes(),
-            ),
-            two: ::std::str::from_utf8(&bytes[20..end_0])
-                .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?
-                .to_string(),
-        })
+        ::std::str::from_utf8(&bytes[20..end_0])
+            .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -158,6 +162,145 @@ impl SpecialFields {
             ),
             two: unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(20..end_0)) }
                 .to_string(),
+        }
+    }
+}
+
+/// The borrowed encoding of a [SpecialFields], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct SpecialFieldsRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> SpecialFieldsRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [SpecialFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [SpecialFields].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        SpecialFields::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [SpecialFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [SpecialFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> SpecialFieldsRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [SpecialFields].
+    #[must_use]
+    pub fn decode(&self) -> SpecialFields {
+        unsafe { SpecialFields::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> SpecialFieldsBuf {
+        SpecialFieldsBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> SpecialFieldsRef<'a> {
+    //! Fields
+
+    /// Gets the field: `one`.
+    #[must_use]
+    pub fn one(&self) -> ::proto_packet::types::Uuid {
+        ::proto_packet::types::Uuid::from_bytes(
+            unsafe { ::proto_packet::io::read_u128_unchecked(self.bytes, 0) }.to_le_bytes(),
+        )
+    }
+
+    /// Gets the field: `two`.
+    #[must_use]
+    pub fn two(&self) -> &'a str {
+        let start: usize = 20;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 16) } as usize;
+        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+    }
+}
+
+/// The owned encoding of a [SpecialFields], read in place.
+#[derive(Clone, Debug)]
+pub struct SpecialFieldsBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl SpecialFieldsBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [SpecialFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [SpecialFields].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        SpecialFields::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [SpecialFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [SpecialFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl SpecialFieldsBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> SpecialFieldsRef<'_> {
+        unsafe { SpecialFieldsRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [SpecialFields].
+    #[must_use]
+    pub fn decode(&self) -> SpecialFields {
+        unsafe { SpecialFields::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&SpecialFields> for SpecialFieldsBuf {
+    fn from(value: &SpecialFields) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

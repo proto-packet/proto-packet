@@ -139,22 +139,27 @@ impl Vec3 {
 impl Vec3 {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 12 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 12,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            x: ::proto_packet::types::Float32::new(::proto_packet::io::read_f32(bytes, 0)),
-            y: ::proto_packet::types::Float32::new(::proto_packet::io::read_f32(bytes, 4)),
-            z: ::proto_packet::types::Float32::new(::proto_packet::io::read_f32(bytes, 8)),
-        })
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -173,6 +178,155 @@ impl Vec3 {
             z: ::proto_packet::types::Float32::new(unsafe {
                 ::proto_packet::io::read_f32_unchecked(bytes, 8)
             }),
+        }
+    }
+}
+
+/// The borrowed encoding of a [Vec3], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct Vec3Ref<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> Vec3Ref<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [Vec3] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Vec3].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Vec3::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [Vec3] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Vec3].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> Vec3Ref<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [Vec3].
+    #[must_use]
+    pub fn decode(&self) -> Vec3 {
+        unsafe { Vec3::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> Vec3Buf {
+        Vec3Buf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> Vec3Ref<'a> {
+    //! Fields
+
+    /// Gets the field: `x`.
+    #[must_use]
+    pub fn x(&self) -> f32 {
+        ::proto_packet::types::Float32::new(unsafe {
+            ::proto_packet::io::read_f32_unchecked(self.bytes, 0)
+        })
+        .value()
+    }
+
+    /// Gets the field: `y`.
+    #[must_use]
+    pub fn y(&self) -> f32 {
+        ::proto_packet::types::Float32::new(unsafe {
+            ::proto_packet::io::read_f32_unchecked(self.bytes, 4)
+        })
+        .value()
+    }
+
+    /// Gets the field: `z`.
+    #[must_use]
+    pub fn z(&self) -> f32 {
+        ::proto_packet::types::Float32::new(unsafe {
+            ::proto_packet::io::read_f32_unchecked(self.bytes, 8)
+        })
+        .value()
+    }
+}
+
+/// The owned encoding of a [Vec3], read in place.
+#[derive(Clone, Debug)]
+pub struct Vec3Buf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl Vec3Buf {
+    //! Construction
+
+    /// Creates the owned encoding of a [Vec3] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Vec3].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Vec3::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [Vec3] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Vec3].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl Vec3Buf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> Vec3Ref<'_> {
+        unsafe { Vec3Ref::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [Vec3].
+    #[must_use]
+    pub fn decode(&self) -> Vec3 {
+        unsafe { Vec3::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&Vec3> for Vec3Buf {
+    fn from(value: &Vec3) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

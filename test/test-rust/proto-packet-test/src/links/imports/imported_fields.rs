@@ -181,23 +181,31 @@ impl ImportedFields {
 impl ImportedFields {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 20 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 20,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            point: crate::types::Point::decode(&bytes[0..8])?,
-            child: crate::mods::parent::child::Child::decode(&bytes[8..12])?,
-            raw: crate::names::r#move::MoveStruct::decode(&bytes[12..16])?,
-            non_raw: crate::names::r#type::self_::SelfStruct::decode(&bytes[16..20])?,
-        })
+        crate::types::Point::validate(&bytes[0..8])?;
+        crate::mods::parent::child::Child::validate(&bytes[8..12])?;
+        crate::names::r#move::MoveStruct::validate(&bytes[12..16])?;
+        crate::names::r#type::self_::SelfStruct::validate(&bytes[16..20])?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -219,6 +227,160 @@ impl ImportedFields {
                     bytes.get_unchecked(16..20),
                 )
             },
+        }
+    }
+}
+
+/// The borrowed encoding of a [ImportedFields], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct ImportedFieldsRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> ImportedFieldsRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [ImportedFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [ImportedFields].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        ImportedFields::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [ImportedFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [ImportedFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> ImportedFieldsRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [ImportedFields].
+    #[must_use]
+    pub fn decode(&self) -> ImportedFields {
+        unsafe { ImportedFields::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> ImportedFieldsBuf {
+        ImportedFieldsBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> ImportedFieldsRef<'a> {
+    //! Fields
+
+    /// Gets the field: `point`.
+    #[must_use]
+    pub fn point(&self) -> crate::types::PointRef<'a> {
+        unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(0..8)) }
+    }
+
+    /// Gets the field: `child`.
+    #[must_use]
+    pub fn child(&self) -> crate::mods::parent::child::ChildRef<'a> {
+        unsafe {
+            crate::mods::parent::child::ChildRef::new_unchecked(self.bytes.get_unchecked(8..12))
+        }
+    }
+
+    /// Gets the field: `raw`.
+    #[must_use]
+    pub fn raw(&self) -> crate::names::r#move::MoveStructRef<'a> {
+        unsafe {
+            crate::names::r#move::MoveStructRef::new_unchecked(self.bytes.get_unchecked(12..16))
+        }
+    }
+
+    /// Gets the field: `non_raw`.
+    #[must_use]
+    pub fn non_raw(&self) -> crate::names::r#type::self_::SelfStructRef<'a> {
+        unsafe {
+            crate::names::r#type::self_::SelfStructRef::new_unchecked(
+                self.bytes.get_unchecked(16..20),
+            )
+        }
+    }
+}
+
+/// The owned encoding of a [ImportedFields], read in place.
+#[derive(Clone, Debug)]
+pub struct ImportedFieldsBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl ImportedFieldsBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [ImportedFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [ImportedFields].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        ImportedFields::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [ImportedFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [ImportedFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl ImportedFieldsBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> ImportedFieldsRef<'_> {
+        unsafe { ImportedFieldsRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [ImportedFields].
+    #[must_use]
+    pub fn decode(&self) -> ImportedFields {
+        unsafe { ImportedFields::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&ImportedFields> for ImportedFieldsBuf {
+    fn from(value: &ImportedFields) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }
