@@ -26,8 +26,8 @@ pub fn gen_service(project: &Project, mod_path: ModPathRef<'_>, service: &Servic
 /// Generates the trait of the `service`.
 fn gen_trait(typing: Typing<'_>, service: &Service) -> Trait {
     let mut result: Trait = Trait::from(ident(&service.type_name()))
-        .with_supertrait("Send")
-        .with_supertrait("Sync");
+        .with_supertrait("::std::marker::Send")
+        .with_supertrait("::std::marker::Sync");
     add_docs(&mut result, service.comments());
     if !is_upper_camel_case(&service.type_name()) {
         result.add_attribute("allow(non_camel_case_types)");
@@ -52,7 +52,7 @@ fn gen_signature(typing: Typing<'_>, call: &ServiceCall) -> Signature {
     let future: RustType = RustType::from("::std::future::Future")
         .with_generic(result.to_binding("Output"))
         .to_impl()
-        .with_bound("Send")
+        .with_bound("::std::marker::Send")
         .with_bound("'_");
     Signature::from(ident(&call.call_name()))
         .with_receiver(Receiver::Borrowed)
