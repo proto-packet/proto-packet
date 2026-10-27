@@ -1,4 +1,5 @@
 use crate::layout::StructLayout;
+use crate::rust::bufs::buf_name;
 use crate::rust::naming::{ident, is_snake_case, snake_case};
 use crate::rust::refs::ref_name;
 use crate::rust::{gen_enum, gen_message, gen_service, gen_struct, gen_variant};
@@ -103,7 +104,7 @@ impl ModNode<'_> {
 
 /// Checks no two types of the `schema_file` at the `mod_path` have the same generated type name.
 ///
-/// A struct with an encoding also has its `Ref` type. (ex: `FooRef` of `Foo`)
+/// A struct with an encoding also has its `Ref` & `Buf` types. (ex: `FooRef` & `FooBuf` of `Foo`)
 fn check_type_names(
     project: &Project,
     mod_path: ModPathRef<'_>,
@@ -112,12 +113,19 @@ fn check_type_names(
     let mut type_names: BTreeSet<String> = BTreeSet::default();
     for type_dec in schema_file.type_decs() {
         let type_name: String = ident(&type_dec.type_name());
-        let has_ref: bool = matches!(
+        let has_encodings: bool = matches!(
             type_dec,
             TypeDec::Struct(structure) if StructLayout::new(project, structure).is_some()
         );
-        let ref_type_name: Option<String> = has_ref.then(|| ref_name(&type_dec.type_name()));
-        for name in std::iter::once(type_name).chain(ref_type_name) {
+        let encodings: Vec<String> = if has_encodings {
+            vec![
+                ref_name(&type_dec.type_name()),
+                buf_name(&type_dec.type_name()),
+            ]
+        } else {
+            Vec::default()
+        };
+        for name in std::iter::once(type_name).chain(encodings) {
             if !type_names.insert(name.clone()) {
                 return Err(GenError::TypeNameConflict {
                     mod_path: mod_path.to_string(),

@@ -1,4 +1,5 @@
 use crate::layout::{FieldLayout, StructLayout};
+use crate::rust::bufs::buf_name;
 use crate::rust::decoding::{IO, bit_value, fixed_value};
 use crate::rust::naming::{ident, is_snake_case, is_upper_camel_case, type_path};
 use crate::rust::typing::Typing;
@@ -13,7 +14,8 @@ use proto_packet_tree::{
 };
 
 /// The names of the generated functions of a `Ref` type, other than its field getters.
-pub(crate) const REF_FUNCTIONS: [&str; 4] = ["new", "new_unchecked", "as_bytes", "decode"];
+pub(crate) const REF_FUNCTIONS: [&str; 5] =
+    ["new", "new_unchecked", "as_bytes", "decode", "to_buf"];
 
 /// Gets the Rust name of the `Ref` type of the struct with the schema `type_name`.
 ///
@@ -54,7 +56,11 @@ pub(crate) fn gen_ref(
         .with_statement(EmptyLine::default())
         .with_statement(gen_construction(&ref_type, type_name))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_encoding(&ref_type, type_name));
+        .with_statement(gen_encoding(
+            &ref_type,
+            &buf_name(&structure.type_name()),
+            type_name,
+        ));
     if !structure.fields().is_empty() {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_fields(typing, project, structure, layout, &ref_type));
@@ -128,8 +134,9 @@ fn gen_construction(ref_type: &RustType, type_name: &str) -> ImplBlock {
         .with_function(new_unchecked)
 }
 
-/// Generates the impl block with the encoding of the `ref_type` of the struct with the `type_name`.
-fn gen_encoding(ref_type: &RustType, type_name: &str) -> ImplBlock {
+/// Generates the impl block with the encoding of the `ref_type` of the struct with the `type_name`
+/// & the `Buf` type with the `buf_name`.
+fn gen_encoding(ref_type: &RustType, buf_name: &str, type_name: &str) -> ImplBlock {
     let signature: Signature = Signature::from("as_bytes")
         .with_receiver(Receiver::Borrowed)
         .with_result("&'a [u8]");
@@ -152,11 +159,21 @@ fn gen_encoding(ref_type: &RustType, type_name: &str) -> ImplBlock {
             type_name
         ));
 
+    let signature: Signature = Signature::from("to_buf")
+        .with_receiver(Receiver::Borrowed)
+        .with_result(buf_name);
+    let to_buf: Function = Function::from(signature)
+        .with_comment(" Copies the encoding into an owned encoding.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_literal(format!("{} {{ bytes: self.bytes.to_vec() }}", buf_name));
+
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
         .with_comment(" Encoding")
         .with_function(as_bytes)
         .with_function(decode)
+        .with_function(to_buf)
 }
 
 /// Generates the impl block with the field getters of the `ref_type` of the `structure`.
