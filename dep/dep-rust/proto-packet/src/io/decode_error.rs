@@ -16,6 +16,9 @@ pub enum DecodeError {
 
     /// A date is outside the range of the dates. (in days since 1970-01-01)
     InvalidDate { days: i32 },
+
+    /// A list's encoding is not valid. (ex: a length that is not a multiple of the element size)
+    InvalidList,
 }
 
 impl Display for DecodeError {
@@ -31,6 +34,7 @@ impl Display for DecodeError {
             Self::InvalidDate { days } => {
                 write!(f, "the date {} days from 1970-01-01 is out of range", days)
             }
+            Self::InvalidList => f.write_str("invalid list"),
         }
     }
 }
