@@ -9,7 +9,10 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
     match tree {
         TypeTagTree::Name(name) => validate_named_type(name, source),
         TypeTagTree::Slice { base } => Ok(validate_type_tag(base, source)?.into_slice()),
-        TypeTagTree::Map { .. } => todo!(),
+        TypeTagTree::Map { key, value } => Ok(TypeTag::map(
+            validate_type_tag(key, source)?,
+            validate_type_tag(value, source)?,
+        )),
     }
 }
 
