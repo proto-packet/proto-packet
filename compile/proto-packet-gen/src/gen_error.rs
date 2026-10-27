@@ -9,6 +9,17 @@ pub enum GenError {
     ModNameConflict { mod_path: String, mod_name: String },
 }
 
+impl GenError {
+    //! Properties
+
+    /// Gets the error code.
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::ModNameConflict { .. } => "G_MOD_NAME_CONFLICT",
+        }
+    }
+}
+
 impl Display for GenError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {

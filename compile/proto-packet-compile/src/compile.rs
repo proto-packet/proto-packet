@@ -43,7 +43,7 @@ pub fn compile(language: Language, source: &Path, target: &Path) -> Result<(), R
     let files: Vec<GeneratedFile> = match language {
         Language::Rust => proto_packet_gen::rust::generate(&project),
     }
-    .map_err(|error| Report::from(Code::error("G_MOD_NAME_CONFLICT", error.to_string())))?;
+    .map_err(|error| Report::from(Code::error(error.code(), error.to_string())))?;
     write_files(target, &files)
 }
 
