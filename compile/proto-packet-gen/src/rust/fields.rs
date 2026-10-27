@@ -169,16 +169,22 @@ impl Field<'_> {
     }
 
     /// Generates the getter of the field.
+    ///
+    /// The getter of a field named `new` does not return `Self`. (only messages can have one)
     fn gen_getter(self, typing: Typing<'_>) -> Function {
         let (result, expr): (RustType, String) = self.getter(typing);
         let signature: Signature = Signature::from(ident(&self.name))
             .with_receiver(Receiver::Borrowed)
             .with_result(result);
-        Function::from(signature)
+        let mut function: Function = Function::from(signature)
             .with_comment(format!(" Gets the field: `{}`.", self.name))
             .with_attribute("must_use")
             .with_access(Access::Public)
-            .with_literal(expr)
+            .with_literal(expr);
+        if self.name == "new" {
+            function.add_attribute("allow(clippy::new_ret_no_self)");
+        }
+        function
     }
 
     /// Generates the setter of the field. (it returns the previous value)
