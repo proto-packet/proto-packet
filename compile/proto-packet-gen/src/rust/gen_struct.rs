@@ -1,5 +1,6 @@
 use crate::GenError;
 use crate::layout::StructLayout;
+use crate::rust::bufs::gen_buf;
 use crate::rust::decoding::{DECODING_FUNCTIONS, gen_decoding};
 use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
@@ -64,6 +65,8 @@ pub fn gen_struct(
         block.add_statement(gen_decoding(project, structure, &layout, &type_name));
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_ref(typing, project, structure, &layout, &type_name));
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_buf(structure, &type_name));
     }
     Ok(block.to_code())
 }
