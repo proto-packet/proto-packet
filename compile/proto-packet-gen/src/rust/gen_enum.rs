@@ -1,14 +1,28 @@
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
 use crate::rust::naming::{ident, is_renamed, is_upper_camel_case};
-use code_gen::Statement;
-use code_gen::rust::{Access, Enum as RustEnum, EnumCase, WithAccess, WithAttributes};
-use proto_packet_tree::{Enum, WithCaseName, WithComments, WithTypeName};
+use code_gen::rust::{
+    Access, Enum as RustEnum, EnumCase, Function, ImplBlock, MatchCase, MatchStatement, Receiver,
+    Signature, Var, WithAccess, WithAttributes, WithComments, WithFunctions, WithReceiver,
+    WithResult, WithVarParams,
+};
+use code_gen::{Block, EmptyLine, Statement, WithStatements};
+use proto_packet::io::WithTagNumber;
+use proto_packet_tree::{Enum, WithCaseName, WithComments as _, WithTypeName};
 
 /// Generates the Rust code of the `enumeration`.
 ///
 /// A renamed case keeps its schema name in serde. (ex: `Self_` is `Self`)
 pub fn gen_enum(enumeration: &Enum) -> String {
+    let block: Block = Block::default()
+        .with_statement(gen_dec(enumeration))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_tag_numbers(enumeration));
+    block.to_code()
+}
+
+/// Generates the declaration of the `enumeration`.
+fn gen_dec(enumeration: &Enum) -> RustEnum {
     let mut result: RustEnum = RustEnum::from(ident(&enumeration.type_name()));
     add_docs(&mut result, enumeration.comments());
     add_derives(&mut result, true, false);
@@ -29,5 +43,58 @@ pub fn gen_enum(enumeration: &Enum) -> String {
         }
         result.add_case(rust_case);
     }
-    result.to_code()
+    result
+}
+
+/// Generates the impl block converting the cases of the `enumeration` to & from tag numbers.
+fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
+    let mut to_tag_number: MatchStatement = MatchStatement::from("self");
+    let mut from_tag_number: MatchStatement = MatchStatement::from("tag_number");
+    for case in enumeration.cases() {
+        let path: String = format!("Self::{}", ident(&case.case_name()));
+        let tag_number: String = case.tag_number().to_string();
+        to_tag_number
+            .add_match_case(MatchCase::from(path.as_str()).with_literal(tag_number.as_str()));
+        from_tag_number.add_match_case(
+            MatchCase::from(tag_number)
+                .with_literal(format!("::std::option::Option::Some({})", path)),
+        );
+    }
+
+    let signature: Signature = Signature::from("tag_number")
+        .with_receiver(Receiver::Owned)
+        .with_result("u16");
+    let to: Function = Function::from(signature)
+        .with_comment(" Gets the tag number.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_const(true)
+        .with_statement(to_tag_number);
+
+    let param: &str = if enumeration.cases().is_empty() {
+        "_tag_number"
+    } else {
+        "tag_number"
+    };
+    let signature: Signature = Signature::from("from_tag_number")
+        .with_param(Var::from((param, "u16")))
+        .with_result("::std::option::Option<Self>");
+    let mut from: Function = Function::from(signature)
+        .with_comment(" Gets the optional case with the `tag_number`.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_const(true);
+    if enumeration.cases().is_empty() {
+        from.add_literal("::std::option::Option::None");
+    } else {
+        from.add_statement(
+            from_tag_number
+                .with_match_case(MatchCase::from("_").with_literal("::std::option::Option::None")),
+        );
+    }
+
+    ImplBlock::from(ident(&enumeration.type_name()))
+        .with_comment(" Tag Numbers")
+        .with_function(to)
+        .with_function(from)
 }
