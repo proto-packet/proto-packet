@@ -32,3 +32,5 @@ The workspaces:
 - `[compile/validate]`: validating schema files in `proto-packet-validate`.
 - `[dep]`: the runtime libraries in `dep/`, typically anything focused outside a single language.
 - `[dep/rust]`: the Rust runtime library in `dep/dep-rust`.
+- `[test]`: the end-to-end tests in `test/`, typically anything focused outside a single language.
+- `[test/rust]`: the Rust tests in `test/test-rust`.
