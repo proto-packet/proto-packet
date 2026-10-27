@@ -35,8 +35,7 @@ impl Typing<'_> {
             TypeTag::Time(TimeType::Timestamp) => RustType::from("i64"),
             TypeTag::Time(TimeType::Date) => RustType::from("::proto_packet::types::Date"),
             TypeTag::Named(name) => RustType::from(type_path(name.to_ref())),
-            TypeTag::Slice { .. } => self.storage_type(tag),
-            TypeTag::Map { .. } => todo!(),
+            TypeTag::Slice { .. } | TypeTag::Map { .. } => self.storage_type(tag),
         }
     }
 
@@ -52,6 +51,9 @@ impl Typing<'_> {
             TypeTag::Slice { base } => {
                 RustType::from("::std::vec::Vec").with_generic(self.storage_type(base))
             }
+            TypeTag::Map { key, value } => RustType::from("::std::collections::BTreeMap")
+                .with_generic(self.storage_type(key))
+                .with_generic(self.storage_type(value)),
             _ => self.value_type(tag),
         }
     }
@@ -115,8 +117,7 @@ impl Typing<'_> {
         match tag {
             TypeTag::Primitive(_) | TypeTag::Time(_) => true,
             TypeTag::Special(special) => *special == SpecialType::Uuid,
-            TypeTag::Slice { .. } => false,
-            TypeTag::Map { .. } => todo!(),
+            TypeTag::Slice { .. } | TypeTag::Map { .. } => false,
             TypeTag::Named(name) => match self.project.type_dec_with_name(name.to_ref()) {
                 Some(TypeDec::Enum(_)) => true,
                 Some(TypeDec::Struct(structure)) if !visiting.contains(name) => {
