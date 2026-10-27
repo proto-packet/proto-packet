@@ -14,7 +14,7 @@ use proto_packet_tree::{
 pub(crate) const DECODING_FUNCTIONS: [&str; 3] = ["validate", "decode", "decode_unchecked"];
 
 /// The path of the runtime's `io` module.
-const IO: &str = "::proto_packet::io";
+pub(crate) const IO: &str = "::proto_packet::io";
 
 /// A field of a struct being decoded.
 struct Field<'a> {
@@ -257,71 +257,96 @@ fn validation(project: &Project, tag: &TypeTag, location: &Location) -> Option<S
 
 /// Gets the expression reading the valid value of the `tag` of the `project` at the `location`.
 fn value(project: &Project, tag: &TypeTag, location: &Location) -> String {
-    let read = |name: &str, offset: usize| {
+    match location {
+        Location::Bit { offset, bit } => bit_value(*offset, *bit, "bytes"),
+        Location::Fixed { offset, size } => fixed_value(project, tag, *offset, "bytes")
+            .unwrap_or_else(|| {
+                format!(
+                    "unsafe {{ {}::decode_unchecked(bytes.get_unchecked({}..{})) }}",
+                    struct_path(tag),
+                    offset,
+                    offset + size
+                )
+            }),
+        Location::Data { range } => match tag {
+            TypeTag::Special(SpecialType::String) => format!(
+                "unsafe {{ ::std::str::from_utf8_unchecked(bytes.get_unchecked({})) }}.to_string()",
+                range
+            ),
+            _ => format!(
+                "unsafe {{ {}::decode_unchecked(bytes.get_unchecked({})) }}",
+                struct_path(tag),
+                range
+            ),
+        },
+    }
+}
+
+/// Gets the path of the named type of the `tag`. (ex: `crate::a::Point`)
+fn struct_path(tag: &TypeTag) -> String {
+    match tag {
+        TypeTag::Named(name) => type_path(name.to_ref()),
+        _ => unreachable!("a named type"),
+    }
+}
+
+/// Gets the expression reading the valid bit at the `offset` & `bit` of the `bytes`.
+pub(crate) fn bit_value(offset: usize, bit: u8, bytes: &str) -> String {
+    format!(
+        "unsafe {{ {}::read_bit_unchecked({}, {}, {}) }}",
+        IO, bytes, offset, bit
+    )
+}
+
+/// Gets the expression reading the valid fixed-size value of the `tag` of the `project` at the
+/// `offset` of the `bytes`, as its storage type. (ex: a `Float32` for an `f32`)
+///
+/// Returns `None` for a struct, which is read from its own range of the bytes instead.
+pub(crate) fn fixed_value(
+    project: &Project,
+    tag: &TypeTag,
+    offset: usize,
+    bytes: &str,
+) -> Option<String> {
+    let read = |name: &str| {
         format!(
-            "unsafe {{ {}::read_{}_unchecked(bytes, {}) }}",
-            IO, name, offset
+            "unsafe {{ {}::read_{}_unchecked({}, {}) }}",
+            IO, name, bytes, offset
         )
     };
-    match (tag, location) {
-        (_, Location::Bit { offset, bit }) => format!(
-            "unsafe {{ {}::read_bit_unchecked(bytes, {}, {}) }}",
-            IO, offset, bit
-        ),
-        (TypeTag::Special(SpecialType::String), Location::Data { range }) => format!(
-            "unsafe {{ ::std::str::from_utf8_unchecked(bytes.get_unchecked({})) }}.to_string()",
-            range
-        ),
-        (TypeTag::Named(name), Location::Data { range }) => format!(
-            "unsafe {{ {}::decode_unchecked(bytes.get_unchecked({})) }}",
-            type_path(name.to_ref()),
-            range
-        ),
-        (_, Location::Data { .. }) => unreachable!("a variable-size value"),
-        (tag, Location::Fixed { offset, size }) => {
-            let offset: usize = *offset;
-            match tag {
-                TypeTag::Primitive(PrimitiveType::Float32) => format!(
-                    "::proto_packet::types::Float32::new({})",
-                    read("f32", offset)
-                ),
-                TypeTag::Primitive(PrimitiveType::Float64) => format!(
-                    "::proto_packet::types::Float64::new({})",
-                    read("f64", offset)
-                ),
-                TypeTag::Primitive(primitive) => read(primitive.name(), offset),
-                TypeTag::Special(SpecialType::Uuid) => format!(
-                    "::proto_packet::types::Uuid::from_bytes({}.to_le_bytes())",
-                    read("u128", offset)
-                ),
-                TypeTag::Time(TimeType::Timestamp) => read("i64", offset),
-                TypeTag::Time(TimeType::Date) => format!(
-                    "unsafe {{ ::proto_packet::types::date_from_days(\
-                    {}::read_i32_unchecked(bytes, {})).unwrap_unchecked() }}",
-                    IO, offset
-                ),
-                TypeTag::Named(name) => {
-                    let path: String = type_path(name.to_ref());
-                    match project.type_dec_with_name(name.to_ref()) {
-                        Some(TypeDec::Enum(_)) => format!(
-                            "unsafe {{ {}::from_tag_number(\
-                            {}::read_u16_unchecked(bytes, {})).unwrap_unchecked() }}",
-                            path, IO, offset
-                        ),
-                        _ => format!(
-                            "unsafe {{ {}::decode_unchecked(bytes.get_unchecked({}..{})) }}",
-                            path,
-                            offset,
-                            offset + size
-                        ),
-                    }
-                }
-                TypeTag::Special(SpecialType::String)
-                | TypeTag::Slice { .. }
-                | TypeTag::Map { .. } => {
-                    unreachable!("a fixed-size value")
-                }
-            }
+    match tag {
+        TypeTag::Primitive(PrimitiveType::Float32) => Some(format!(
+            "::proto_packet::types::Float32::new({})",
+            read("f32")
+        )),
+        TypeTag::Primitive(PrimitiveType::Float64) => Some(format!(
+            "::proto_packet::types::Float64::new({})",
+            read("f64")
+        )),
+        TypeTag::Primitive(primitive) => Some(read(primitive.name())),
+        TypeTag::Special(SpecialType::Uuid) => Some(format!(
+            "::proto_packet::types::Uuid::from_bytes({}.to_le_bytes())",
+            read("u128")
+        )),
+        TypeTag::Time(TimeType::Timestamp) => Some(read("i64")),
+        TypeTag::Time(TimeType::Date) => Some(format!(
+            "unsafe {{ ::proto_packet::types::date_from_days(\
+            {}::read_i32_unchecked({}, {})).unwrap_unchecked() }}",
+            IO, bytes, offset
+        )),
+        TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref()) {
+            Some(TypeDec::Enum(_)) => Some(format!(
+                "unsafe {{ {}::from_tag_number(\
+                {}::read_u16_unchecked({}, {})).unwrap_unchecked() }}",
+                type_path(name.to_ref()),
+                IO,
+                bytes,
+                offset
+            )),
+            _ => None,
+        },
+        TypeTag::Special(SpecialType::String) | TypeTag::Slice { .. } | TypeTag::Map { .. } => {
+            unreachable!("a fixed-size value")
         }
     }
 }

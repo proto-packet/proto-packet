@@ -1,4 +1,6 @@
+use crate::layout::StructLayout;
 use crate::rust::naming::{ident, is_snake_case, snake_case};
+use crate::rust::refs::ref_name;
 use crate::rust::{gen_enum, gen_message, gen_service, gen_struct, gen_variant};
 use crate::{GenError, GeneratedFile};
 use proto_packet_tree::{ModPathRef, Project, SchemaFile, TypeDec, WithTypeName};
@@ -43,6 +45,7 @@ impl ModNode<'_> {
         let mut code: String = String::from(HEADER);
         let mut mod_names: BTreeSet<String> = BTreeSet::default();
         if let Some((mod_path, schema_file)) = self.schema_file {
+            check_type_names(project, mod_path, schema_file)?;
             let mut uses: String = String::default();
             let mut mods: String = String::default();
             for type_dec in schema_file.type_decs() {
@@ -98,6 +101,34 @@ impl ModNode<'_> {
     }
 }
 
+/// Checks no two types of the `schema_file` at the `mod_path` have the same generated type name.
+///
+/// A struct with an encoding also has its `Ref` type. (ex: `FooRef` of `Foo`)
+fn check_type_names(
+    project: &Project,
+    mod_path: ModPathRef<'_>,
+    schema_file: &SchemaFile,
+) -> Result<(), GenError> {
+    let mut type_names: BTreeSet<String> = BTreeSet::default();
+    for type_dec in schema_file.type_decs() {
+        let type_name: String = ident(&type_dec.type_name());
+        let has_ref: bool = matches!(
+            type_dec,
+            TypeDec::Struct(structure) if StructLayout::new(project, structure).is_some()
+        );
+        let ref_type_name: Option<String> = has_ref.then(|| ref_name(&type_dec.type_name()));
+        for name in std::iter::once(type_name).chain(ref_type_name) {
+            if !type_names.insert(name.clone()) {
+                return Err(GenError::TypeNameConflict {
+                    mod_path: mod_path.to_string(),
+                    type_name: name,
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Generates the code of the `type_dec` in the schema file at the `mod_path`.
 fn gen_type_dec(
     project: &Project,
@@ -123,5 +154,42 @@ fn conflict(mod_path: &str, mod_name: &str) -> GenError {
     GenError::ModNameConflict {
         mod_path: mod_path.replace('/', "."),
         mod_name: mod_name.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::GenError;
+    use crate::rust::generate;
+    use proto_packet_tree::{
+        FieldName, ModPath, PrimitiveType, Project, SchemaFile, Struct, StructField, TypeName,
+    };
+
+    /// Creates the struct with the `name` & a `u32` field.
+    fn structure(name: &str) -> Struct {
+        let field: StructField = StructField::new(
+            FieldName::try_from("x").unwrap(),
+            PrimitiveType::UnsignedInt32,
+        );
+        Struct::from(TypeName::try_from(name).unwrap())
+            .with_field(field)
+            .unwrap()
+    }
+
+    #[test]
+    fn generate_rejects_the_ref_type_names() {
+        let schema_file: SchemaFile = SchemaFile::default()
+            .with_type_dec(structure("Foo"))
+            .unwrap()
+            .with_type_dec(structure("FooRef"))
+            .unwrap();
+        let project: Project = Project::default()
+            .with_schema_file(ModPath::try_from("a").unwrap(), schema_file)
+            .unwrap();
+        let expected: GenError = GenError::TypeNameConflict {
+            mod_path: "a".to_string(),
+            type_name: "FooRef".to_string(),
+        };
+        assert_eq!(generate(&project), Err(expected));
     }
 }

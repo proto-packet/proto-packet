@@ -6,6 +6,7 @@ use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::{ENCODING_METHODS, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
+use crate::rust::refs::{REF_FUNCTIONS, gen_ref};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, ImplBlock, Signature, Struct as RustStruct, Var, WithAccess, WithAttributes,
@@ -39,6 +40,7 @@ pub fn gen_struct(
         .into_iter()
         .chain(ENCODING_METHODS)
         .chain(DECODING_FUNCTIONS)
+        .chain(REF_FUNCTIONS)
         .collect();
     check_field_names(
         &format!("{}.{}", mod_path, structure.type_name()),
@@ -60,6 +62,8 @@ pub fn gen_struct(
         block.add_statement(gen_encoding(project, structure, &layout, &type_name));
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_decoding(project, structure, &layout, &type_name));
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_ref(typing, project, structure, &layout, &type_name));
     }
     Ok(block.to_code())
 }

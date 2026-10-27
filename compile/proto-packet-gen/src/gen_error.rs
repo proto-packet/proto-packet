@@ -8,6 +8,11 @@ pub enum GenError {
     /// The module name `mod` also conflicts, with the parent module's own `mod.rs` file.
     ModNameConflict { mod_path: String, mod_name: String },
 
+    /// Two types of a module have the same generated type name.
+    ///
+    /// (ex: the struct `FooRef`, & the `Ref` type `FooRef` of the struct `Foo`)
+    TypeNameConflict { mod_path: String, type_name: String },
+
     /// A field is named like a generated method of its type.
     ///
     /// (ex: the constructor `new`, or the setter `set_x` & builder `with_x` of the field `x`)
@@ -24,6 +29,7 @@ impl GenError {
     pub const fn code(&self) -> &'static str {
         match self {
             Self::ModNameConflict { .. } => "G_MOD_NAME_CONFLICT",
+            Self::TypeNameConflict { .. } => "G_TYPE_NAME_CONFLICT",
             Self::FieldNameConflict { .. } => "G_FIELD_NAME_CONFLICT",
         }
     }
@@ -36,6 +42,14 @@ impl Display for GenError {
                 f,
                 "the generated module name `{}` conflicts in `{}`",
                 mod_name, mod_path
+            ),
+            Self::TypeNameConflict {
+                mod_path,
+                type_name,
+            } => write!(
+                f,
+                "the generated type name `{}` conflicts in `{}`",
+                type_name, mod_path
             ),
             Self::FieldNameConflict {
                 type_name,
