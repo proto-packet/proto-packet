@@ -1,0 +1,13 @@
+// A message with a field named like the struct constructor. (messages are created with `default`)
+message NewField {
+
+    // The field named like the struct constructor.
+    new: u32 = 1;
+}
+
+// A struct with a field named like the message constructor. (structs are created with `new`)
+struct DefaultField {
+
+    // The field named like the message constructor.
+    default: u32;
+}

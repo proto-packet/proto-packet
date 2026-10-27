@@ -11,6 +11,7 @@ use proto_packet_test::names::keywords::{
     KeywordEnum, KeywordMessage, KeywordService, KeywordStruct, KeywordVariant, Self_, Type,
     keyword_service_router,
 };
+use proto_packet_test::names::methods::{DefaultField, NewField};
 use proto_packet_test::names::r#move::MoveStruct;
 use proto_packet_test::names::myMod::CamelStruct;
 use proto_packet_test::names::prelude;
@@ -97,6 +98,17 @@ async fn keyword_calls_are_routed_by_their_schema_names() {
 fn keyword_mods() {
     assert_eq!(MoveStruct::new(1).value(), 1);
     assert_eq!(SelfStruct::new(1).value(), 1);
+}
+
+#[test]
+fn fields_named_like_the_constructor_of_the_other_kind() {
+    let value: NewField = NewField::default().with_new(1_u32);
+    assert_eq!(value.new(), Some(1));
+    assert_json(&value, r#"{"new":1}"#);
+
+    let value: DefaultField = DefaultField::new(1);
+    assert_eq!(value.default(), 1);
+    assert_json(&value, r#"{"default":1}"#);
 }
 
 #[test]
