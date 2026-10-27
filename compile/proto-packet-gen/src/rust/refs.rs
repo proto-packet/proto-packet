@@ -1,8 +1,8 @@
-use crate::layout::{FieldLayout, StructLayout};
+use crate::layout::{BitLayout, StructLayout, ValueLayout};
 use crate::rust::bufs::buf_name;
-use crate::rust::decoding::{IO, bit_value, fixed_value};
+use crate::rust::decoding::{IO, bit_value, data_length, fixed_value, optional_enum_value};
 use crate::rust::naming::{ident, is_snake_case, is_upper_camel_case, type_path};
-use crate::rust::typing::Typing;
+use crate::rust::typing::{Typing, option};
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, Struct as RustStruct, StructField,
     Var, WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithGenerics,
@@ -186,20 +186,17 @@ fn gen_fields(
     layout: &StructLayout,
     ref_type: &RustType,
 ) -> ImplBlock {
-    let length_offsets: Vec<usize> = layout
+    let lengths: Vec<(usize, bool)> = structure
         .fields()
         .iter()
-        .filter_map(|field| match field {
-            FieldLayout::Length { offset } => Some(*offset),
+        .zip(layout.fields())
+        .filter_map(|(field, field_layout)| match field_layout.value {
+            ValueLayout::Length { offset } => Some((offset, field.is_optional())),
             _ => None,
         })
         .collect();
-    let length = |offset: usize| {
-        format!(
-            "unsafe {{ {}::read_u32_unchecked(self.bytes, {}) }} as usize",
-            IO, offset
-        )
-    };
+    let length =
+        |(offset, is_optional): (usize, bool)| data_length(offset, is_optional, "self.bytes", true);
     let mut lengths_before: usize = 0;
     let mut result: ImplBlock = ImplBlock::from(ref_type.clone())
         .with_generic("'a")
@@ -207,8 +204,8 @@ fn gen_fields(
     for (field, field_layout) in structure.fields().iter().zip(layout.fields()) {
         let tag: &TypeTag = field.type_tag();
         let mut statements: Vec<String> = Vec::default();
-        let (result_type, expr): (RustType, String) = match *field_layout {
-            FieldLayout::Fixed { offset, size } => {
+        let (result_type, expr): (RustType, String) = match field_layout.value {
+            ValueLayout::Fixed { offset, size } => {
                 match fixed_value(project, tag, offset, "self.bytes") {
                     Some(value) if typing.is_converted(tag) => {
                         (typing.value_type(tag), format!("{}.value()", value))
@@ -228,16 +225,19 @@ fn gen_fields(
                     }
                 }
             }
-            FieldLayout::Bit { offset, bit } => {
+            ValueLayout::Bit(BitLayout { offset, bit }) => {
                 (RustType::from("bool"), bit_value(offset, bit, "self.bytes"))
             }
-            FieldLayout::Length { offset } => {
+            ValueLayout::Length { offset } => {
                 let start: Vec<String> = std::iter::once(layout.head_size().to_string())
-                    .chain(length_offsets[..lengths_before].iter().map(|o| length(*o)))
+                    .chain(lengths[..lengths_before].iter().map(|item| length(*item)))
                     .collect();
                 lengths_before += 1;
                 statements.push(format!("let start: usize = {}", start.join(" + ")));
-                statements.push(format!("let end: usize = start + {}", length(offset)));
+                statements.push(format!(
+                    "let end: usize = start + {}",
+                    length((offset, field.is_optional()))
+                ));
                 match tag {
                     TypeTag::Special(SpecialType::String) => (
                         RustType::from("&'a str"),
@@ -257,6 +257,26 @@ fn gen_fields(
                     }
                 }
             }
+        };
+        let (result_type, expr): (RustType, String) = if field.is_optional() {
+            let expr: String = match (field_layout.presence, field_layout.value) {
+                (Some(presence), _) => format!(
+                    "{}.then(|| {})",
+                    bit_value(presence.offset, presence.bit, "self.bytes"),
+                    expr
+                ),
+                (None, ValueLayout::Fixed { offset, .. }) => {
+                    optional_enum_value(tag, offset, "self.bytes")
+                }
+                (None, ValueLayout::Length { offset }) => format!(
+                    "(unsafe {{ {}::read_u32_unchecked(self.bytes, {}) }} != u32::MAX).then(|| {})",
+                    IO, offset, expr
+                ),
+                (None, ValueLayout::Bit(_)) => unreachable!("a presence bit"),
+            };
+            (option(result_type), expr)
+        } else {
+            (result_type, expr)
         };
         let signature: Signature = Signature::from(ident(&field.field_name()))
             .with_receiver(Receiver::Borrowed)

@@ -1,12 +1,14 @@
-/// The place of a field in the head of its struct's encoding.
+use crate::layout::{BitLayout, ValueLayout};
+
+/// The layout of a field in the head of its struct's encoding.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-pub enum FieldLayout {
-    /// A fixed-size value, of the `size`, at the `offset`.
-    Fixed { offset: usize, size: usize },
+pub struct FieldLayout {
+    /// The place of the field's value.
+    pub value: ValueLayout,
 
-    /// The `u32` length of a variable-size value, at the `offset`. (its value is in the data)
-    Length { offset: usize },
-
-    /// A `bool`, the `bit` of the byte at the `offset`. (bit 0 is the least significant)
-    Bit { offset: usize, bit: u8 },
+    /// The presence bit of an optional field whose type has no absent value. (ex: an `optional u32`)
+    ///
+    /// An optional enum is absent as the tag number 0, & an optional variable-size value as the
+    /// length `u32::MAX`, so they have no presence bit.
+    pub presence: Option<BitLayout>,
 }

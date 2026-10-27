@@ -1,4 +1,4 @@
-use crate::layout::{FieldLayout, StructLayout};
+use crate::layout::{BitLayout, StructLayout, ValueLayout};
 use crate::rust::naming::{ident, type_path};
 use code_gen::WithStatements;
 use code_gen::rust::{
@@ -21,7 +21,9 @@ struct Field<'a> {
     name: String,
     tag: &'a TypeTag,
     is_boxed: bool,
-    layout: FieldLayout,
+    is_optional: bool,
+    layout: ValueLayout,
+    presence: Option<BitLayout>,
 }
 
 /// Generates the impl block decoding the `structure` of the `project` with the `layout`.
@@ -41,7 +43,9 @@ pub(crate) fn gen_decoding(
             name: ident(&field.field_name()),
             tag: field.type_tag(),
             is_boxed: field.is_boxed(),
-            layout: *layout,
+            is_optional: field.is_optional(),
+            layout: layout.value,
+            presence: layout.presence,
         })
         .collect();
     ImplBlock::from(type_name)
@@ -91,10 +95,12 @@ fn gen_validate(project: &Project, fields: &[Field], layout: &StructLayout) -> F
             invalid_length(&head.to_string())
         ));
         let mut previous: String = format!("{}_usize", head);
-        for (end, offset) in ends.iter().zip(length_offsets(fields)) {
+        for (end, field) in ends.iter().zip(variable_fields(fields)) {
             function.add_semi(format!(
-                "let {}: usize = {}.saturating_add({}::read_u32(bytes, {}) as usize)",
-                end, previous, IO, offset
+                "let {}: usize = {}.saturating_add({})",
+                end,
+                previous,
+                data_length(length_offset(field), field.is_optional, "bytes", false)
             ));
             previous = end.clone();
         }
@@ -105,8 +111,8 @@ fn gen_validate(project: &Project, fields: &[Field], layout: &StructLayout) -> F
         ));
     }
     for (field, location) in fields.iter().zip(locations(fields, layout)) {
-        if let Some(statement) = validation(project, field.tag, &location) {
-            function.add_semi(statement);
+        if let Some(statement) = validation(project, field, &location) {
+            function.add_literal(statement);
         }
     }
     function.with_literal("::std::result::Result::Ok(())")
@@ -144,10 +150,12 @@ fn gen_decode_unchecked(project: &Project, fields: &[Field], layout: &StructLayo
         .with_attribute("must_use")
         .with_access(Access::Public);
     let mut previous: String = layout.head_size().to_string();
-    for (end, offset) in data_ends(fields).iter().zip(length_offsets(fields)) {
+    for (end, field) in data_ends(fields).iter().zip(variable_fields(fields)) {
         function.add_semi(format!(
-            "let {}: usize = {} + unsafe {{ {}::read_u32_unchecked(bytes, {}) }} as usize",
-            end, previous, IO, offset
+            "let {}: usize = {} + {}",
+            end,
+            previous,
+            data_length(length_offset(field), field.is_optional, "bytes", true)
         ));
         previous = end.clone();
     }
@@ -155,12 +163,7 @@ fn gen_decode_unchecked(project: &Project, fields: &[Field], layout: &StructLayo
         .iter()
         .zip(locations(fields, layout))
         .map(|(field, location)| {
-            let value: String = value(project, field.tag, &location);
-            if field.is_boxed {
-                format!("{}: ::std::boxed::Box::new({})", field.name, value)
-            } else {
-                format!("{}: {}", field.name, value)
-            }
+            format!("{}: {}", field.name, field_value(project, field, &location))
         })
         .collect();
     function.with_literal(format!("Self {{ {} }}", values.join(", ")))
@@ -185,37 +188,144 @@ fn locations(fields: &[Field], layout: &StructLayout) -> Vec<Location> {
     fields
         .iter()
         .map(|field| match field.layout {
-            FieldLayout::Fixed { offset, size } => Location::Fixed { offset, size },
-            FieldLayout::Length { .. } => {
+            ValueLayout::Fixed { offset, size } => Location::Fixed { offset, size },
+            ValueLayout::Length { .. } => {
                 let end: String = ends.next().unwrap_or_default();
                 let range: String = format!("{}..{}", start, end);
                 start = end;
                 Location::Data { range }
             }
-            FieldLayout::Bit { offset, bit } => Location::Bit { offset, bit },
+            ValueLayout::Bit(BitLayout { offset, bit }) => Location::Bit { offset, bit },
         })
         .collect()
 }
 
 /// Gets the names of the locals with the end offsets of the data of the variable-size `fields`.
 fn data_ends(fields: &[Field]) -> Vec<String> {
-    (0..length_offsets(fields).count())
+    (0..variable_fields(fields).count())
         .map(|index| format!("end_{}", index))
         .collect()
 }
 
-/// Gets the offsets of the lengths of the variable-size `fields`, in declaration order.
-fn length_offsets<'a>(fields: &'a [Field]) -> impl Iterator<Item = usize> + 'a {
-    fields.iter().filter_map(|field| match field.layout {
-        FieldLayout::Length { offset } => Some(offset),
-        _ => None,
+/// Gets the variable-size `fields`, in declaration order.
+fn variable_fields<'a, 'b>(fields: &'a [Field<'b>]) -> impl Iterator<Item = &'a Field<'b>> {
+    fields
+        .iter()
+        .filter(|field| matches!(field.layout, ValueLayout::Length { .. }))
+}
+
+/// Gets the offset of the length of the variable-size `field`.
+fn length_offset(field: &Field) -> usize {
+    match field.layout {
+        ValueLayout::Length { offset } => offset,
+        _ => unreachable!("a variable-size field"),
+    }
+}
+
+/// Gets the expression reading the data length of the variable-size value with its length at the
+/// `offset` of the `bytes`, as a `usize`. An optional value's absent length `u32::MAX` is 0.
+pub(crate) fn data_length(
+    offset: usize,
+    is_optional: bool,
+    bytes: &str,
+    unchecked: bool,
+) -> String {
+    let length: String = if unchecked {
+        format!(
+            "unsafe {{ {}::read_u32_unchecked({}, {}) }}",
+            IO, bytes, offset
+        )
+    } else {
+        format!("{}::read_u32({}, {})", IO, bytes, offset)
+    };
+    if is_optional {
+        format!(
+            "match {} {{ u32::MAX => 0, length => length as usize }}",
+            length
+        )
+    } else {
+        format!("{} as usize", length)
+    }
+}
+
+/// Gets the expression reading the valid optional enum of the `tag` at the `offset` of the
+/// `bytes`, as an `Option`. (the tag number 0 is absent)
+pub(crate) fn optional_enum_value(tag: &TypeTag, offset: usize, bytes: &str) -> String {
+    format!(
+        "{}::from_tag_number(unsafe {{ {}::read_u16_unchecked({}, {}) }})",
+        struct_path(tag),
+        IO,
+        bytes,
+        offset
+    )
+}
+
+/// Gets the expression reading the valid value of the `field` of the `project` at the `location`,
+/// as the field's storage type. (ex: an `Option<Box<T>>`)
+fn field_value(project: &Project, field: &Field, location: &Location) -> String {
+    let boxed = |value: String| {
+        if field.is_boxed {
+            format!("::std::boxed::Box::new({})", value)
+        } else {
+            value
+        }
+    };
+    if !field.is_optional {
+        return boxed(value(project, field.tag, location));
+    }
+    match (field.presence, location) {
+        (Some(presence), _) => format!(
+            "{}.then(|| {})",
+            bit_value(presence.offset, presence.bit, "bytes"),
+            boxed(value(project, field.tag, location))
+        ),
+        (None, Location::Fixed { offset, .. }) => {
+            let value: String = optional_enum_value(field.tag, *offset, "bytes");
+            if field.is_boxed {
+                format!("{}.map(::std::boxed::Box::new)", value)
+            } else {
+                value
+            }
+        }
+        (None, Location::Data { .. }) => format!(
+            "(unsafe {{ {}::read_u32_unchecked(bytes, {}) }} != u32::MAX).then(|| {})",
+            IO,
+            length_offset(field),
+            boxed(value(project, field.tag, location))
+        ),
+        (None, Location::Bit { .. }) => unreachable!("a presence bit"),
+    }
+}
+
+/// Gets the optional statement validating the value of the `field` of the `project` at the
+/// `location`. (only present values with invalid encodings are validated)
+fn validation(project: &Project, field: &Field, location: &Location) -> Option<String> {
+    let statement: String = value_validation(project, field, location)?;
+    let condition: Option<String> = match (field.presence, location) {
+        _ if !field.is_optional => None,
+        (Some(presence), _) => Some(format!(
+            "{}::read_bit(bytes, {}, {})",
+            IO, presence.offset, presence.bit
+        )),
+        (None, Location::Fixed { offset, .. }) => {
+            Some(format!("{}::read_u16(bytes, {}) != 0", IO, offset))
+        }
+        (None, _) => Some(format!(
+            "{}::read_u32(bytes, {}) != u32::MAX",
+            IO,
+            length_offset(field)
+        )),
+    };
+    Some(match condition {
+        Some(condition) => format!("if {} {{ {}; }}", condition, statement),
+        None => format!("{};", statement),
     })
 }
 
-/// Gets the optional statement validating the value of the `tag` of the `project` at the
-/// `location`. (only values with invalid encodings are validated)
-fn validation(project: &Project, tag: &TypeTag, location: &Location) -> Option<String> {
-    match (tag, location) {
+/// Gets the optional statement validating the value of the `field` of the `project` at the
+/// `location`, without its `;`. (only values with invalid encodings are validated)
+fn value_validation(project: &Project, field: &Field, location: &Location) -> Option<String> {
+    match (field.tag, location) {
         (TypeTag::Time(TimeType::Date), Location::Fixed { offset, .. }) => {
             let days: String = format!("{}::read_i32(bytes, {})", IO, offset);
             Some(format!(
