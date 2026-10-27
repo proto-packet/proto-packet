@@ -36,15 +36,15 @@ fn keyword_fields() {
 }
 
 #[test]
-fn raw_keyword_fields_json() {
-    let result: serde_json::Value =
-        serde_json::to_value(KeywordStruct::new(1, "match".to_string(), 2)).unwrap();
-    assert_eq!(result["type"], 1);
-    assert_eq!(result["match"], "match");
-
-    let result: serde_json::Value =
-        serde_json::to_value(KeywordMessage::default().with_type(1_u32)).unwrap();
-    assert_eq!(result["type"], 1);
+fn keyword_fields_json_keeps_the_schema_names() {
+    assert_json(
+        &KeywordStruct::new(1, "match".to_string(), 2),
+        r#"{"type":1,"match":"match","self":2}"#,
+    );
+    assert_json(
+        &KeywordMessage::default().with_type(1_u32).with_self(2_u32),
+        r#"{"type":1,"self":2}"#,
+    );
 }
 
 #[test]

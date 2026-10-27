@@ -28,6 +28,7 @@
 pub struct KeywordStruct {
     r#type: u32,
     r#match: ::std::string::String,
+    #[serde(rename = "self")]
     self_: u32,
 }
 

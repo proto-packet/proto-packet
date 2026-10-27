@@ -26,6 +26,7 @@
 pub struct KeywordMessage {
     #[serde(skip_serializing_if = "::std::option::Option::is_none")]
     r#type: ::std::option::Option<u32>,
+    #[serde(rename = "self")]
     #[serde(skip_serializing_if = "::std::option::Option::is_none")]
     self_: ::std::option::Option<u32>,
 }
