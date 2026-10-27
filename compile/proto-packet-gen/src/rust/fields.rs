@@ -1,4 +1,4 @@
-use crate::rust::naming::{ident, is_snake_case};
+use crate::rust::naming::{ident, is_renamed, is_snake_case};
 use crate::rust::typing::{Typing, option};
 use code_gen::WithStatements;
 use code_gen::rust::{
@@ -113,9 +113,14 @@ impl Field<'_> {
     //! Declaration
 
     /// Generates the declaration of the field.
+    ///
+    /// A renamed field keeps its schema name in serde. (ex: `self_` is `self`)
     pub(crate) fn gen_dec(self, typing: Typing<'_>) -> StructField {
         let var: Var = Var::from((ident(&self.name), self.storage_type(typing)));
         let mut field: StructField = StructField::from(var);
+        if is_renamed(&self.name) {
+            field.add_attribute(format!("serde(rename = \"{}\")", self.name));
+        }
         if self.is_optional {
             field.add_attribute("serde(skip_serializing_if = \"::std::option::Option::is_none\")");
         }

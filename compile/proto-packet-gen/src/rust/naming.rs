@@ -28,6 +28,12 @@ pub fn ident(name: &str) -> String {
     }
 }
 
+/// Checks if the Rust identifier of the schema `name` is not the name itself or its raw identifier.
+/// (ex: `self` -> `self_`)
+pub fn is_renamed(name: &str) -> bool {
+    NON_RAW_KEYWORDS.contains(&name)
+}
+
 /// Converts the schema type `name` to snake case. (ex: `HttpServer` -> `http_server`)
 ///
 /// An underscore is added before each word that starts with an uppercase letter, unless the
