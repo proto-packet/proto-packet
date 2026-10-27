@@ -7,6 +7,9 @@ pub enum ParseErrorReason {
     /// Expected a `]`.
     ExpectedCloseBracket,
 
+    /// Expected a `>`.
+    ExpectedCloseAngle,
+
     /// Expected a type tag.
     ExpectedTypeTag,
 
@@ -43,6 +46,9 @@ pub enum ParseErrorReason {
     /// Expected a `:`.
     ExpectedColon,
 
+    /// Expected a `,`.
+    ExpectedComma,
+
     /// Expected a `;`.
     ExpectedSemicolon,
 
@@ -61,6 +67,7 @@ impl ParseErrorReason {
         match self {
             Self::ExpectedName => "expected a name",
             Self::ExpectedCloseBracket => "expected a `]`",
+            Self::ExpectedCloseAngle => "expected a `>`",
             Self::ExpectedTypeTag => "expected a type",
             Self::ExpectedImport => "expected an import",
             Self::ImportAfterTypeDeclaration => "imports must come before type declarations",
@@ -73,6 +80,7 @@ impl ParseErrorReason {
             Self::ExpectedOpenBrace => "expected a `{`",
             Self::ExpectedCloseBrace => "expected a `}`",
             Self::ExpectedColon => "expected a `:`",
+            Self::ExpectedComma => "expected a `,`",
             Self::ExpectedSemicolon => "expected a `;`",
             Self::ExpectedEqual => "expected a `=`",
             Self::ExpectedTagNumber => "expected an integer tag number",
@@ -84,6 +92,7 @@ impl ParseErrorReason {
         match self {
             Self::ExpectedName => "P_EXPECTED_NAME",
             Self::ExpectedCloseBracket => "P_EXPECTED_CLOSE_BRACKET",
+            Self::ExpectedCloseAngle => "P_EXPECTED_CLOSE_ANGLE",
             Self::ExpectedTypeTag => "P_EXPECTED_TYPE_TAG",
             Self::ExpectedImport => "P_EXPECTED_IMPORT",
             Self::ImportAfterTypeDeclaration => "P_IMPORT_AFTER_TYPE_DECLARATION",
@@ -96,6 +105,7 @@ impl ParseErrorReason {
             Self::ExpectedOpenBrace => "P_EXPECTED_OPEN_BRACE",
             Self::ExpectedCloseBrace => "P_EXPECTED_CLOSE_BRACE",
             Self::ExpectedColon => "P_EXPECTED_COLON",
+            Self::ExpectedComma => "P_EXPECTED_COMMA",
             Self::ExpectedSemicolon => "P_EXPECTED_SEMICOLON",
             Self::ExpectedEqual => "P_EXPECTED_EQUAL",
             Self::ExpectedTagNumber => "P_EXPECTED_TAG_NUMBER",
