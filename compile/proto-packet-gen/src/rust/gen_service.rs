@@ -1,5 +1,5 @@
 use crate::rust::docs::add_docs;
-use crate::rust::naming::{ident, is_upper_camel_case, snake_case};
+use crate::rust::naming::{ident, is_snake_case, is_upper_camel_case, snake_case};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, Receiver, RustType, Signature, SignatureDec, Trait, Var, WithAccess,
@@ -31,6 +31,13 @@ fn gen_trait(typing: Typing<'_>, service: &Service) -> Trait {
     add_docs(&mut result, service.comments());
     if !is_upper_camel_case(&service.type_name()) {
         result.add_attribute("allow(non_camel_case_types)");
+    }
+    if service
+        .calls()
+        .iter()
+        .any(|call| !is_snake_case(&call.call_name()))
+    {
+        result.add_attribute("allow(non_snake_case)");
     }
     result.set_access(Access::Public);
     for call in service.calls() {
