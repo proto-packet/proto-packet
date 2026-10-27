@@ -1,11 +1,13 @@
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
-use crate::rust::naming::{ident, is_upper_camel_case};
+use crate::rust::naming::{ident, is_renamed, is_upper_camel_case};
 use code_gen::Statement;
 use code_gen::rust::{Access, Enum as RustEnum, EnumCase, WithAccess, WithAttributes};
 use proto_packet_tree::{Enum, WithCaseName, WithComments, WithTypeName};
 
 /// Generates the Rust code of the `enumeration`.
+///
+/// A renamed case keeps its schema name in serde. (ex: `Self_` is `Self`)
 pub fn gen_enum(enumeration: &Enum) -> String {
     let mut result: RustEnum = RustEnum::from(ident(&enumeration.type_name()));
     add_docs(&mut result, enumeration.comments());
@@ -22,6 +24,9 @@ pub fn gen_enum(enumeration: &Enum) -> String {
     for case in enumeration.cases() {
         let mut rust_case: EnumCase = EnumCase::from(ident(&case.case_name()));
         add_docs(&mut rust_case, case.comments());
+        if is_renamed(&case.case_name()) {
+            rust_case.add_attribute(format!("serde(rename = \"{}\")", case.case_name()));
+        }
         result.add_case(rust_case);
     }
     result.to_code()

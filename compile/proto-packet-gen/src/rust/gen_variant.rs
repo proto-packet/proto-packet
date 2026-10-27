@@ -1,6 +1,6 @@
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
-use crate::rust::naming::{ident, is_upper_camel_case};
+use crate::rust::naming::{ident, is_renamed, is_upper_camel_case};
 use crate::rust::typing::Typing;
 use code_gen::Statement;
 use code_gen::rust::{
@@ -9,6 +9,8 @@ use code_gen::rust::{
 use proto_packet_tree::{Project, Variant, WithCaseName, WithComments, WithTypeName, WithTypeTag};
 
 /// Generates the Rust code of the `variant`.
+///
+/// A renamed case keeps its schema name in serde. (ex: `Self_` is `Self`)
 pub fn gen_variant(project: &Project, variant: &Variant) -> String {
     let typing: Typing = Typing::new(project);
     let mut result: RustEnum = RustEnum::from(ident(&variant.type_name()));
@@ -32,6 +34,9 @@ pub fn gen_variant(project: &Project, variant: &Variant) -> String {
         let fields: EnumFields = EnumFields::Unnamed(vec![case_type]);
         let mut rust_case: EnumCase = EnumCase::from(ident(&case.case_name())).with_fields(fields);
         add_docs(&mut rust_case, case.comments());
+        if is_renamed(&case.case_name()) {
+            rust_case.add_attribute(format!("serde(rename = \"{}\")", case.case_name()));
+        }
         result.add_case(rust_case);
     }
     result.to_code()
