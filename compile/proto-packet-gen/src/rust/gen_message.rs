@@ -1,19 +1,25 @@
+use crate::GenError;
 use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
-use crate::rust::fields::Field;
+use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::typing::Typing;
 use code_gen::rust::{Access, Struct as RustStruct, WithAccess, WithAttributes, WithStructFields};
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet::io::WithTagNumber;
 use proto_packet_tree::{
-    Message, Project, WithComments as _, WithFieldName, WithTypeName, WithTypeTag,
+    Message, ModPathRef, Project, WithComments as _, WithFieldName, WithTypeName, WithTypeTag,
 };
 
-/// Generates the Rust code of the `message`.
+/// Generates the Rust code of the `message` in the schema file at the `mod_path`.
 ///
-/// Every message field is optional, so messages are created with `Default`.
-pub fn gen_message(project: &Project, message: &Message) -> String {
+/// Every message field is optional, so messages are created with `Default`. No field can be named
+/// like a generated method. (ex: the setter `set_x` of the field `x`)
+pub fn gen_message(
+    project: &Project,
+    mod_path: ModPathRef<'_>,
+    message: &Message,
+) -> Result<String, GenError> {
     let typing: Typing = Typing::new(project);
     let type_name: String = ident(&message.type_name());
     let fields: Vec<Field> = message
@@ -26,13 +32,18 @@ pub fn gen_message(project: &Project, message: &Message) -> String {
             is_boxed: field.is_boxed(),
         })
         .collect();
+    check_field_names(
+        &format!("{}.{}", mod_path, message.type_name()),
+        &fields,
+        &[],
+    )?;
 
     let mut block: Block = Block::default().with_statement(gen_dec(typing, message, &fields));
     for field in &fields {
         block.add_statement(EmptyLine::default());
         block.add_statement(field.gen_impl(typing, &type_name));
     }
-    block.to_code()
+    Ok(block.to_code())
 }
 
 /// Generates the declaration of the `message`.

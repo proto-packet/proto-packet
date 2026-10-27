@@ -61,7 +61,7 @@ impl ModNode<'_> {
                 mods.push_str(&format!("mod {};\n", ident(&mod_name)));
                 files.push(GeneratedFile {
                     path: format!("{}{}.rs", dir, file_name(&mod_name)),
-                    code: format!("{}{}", HEADER, gen_type_dec(project, mod_path, type_dec)),
+                    code: format!("{}{}", HEADER, gen_type_dec(project, mod_path, type_dec)?),
                 });
             }
             if !uses.is_empty() {
@@ -99,13 +99,17 @@ impl ModNode<'_> {
 }
 
 /// Generates the code of the `type_dec` in the schema file at the `mod_path`.
-fn gen_type_dec(project: &Project, mod_path: ModPathRef<'_>, type_dec: &TypeDec) -> String {
+fn gen_type_dec(
+    project: &Project,
+    mod_path: ModPathRef<'_>,
+    type_dec: &TypeDec,
+) -> Result<String, GenError> {
     match type_dec {
-        TypeDec::Struct(structure) => gen_struct(project, structure),
-        TypeDec::Message(message) => gen_message(project, message),
-        TypeDec::Enum(enumeration) => gen_enum(enumeration),
-        TypeDec::Variant(variant) => gen_variant(project, variant),
-        TypeDec::Service(service) => gen_service(project, mod_path, service),
+        TypeDec::Struct(structure) => gen_struct(project, mod_path, structure),
+        TypeDec::Message(message) => gen_message(project, mod_path, message),
+        TypeDec::Enum(enumeration) => Ok(gen_enum(enumeration)),
+        TypeDec::Variant(variant) => Ok(gen_variant(project, variant)),
+        TypeDec::Service(service) => Ok(gen_service(project, mod_path, service)),
     }
 }
 

@@ -1,3 +1,4 @@
+use crate::GenError;
 use crate::rust::naming::{ident, is_renamed, is_snake_case};
 use crate::rust::typing::{Typing, option};
 use code_gen::WithStatements;
@@ -7,6 +8,7 @@ use code_gen::rust::{
     WithResult, WithVarParams,
 };
 use proto_packet_tree::{FieldNameRef, TypeTag};
+use std::collections::BTreeSet;
 
 /// A field of a generated struct or message.
 #[derive(Copy, Clone, Debug)]
@@ -131,6 +133,16 @@ impl Field<'_> {
 impl Field<'_> {
     //! Accessors
 
+    /// Gets the name of the field's setter. (ex: `set_x`)
+    fn setter_name(self) -> String {
+        format!("set_{}", self.name)
+    }
+
+    /// Gets the name of the field's builder. (ex: `with_x`)
+    fn builder_name(self) -> String {
+        format!("with_{}", self.name)
+    }
+
     /// Checks if the field name is not snake case for Rust. (ex: `myField`)
     pub(crate) fn is_non_snake_case(self) -> bool {
         !is_snake_case(&self.name)
@@ -173,7 +185,7 @@ impl Field<'_> {
     fn gen_setter(self, typing: Typing<'_>) -> Function {
         let field: String = ident(&self.name);
         let value_type: RustType = self.value_type(typing);
-        let mut signature: Signature = Signature::from(format!("set_{}", self.name))
+        let mut signature: Signature = Signature::from(self.setter_name())
             .with_receiver(Receiver::BorrowedMut)
             .with_result(value_type.clone());
         if self.is_optional {
@@ -202,7 +214,7 @@ impl Field<'_> {
     /// Generates the builder of the field. (it sets the field & returns itself)
     fn gen_builder(self, typing: Typing<'_>) -> Function {
         let field: String = ident(&self.name);
-        let mut signature: Signature = Signature::from(format!("with_{}", self.name))
+        let mut signature: Signature = Signature::from(self.builder_name())
             .with_receiver(Receiver::OwnedMut)
             .with_result("Self");
         if self.is_optional {
@@ -218,12 +230,85 @@ impl Field<'_> {
             ))
             .with_attribute("must_use")
             .with_access(Access::Public)
-            .with_semi(format!("self.set_{}({})", self.name, field))
+            .with_semi(format!("self.{}({})", self.setter_name(), field))
             .with_literal("self")
+    }
+}
+
+/// Checks no field of the type with the `type_name` is named like one of its generated methods.
+///
+/// The methods are the type's own `methods` (ex: the constructor `new`), plus the setter & builder
+/// of each field. (ex: `set_x` & `with_x` of the field `x`) The getters have the names of their
+/// fields, so they cannot conflict with each other.
+pub(crate) fn check_field_names(
+    type_name: &str,
+    fields: &[Field<'_>],
+    methods: &[&str],
+) -> Result<(), GenError> {
+    let mut method_names: BTreeSet<String> =
+        methods.iter().map(|method| method.to_string()).collect();
+    for field in fields {
+        method_names.insert(field.setter_name());
+        method_names.insert(field.builder_name());
+    }
+    match fields
+        .iter()
+        .find(|field| method_names.contains(field.name.value()))
+    {
+        Some(field) => Err(GenError::FieldNameConflict {
+            type_name: type_name.to_string(),
+            field_name: field.name.to_string(),
+        }),
+        None => Ok(()),
     }
 }
 
 /// Gets the `Into` bound of the `rust_type`.
 fn into(rust_type: RustType) -> RustType {
     RustType::from("::std::convert::Into").with_generic(rust_type)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::GenError;
+    use crate::rust::fields::{Field, check_field_names};
+    use proto_packet_tree::{FieldName, PrimitiveType, TypeTag};
+
+    #[test]
+    fn check_field_names_conflicts() {
+        let test_cases: &[(&[&str], &[&str], Option<&str>)] = &[
+            (&["x", "y"], &["new"], None),
+            (&["newer", "set", "with"], &["new"], None),
+            (&["new"], &["new"], Some("new")),
+            (&["new"], &[], None),
+            (&["x", "set_x"], &[], Some("set_x")),
+            (&["with_x", "x"], &[], Some("with_x")),
+            (&["type", "set_type"], &[], Some("set_type")),
+        ];
+        let tag: TypeTag = TypeTag::from(PrimitiveType::UnsignedInt32);
+        for (field_names, methods, expected) in test_cases {
+            let names: Vec<FieldName> = field_names
+                .iter()
+                .map(|name| FieldName::try_from(*name).unwrap())
+                .collect();
+            let fields: Vec<Field> = names
+                .iter()
+                .map(|name| Field {
+                    name: name.to_ref(),
+                    tag: &tag,
+                    is_optional: false,
+                    is_boxed: false,
+                })
+                .collect();
+            let result: Result<(), GenError> = check_field_names("a.Foo", &fields, methods);
+            let expected: Result<(), GenError> = match expected {
+                Some(field_name) => Err(GenError::FieldNameConflict {
+                    type_name: "a.Foo".to_string(),
+                    field_name: field_name.to_string(),
+                }),
+                None => Ok(()),
+            };
+            assert_eq!(result, expected, "fields: {:?}", field_names);
+        }
+    }
 }
