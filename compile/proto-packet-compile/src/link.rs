@@ -3,7 +3,7 @@ use clerr::{Code, Report, Severity, TokenInfo};
 use lex::lexer::Span;
 use proto_packet_link::{LinkError, Location, Member};
 use proto_packet_parse::{SchemaFileTree, TypeDecTree, TypeTagTree};
-use proto_packet_tree::{ModPathRef, Project};
+use proto_packet_tree::{ModPathRef, Project, QualifiedName};
 
 /// Links the `project` of the schema `sources`.
 ///
@@ -17,10 +17,15 @@ fn link_report(error: &LinkError, sources: &[SchemaSource]) -> Report {
     let message: String = error.to_string();
     let code: Code = Code::error(code(error), message.as_str());
     let (mod_path, locate): (ModPathRef<'_>, Locate) = match error {
-        LinkError::UnresolvedType { location, .. }
-        | LinkError::ServiceAsType { location, .. }
-        | LinkError::UnboxedLoop { location, .. } => {
-            (location.mod_path.to_ref(), Locate::TypeTag(location))
+        LinkError::UnresolvedType { location, name }
+        | LinkError::ServiceAsType { location, name } => {
+            (location.mod_path.to_ref(), Locate::TypeTag(location, name))
+        }
+        LinkError::UnboxedLoop { location, names } => {
+            let Some(name) = names.last() else {
+                return Report::from(code);
+            };
+            (location.mod_path.to_ref(), Locate::TypeTag(location, name))
         }
         LinkError::UnresolvedImport { mod_path, name } => {
             (mod_path.to_ref(), Locate::Import(name.value()))
@@ -61,8 +66,8 @@ fn code(error: &LinkError) -> &'static str {
 
 /// What to locate in a schema file.
 enum Locate<'a> {
-    /// The named type of the type tag at the location.
-    TypeTag(&'a Location),
+    /// The named type with the qualified name, in the type tag at the location.
+    TypeTag(&'a Location, &'a QualifiedName),
 
     /// The import with the qualified name.
     Import(&'a str),
@@ -72,13 +77,14 @@ impl Locate<'_> {
     /// Gets the span of what to locate in the schema file `tree` of the `source`.
     fn span(&self, tree: &SchemaFileTree, source: &str) -> Option<Span> {
         match self {
-            Self::TypeTag(location) => {
+            Self::TypeTag(location, name) => {
                 let type_name: &str = location.type_name.value();
                 let type_dec: &TypeDecTree = tree
                     .type_decs
                     .iter()
                     .find(|type_dec| type_dec.type_name().text(source) == type_name)?;
-                member_type_tag(type_dec, &location.member, source).map(name_span)
+                let tag: &TypeTagTree = member_type_tag(type_dec, &location.member, source)?;
+                name_span(tag, name.to_ref().type_name().value(), source)
             }
             Self::Import(name) => tree
                 .imports
@@ -126,12 +132,20 @@ fn member_type_tag<'a>(
     }
 }
 
-/// Gets the span of the name in the type `tag`. (the base name of slices)
-fn name_span(tag: &TypeTagTree) -> Span {
+/// Gets the span of the first name of the `type_name` in the type `tag` of the `source`.
+///
+/// The name may have a mod path. (ex: `a.Foo` for `Foo` in `map<string, a.Foo>`)
+fn name_span(tag: &TypeTagTree, type_name: &str, source: &str) -> Option<Span> {
     match tag {
-        TypeTagTree::Name(name) => name.span(),
-        TypeTagTree::Slice { base } => name_span(base),
-        TypeTagTree::Map { .. } => todo!(),
+        TypeTagTree::Name(name) => name
+            .idents
+            .last()
+            .is_some_and(|ident| ident.text(source) == type_name)
+            .then(|| name.span()),
+        TypeTagTree::Slice { base } => name_span(base, type_name, source),
+        TypeTagTree::Map { key, value } => {
+            name_span(key, type_name, source).or_else(|| name_span(value, type_name, source))
+        }
     }
 }
 
