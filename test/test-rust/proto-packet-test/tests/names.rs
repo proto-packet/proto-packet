@@ -129,24 +129,33 @@ fn non_standard_casing() {
     assert_json(&Vec3::new(1.0, 2.0, 3.0), r#"{"x":1.0,"y":2.0,"z":3.0}"#);
 }
 
-/// A service with a non-camel-case name.
+/// A service with a non-camel-case name & a non-snake-case call.
 struct TestMyService;
 
 impl My_Service for TestMyService {
     async fn call(&self, request: u32) -> Result<u32, ServiceError> {
-        Ok(request)
+        Ok(request + 1)
+    }
+
+    async fn myCall(&self, request: u32) -> Result<u32, ServiceError> {
+        Ok(request + 2)
     }
 }
 
 #[tokio::test]
-async fn non_camel_case_services_are_routed_by_their_schema_names() {
-    let result: (StatusCode, String) = post(
-        my_service_router(Arc::new(TestMyService)),
-        "/names.casing.My_Service/call",
-        "1",
-    )
-    .await;
-    assert_eq!(result, (StatusCode::OK, "1".to_string()));
+async fn non_standard_casing_calls_are_routed_by_their_schema_names() {
+    let test_cases: &[(&str, &str)] = &[("call", "2"), ("myCall", "3")];
+    for (call, expected) in test_cases {
+        let path: String = format!("/names.casing.My_Service/{}", call);
+        let result: (StatusCode, String) =
+            post(my_service_router(Arc::new(TestMyService)), &path, "1").await;
+        assert_eq!(
+            result,
+            (StatusCode::OK, expected.to_string()),
+            "call: {}",
+            call
+        );
+    }
 }
 
 #[test]

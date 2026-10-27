@@ -32,11 +32,14 @@ variant My_Variant {
     CaseTwo: u32 = 2;
 }
 
-// A service with a non-camel-case name.
+// A service with a non-camel-case name & a non-snake-case call.
 service My_Service {
 
     // A call.
     call: u32 returns u32;
+
+    // A non-snake-case call.
+    myCall: u32 returns u32;
 }
 
 // A struct with an acronym name. (`http_server`)
