@@ -1,6 +1,8 @@
 use crate::GenError;
+use crate::layout::StructLayout;
 use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
+use crate::rust::encoding::{ENCODING_METHODS, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::typing::Typing;
@@ -22,7 +24,8 @@ const MAX_ARGUMENTS: usize = 7;
 
 /// Generates the Rust code of the `structure` in the schema file at the `mod_path`.
 ///
-/// No field can be named like a generated method. (ex: the constructor `new`)
+/// No field can be named like a generated method. (ex: the constructor `new`) The struct has the
+/// encoding methods if its fields have encodings. (see `FORMAT.md`)
 pub fn gen_struct(
     project: &Project,
     mod_path: ModPathRef<'_>,
@@ -31,10 +34,11 @@ pub fn gen_struct(
     let typing: Typing = Typing::new(project);
     let type_name: String = ident(&structure.type_name());
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
+    let methods: Vec<&str> = [CONSTRUCTOR].into_iter().chain(ENCODING_METHODS).collect();
     check_field_names(
         &format!("{}.{}", mod_path, structure.type_name()),
         &fields,
-        &[CONSTRUCTOR],
+        &methods,
     )?;
 
     let mut block: Block = Block::default().with_statement(gen_dec(typing, structure, &fields));
@@ -45,6 +49,10 @@ pub fn gen_struct(
     for field in &fields {
         block.add_statement(EmptyLine::default());
         block.add_statement(field.gen_impl(typing, &type_name));
+    }
+    if let Some(layout) = StructLayout::new(project, structure) {
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_encoding(project, structure, &layout, &type_name));
     }
     Ok(block.to_code())
 }
