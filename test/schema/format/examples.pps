@@ -133,3 +133,29 @@ struct OptionalValues {
     // A required enum, still validated.
     color: Color;
 }
+
+// The list examples of `FORMAT.md`.
+struct Lists {
+
+    // A list of fixed-size elements.
+    numbers: []u32;
+
+    // A list of bits.
+    bits: []bool;
+
+    // A list of variable-size elements.
+    strings: []string;
+}
+
+// A struct with lists of elements that are validated.
+struct ValidatedLists {
+
+    // A list of enums.
+    colors: []Color;
+
+    // A list of dates.
+    days: []date;
+
+    // An optional list of strings.
+    names: optional []string;
+}

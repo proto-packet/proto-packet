@@ -85,3 +85,281 @@ impl TreeNode {
         self
     }
 }
+
+impl TreeNode {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        8 + 4
+            + 4 * self.children.len()
+            + self
+                .children
+                .iter()
+                .map(|value_0| value_0.encoded_len())
+                .sum::<usize>()
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the encoding of a variable-size field is `u32::MAX` bytes or more.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(&self.value.to_le_bytes());
+        out.extend_from_slice(
+            &u32::try_from(
+                4 + 4 * self.children.len()
+                    + self
+                        .children
+                        .iter()
+                        .map(|value_0| value_0.encoded_len())
+                        .sum::<usize>(),
+            )
+            .ok()
+            .filter(|length| *length != u32::MAX)
+            .expect("length out of range")
+            .to_le_bytes(),
+        );
+        {
+            out.extend_from_slice(
+                &u32::try_from(self.children.len())
+                    .expect("count out of range")
+                    .to_le_bytes(),
+            );
+            let mut end_0: usize = 0;
+            for value_0 in self.children.iter() {
+                end_0 += value_0.encoded_len();
+                out.extend_from_slice(
+                    &u32::try_from(end_0)
+                        .ok()
+                        .filter(|length| *length != u32::MAX)
+                        .expect("length out of range")
+                        .to_le_bytes(),
+                );
+            }
+            for value_0 in self.children.iter() {
+                value_0.encode_to(out);
+            }
+        }
+    }
+}
+
+impl TreeNode {
+    //! Decoding
+
+    /// Validates the encoding of the struct, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
+        if bytes.len() < 8 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 8,
+                actual: bytes.len(),
+            });
+        }
+        let end_0: usize = 8_usize.saturating_add(::proto_packet::io::read_u32(bytes, 4) as usize);
+        if bytes.len() != end_0 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: end_0,
+                actual: bytes.len(),
+            });
+        }
+        for bytes_0 in ::proto_packet::io::VarListRef::new(
+            &bytes[8..end_0],
+            ::std::convert::identity::<&[u8]>,
+        )?
+        .iter()
+        {
+            crate::links::loops::TreeNode::validate(bytes_0)?;
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        let end_0: usize = 8 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 4) } as usize;
+        Self {
+            value: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) },
+            children: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(8..end_0) };
+                {
+                    let list_0: &[u8] = data;
+                    let read_0 = |bytes_0: &[u8]| unsafe {
+                        crate::links::loops::TreeNode::decode_unchecked(bytes_0)
+                    };
+                    unsafe { ::proto_packet::io::VarListRef::new_unchecked(list_0, read_0) }
+                        .to_vec()
+                }
+            },
+        }
+    }
+}
+
+/// The borrowed encoding of a [TreeNode], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct TreeNodeRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> TreeNodeRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [TreeNode] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [TreeNode].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        TreeNode::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [TreeNode] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [TreeNode].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> TreeNodeRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [TreeNode].
+    #[must_use]
+    pub fn decode(&self) -> TreeNode {
+        unsafe { TreeNode::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> TreeNodeBuf {
+        TreeNodeBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> TreeNodeRef<'a> {
+    //! Fields
+
+    /// Gets the field: `value`.
+    #[must_use]
+    pub fn value(&self) -> u32 {
+        unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) }
+    }
+
+    /// Gets the field: `children`.
+    #[must_use]
+    pub fn children(
+        &self,
+    ) -> ::proto_packet::io::VarListRef<'a, impl Fn(&'a [u8]) -> crate::links::loops::TreeNodeRef<'a>>
+    {
+        let start: usize = 8;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let read_0 = |bytes_0: &'a [u8]| unsafe {
+                crate::links::loops::TreeNodeRef::new_unchecked(bytes_0)
+            };
+            unsafe { ::proto_packet::io::VarListRef::new_unchecked(data, read_0) }
+        }
+    }
+}
+
+/// The owned encoding of a [TreeNode], read in place.
+#[derive(Clone, Debug)]
+pub struct TreeNodeBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl TreeNodeBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [TreeNode] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [TreeNode].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        TreeNode::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [TreeNode] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [TreeNode].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl TreeNodeBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> TreeNodeRef<'_> {
+        unsafe { TreeNodeRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [TreeNode].
+    #[must_use]
+    pub fn decode(&self) -> TreeNode {
+        unsafe { TreeNode::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&TreeNode> for TreeNodeBuf {
+    fn from(value: &TreeNode) -> Self {
+        Self {
+            bytes: value.encode(),
+        }
+    }
+}

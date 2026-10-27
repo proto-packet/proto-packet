@@ -169,3 +169,422 @@ impl SignedIntFields {
         self
     }
 }
+
+impl SignedIntFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        20 + self.one.len()
+            + self.two.len() * 2
+            + self.three.len() * 4
+            + self.four.len() * 8
+            + self.five.len() * 16
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the encoding of a variable-size field is `u32::MAX` bytes or more.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(
+            &u32::try_from(self.one.len())
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(self.two.len() * 2)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(self.three.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(self.four.len() * 8)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(self.five.len() * 16)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        for value_0 in self.one.iter() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        for value_0 in self.two.iter() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        for value_0 in self.three.iter() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        for value_0 in self.four.iter() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        for value_0 in self.five.iter() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+    }
+}
+
+impl SignedIntFields {
+    //! Decoding
+
+    /// Validates the encoding of the struct, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
+        if bytes.len() < 20 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 20,
+                actual: bytes.len(),
+            });
+        }
+        let end_0: usize = 20_usize.saturating_add(::proto_packet::io::read_u32(bytes, 0) as usize);
+        let end_1: usize = end_0.saturating_add(::proto_packet::io::read_u32(bytes, 4) as usize);
+        let end_2: usize = end_1.saturating_add(::proto_packet::io::read_u32(bytes, 8) as usize);
+        let end_3: usize = end_2.saturating_add(::proto_packet::io::read_u32(bytes, 12) as usize);
+        let end_4: usize = end_3.saturating_add(::proto_packet::io::read_u32(bytes, 16) as usize);
+        if bytes.len() != end_4 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: end_4,
+                actual: bytes.len(),
+            });
+        }
+        ::proto_packet::io::FixedListRef::new(
+            &bytes[20..end_0],
+            1,
+            ::std::convert::identity::<&[u8]>,
+        )?;
+        ::proto_packet::io::FixedListRef::new(
+            &bytes[end_0..end_1],
+            2,
+            ::std::convert::identity::<&[u8]>,
+        )?;
+        ::proto_packet::io::FixedListRef::new(
+            &bytes[end_1..end_2],
+            4,
+            ::std::convert::identity::<&[u8]>,
+        )?;
+        ::proto_packet::io::FixedListRef::new(
+            &bytes[end_2..end_3],
+            8,
+            ::std::convert::identity::<&[u8]>,
+        )?;
+        ::proto_packet::io::FixedListRef::new(
+            &bytes[end_3..end_4],
+            16,
+            ::std::convert::identity::<&[u8]>,
+        )?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        let end_0: usize =
+            20 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } as usize;
+        let end_1: usize =
+            end_0 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 4) } as usize;
+        let end_2: usize =
+            end_1 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 8) } as usize;
+        let end_3: usize =
+            end_2 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 12) } as usize;
+        let end_4: usize =
+            end_3 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 16) } as usize;
+        Self {
+            one: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(20..end_0) };
+                {
+                    let list_0: &[u8] = data;
+                    let read_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_i8_unchecked(bytes_0, 0)
+                    };
+                    unsafe { ::proto_packet::io::FixedListRef::new_unchecked(list_0, 1, read_0) }
+                        .to_vec()
+                }
+            },
+            two: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_0..end_1) };
+                {
+                    let list_0: &[u8] = data;
+                    let read_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_i16_unchecked(bytes_0, 0)
+                    };
+                    unsafe { ::proto_packet::io::FixedListRef::new_unchecked(list_0, 2, read_0) }
+                        .to_vec()
+                }
+            },
+            three: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_1..end_2) };
+                {
+                    let list_0: &[u8] = data;
+                    let read_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_i32_unchecked(bytes_0, 0)
+                    };
+                    unsafe { ::proto_packet::io::FixedListRef::new_unchecked(list_0, 4, read_0) }
+                        .to_vec()
+                }
+            },
+            four: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_2..end_3) };
+                {
+                    let list_0: &[u8] = data;
+                    let read_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_i64_unchecked(bytes_0, 0)
+                    };
+                    unsafe { ::proto_packet::io::FixedListRef::new_unchecked(list_0, 8, read_0) }
+                        .to_vec()
+                }
+            },
+            five: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_3..end_4) };
+                {
+                    let list_0: &[u8] = data;
+                    let read_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_i128_unchecked(bytes_0, 0)
+                    };
+                    unsafe { ::proto_packet::io::FixedListRef::new_unchecked(list_0, 16, read_0) }
+                        .to_vec()
+                }
+            },
+        }
+    }
+}
+
+/// The borrowed encoding of a [SignedIntFields], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct SignedIntFieldsRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> SignedIntFieldsRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [SignedIntFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [SignedIntFields].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        SignedIntFields::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [SignedIntFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [SignedIntFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> SignedIntFieldsRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [SignedIntFields].
+    #[must_use]
+    pub fn decode(&self) -> SignedIntFields {
+        unsafe { SignedIntFields::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> SignedIntFieldsBuf {
+        SignedIntFieldsBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> SignedIntFieldsRef<'a> {
+    //! Fields
+
+    /// Gets the field: `one`.
+    #[must_use]
+    pub fn one(&self) -> ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> i8> {
+        let start: usize = 20;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let read_0 =
+                |bytes_0: &'a [u8]| unsafe { ::proto_packet::io::read_i8_unchecked(bytes_0, 0) };
+            unsafe { ::proto_packet::io::FixedListRef::new_unchecked(data, 1, read_0) }
+        }
+    }
+
+    /// Gets the field: `two`.
+    #[must_use]
+    pub fn two(&self) -> ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> i16> {
+        let start: usize =
+            20 + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let read_0 =
+                |bytes_0: &'a [u8]| unsafe { ::proto_packet::io::read_i16_unchecked(bytes_0, 0) };
+            unsafe { ::proto_packet::io::FixedListRef::new_unchecked(data, 2, read_0) }
+        }
+    }
+
+    /// Gets the field: `three`.
+    #[must_use]
+    pub fn three(&self) -> ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> i32> {
+        let start: usize = 20
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let read_0 =
+                |bytes_0: &'a [u8]| unsafe { ::proto_packet::io::read_i32_unchecked(bytes_0, 0) };
+            unsafe { ::proto_packet::io::FixedListRef::new_unchecked(data, 4, read_0) }
+        }
+    }
+
+    /// Gets the field: `four`.
+    #[must_use]
+    pub fn four(&self) -> ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> i64> {
+        let start: usize = 20
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 12) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let read_0 =
+                |bytes_0: &'a [u8]| unsafe { ::proto_packet::io::read_i64_unchecked(bytes_0, 0) };
+            unsafe { ::proto_packet::io::FixedListRef::new_unchecked(data, 8, read_0) }
+        }
+    }
+
+    /// Gets the field: `five`.
+    #[must_use]
+    pub fn five(&self) -> ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> i128> {
+        let start: usize = 20
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 12) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 16) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let read_0 =
+                |bytes_0: &'a [u8]| unsafe { ::proto_packet::io::read_i128_unchecked(bytes_0, 0) };
+            unsafe { ::proto_packet::io::FixedListRef::new_unchecked(data, 16, read_0) }
+        }
+    }
+}
+
+/// The owned encoding of a [SignedIntFields], read in place.
+#[derive(Clone, Debug)]
+pub struct SignedIntFieldsBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl SignedIntFieldsBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [SignedIntFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [SignedIntFields].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        SignedIntFields::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [SignedIntFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [SignedIntFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl SignedIntFieldsBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> SignedIntFieldsRef<'_> {
+        unsafe { SignedIntFieldsRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [SignedIntFields].
+    #[must_use]
+    pub fn decode(&self) -> SignedIntFields {
+        unsafe { SignedIntFields::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&SignedIntFields> for SignedIntFieldsBuf {
+    fn from(value: &SignedIntFields) -> Self {
+        Self {
+            bytes: value.encode(),
+        }
+    }
+}

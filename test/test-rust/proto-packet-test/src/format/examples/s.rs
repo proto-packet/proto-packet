@@ -286,12 +286,16 @@ impl S {
         let end_1: usize =
             end_0 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 32) } as usize;
         Self {
-            a: unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(37..end_0)) }
-                .to_string(),
+            a: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(37..end_0) };
+                unsafe { ::std::str::from_utf8_unchecked(data) }.to_string()
+            },
             b: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 24) },
             c: unsafe { ::proto_packet::io::read_u128_unchecked(bytes, 0) },
-            d: unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(end_0..end_1)) }
-                .to_string(),
+            d: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_0..end_1) };
+                unsafe { ::std::str::from_utf8_unchecked(data) }.to_string()
+            },
             e: unsafe { ::proto_packet::io::read_bit_unchecked(bytes, 36, 0) },
             f: unsafe { ::proto_packet::io::read_u64_unchecked(bytes, 16) },
         }
@@ -359,7 +363,8 @@ impl<'a> SRef<'a> {
         let start: usize = 37;
         let end: usize =
             start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 28) } as usize;
-        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        unsafe { ::std::str::from_utf8_unchecked(data) }
     }
 
     /// Gets the field: `b`.
@@ -381,7 +386,8 @@ impl<'a> SRef<'a> {
             37 + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 28) } as usize;
         let end: usize =
             start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 32) } as usize;
-        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        unsafe { ::std::str::from_utf8_unchecked(data) }
     }
 
     /// Gets the field: `e`.

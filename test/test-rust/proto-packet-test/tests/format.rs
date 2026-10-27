@@ -2,15 +2,17 @@ mod common;
 
 use common::*;
 use proto_packet::io::DecodeError;
+use proto_packet::types::{Float32, Float64};
 use proto_packet_test::enums::cases::{EdgeTags, MultiCase};
 use proto_packet_test::enums::empty::Empty as EmptyEnum;
 use proto_packet_test::format::examples::{
-    self, Bits, MyStruct, Odd, Opt, OptRef, OptionalValues, OptionalValuesBuf, OptionalValuesRef,
-    S, SBuf, SRef, T, TRef,
+    self, Bits, Lists, ListsBuf, ListsRef, MyStruct, Odd, Opt, OptRef, OptionalValues,
+    OptionalValuesBuf, OptionalValuesRef, S, SBuf, SRef, T, TRef, ValidatedLists,
+    ValidatedListsBuf, ValidatedListsRef,
 };
 use proto_packet_test::links::imports::ImportedFields;
 use proto_packet_test::links::local::{After, Before};
-use proto_packet_test::links::loops::{ListNode, ListNodeRef};
+use proto_packet_test::links::loops::{ListNode, ListNodeRef, TreeNode, TreeNodeRef};
 use proto_packet_test::mods::parent::child::Child;
 use proto_packet_test::names::casing::{HTTPServer, My_Struct, Vec3};
 use proto_packet_test::names::keywords::{KeywordStruct, Self_, SelfBuf, SelfRef};
@@ -24,7 +26,7 @@ use proto_packet_test::structs::copy::{
     OptionalCopy,
 };
 use proto_packet_test::structs::empty::{Empty, EmptyBuf, EmptyRef};
-use proto_packet_test::structs::fields;
+use proto_packet_test::structs::{fields, slices};
 use proto_packet_test::types::{Color, Point, PointRef};
 
 /// Asserts the `value` of the `type` encodes to bytes that decode back to it, with & without
@@ -492,4 +494,214 @@ fn structs_containing_themselves_round_trip() {
         .map(|node| node.value())
         .collect();
     assert_eq!(values, [1, 2, 3]);
+}
+
+#[test]
+fn list_examples() {
+    let value: Lists = Lists::new(
+        vec![1, 2, 3],
+        vec![true, false, true],
+        vec!["ab".to_string(), String::new(), "c".to_string()],
+    );
+    let expected: Vec<u8> = [
+        &12_u32.to_le_bytes()[..],
+        &5_u32.to_le_bytes(),
+        &19_u32.to_le_bytes(),
+        &1_u32.to_le_bytes(),
+        &2_u32.to_le_bytes(),
+        &3_u32.to_le_bytes(),
+        &3_u32.to_le_bytes(),
+        &[0b0000_0101],
+        &3_u32.to_le_bytes(),
+        &2_u32.to_le_bytes(),
+        &2_u32.to_le_bytes(),
+        &3_u32.to_le_bytes(),
+        b"abc",
+    ]
+    .concat();
+    assert_eq!(value.encode(), expected);
+    assert_round_trip!(Lists, value);
+    let result: ListsRef<'_> = ListsRef::new(&expected).unwrap();
+    assert_eq!(result.numbers().to_vec(), [1, 2, 3]);
+    assert_eq!(result.bits().to_vec(), [true, false, true]);
+    assert_eq!(result.strings().to_vec(), ["ab", "", "c"]);
+}
+
+#[test]
+fn lists_round_trip() {
+    assert_round_trip!(
+        slices::BooleanField,
+        slices::BooleanField::new(vec![true; 9])
+    );
+    assert_round_trip!(
+        slices::UnsignedIntFields,
+        slices::UnsignedIntFields::new(
+            vec![u8::MAX],
+            vec![u16::MAX],
+            vec![u32::MAX],
+            vec![u64::MAX],
+            vec![u128::MAX]
+        )
+    );
+    assert_round_trip!(
+        slices::SignedIntFields,
+        slices::SignedIntFields::new(
+            vec![i8::MIN],
+            vec![i16::MIN],
+            vec![i32::MIN],
+            vec![i64::MIN],
+            vec![i128::MIN]
+        )
+    );
+    assert_round_trip!(
+        slices::FloatFields,
+        slices::FloatFields::new(vec![Float32::new(1.5)], vec![Float64::new(-2.5)])
+    );
+    assert_round_trip!(
+        slices::SpecialFields,
+        slices::SpecialFields::new(vec![id()], vec!["é".to_string(), String::new()])
+    );
+    assert_round_trip!(
+        slices::TimeFields,
+        slices::TimeFields::new(vec![-1, 1], vec![day()])
+    );
+    assert_round_trip!(
+        slices::NestedSlices,
+        slices::NestedSlices::new(
+            vec![vec![1, 2], vec![]],
+            vec![vec!["a".to_string()], vec![]]
+        )
+    );
+    assert_round_trip!(
+        slices::NestedSlices,
+        slices::NestedSlices::new(vec![], vec![])
+    );
+}
+
+#[test]
+fn list_views() {
+    let value: slices::UnsignedIntFields =
+        slices::UnsignedIntFields::new(vec![1, 2], vec![3], vec![4, 5, 6], vec![], vec![7]);
+    let bytes: Vec<u8> = value.encode();
+    let result: slices::UnsignedIntFieldsRef<'_> =
+        slices::UnsignedIntFieldsRef::new(&bytes).unwrap();
+    let one: &[u8] = result.one();
+    assert_eq!(one, [1, 2]);
+    assert_eq!(result.three().len(), 3);
+    assert_eq!(result.three().get(2), Some(6));
+    assert_eq!(result.three().get(3), None);
+    assert!(result.four().is_empty());
+    assert_eq!(result.five().iter().rev().collect::<Vec<u128>>(), [7]);
+
+    let value: slices::NestedSlices = slices::NestedSlices::new(
+        vec![vec![1, 2], vec![]],
+        vec![vec!["a".to_string()], vec![]],
+    );
+    let bytes: Vec<u8> = value.encode();
+    let result: slices::NestedSlicesRef<'_> = slices::NestedSlicesRef::new(&bytes).unwrap();
+    assert_eq!(result.one().to_vec(), [&[1, 2][..], &[]]);
+    let two: Vec<Vec<&str>> = result.two().iter().map(|inner| inner.to_vec()).collect();
+    assert_eq!(two, [vec!["a"], vec![]]);
+
+    let mut bytes: Vec<u8> = slices::FloatFields::new(vec![Float32::new(1.5)], vec![]).encode();
+    bytes[8..12].copy_from_slice(&0xFFC0_0001_u32.to_le_bytes());
+    let result: slices::FloatFieldsRef<'_> = slices::FloatFieldsRef::new(&bytes).unwrap();
+    assert_eq!(result.one().to_vec()[0].to_bits(), f32::NAN.to_bits());
+}
+
+#[test]
+fn structs_containing_themselves_through_lists_round_trip() {
+    let value: TreeNode = TreeNode::new(
+        1,
+        vec![
+            TreeNode::new(2, vec![]),
+            TreeNode::new(3, vec![TreeNode::new(4, vec![])]),
+        ],
+    );
+    let bytes: Vec<u8> = value.encode();
+    assert_round_trip!(TreeNode, value);
+    let result: TreeNodeRef<'_> = TreeNodeRef::new(&bytes).unwrap();
+    let leaf: Option<u32> = result
+        .children()
+        .get(1)
+        .and_then(|node| node.children().get(0))
+        .map(|node| node.value());
+    assert_eq!(leaf, Some(4));
+}
+
+/// Gets the test `ValidatedLists`.
+///
+/// Its head is the lengths of `colors` at 0, `days` at 4 & `names` at 8. Its data is `colors` at 12,
+/// `days` at 14 & `names` at 18. (its count at 18, its end at 22 & its `ab` at 26)
+fn validated_lists() -> ValidatedLists {
+    ValidatedLists::new(vec![Color::Red], vec![day()], Some(vec!["ab".to_string()]))
+}
+
+/// Asserts the `bytes` of `ValidatedLists` are rejected with the `error`.
+macro_rules! assert_validated_lists_rejected {
+    ($bytes:expr, $error:expr) => {
+        assert_rejected!(
+            ValidatedLists,
+            ValidatedListsRef,
+            ValidatedListsBuf,
+            $bytes,
+            $error
+        )
+    };
+}
+
+#[test]
+fn readers_reject_invalid_list_elements() {
+    let bytes: Vec<u8> = validated_lists().encode();
+    assert_round_trip!(ValidatedLists, validated_lists());
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[12..14].copy_from_slice(&9_u16.to_le_bytes());
+    assert_validated_lists_rejected!(&invalid, DecodeError::InvalidEnumTag { tag_number: 9 });
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[14..18].copy_from_slice(&i32::MAX.to_le_bytes());
+    assert_validated_lists_rejected!(&invalid, DecodeError::InvalidDate { days: i32::MAX });
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[26] = 0xFF;
+    assert_validated_lists_rejected!(&invalid, DecodeError::InvalidUtf8);
+}
+
+#[test]
+fn readers_reject_invalid_lists() {
+    let mut invalid: Vec<u8> = validated_lists().encode();
+    invalid[22..26].copy_from_slice(&1_u32.to_le_bytes());
+    assert_validated_lists_rejected!(&invalid, DecodeError::InvalidList);
+
+    let bytes: Vec<u8> = Lists::new(vec![1], vec![true], vec![]).encode();
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[16..20].copy_from_slice(&9_u32.to_le_bytes());
+    assert_rejected!(
+        Lists,
+        ListsRef,
+        ListsBuf,
+        &invalid,
+        DecodeError::InvalidList
+    );
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[0..4].copy_from_slice(&3_u32.to_le_bytes());
+    invalid.remove(12);
+    assert_rejected!(
+        Lists,
+        ListsRef,
+        ListsBuf,
+        &invalid,
+        DecodeError::InvalidList
+    );
+}
+
+#[test]
+fn absent_lists() {
+    let value: ValidatedLists = ValidatedLists::new(vec![], vec![], None);
+    let bytes: Vec<u8> = value.encode();
+    assert_eq!(bytes[8..12], u32::MAX.to_le_bytes());
+    assert_round_trip!(ValidatedLists, value);
+    assert!(ValidatedListsRef::new(&bytes).unwrap().names().is_none());
 }
