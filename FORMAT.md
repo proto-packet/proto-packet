@@ -52,6 +52,7 @@ language can represent.
 |----------------------|-----------------------------------------------------------|
 | `string`             | The UTF-8 bytes, without a terminator.                    |
 | non-fixed struct     | The struct's head & data. (see [Structs](#structs))       |
+| list (`[]T`)         | The list's elements. (see [Lists](#lists))                |
 
 The length of a variable-size value is not part of its encoding. It is stored by its container.
 (ex: in the head of a struct) A length is at most `u32::MAX - 1`, since `u32::MAX` is the length of
@@ -112,6 +113,9 @@ bits are written as 0 & ignored by readers.
 The data is the encoding of each present variable-size field, in declaration order. Each field's
 encoding has the length in its head item, so a field's data starts at the head's size plus the
 lengths of the present variable-size fields before it.
+
+The data is not aligned: each variable-size value starts right after the one before it, & readers
+read values at any address.
 
 Safe readers reject a struct whose bytes are not exactly its head's size plus the lengths of its
 present variable-size fields.
@@ -182,6 +186,58 @@ offset 10: bits (a present is bit 0, b is bit 1, d present is bit 2 & d is bit 3
 offset 11: c bytes
 ```
 
+## Lists
+
+A list (`[]T`) is a variable-size value. Its encoding depends on the type of its elements.
+
+### Fixed-Size Elements
+
+The elements are encoded one after another, with no count, since the count is the list's length
+divided by the size of an element. (ex: a `[]u8` is its bytes) The `bool` elements are bits
+instead. (see [Bit Elements](#bit-elements))
+
+```text
+[]u32 [1, 2, 3]
+
+[1: u32][2: u32][3: u32]                                12 bytes
+```
+
+### Bit Elements
+
+A `[]bool` is the `u32` count of its elements, followed by a bit for each element, in as few bytes
+as needed. The `n`th element (from 0) is bit `n % 8` of byte `n / 8` of the bits, where bit 0 is
+the least significant. Unused bits are written as 0 & ignored by readers.
+
+```text
+[]bool [true, false, true]
+
+[count: u32 = 3][bits: 0b0000_0101]                     5 bytes
+```
+
+### Variable-Size Elements
+
+A list of variable-size elements is the `u32` count of its elements, followed by the `u32` end
+offset of each element, followed by the encodings of the elements one after another. The end
+offsets are from the start of the elements' encodings, so the `n`th element (from 0) is from the end
+offset of the element before it (0 for the first element) to its own end offset.
+
+```text
+[]string ["ab", "", "c"]
+
+[count: u32 = 3][ends: u32 = 2, 2, 3][ab][][c]          19 bytes
+```
+
+### Validation
+
+Safe readers reject a list:
+
+- Of fixed-size elements, whose length is not a multiple of the size of an element.
+- Of `bool` elements, whose length is not the size of its count & its bits.
+- Of variable-size elements, whose end offsets decrease or whose last end offset is not the size of
+  its elements' encodings.
+
+They validate each element like any value of its type. (ex: the UTF-8 of each `string`)
+
 ## Reading
 
 Safe readers validate the bytes: the lengths, the UTF-8 of strings, the enum tag numbers & the
@@ -208,11 +264,13 @@ Creating a `MyTypeBuf` or `MyTypeRef` from bytes validates them, or skips the va
 `unsafe` function. Since a `MyTypeRef` borrows its bytes, its floats are normalized when they are
 read.
 
+A `MyTypeRef` reads a list field's elements through a view of them, reading each element from its
+offset. A `[]u8` is borrowed as the bytes instead.
+
 ## Not Yet Specified
 
-- Slices & maps.
+- Maps. (a list of structs with a key & a value)
 - Messages. (a `u16` header of a 13-bit tag number & a 3-bit wire type)
 - Variants.
 - Values outside a struct. (ex: a `bool` or a `u32` as a service request)
-- The alignment of the data.
 - Enum tag numbers that are not one of the enum's cases, for schema evolution.
