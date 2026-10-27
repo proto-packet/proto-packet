@@ -19,5 +19,6 @@ mod gen_service;
 mod gen_struct;
 mod gen_variant;
 mod generate;
+mod lists;
 mod refs;
 mod typing;

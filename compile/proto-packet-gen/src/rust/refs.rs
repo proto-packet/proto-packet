@@ -1,6 +1,7 @@
 use crate::layout::{BitLayout, StructLayout, ValueLayout};
 use crate::rust::bufs::buf_name;
 use crate::rust::decoding::{IO, bit_value, data_length, fixed_value, optional_enum_value};
+use crate::rust::lists::{has_nested_views, variable_ref};
 use crate::rust::naming::{ident, is_snake_case, is_upper_camel_case, type_path};
 use crate::rust::typing::{Typing, option};
 use code_gen::rust::{
@@ -9,9 +10,7 @@ use code_gen::rust::{
     WithReceiver, WithResult, WithStructFields, WithUnsafeFlag, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, WithStatements};
-use proto_packet_tree::{
-    Project, SpecialType, Struct, TypeTag, WithFieldName, WithTypeName, WithTypeTag,
-};
+use proto_packet_tree::{Project, Struct, TypeTag, WithFieldName, WithTypeName, WithTypeTag};
 
 /// The names of the generated functions of a `Ref` type, other than its field getters.
 pub(crate) const REF_FUNCTIONS: [&str; 5] =
@@ -27,7 +26,7 @@ pub(crate) fn ref_name(type_name: &str) -> String {
 /// Gets the Rust path of the `Ref` type of the struct of the named `tag`.
 ///
 /// (ex: `crate::a::FooRef` for `a.Foo`)
-fn ref_path(tag: &TypeTag) -> String {
+pub(crate) fn ref_path(tag: &TypeTag) -> String {
     match tag {
         TypeTag::Named(name) => {
             let path: String = type_path(name.to_ref());
@@ -238,24 +237,13 @@ fn gen_fields(
                     "let end: usize = start + {}",
                     length((offset, field.is_optional()))
                 ));
-                match tag {
-                    TypeTag::Special(SpecialType::String) => (
-                        RustType::from("&'a str"),
-                        "unsafe { ::std::str::from_utf8_unchecked(\
-                        self.bytes.get_unchecked(start..end)) }"
-                            .to_string(),
-                    ),
-                    _ => {
-                        let path: String = ref_path(tag);
-                        (
-                            RustType::from(format!("{}<'a>", path)),
-                            format!(
-                                "unsafe {{ {}::new_unchecked(self.bytes.get_unchecked(start..end)) }}",
-                                path
-                            ),
-                        )
-                    }
-                }
+                statements.push(
+                    "let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) }"
+                        .to_string(),
+                );
+                let (result_type, expr): (String, String) =
+                    variable_ref(typing, project, "data", tag, 0);
+                (RustType::from(result_type), expr)
             }
         };
         let (result_type, expr): (RustType, String) = if field.is_optional() {
@@ -287,6 +275,9 @@ fn gen_fields(
             .with_access(Access::Public);
         if !is_snake_case(&field.field_name()) {
             function.add_attribute("allow(non_snake_case)");
+        }
+        if has_nested_views(tag) {
+            function.add_attribute("allow(clippy::type_complexity)");
         }
         for statement in statements {
             function.add_semi(statement);

@@ -1,4 +1,5 @@
 use crate::layout::{BitLayout, FieldLayout, StructLayout, ValueLayout};
+use crate::rust::lists::{variable_len, variable_write};
 use crate::rust::naming::ident;
 use code_gen::WithStatements;
 use code_gen::rust::{
@@ -44,7 +45,7 @@ pub(crate) fn gen_encoding(
         .collect();
     ImplBlock::from(type_name)
         .with_comment(" Encoding")
-        .with_function(gen_encoded_len(&fields, layout))
+        .with_function(gen_encoded_len(project, &fields, layout))
         .with_function(gen_encode())
         .with_function(gen_encode_to(project, &fields))
 }
@@ -52,7 +53,7 @@ pub(crate) fn gen_encoding(
 /// Generates the `encoded_len` method of the struct with the `fields`.
 ///
 /// An absent variable-size value has no data.
-fn gen_encoded_len(fields: &[Field], layout: &StructLayout) -> Function {
+fn gen_encoded_len(project: &Project, fields: &[Field], layout: &StructLayout) -> Function {
     let mut terms: Vec<String> = vec![layout.head_size().to_string()];
     for field in fields {
         if let ValueLayout::Length { .. } = field.layout.value {
@@ -60,10 +61,10 @@ fn gen_encoded_len(fields: &[Field], layout: &StructLayout) -> Function {
                 format!(
                     "self.{}.as_ref().map_or(0, |value| {})",
                     field.name,
-                    length_expr("value", field.tag)
+                    variable_len(project, "value", field.tag, 0)
                 )
             } else {
-                length_expr(&format!("self.{}", field.name), field.tag)
+                variable_len(project, &format!("self.{}", field.name), field.tag, 0)
             });
         }
     }
@@ -140,10 +141,15 @@ fn gen_encode_to(project: &Project, fields: &[Field]) -> Function {
                     format!(
                         "self.{}.as_ref().map_or(u32::MAX, |value| {})",
                         name,
-                        checked_length(&length_expr("value", field.tag))
+                        checked_length(&variable_len(project, "value", field.tag, 0))
                     )
                 } else {
-                    checked_length(&length_expr(&format!("self.{}", name), field.tag))
+                    checked_length(&variable_len(
+                        project,
+                        &format!("self.{}", name),
+                        field.tag,
+                        0,
+                    ))
                 };
                 head.insert(
                     offset,
@@ -153,10 +159,10 @@ fn gen_encode_to(project: &Project, fields: &[Field]) -> Function {
                     format!(
                         "if let ::std::option::Option::Some(value) = &self.{} {{ {} }}",
                         name,
-                        data_statement("value", field.tag)
+                        variable_write(project, "value", field.tag, 0)
                     )
                 } else {
-                    data_statement(&format!("self.{}", name), field.tag)
+                    variable_write(project, &format!("self.{}", name), field.tag, 0)
                 });
             }
             ValueLayout::Bit(bit) => {
@@ -196,7 +202,12 @@ fn gen_encode_to(project: &Project, fields: &[Field]) -> Function {
 /// Gets the statement writing the fixed-size `value` of the `tag` of the `project`.
 ///
 /// The `value` is a reference when `is_ref`. (ex: `value` of `Some(value)`)
-fn fixed_statement(project: &Project, value: &str, tag: &TypeTag, is_ref: bool) -> String {
+pub(crate) fn fixed_statement(
+    project: &Project,
+    value: &str,
+    tag: &TypeTag,
+    is_ref: bool,
+) -> String {
     let bytes = |expr: String| format!("out.extend_from_slice(&{}.to_le_bytes());", expr);
     match tag {
         TypeTag::Primitive(PrimitiveType::Float32 | PrimitiveType::Float64) => {
@@ -218,28 +229,10 @@ fn fixed_statement(project: &Project, value: &str, tag: &TypeTag, is_ref: bool) 
     }
 }
 
-/// Gets the expression of the encoding length of the variable-size `value` of the `tag`.
-fn length_expr(value: &str, tag: &TypeTag) -> String {
-    match tag {
-        TypeTag::Special(SpecialType::String) => format!("{}.len()", value),
-        _ => format!("{}.encoded_len()", value),
-    }
-}
-
 /// Gets the `u32` of the `length`, panicking if it is `u32::MAX` or more. (the absent length)
-fn checked_length(length: &str) -> String {
+pub(crate) fn checked_length(length: &str) -> String {
     format!(
         "u32::try_from({}).ok().filter(|length| *length != u32::MAX).expect(\"length out of range\")",
         length
     )
-}
-
-/// Gets the statement writing the data of the variable-size `value` of the `tag`.
-fn data_statement(value: &str, tag: &TypeTag) -> String {
-    match tag {
-        TypeTag::Special(SpecialType::String) => {
-            format!("out.extend_from_slice({}.as_bytes());", value)
-        }
-        _ => format!("{}.encode_to(out);", value),
-    }
 }

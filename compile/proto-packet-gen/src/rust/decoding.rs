@@ -1,4 +1,5 @@
 use crate::layout::{BitLayout, StructLayout, ValueLayout};
+use crate::rust::lists::{variable_validation, variable_value};
 use crate::rust::naming::{ident, type_path};
 use code_gen::WithStatements;
 use code_gen::rust::{
@@ -317,27 +318,26 @@ fn validation(project: &Project, field: &Field, location: &Location) -> Option<S
         )),
     };
     Some(match condition {
-        Some(condition) => format!("if {} {{ {}; }}", condition, statement),
-        None => format!("{};", statement),
+        Some(condition) => format!("if {} {{ {} }}", condition, statement),
+        None => statement,
     })
 }
 
-/// Gets the optional statement validating the value of the `field` of the `project` at the
-/// `location`, without its `;`. (only values with invalid encodings are validated)
+/// Gets the optional statements validating the value of the `field` of the `project` at the
+/// `location`. (only values with invalid encodings are validated)
 fn value_validation(project: &Project, field: &Field, location: &Location) -> Option<String> {
     match (field.tag, location) {
+        (tag, Location::Data { range }) => {
+            variable_validation(project, &format!("&bytes[{}]", range), tag, 0)
+        }
         (TypeTag::Time(TimeType::Date), Location::Fixed { offset, .. }) => {
             let days: String = format!("{}::read_i32(bytes, {})", IO, offset);
             Some(format!(
                 "::proto_packet::types::date_from_days({}).ok_or_else(|| \
-                {}::DecodeError::InvalidDate {{ days: {} }})?",
+                {}::DecodeError::InvalidDate {{ days: {} }})?;",
                 days, IO, days
             ))
         }
-        (TypeTag::Special(SpecialType::String), Location::Data { range }) => Some(format!(
-            "::std::str::from_utf8(&bytes[{}]).map_err(|_| {}::DecodeError::InvalidUtf8)?",
-            range, IO
-        )),
         (TypeTag::Named(name), location) => {
             let path: String = type_path(name.to_ref());
             match (project.type_dec_with_name(name.to_ref()), location) {
@@ -345,20 +345,17 @@ fn value_validation(project: &Project, field: &Field, location: &Location) -> Op
                     let tag_number: String = format!("{}::read_u16(bytes, {})", IO, offset);
                     Some(format!(
                         "{}::from_tag_number({}).ok_or_else(|| \
-                        {}::DecodeError::InvalidEnumTag {{ tag_number: {} }})?",
+                        {}::DecodeError::InvalidEnumTag {{ tag_number: {} }})?;",
                         path, tag_number, IO, tag_number
                     ))
                 }
                 (_, Location::Fixed { offset, size }) => Some(format!(
-                    "{}::validate(&bytes[{}..{}])?",
+                    "{}::validate(&bytes[{}..{}])?;",
                     path,
                     offset,
                     offset + size
                 )),
-                (_, Location::Data { range }) => {
-                    Some(format!("{}::validate(&bytes[{}])?", path, range))
-                }
-                (_, Location::Bit { .. }) => None,
+                (_, _) => None,
             }
         }
         _ => None,
@@ -378,22 +375,16 @@ fn value(project: &Project, tag: &TypeTag, location: &Location) -> String {
                     offset + size
                 )
             }),
-        Location::Data { range } => match tag {
-            TypeTag::Special(SpecialType::String) => format!(
-                "unsafe {{ ::std::str::from_utf8_unchecked(bytes.get_unchecked({})) }}.to_string()",
-                range
-            ),
-            _ => format!(
-                "unsafe {{ {}::decode_unchecked(bytes.get_unchecked({})) }}",
-                struct_path(tag),
-                range
-            ),
-        },
+        Location::Data { range } => format!(
+            "{{ let data: &[u8] = unsafe {{ bytes.get_unchecked({}) }}; {} }}",
+            range,
+            variable_value(project, "data", tag, 0)
+        ),
     }
 }
 
 /// Gets the path of the named type of the `tag`. (ex: `crate::a::Point`)
-fn struct_path(tag: &TypeTag) -> String {
+pub(crate) fn struct_path(tag: &TypeTag) -> String {
     match tag {
         TypeTag::Named(name) => type_path(name.to_ref()),
         _ => unreachable!("a named type"),
