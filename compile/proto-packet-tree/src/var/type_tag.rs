@@ -18,6 +18,12 @@ pub enum TypeTag {
 
     /// A slice type.
     Slice { base: Box<TypeTag> },
+
+    /// A map type.
+    Map {
+        key: Box<TypeTag>,
+        value: Box<TypeTag>,
+    },
 }
 
 impl From<PrimitiveType> for TypeTag {
@@ -56,6 +62,22 @@ impl TypeTag {
     }
 }
 
+impl TypeTag {
+    //! Maps
+
+    /// Creates a map type of the `key` & `value` types.
+    pub fn map<K, V>(key: K, value: V) -> Self
+    where
+        K: Into<TypeTag>,
+        V: Into<TypeTag>,
+    {
+        Self::Map {
+            key: Box::new(key.into()),
+            value: Box::new(value.into()),
+        }
+    }
+}
+
 impl Display for TypeTag {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -64,6 +86,7 @@ impl Display for TypeTag {
             Self::Time(time) => write!(f, "{}", time),
             Self::Named(name) => write!(f, "{}", name),
             Self::Slice { base } => write!(f, "[]{}", base),
+            Self::Map { key, value } => write!(f, "map<{}, {}>", key, value),
         }
     }
 }

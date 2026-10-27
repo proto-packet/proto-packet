@@ -36,6 +36,7 @@ impl Typing<'_> {
             TypeTag::Time(TimeType::Date) => RustType::from("::proto_packet::types::Date"),
             TypeTag::Named(name) => RustType::from(type_path(name.to_ref())),
             TypeTag::Slice { .. } => self.storage_type(tag),
+            TypeTag::Map { .. } => todo!(),
         }
     }
 
@@ -115,6 +116,7 @@ impl Typing<'_> {
             TypeTag::Primitive(_) | TypeTag::Time(_) => true,
             TypeTag::Special(special) => *special == SpecialType::Uuid,
             TypeTag::Slice { .. } => false,
+            TypeTag::Map { .. } => todo!(),
             TypeTag::Named(name) => match self.project.type_dec_with_name(name.to_ref()) {
                 Some(TypeDec::Enum(_)) => true,
                 Some(TypeDec::Struct(structure)) if !visiting.contains(name) => {

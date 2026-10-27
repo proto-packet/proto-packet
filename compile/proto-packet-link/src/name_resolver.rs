@@ -67,6 +67,7 @@ impl NameResolver<'_> {
         match tag {
             TypeTag::Named(name) => self.link_name(name, location).map(TypeTag::Named),
             TypeTag::Slice { base } => Ok(self.link_type_tag(base, location)?.into_slice()),
+            TypeTag::Map { .. } => todo!(),
             TypeTag::Primitive(_) | TypeTag::Special(_) | TypeTag::Time(_) => Ok(tag.clone()),
         }
     }
