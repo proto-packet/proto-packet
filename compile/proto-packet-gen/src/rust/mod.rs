@@ -7,6 +7,7 @@ pub use generate::*;
 
 pub mod naming;
 
+mod decoding;
 mod derives;
 mod docs;
 mod encoding;
