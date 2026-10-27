@@ -60,14 +60,17 @@ impl NameResolver<'_> {
 impl NameResolver<'_> {
     //! Linking
 
-    /// Links the type `tag` at the `location` by resolving its named type.
+    /// Links the type `tag` at the `location` by resolving its named types.
     ///
-    /// The named type must be declared in the project & be a data type, not a service.
+    /// The named types must be declared in the project & be data types, not services.
     pub fn link_type_tag(self, tag: &TypeTag, location: &Location) -> Result<TypeTag, LinkError> {
         match tag {
             TypeTag::Named(name) => self.link_name(name, location).map(TypeTag::Named),
             TypeTag::Slice { base } => Ok(self.link_type_tag(base, location)?.into_slice()),
-            TypeTag::Map { .. } => todo!(),
+            TypeTag::Map { key, value } => Ok(TypeTag::map(
+                self.link_type_tag(key, location)?,
+                self.link_type_tag(value, location)?,
+            )),
             TypeTag::Primitive(_) | TypeTag::Special(_) | TypeTag::Time(_) => Ok(tag.clone()),
         }
     }

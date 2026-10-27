@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 /// Checks the linked `project` has no loops of types without a `box`.
 ///
-/// Fields & cases of named types are the links of the loops. Slices & boxed links break them.
+/// Fields & cases of named types are the links of the loops. Slices, maps & boxed links break them.
 pub(crate) fn check_unboxed_loops(project: &Project) -> Result<(), LinkError> {
     let links: BTreeMap<QualifiedName, Vec<Link>> = links(project);
     let mut done: BTreeSet<&QualifiedName> = BTreeSet::default();
