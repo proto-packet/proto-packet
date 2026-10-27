@@ -1,7 +1,7 @@
-use crate::layout::FieldLayout;
+use crate::layout::{BitLayout, FieldLayout, ValueLayout};
 use proto_packet_tree::{
-    PrimitiveType, Project, QualifiedName, SpecialType, Struct, TimeType, TypeDec, TypeTag,
-    WithTypeTag,
+    PrimitiveType, Project, QualifiedName, SpecialType, Struct, StructField, TimeType, TypeDec,
+    TypeTag, WithTypeTag,
 };
 
 /// The alignment groups of a head, in order.
@@ -17,7 +17,8 @@ const LENGTH_SIZE: usize = 4;
 ///
 /// The head has an item for each field, placed in alignment groups of 8, 4, 2 & 1 bytes, followed
 /// by the bit group. Within an alignment group, the fixed-size values are in declaration order,
-/// followed by the lengths.
+/// followed by the lengths. The bit group has the `bool` bits & the presence bits of the optional
+/// fields, in declaration order.
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct StructLayout {
     fields: Vec<FieldLayout>,
@@ -26,7 +27,7 @@ pub struct StructLayout {
     is_fixed: bool,
 }
 
-/// The kind of a field's item in the head.
+/// The kind of a field's value in the head.
 #[derive(Copy, Clone, Debug)]
 enum Item {
     /// A fixed-size value, of the `size`, in the `alignment` group.
@@ -44,12 +45,12 @@ impl StructLayout {
 
     /// Computes the layout of the `structure` of the linked `project`.
     ///
-    /// Returns `None` if a field has no encoding yet. (ex: a slice, or a struct containing itself)
+    /// Returns `None` if a field has no encoding yet. (ex: a slice)
     pub fn new(project: &Project, structure: &Struct) -> Option<Self> {
         Self::new_visiting(project, structure, &mut Vec::default())
     }
 
-    /// Computes the layout of the `structure`, without revisiting the `visiting` structs.
+    /// Computes the layout of the `structure`, with the `visiting` structs as variable-size.
     fn new_visiting(
         project: &Project,
         structure: &Struct,
@@ -58,45 +59,49 @@ impl StructLayout {
         let items: Vec<Item> = structure
             .fields()
             .iter()
-            .map(|field| {
-                if field.is_optional() {
-                    None
-                } else {
-                    item(project, field.type_tag(), visiting)
-                }
-            })
+            .map(|field| item(project, field.type_tag(), visiting))
             .collect::<Option<_>>()?;
 
-        let mut fields: Vec<Option<FieldLayout>> = vec![None; items.len()];
+        let mut values: Vec<Option<ValueLayout>> = vec![None; items.len()];
         let mut offset: usize = 0;
         for group in ALIGNMENT_GROUPS {
             for (index, item) in items.iter().enumerate() {
                 if let Item::Fixed { size, alignment } = *item
                     && alignment == group
                 {
-                    fields[index] = Some(FieldLayout::Fixed { offset, size });
+                    values[index] = Some(ValueLayout::Fixed { offset, size });
                     offset += size;
                 }
             }
             if group == LENGTH_ALIGNMENT {
                 for (index, item) in items.iter().enumerate() {
                     if let Item::Length = item {
-                        fields[index] = Some(FieldLayout::Length { offset });
+                        values[index] = Some(ValueLayout::Length { offset });
                         offset += LENGTH_SIZE;
                     }
                 }
             }
         }
+
         let mut bits: usize = 0;
-        for (index, item) in items.iter().enumerate() {
-            if let Item::Bit = item {
-                let bit: u8 = (bits % 8) as u8;
-                fields[index] = Some(FieldLayout::Bit {
-                    offset: offset + bits / 8,
-                    bit,
-                });
-                bits += 1;
-            }
+        let mut next_bit = || {
+            let bit: BitLayout = BitLayout {
+                offset: offset + bits / 8,
+                bit: (bits % 8) as u8,
+            };
+            bits += 1;
+            bit
+        };
+        let mut fields: Vec<FieldLayout> = Vec::with_capacity(items.len());
+        for ((field, item), value) in structure.fields().iter().zip(&items).zip(values) {
+            let presence: Option<BitLayout> =
+                has_presence_bit(project, field, *item).then(&mut next_bit);
+            let value: ValueLayout = match (item, value) {
+                (Item::Bit, _) => ValueLayout::Bit(next_bit()),
+                (_, Some(value)) => value,
+                (_, None) => unreachable!("a placed value"),
+            };
+            fields.push(FieldLayout { value, presence });
         }
         let head_size: usize = offset + bits.div_ceil(8);
 
@@ -110,7 +115,7 @@ impl StructLayout {
             .max()
             .unwrap_or(1);
         Some(Self {
-            fields: fields.into_iter().flatten().collect(),
+            fields,
             head_size,
             alignment: if head_size.is_multiple_of(largest) {
                 largest
@@ -149,8 +154,24 @@ impl StructLayout {
     }
 }
 
-/// Gets the head item of the `tag`, without revisiting the `visiting` structs.
+/// Checks if the `field` of the `project`, with the head `item`, has a presence bit.
 ///
+/// An optional field has one unless its type has an absent value: the tag number 0 of an enum, or
+/// the length `u32::MAX` of a variable-size value.
+fn has_presence_bit(project: &Project, field: &StructField, item: Item) -> bool {
+    let is_enum = || match field.type_tag() {
+        TypeTag::Named(name) => matches!(
+            project.type_dec_with_name(name.to_ref()),
+            Some(TypeDec::Enum(_))
+        ),
+        _ => false,
+    };
+    field.is_optional() && !matches!(item, Item::Length) && !is_enum()
+}
+
+/// Gets the head item of the `tag`, with the `visiting` structs as variable-size.
+///
+/// A struct being visited contains itself through a loop of types, which has no fixed size.
 /// Returns `None` if the `tag` has no encoding yet.
 fn item(project: &Project, tag: &TypeTag, visiting: &mut Vec<QualifiedName>) -> Option<Item> {
     let fixed = |size: usize| Item::Fixed {
@@ -166,7 +187,8 @@ fn item(project: &Project, tag: &TypeTag, visiting: &mut Vec<QualifiedName>) -> 
         TypeTag::Time(TimeType::Date) => Some(fixed(4)),
         TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref())? {
             TypeDec::Enum(_) => Some(fixed(2)),
-            TypeDec::Struct(structure) if !visiting.contains(name) => {
+            TypeDec::Struct(_) if visiting.contains(name) => Some(Item::Length),
+            TypeDec::Struct(structure) => {
                 visiting.push(name.clone());
                 let layout: Option<StructLayout> =
                     StructLayout::new_visiting(project, structure, visiting);
@@ -200,12 +222,44 @@ fn primitive_size(primitive: PrimitiveType) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::layout::{FieldLayout, StructLayout};
+    use crate::layout::{BitLayout, FieldLayout, StructLayout, ValueLayout};
     use proto_packet::io::TagNumber;
     use proto_packet_tree::{
         CaseName, Enum, EnumCase, FieldName, Message, ModPath, PrimitiveType, Project,
         QualifiedName, SchemaFile, SpecialType, Struct, StructField, TypeDec, TypeName, TypeTag,
     };
+
+    /// Gets the layout of a required fixed-size field, of the `size`, at the `offset`.
+    fn fixed(offset: usize, size: usize) -> FieldLayout {
+        FieldLayout {
+            value: ValueLayout::Fixed { offset, size },
+            presence: None,
+        }
+    }
+
+    /// Gets the layout of a required variable-size field, with its length at the `offset`.
+    fn length(offset: usize) -> FieldLayout {
+        FieldLayout {
+            value: ValueLayout::Length { offset },
+            presence: None,
+        }
+    }
+
+    /// Gets the layout of a required `bool` field, at the `bit` of the byte at the `offset`.
+    fn bit(offset: usize, bit: u8) -> FieldLayout {
+        FieldLayout {
+            value: ValueLayout::Bit(BitLayout { offset, bit }),
+            presence: None,
+        }
+    }
+
+    /// Gets the `layout` with the presence bit at the `bit` of the byte at the `offset`.
+    fn present(layout: FieldLayout, offset: usize, bit: u8) -> FieldLayout {
+        FieldLayout {
+            presence: Some(BitLayout { offset, bit }),
+            ..layout
+        }
+    }
 
     /// Gets the type tag of the named type `name` in the mod `a`.
     fn named(name: &str) -> TypeTag {
@@ -270,20 +324,7 @@ mod tests {
             ],
         );
         let result: StructLayout = layout(vec![my_struct.into()], "MyStruct").unwrap();
-        assert_eq!(
-            result.fields(),
-            [
-                FieldLayout::Length { offset: 20 },
-                FieldLayout::Fixed {
-                    offset: 16,
-                    size: 4
-                },
-                FieldLayout::Fixed {
-                    offset: 0,
-                    size: 16
-                },
-            ]
-        );
+        assert_eq!(result.fields(), [length(20), fixed(16, 4), fixed(0, 16),]);
         assert_eq!(result.head_size(), 24);
         assert!(!result.is_fixed());
     }
@@ -305,21 +346,12 @@ mod tests {
         assert_eq!(
             result.fields(),
             [
-                FieldLayout::Length { offset: 28 },
-                FieldLayout::Fixed {
-                    offset: 24,
-                    size: 4
-                },
-                FieldLayout::Fixed {
-                    offset: 0,
-                    size: 16
-                },
-                FieldLayout::Length { offset: 32 },
-                FieldLayout::Bit { offset: 36, bit: 0 },
-                FieldLayout::Fixed {
-                    offset: 16,
-                    size: 8
-                },
+                length(28),
+                fixed(24, 4),
+                fixed(0, 16),
+                length(32),
+                bit(36, 0),
+                fixed(16, 8),
             ]
         );
         assert_eq!(result.head_size(), 37);
@@ -354,15 +386,7 @@ mod tests {
         let result: StructLayout = layout(type_decs(), "T").unwrap();
         assert_eq!(
             result.fields(),
-            [
-                FieldLayout::Fixed {
-                    offset: 16,
-                    size: 9
-                },
-                FieldLayout::Fixed { offset: 8, size: 8 },
-                FieldLayout::Fixed { offset: 0, size: 8 },
-                FieldLayout::Bit { offset: 25, bit: 0 },
-            ]
+            [fixed(16, 9), fixed(8, 8), fixed(0, 8), bit(25, 0),]
         );
         assert_eq!((result.head_size(), result.alignment()), (26, 1));
         assert!(result.is_fixed());
@@ -375,13 +399,10 @@ mod tests {
             .collect();
         fields.push(field("n", primitive(PrimitiveType::UnsignedInt8)));
         let result: StructLayout = layout(vec![structure("Bits", fields).into()], "Bits").unwrap();
-        assert_eq!(result.fields()[0], FieldLayout::Bit { offset: 1, bit: 0 });
-        assert_eq!(result.fields()[7], FieldLayout::Bit { offset: 1, bit: 7 });
-        assert_eq!(result.fields()[8], FieldLayout::Bit { offset: 2, bit: 0 });
-        assert_eq!(
-            result.fields()[9],
-            FieldLayout::Fixed { offset: 0, size: 1 }
-        );
+        assert_eq!(result.fields()[0], bit(1, 0));
+        assert_eq!(result.fields()[7], bit(1, 7));
+        assert_eq!(result.fields()[8], bit(2, 0));
+        assert_eq!(result.fields()[9], fixed(0, 1));
         assert_eq!((result.head_size(), result.alignment()), (3, 1));
     }
 
@@ -408,15 +429,7 @@ mod tests {
         let result: StructLayout = layout(type_decs, "NamedFields").unwrap();
         assert_eq!(
             result.fields(),
-            [
-                FieldLayout::Fixed {
-                    offset: 20,
-                    size: 2
-                },
-                FieldLayout::Fixed { offset: 0, size: 8 },
-                FieldLayout::Fixed { offset: 8, size: 8 },
-                FieldLayout::Length { offset: 16 },
-            ]
+            [fixed(20, 2), fixed(0, 8), fixed(8, 8), length(16),]
         );
         assert_eq!(result.head_size(), 22);
         assert!(!result.is_fixed());
@@ -428,9 +441,7 @@ mod tests {
         let test_cases: Vec<(&str, StructField)> = vec![
             ("slice", field("x", string().into_slice())),
             ("map", field("x", TypeTag::map(string(), string()))),
-            ("optional", field("x", string()).with_optional(true)),
             ("message", field("x", named("Label"))),
-            ("loop", field("x", named("Loop")).with_boxed(true)),
         ];
         for (name, field) in test_cases {
             let type_decs: Vec<TypeDec> = vec![
@@ -439,5 +450,67 @@ mod tests {
             ];
             assert_eq!(layout(type_decs, "Loop"), None, "field: {}", name);
         }
+    }
+
+    #[test]
+    fn format_example_opt() {
+        let color: Enum = Enum::from(TypeName::try_from("Color").unwrap())
+            .with_case(EnumCase::new(
+                CaseName::try_from("Red").unwrap(),
+                TagNumber::new(1).unwrap(),
+            ))
+            .unwrap();
+        let opt: Struct = structure(
+            "Opt",
+            vec![
+                field("a", primitive(PrimitiveType::UnsignedInt32)).with_optional(true),
+                field("b", primitive(PrimitiveType::Boolean)),
+                field("c", string()).with_optional(true),
+                field("d", primitive(PrimitiveType::Boolean)).with_optional(true),
+                field("e", named("Color")).with_optional(true),
+            ],
+        );
+        let result: StructLayout = layout(vec![color.into(), opt.into()], "Opt").unwrap();
+        assert_eq!(
+            result.fields(),
+            [
+                present(fixed(0, 4), 10, 0),
+                bit(10, 1),
+                length(4),
+                present(bit(10, 3), 10, 2),
+                fixed(8, 2),
+            ]
+        );
+        assert_eq!(result.head_size(), 11);
+        assert!(!result.is_fixed());
+    }
+
+    #[test]
+    fn optional_fixed_structs_are_fixed() {
+        let optional: Struct = structure(
+            "Optional",
+            vec![field("point", named("Point")).with_optional(true)],
+        );
+        let result: StructLayout = layout(vec![point(), optional.into()], "Optional").unwrap();
+        assert_eq!(result.fields(), [present(fixed(0, 8), 8, 0)]);
+        assert_eq!(result.head_size(), 9);
+        assert!(result.is_fixed());
+    }
+
+    #[test]
+    fn structs_containing_themselves_are_variable_size() {
+        let list_node: Struct = structure(
+            "ListNode",
+            vec![
+                field("value", primitive(PrimitiveType::UnsignedInt32)),
+                field("next", named("ListNode"))
+                    .with_optional(true)
+                    .with_boxed(true),
+            ],
+        );
+        let result: StructLayout = layout(vec![list_node.into()], "ListNode").unwrap();
+        assert_eq!(result.fields(), [fixed(0, 4), length(4)]);
+        assert_eq!(result.head_size(), 8);
+        assert!(!result.is_fixed());
     }
 }
