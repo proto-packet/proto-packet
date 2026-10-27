@@ -4,9 +4,13 @@ use common::*;
 use proto_packet::io::DecodeError;
 use proto_packet_test::enums::cases::{EdgeTags, MultiCase};
 use proto_packet_test::enums::empty::Empty as EmptyEnum;
-use proto_packet_test::format::examples::{self, Bits, MyStruct, Odd, S, SBuf, SRef, T, TRef};
+use proto_packet_test::format::examples::{
+    self, Bits, MyStruct, Odd, Opt, OptRef, OptionalValues, OptionalValuesBuf, OptionalValuesRef,
+    S, SBuf, SRef, T, TRef,
+};
 use proto_packet_test::links::imports::ImportedFields;
 use proto_packet_test::links::local::{After, Before};
+use proto_packet_test::links::loops::{ListNode, ListNodeRef};
 use proto_packet_test::mods::parent::child::Child;
 use proto_packet_test::names::casing::{HTTPServer, My_Struct, Vec3};
 use proto_packet_test::names::keywords::{KeywordStruct, Self_, SelfBuf, SelfRef};
@@ -17,6 +21,7 @@ use proto_packet_test::names::r#type::self_::SelfStruct;
 use proto_packet_test::structs::arguments::EightFields;
 use proto_packet_test::structs::copy::{
     CopyFields, CopyFieldsBuf, CopyFieldsRef, NestedCopy, NestedCopyBuf, NestedCopyRef,
+    OptionalCopy,
 };
 use proto_packet_test::structs::empty::{Empty, EmptyBuf, EmptyRef};
 use proto_packet_test::structs::fields;
@@ -365,4 +370,126 @@ fn encoding_types_of_renamed_structs() {
     let bytes: Vec<u8> = Self_::new(1).encode();
     assert_eq!(SelfRef::new(&bytes).unwrap().value(), 1);
     assert_eq!(SelfBuf::new(bytes).unwrap().decode(), Self_::new(1));
+}
+
+#[test]
+fn opt_example() {
+    let value: Opt = Opt::new(
+        Some(7),
+        true,
+        Some("hi".to_string()),
+        Some(true),
+        Some(Color::Red),
+    );
+    let expected: Vec<u8> = [
+        &7_u32.to_le_bytes()[..],
+        &2_u32.to_le_bytes(),
+        &1_u16.to_le_bytes(),
+        &[0b0000_1111],
+        b"hi",
+    ]
+    .concat();
+    assert_eq!(value.encode(), expected);
+    assert_round_trip!(Opt, value);
+    let result: OptRef<'_> = OptRef::new(&expected).unwrap();
+    assert_eq!(result.a(), Some(7));
+    assert!(result.b());
+    assert_eq!(result.c(), Some("hi"));
+    assert_eq!(result.d(), Some(true));
+    assert_eq!(result.e(), Some(Color::Red));
+}
+
+#[test]
+fn opt_example_absent() {
+    let value: Opt = Opt::new(None, false, None, None, None);
+    let expected: Vec<u8> = [&[0; 4][..], &u32::MAX.to_le_bytes(), &[0; 2], &[0]].concat();
+    assert_eq!(value.encode(), expected);
+    assert_round_trip!(Opt, value);
+    let result: OptRef<'_> = OptRef::new(&expected).unwrap();
+    assert_eq!(result.a(), None);
+    assert!(!result.b());
+    assert_eq!(result.c(), None);
+    assert_eq!(result.d(), None);
+    assert_eq!(result.e(), None);
+}
+
+#[test]
+fn empty_values_are_present() {
+    let value: Opt = Opt::new(None, false, Some(String::new()), Some(false), None);
+    let bytes: Vec<u8> = value.encode();
+    assert_round_trip!(Opt, value);
+    let result: OptRef<'_> = OptRef::new(&bytes).unwrap();
+    assert_eq!(result.c(), Some(""));
+    assert_eq!(result.d(), Some(false));
+}
+
+/// Gets the test `OptionalValues`, with its values present.
+///
+/// Its head is the `day` at 0, `point` at 4, `color` at 12 & the presence bits of `day` & `point`
+/// at 14.
+fn optional_values() -> OptionalValues {
+    OptionalValues::new(Some(day()), Some(examples::Point::new(1, 2)), Color::Red)
+}
+
+#[test]
+fn absent_values_are_not_validated() {
+    let value: OptionalValues = OptionalValues::new(None, None, Color::Red);
+    let mut bytes: Vec<u8> = value.encode();
+    bytes[0..12].fill(0xFF);
+    assert_round_trip!(OptionalValues, value);
+    assert_eq!(OptionalValues::decode(&bytes), Ok(value));
+    let result: OptionalValuesRef<'_> = OptionalValuesRef::new(&bytes).unwrap();
+    assert_eq!(result.day(), None);
+    assert!(result.point().is_none());
+
+    let mut bytes: Vec<u8> = optional_values().encode();
+    assert_round_trip!(OptionalValues, optional_values());
+    bytes[0..4].copy_from_slice(&i32::MAX.to_le_bytes());
+    let error: DecodeError = DecodeError::InvalidDate { days: i32::MAX };
+    assert_rejected!(
+        OptionalValues,
+        OptionalValuesRef,
+        OptionalValuesBuf,
+        &bytes,
+        error
+    );
+}
+
+#[test]
+fn optional_enums_are_absent_as_0() {
+    let bytes: Vec<u8> = Opt::new(None, false, None, None, None).encode();
+    assert_eq!(OptRef::new(&bytes).unwrap().e(), None);
+
+    let mut bytes: Vec<u8> = optional_values().encode();
+    bytes[12..14].copy_from_slice(&0_u16.to_le_bytes());
+    let error: DecodeError = DecodeError::InvalidEnumTag { tag_number: 0 };
+    assert_rejected!(
+        OptionalValues,
+        OptionalValuesRef,
+        OptionalValuesBuf,
+        &bytes,
+        error
+    );
+}
+
+#[test]
+fn optional_structs_round_trip() {
+    assert_round_trip!(OptionalCopy, OptionalCopy::new(Some(1)));
+    assert_round_trip!(OptionalCopy, OptionalCopy::new(None));
+    assert_round_trip!(prelude::Option, prelude::Option::new(Some(1)));
+    assert_round_trip!(prelude::Some, prelude::Some::new(Some("text".to_string())));
+    assert_round_trip!(prelude::None, prelude::None::new(None));
+}
+
+#[test]
+fn structs_containing_themselves_round_trip() {
+    let value: ListNode = ListNode::new(1, Some(ListNode::new(2, Some(ListNode::new(3, None)))));
+    let bytes: Vec<u8> = value.encode();
+    assert_eq!(bytes.len(), 24);
+    assert_round_trip!(ListNode, value);
+    let result: ListNodeRef<'_> = ListNodeRef::new(&bytes).unwrap();
+    let values: Vec<u32> = std::iter::successors(Some(result), ListNodeRef::next)
+        .map(|node| node.value())
+        .collect();
+    assert_eq!(values, [1, 2, 3]);
 }

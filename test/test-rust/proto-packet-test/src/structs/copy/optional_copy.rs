@@ -62,3 +62,202 @@ impl OptionalCopy {
         self
     }
 }
+
+impl OptionalCopy {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        5
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        match &self.value {
+            ::std::option::Option::Some(value) => {
+                out.extend_from_slice(&value.to_le_bytes());
+            }
+            ::std::option::Option::None => {
+                out.extend_from_slice(&[0; 4]);
+            }
+        }
+        out.push(u8::from(self.value.is_some()));
+    }
+}
+
+impl OptionalCopy {
+    //! Decoding
+
+    /// Validates the encoding of the struct, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
+        if bytes.len() != 5 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 5,
+                actual: bytes.len(),
+            });
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            value: unsafe { ::proto_packet::io::read_bit_unchecked(bytes, 4, 0) }
+                .then(|| unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) }),
+        }
+    }
+}
+
+/// The borrowed encoding of a [OptionalCopy], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct OptionalCopyRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> OptionalCopyRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [OptionalCopy] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [OptionalCopy].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        OptionalCopy::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [OptionalCopy] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [OptionalCopy].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> OptionalCopyRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [OptionalCopy].
+    #[must_use]
+    pub fn decode(&self) -> OptionalCopy {
+        unsafe { OptionalCopy::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> OptionalCopyBuf {
+        OptionalCopyBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> OptionalCopyRef<'a> {
+    //! Fields
+
+    /// Gets the field: `value`.
+    #[must_use]
+    pub fn value(&self) -> ::std::option::Option<u32> {
+        unsafe { ::proto_packet::io::read_bit_unchecked(self.bytes, 4, 0) }
+            .then(|| unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) })
+    }
+}
+
+/// The owned encoding of a [OptionalCopy], read in place.
+#[derive(Clone, Debug)]
+pub struct OptionalCopyBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl OptionalCopyBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [OptionalCopy] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [OptionalCopy].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        OptionalCopy::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [OptionalCopy] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [OptionalCopy].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl OptionalCopyBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> OptionalCopyRef<'_> {
+        unsafe { OptionalCopyRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [OptionalCopy].
+    #[must_use]
+    pub fn decode(&self) -> OptionalCopy {
+        unsafe { OptionalCopy::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&OptionalCopy> for OptionalCopyBuf {
+    fn from(value: &OptionalCopy) -> Self {
+        Self {
+            bytes: value.encode(),
+        }
+    }
+}

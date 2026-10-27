@@ -61,3 +61,240 @@ impl Some {
         self
     }
 }
+
+impl Some {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        4 + self.value.as_ref().map_or(0, |value| value.len())
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the encoding of a variable-size field is `u32::MAX` bytes or more.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(
+            &self
+                .value
+                .as_ref()
+                .map_or(u32::MAX, |value| {
+                    u32::try_from(value.len())
+                        .ok()
+                        .filter(|length| *length != u32::MAX)
+                        .expect("length out of range")
+                })
+                .to_le_bytes(),
+        );
+        if let ::std::option::Option::Some(value) = &self.value {
+            out.extend_from_slice(value.as_bytes());
+        }
+    }
+}
+
+impl Some {
+    //! Decoding
+
+    /// Validates the encoding of the struct, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
+        if bytes.len() < 4 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 4,
+                actual: bytes.len(),
+            });
+        }
+        let end_0: usize = 4_usize.saturating_add(match ::proto_packet::io::read_u32(bytes, 0) {
+            u32::MAX => 0,
+            length => length as usize,
+        });
+        if bytes.len() != end_0 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: end_0,
+                actual: bytes.len(),
+            });
+        }
+        if ::proto_packet::io::read_u32(bytes, 0) != u32::MAX {
+            ::std::str::from_utf8(&bytes[4..end_0])
+                .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?;
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        let end_0: usize = 4 + match unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } {
+            u32::MAX => 0,
+            length => length as usize,
+        };
+        Self {
+            value: (unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } != u32::MAX).then(
+                || {
+                    unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(4..end_0)) }
+                        .to_string()
+                },
+            ),
+        }
+    }
+}
+
+/// The borrowed encoding of a [Some], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct SomeRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> SomeRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [Some] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Some].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Some::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [Some] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Some].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> SomeRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [Some].
+    #[must_use]
+    pub fn decode(&self) -> Some {
+        unsafe { Some::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> SomeBuf {
+        SomeBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> SomeRef<'a> {
+    //! Fields
+
+    /// Gets the field: `value`.
+    #[must_use]
+    pub fn value(&self) -> ::std::option::Option<&'a str> {
+        let start: usize = 4;
+        let end: usize = start
+            + match unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } {
+                u32::MAX => 0,
+                length => length as usize,
+            };
+        (unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } != u32::MAX).then(
+            || unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) },
+        )
+    }
+}
+
+/// The owned encoding of a [Some], read in place.
+#[derive(Clone, Debug)]
+pub struct SomeBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl SomeBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [Some] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Some].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Some::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [Some] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Some].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl SomeBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> SomeRef<'_> {
+        unsafe { SomeRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [Some].
+    #[must_use]
+    pub fn decode(&self) -> Some {
+        unsafe { Some::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&Some> for SomeBuf {
+    fn from(value: &Some) -> Self {
+        Self {
+            bytes: value.encode(),
+        }
+    }
+}

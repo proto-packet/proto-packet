@@ -131,12 +131,14 @@ impl KeywordStruct {
     /// Appends the encoding of the struct to the `out` bytes.
     ///
     /// # Panics
-    /// Panics if the encoding of a variable-size field is over `u32::MAX` bytes.
+    /// Panics if the encoding of a variable-size field is `u32::MAX` bytes or more.
     pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
         out.extend_from_slice(&self.r#type.to_le_bytes());
         out.extend_from_slice(&self.self_.to_le_bytes());
         out.extend_from_slice(
             &u32::try_from(self.r#match.len())
+                .ok()
+                .filter(|length| *length != u32::MAX)
                 .expect("length out of range")
                 .to_le_bytes(),
         );
