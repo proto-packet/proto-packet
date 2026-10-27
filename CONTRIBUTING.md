@@ -7,6 +7,14 @@ This guide outlines how contributions should be made to the codebase.
 The `build.sh` script formats, lints & tests the runtime & the compiler, then runs the end-to-end
 tests with `test/build.sh`.
 
+## Pull Requests
+
+The `master` branch is protected, so every change is made on a branch & merged with a pull request.
+
+- Each pull request is one small, focused change.
+- Pull requests are squash merged, so the title becomes the commit message.
+- The `build.sh` checks must pass.
+
 ## Commits
 
 Each commit is one small, focused change. Its message is a tag & one sentence:
