@@ -110,3 +110,69 @@ impl Vec3 {
         self
     }
 }
+
+impl Vec3 {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        12
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(&self.x.value().to_le_bytes());
+        out.extend_from_slice(&self.y.value().to_le_bytes());
+        out.extend_from_slice(&self.z.value().to_le_bytes());
+    }
+}
+
+impl Vec3 {
+    //! Decoding
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        if bytes.len() != 12 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 12,
+                actual: bytes.len(),
+            });
+        }
+        ::std::result::Result::Ok(Self {
+            x: ::proto_packet::types::Float32::new(::proto_packet::io::read_f32(bytes, 0)),
+            y: ::proto_packet::types::Float32::new(::proto_packet::io::read_f32(bytes, 4)),
+            z: ::proto_packet::types::Float32::new(::proto_packet::io::read_f32(bytes, 8)),
+        })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            x: ::proto_packet::types::Float32::new(unsafe {
+                ::proto_packet::io::read_f32_unchecked(bytes, 0)
+            }),
+            y: ::proto_packet::types::Float32::new(unsafe {
+                ::proto_packet::io::read_f32_unchecked(bytes, 4)
+            }),
+            z: ::proto_packet::types::Float32::new(unsafe {
+                ::proto_packet::io::read_f32_unchecked(bytes, 8)
+            }),
+        }
+    }
+}

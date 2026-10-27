@@ -80,3 +80,68 @@ impl TimeFields {
         self
     }
 }
+
+impl TimeFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        12
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(&self.one.to_le_bytes());
+        out.extend_from_slice(&::proto_packet::types::date_to_days(self.two).to_le_bytes());
+    }
+}
+
+impl TimeFields {
+    //! Decoding
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        if bytes.len() != 12 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 12,
+                actual: bytes.len(),
+            });
+        }
+        ::std::result::Result::Ok(Self {
+            one: ::proto_packet::io::read_i64(bytes, 0),
+            two: ::proto_packet::types::date_from_days(::proto_packet::io::read_i32(bytes, 8))
+                .ok_or_else(|| ::proto_packet::io::DecodeError::InvalidDate {
+                    days: ::proto_packet::io::read_i32(bytes, 8),
+                })?,
+        })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            one: unsafe { ::proto_packet::io::read_i64_unchecked(bytes, 0) },
+            two: unsafe {
+                ::proto_packet::types::date_from_days(::proto_packet::io::read_i32_unchecked(
+                    bytes, 8,
+                ))
+                .unwrap_unchecked()
+            },
+        }
+    }
+}

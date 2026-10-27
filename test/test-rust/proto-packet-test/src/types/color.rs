@@ -23,3 +23,28 @@ pub enum Color {
     /// Blue.
     Blue,
 }
+
+impl Color {
+    //! Tag Numbers
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Red => 1,
+            Self::Green => 2,
+            Self::Blue => 3,
+        }
+    }
+
+    /// Gets the optional case with the `tag_number`.
+    #[must_use]
+    pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
+        match tag_number {
+            1 => ::std::option::Option::Some(Self::Red),
+            2 => ::std::option::Option::Some(Self::Green),
+            3 => ::std::option::Option::Some(Self::Blue),
+            _ => ::std::option::Option::None,
+        }
+    }
+}

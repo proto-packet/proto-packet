@@ -20,3 +20,26 @@ pub enum Ordering {
     /// The greater case.
     Greater,
 }
+
+impl Ordering {
+    //! Tag Numbers
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Less => 1,
+            Self::Greater => 2,
+        }
+    }
+
+    /// Gets the optional case with the `tag_number`.
+    #[must_use]
+    pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
+        match tag_number {
+            1 => ::std::option::Option::Some(Self::Less),
+            2 => ::std::option::Option::Some(Self::Greater),
+            _ => ::std::option::Option::None,
+        }
+    }
+}

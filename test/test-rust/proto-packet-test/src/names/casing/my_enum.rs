@@ -21,3 +21,26 @@ pub enum My_Enum {
     /// A camel-case case.
     CaseTwo,
 }
+
+impl My_Enum {
+    //! Tag Numbers
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Case_One => 1,
+            Self::CaseTwo => 2,
+        }
+    }
+
+    /// Gets the optional case with the `tag_number`.
+    #[must_use]
+    pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
+        match tag_number {
+            1 => ::std::option::Option::Some(Self::Case_One),
+            2 => ::std::option::Option::Some(Self::CaseTwo),
+            _ => ::std::option::Option::None,
+        }
+    }
+}

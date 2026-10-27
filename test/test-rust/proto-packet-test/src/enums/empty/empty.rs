@@ -14,3 +14,19 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub enum Empty {}
+
+impl Empty {
+    //! Tag Numbers
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {}
+    }
+
+    /// Gets the optional case with the `tag_number`.
+    #[must_use]
+    pub const fn from_tag_number(_tag_number: u16) -> ::std::option::Option<Self> {
+        ::std::option::Option::None
+    }
+}

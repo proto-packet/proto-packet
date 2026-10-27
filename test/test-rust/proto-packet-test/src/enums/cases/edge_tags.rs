@@ -23,3 +23,28 @@ pub enum EdgeTags {
     /// The maximum tag number.
     Max,
 }
+
+impl EdgeTags {
+    //! Tag Numbers
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Min => 1,
+            Self::Gap => 100,
+            Self::Max => 8191,
+        }
+    }
+
+    /// Gets the optional case with the `tag_number`.
+    #[must_use]
+    pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
+        match tag_number {
+            1 => ::std::option::Option::Some(Self::Min),
+            100 => ::std::option::Option::Some(Self::Gap),
+            8191 => ::std::option::Option::Some(Self::Max),
+            _ => ::std::option::Option::None,
+        }
+    }
+}
