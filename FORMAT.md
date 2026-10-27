@@ -38,7 +38,8 @@ Safe readers accept any float & normalize it the same way.
 ### Enums
 
 Tag numbers are at most 8,191, so a `u16` always holds them. Safe readers reject a tag number that
-is not one of the enum's cases.
+is not one of the enum's cases. Tag number 0 is never a case, so it is the absent value of an
+optional enum. (see [Optional Fields](#optional-fields))
 
 ### Dates
 
@@ -53,7 +54,8 @@ language can represent.
 | non-fixed struct     | The struct's head & data. (see [Structs](#structs))       |
 
 The length of a variable-size value is not part of its encoding. It is stored by its container.
-(ex: in the head of a struct)
+(ex: in the head of a struct) A length is at most `u32::MAX - 1`, since `u32::MAX` is the length of
+an absent optional value. (see [Optional Fields](#optional-fields))
 
 Safe readers reject a `string` that is not valid UTF-8.
 
@@ -61,7 +63,10 @@ Safe readers reject a `string` that is not valid UTF-8.
 
 A struct is fixed if all its fields are fixed-size types, & non-fixed otherwise. A struct's fields
 never change, so a struct's encoding has no tags & is not evolvable. A boxed field is encoded like
-the type it boxes.
+the type it boxes. An optional field is fixed-size if its type is.
+
+A field of a struct that contains the field's own struct, through a loop of types, is variable-size,
+since a loop has no fixed size. (ex: `next: optional box ListNode;` in `ListNode`)
 
 A struct is encoded as its head followed by its data. A fixed struct has no data.
 
@@ -76,6 +81,7 @@ The head has an item for each field:
 - A fixed-size field is its encoding.
 - A variable-size field is the `u32` length of its encoding, in bytes.
 - A `bool` field is a bit.
+- An optional field with a presence bit also has a bit. (see [Optional Fields](#optional-fields))
 
 The items are placed in alignment groups of 8, 4, 2 & 1 bytes, followed by the bit group. Within an
 alignment group, the fields are in declaration order, followed by the lengths in the declaration
@@ -94,19 +100,34 @@ depend on the alignment, it only makes reading faster.
 
 ### Bits
 
-The bit group is the last item of the head. It has a bit for each `bool` field in declaration
-order, in as few bytes as needed. (ex: 2 bytes for 9 to 16 bits)
+The bit group is the last item of the head. It has the bits of the `bool` fields & the presence
+bits of the optional fields in declaration order, in as few bytes as needed. (ex: 2 bytes for 9 to
+16 bits) An `optional bool` has its presence bit followed by its value bit.
 
-The bit for the `n`th `bool` field (from 0) is bit `n % 8` of byte `n / 8`, where bit 0 is the
-least significant. Unused bits are written as 0 & ignored by readers.
+The `n`th bit (from 0) is bit `n % 8` of byte `n / 8`, where bit 0 is the least significant. Unused
+bits are written as 0 & ignored by readers.
 
 ### Data
 
-The data is the encoding of each variable-size field, in declaration order. Each field's encoding
-has the length in its head item, so a field's data starts at the head's size plus the lengths of
-the variable-size fields before it.
+The data is the encoding of each present variable-size field, in declaration order. Each field's
+encoding has the length in its head item, so a field's data starts at the head's size plus the
+lengths of the present variable-size fields before it.
 
-Safe readers reject a struct whose bytes are not exactly its head's size plus its lengths.
+Safe readers reject a struct whose bytes are not exactly its head's size plus the lengths of its
+present variable-size fields.
+
+### Optional Fields
+
+An optional field can be absent. Its absence is encoded with a value its type never has, if there
+is one:
+
+- An absent enum is the tag number 0.
+- An absent variable-size value is the length `u32::MAX`, with no data.
+
+Otherwise, the field has a presence bit in the bit group: 1 if present & 0 if absent. The field's
+value keeps its place in the head, & is written as zeros when absent. (ex: an `optional u32`)
+
+Safe readers ignore the value of an absent field, so it is not validated.
 
 ### Examples
 
@@ -148,10 +169,23 @@ offset 16: o
 offset 25: bits (g is bit 0)
 ```
 
+```text
+enum Color { Red = 1; }
+struct Opt { a: optional u32; b: bool; c: optional string; d: optional bool; e: optional Color; }
+
+[a: u32][c length: u32][e: Color][bits: a present, b, d present, d][c bytes]
+
+offset  0: a (zeros when absent)
+offset  4: c length (u32::MAX when absent, with no bytes)
+offset  8: e (0 when absent)
+offset 10: bits (a present is bit 0, b is bit 1, d present is bit 2 & d is bit 3)
+offset 11: c bytes
+```
+
 ## Reading
 
 Safe readers validate the bytes: the lengths, the UTF-8 of strings, the enum tag numbers & the
-dates. They normalize the floats.
+dates of the present values. They normalize the floats.
 
 Unsafe readers skip the validation & normalization, for speed when the bytes are known to be valid.
 Only Rust has unsafe readers, as `unsafe` functions, since invalid bytes break its memory safety.
@@ -176,7 +210,6 @@ read.
 
 ## Not Yet Specified
 
-- Optional fields. (a presence bit in the bit group)
 - Slices & maps.
 - Messages. (a `u16` header of a 13-bit tag number & a 3-bit wire type)
 - Variants.
