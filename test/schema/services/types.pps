@@ -1,0 +1,44 @@
+import types.Color;
+import types.Label;
+import types.Point;
+import types.Shape;
+
+// A service with calls of each kind of type. (each call returns its request)
+service Echo {
+
+    // Echoes a `bool`.
+    boolean: bool returns bool;
+
+    // Echoes a `u64`.
+    integer: u64 returns u64;
+
+    // Echoes an `f64`.
+    float: f64 returns f64;
+
+    // Echoes a `uuid`.
+    id: uuid returns uuid;
+
+    // Echoes a `string`.
+    text: string returns string;
+
+    // Echoes a `timestamp`.
+    time: timestamp returns timestamp;
+
+    // Echoes a `date`.
+    day: date returns date;
+
+    // Echoes a slice.
+    bytes: []u8 returns []u8;
+
+    // Echoes a struct.
+    point: Point returns Point;
+
+    // Echoes a message.
+    label: Label returns Label;
+
+    // Echoes an enum.
+    color: Color returns Color;
+
+    // Echoes a variant.
+    shape: Shape returns Shape;
+}

@@ -1,0 +1,60 @@
+// A struct with keyword field names.
+struct KeywordStruct {
+
+    // A raw keyword field. (`r#type`)
+    type: u32;
+
+    // A raw keyword field. (`r#match`)
+    match: string;
+
+    // A non-raw keyword field. (`self_`)
+    self: u32;
+}
+
+// A message with keyword field names.
+message KeywordMessage {
+
+    // A raw keyword field. (`r#type`)
+    type: u32 = 1;
+
+    // A non-raw keyword field. (`self_`)
+    self: u32 = 2;
+}
+
+// An enum with a keyword case name.
+enum KeywordEnum {
+
+    // A non-raw keyword case. (`Self_`)
+    Self = 1;
+}
+
+// A variant with a keyword case name.
+variant KeywordVariant {
+
+    // A non-raw keyword case. (`Self_`)
+    Self: u32 = 1;
+}
+
+// A service with keyword call names.
+service KeywordService {
+
+    // A raw keyword call. (`r#type`)
+    type: u32 returns u32;
+
+    // A non-raw keyword call. (`self_`)
+    self: u32 returns u32;
+}
+
+// A struct in a raw keyword module. (`r#type`)
+struct Type {
+
+    // The value.
+    value: u32;
+}
+
+// A struct with a non-raw keyword name, in a non-raw keyword module. (`Self_` in `self_`)
+struct Self {
+
+    // The value.
+    value: u32;
+}

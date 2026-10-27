@@ -1,0 +1,46 @@
+// A point. (a struct of `Copy` fields)
+struct Point {
+
+    // The x coordinate.
+    x: i32;
+
+    // The y coordinate.
+    y: i32;
+}
+
+// A path. (a struct of non-`Copy` fields)
+struct Path {
+
+    // The points.
+    points: []Point;
+}
+
+// A label.
+message Label {
+
+    // The text.
+    text: string = 1;
+}
+
+// A color.
+enum Color {
+
+    // Red.
+    Red = 1;
+
+    // Green.
+    Green = 2;
+
+    // Blue.
+    Blue = 3;
+}
+
+// A shape.
+variant Shape {
+
+    // A circle with a radius.
+    Circle: f64 = 1;
+
+    // A square with a side length.
+    Square: f64 = 2;
+}

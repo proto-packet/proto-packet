@@ -1,0 +1,6 @@
+// A struct in a non-raw keyword module, in a raw keyword module. (`r#type::self_`)
+struct SelfStruct {
+
+    // The value.
+    value: u32;
+}

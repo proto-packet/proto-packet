@@ -1,0 +1,3 @@
+// A variant without cases.
+variant Empty {
+}

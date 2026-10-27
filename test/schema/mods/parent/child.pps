@@ -1,0 +1,6 @@
+// A struct in a child module of a module with types.
+struct Child {
+
+    // The value.
+    value: u32;
+}

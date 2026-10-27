@@ -1,0 +1,3 @@
+// A struct without fields. (it is created with `Default`)
+struct Empty {
+}

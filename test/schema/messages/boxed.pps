@@ -1,0 +1,24 @@
+import types.Color;
+import types.Label;
+import types.Path;
+import types.Point;
+import types.Shape;
+
+// A message with boxed fields of each kind of named type.
+message BoxedFields {
+
+    // A boxed `Copy` struct field.
+    point: box Point = 1;
+
+    // A boxed non-`Copy` struct field.
+    path: box Path = 2;
+
+    // A boxed message field.
+    label: box Label = 3;
+
+    // A boxed enum field.
+    color: box Color = 4;
+
+    // A boxed variant field.
+    shape: box Shape = 5;
+}

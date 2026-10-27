@@ -1,0 +1,99 @@
+import types.Point;
+
+// A struct named like `Option`, with an optional field.
+struct Option {
+
+    // The optional value.
+    value: optional u32;
+}
+
+// A struct named like `Some`, with an optional field.
+struct Some {
+
+    // The optional value.
+    value: optional string;
+}
+
+// A struct named like `None`, with an optional field.
+struct None {
+
+    // The optional value.
+    value: optional u32;
+}
+
+// A struct named like `String`, with a string field.
+struct String {
+
+    // The text.
+    text: string;
+}
+
+// A struct named like `Vec`, with a slice field.
+struct Vec {
+
+    // The values.
+    values: []u32;
+}
+
+// A struct named like `Box`, with a boxed field. (in the raw keyword module `r#box`)
+struct Box {
+
+    // The boxed point.
+    point: box Point;
+}
+
+// A message named like `Default`.
+message Default {
+
+    // The value.
+    value: u32 = 1;
+}
+
+// An enum named like `Ordering`.
+enum Ordering {
+
+    // The lesser case.
+    Less = 1;
+
+    // The greater case.
+    Greater = 2;
+}
+
+// A variant named like `Result`, with cases named like its variants.
+variant Result {
+
+    // The success case.
+    Ok: u32 = 1;
+
+    // The failure case.
+    Err: string = 2;
+}
+
+// A service named like `Future`.
+service Future {
+
+    // A call.
+    call: u32 returns u32;
+}
+
+// A struct with fields of the types named like prelude types.
+struct PreludeFields {
+
+    // An `Option` field.
+    option: Option;
+
+    // A `String` field.
+    string: String;
+
+    // A `Vec` field.
+    vec: Vec;
+
+    // A `Box` field.
+    box: Box;
+
+    // An `Ordering` field.
+    ordering: Ordering;
+
+    // A `Result` field.
+    result: Result;
+}

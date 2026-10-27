@@ -1,0 +1,6 @@
+// A struct in a raw keyword module. (`r#move`)
+struct MoveStruct {
+
+    // The value.
+    value: u32;
+}

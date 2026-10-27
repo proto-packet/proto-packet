@@ -1,0 +1,62 @@
+// A linked list node. (a struct loop through an optional box)
+struct ListNode {
+
+    // The value.
+    value: u32;
+
+    // The next node.
+    next: optional box ListNode;
+}
+
+// A tree node. (a struct loop through a slice)
+struct TreeNode {
+
+    // The value.
+    value: u32;
+
+    // The child nodes.
+    children: []TreeNode;
+}
+
+// A category. (a message loop through a box)
+message Category {
+
+    // The name.
+    name: string = 1;
+
+    // The parent category.
+    parent: box Category = 2;
+}
+
+// A folder. (a message loop through a slice)
+message Folder {
+
+    // The name.
+    name: string = 1;
+
+    // The child folders.
+    folders: []Folder = 2;
+}
+
+// An expression. (a variant loop through boxed cases)
+variant Expr {
+
+    // A literal value.
+    Literal: i64 = 1;
+
+    // The negation of an expression.
+    Negate: box Expr = 2;
+
+    // The sum of two expressions.
+    Add: box Sum = 3;
+}
+
+// The sum of two expressions. (a struct loop through the boxed `Expr` case)
+struct Sum {
+
+    // The left expression.
+    left: Expr;
+
+    // The right expression.
+    right: Expr;
+}

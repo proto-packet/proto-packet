@@ -1,0 +1,13 @@
+// A struct with a field of a type declared after it.
+struct Before {
+
+    // The field of the type declared after.
+    after: After;
+}
+
+// A struct declared after the type with a field of it.
+struct After {
+
+    // The value.
+    value: u32;
+}

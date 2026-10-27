@@ -1,0 +1,8 @@
+import mods.parent.child.Child;
+
+// A struct in a module with a child module.
+struct Parent {
+
+    // The child.
+    child: Child;
+}

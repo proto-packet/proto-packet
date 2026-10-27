@@ -1,0 +1,60 @@
+// A struct with a non-camel-case name & a non-snake-case field.
+struct My_Struct {
+
+    // A non-snake-case field.
+    myField: u32;
+}
+
+// A message with a non-camel-case name & a non-snake-case field.
+message My_Message {
+
+    // A non-snake-case field.
+    myField: u32 = 1;
+}
+
+// An enum with a non-camel-case name & cases.
+enum My_Enum {
+
+    // A non-camel-case case.
+    Case_One = 1;
+
+    // A camel-case case.
+    CaseTwo = 2;
+}
+
+// A variant with a non-camel-case name & cases.
+variant My_Variant {
+
+    // A non-camel-case case.
+    Case_One: u32 = 1;
+
+    // A camel-case case.
+    CaseTwo: u32 = 2;
+}
+
+// A service with a non-camel-case name.
+service My_Service {
+
+    // A call.
+    call: u32 returns u32;
+}
+
+// A struct with an acronym name. (`http_server`)
+struct HTTPServer {
+
+    // The URL.
+    url: string;
+}
+
+// A struct with a digit in its name. (`vec3`)
+struct Vec3 {
+
+    // The x coordinate.
+    x: f32;
+
+    // The y coordinate.
+    y: f32;
+
+    // The z coordinate.
+    z: f32;
+}

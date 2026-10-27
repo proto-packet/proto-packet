@@ -1,0 +1,6 @@
+// A struct named like its module, in a module named like its parent. (`inception::inception::inception`)
+struct Inception {
+
+    // The value.
+    value: u32;
+}

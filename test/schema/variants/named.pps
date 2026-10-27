@@ -1,0 +1,43 @@
+import types.Color;
+import types.Label;
+import types.Path;
+import types.Point;
+import types.Shape;
+
+// A variant with cases of each kind of named type.
+variant NamedCases {
+
+    // A `Copy` struct case.
+    Point: Point = 1;
+
+    // A non-`Copy` struct case.
+    Path: Path = 2;
+
+    // A message case.
+    Label: Label = 3;
+
+    // An enum case.
+    Color: Color = 4;
+
+    // A variant case.
+    Shape: Shape = 5;
+}
+
+// A variant with slice cases of each kind of named type.
+variant NamedSlices {
+
+    // A `Copy` struct slice case.
+    Points: []Point = 1;
+
+    // A non-`Copy` struct slice case.
+    Paths: []Path = 2;
+
+    // A message slice case.
+    Labels: []Label = 3;
+
+    // An enum slice case.
+    Colors: []Color = 4;
+
+    // A variant slice case.
+    Shapes: []Shape = 5;
+}

@@ -1,0 +1,6 @@
+// A struct in a non-snake-case module.
+struct CamelStruct {
+
+    // The value.
+    value: u32;
+}

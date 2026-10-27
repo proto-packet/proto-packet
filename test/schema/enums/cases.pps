@@ -1,0 +1,32 @@
+// An enum with a single case.
+enum SingleCase {
+
+    // The single case.
+    One = 1;
+}
+
+// An enum with multiple cases.
+enum MultiCase {
+
+    // The first case.
+    One = 1;
+
+    // The second case.
+    Two = 2;
+
+    // The third case.
+    Three = 3;
+}
+
+// An enum with the tag numbers at the edges & gaps of the valid range.
+enum EdgeTags {
+
+    // The minimum tag number.
+    Min = 1;
+
+    // A tag number after a gap.
+    Gap = 100;
+
+    // The maximum tag number.
+    Max = 8191;
+}

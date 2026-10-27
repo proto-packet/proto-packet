@@ -1,0 +1,43 @@
+import types.Color;
+import types.Label;
+import types.Path;
+import types.Point;
+import types.Shape;
+
+// A message with fields of each kind of named type.
+message NamedFields {
+
+    // A `Copy` struct field.
+    point: Point = 1;
+
+    // A non-`Copy` struct field.
+    path: Path = 2;
+
+    // A message field.
+    label: Label = 3;
+
+    // An enum field.
+    color: Color = 4;
+
+    // A variant field.
+    shape: Shape = 5;
+}
+
+// A message with slice fields of each kind of named type.
+message NamedSlices {
+
+    // A `Copy` struct slice field.
+    points: []Point = 1;
+
+    // A non-`Copy` struct slice field.
+    paths: []Path = 2;
+
+    // A message slice field.
+    labels: []Label = 3;
+
+    // An enum slice field.
+    colors: []Color = 4;
+
+    // A variant slice field.
+    shapes: []Shape = 5;
+}

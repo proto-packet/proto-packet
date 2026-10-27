@@ -1,0 +1,22 @@
+// A message with the tag numbers at the edges & gaps of the valid range.
+message EdgeTags {
+
+    // The minimum tag number.
+    min: u32 = 1;
+
+    // A tag number after a gap.
+    gap: u32 = 100;
+
+    // The maximum tag number.
+    max: u32 = 8191;
+}
+
+// A message with fields declared out of tag number order.
+message UnorderedTags {
+
+    // The field with the second tag number.
+    second: u32 = 2;
+
+    // The field with the first tag number.
+    first: u32 = 1;
+}

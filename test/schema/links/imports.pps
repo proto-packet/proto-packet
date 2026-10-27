@@ -1,0 +1,20 @@
+import mods.parent.child.Child;
+import names.move.MoveStruct;
+import names.type.self.SelfStruct;
+import types.Point;
+
+// A struct with fields of imported types.
+struct ImportedFields {
+
+    // A type in a root module.
+    point: Point;
+
+    // A type in a child module.
+    child: Child;
+
+    // A type in a raw keyword module.
+    raw: MoveStruct;
+
+    // A type in a non-raw keyword module.
+    non_raw: SelfStruct;
+}

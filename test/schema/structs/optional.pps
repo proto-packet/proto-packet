@@ -1,0 +1,48 @@
+import types.Color;
+import types.Label;
+import types.Path;
+import types.Point;
+import types.Shape;
+
+// A struct with optional fields of each kind of type.
+struct OptionalFields {
+
+    // An optional `bool` field.
+    boolean: optional bool;
+
+    // An optional `u64` field.
+    integer: optional u64;
+
+    // An optional `f64` field.
+    float: optional f64;
+
+    // An optional `uuid` field.
+    id: optional uuid;
+
+    // An optional `string` field.
+    text: optional string;
+
+    // An optional `timestamp` field.
+    time: optional timestamp;
+
+    // An optional `date` field.
+    day: optional date;
+
+    // An optional slice field.
+    bytes: optional []u8;
+
+    // An optional `Copy` struct field.
+    point: optional Point;
+
+    // An optional non-`Copy` struct field.
+    path: optional Path;
+
+    // An optional message field.
+    label: optional Label;
+
+    // An optional enum field.
+    color: optional Color;
+
+    // An optional variant field.
+    shape: optional Shape;
+}

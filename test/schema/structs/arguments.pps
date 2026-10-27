@@ -1,0 +1,27 @@
+// A struct with more fields than clippy allows constructor arguments.
+struct EightFields {
+
+    // The first field.
+    one: u8;
+
+    // The second field.
+    two: u8;
+
+    // The third field.
+    three: u8;
+
+    // The fourth field.
+    four: u8;
+
+    // The fifth field.
+    five: u8;
+
+    // The sixth field.
+    six: u8;
+
+    // The seventh field.
+    seven: u8;
+
+    // The eighth field.
+    eight: u8;
+}

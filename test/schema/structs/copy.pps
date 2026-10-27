@@ -1,0 +1,44 @@
+import types.Color;
+import types.Point;
+
+// A struct of `Copy` fields. (it is `Copy`)
+struct CopyFields {
+
+    // A `bool` field.
+    boolean: bool;
+
+    // A `u64` field.
+    integer: u64;
+
+    // An `f32` field.
+    float: f32;
+
+    // A `uuid` field.
+    id: uuid;
+
+    // A `timestamp` field.
+    time: timestamp;
+
+    // A `date` field.
+    day: date;
+
+    // An enum field.
+    color: Color;
+
+    // A `Copy` struct field.
+    point: Point;
+}
+
+// A struct of a `Copy` struct field. (it is `Copy`)
+struct NestedCopy {
+
+    // The `Copy` struct field.
+    inner: CopyFields;
+}
+
+// A struct of an optional `Copy` field. (it is `Copy`)
+struct OptionalCopy {
+
+    // The optional `Copy` field.
+    value: optional u32;
+}
