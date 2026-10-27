@@ -4,21 +4,23 @@ use common::*;
 use proto_packet::io::DecodeError;
 use proto_packet_test::enums::cases::{EdgeTags, MultiCase};
 use proto_packet_test::enums::empty::Empty as EmptyEnum;
-use proto_packet_test::format::examples::{self, Bits, MyStruct, Odd, S, T};
+use proto_packet_test::format::examples::{self, Bits, MyStruct, Odd, S, SBuf, SRef, T, TRef};
 use proto_packet_test::links::imports::ImportedFields;
 use proto_packet_test::links::local::{After, Before};
 use proto_packet_test::mods::parent::child::Child;
 use proto_packet_test::names::casing::{HTTPServer, My_Struct, Vec3};
-use proto_packet_test::names::keywords::KeywordStruct;
+use proto_packet_test::names::keywords::{KeywordStruct, Self_, SelfBuf, SelfRef};
 use proto_packet_test::names::methods::DefaultField;
 use proto_packet_test::names::r#move::MoveStruct;
 use proto_packet_test::names::prelude;
 use proto_packet_test::names::r#type::self_::SelfStruct;
 use proto_packet_test::structs::arguments::EightFields;
-use proto_packet_test::structs::copy::{CopyFields, NestedCopy};
-use proto_packet_test::structs::empty::Empty;
+use proto_packet_test::structs::copy::{
+    CopyFields, CopyFieldsBuf, CopyFieldsRef, NestedCopy, NestedCopyBuf, NestedCopyRef,
+};
+use proto_packet_test::structs::empty::{Empty, EmptyBuf, EmptyRef};
 use proto_packet_test::structs::fields;
-use proto_packet_test::types::{Color, Point};
+use proto_packet_test::types::{Color, Point, PointRef};
 
 /// Asserts the `value` of the `type` encodes to bytes that decode back to it, with & without
 /// validation.
@@ -188,73 +190,179 @@ fn decode_normalizes_floats() {
     assert_eq!(value.float().to_bits(), 0);
 }
 
+/// Asserts the `bytes` are rejected with the `error` by the `type`'s `validate` & `decode`, & by
+/// its `Ref` & `Buf` types' `new`.
+macro_rules! assert_rejected {
+    ($type:ty, $ref:ty, $buf:ty, $bytes:expr, $error:expr) => {{
+        let bytes: &[u8] = $bytes;
+        let error: DecodeError = $error;
+        assert_eq!(<$type>::validate(bytes), Err(error));
+        assert_eq!(<$type>::decode(bytes).map(|_| ()), Err(error));
+        assert_eq!(<$ref>::new(bytes).map(|_| ()), Err(error));
+        assert_eq!(<$buf>::new(bytes.to_vec()).map(|_| ()), Err(error));
+    }};
+}
+
+/// Asserts the `bytes` of `SpecialFields` are rejected with the `error`.
+macro_rules! assert_special_fields_rejected {
+    ($bytes:expr, $error:expr) => {
+        assert_rejected!(
+            fields::SpecialFields,
+            fields::SpecialFieldsRef,
+            fields::SpecialFieldsBuf,
+            $bytes,
+            $error
+        )
+    };
+}
+
 /// Gets the invalid length error of the `expected` & `actual` lengths.
-fn invalid_length<T>(expected: usize, actual: usize) -> Result<T, DecodeError> {
-    Err(DecodeError::InvalidLength { expected, actual })
+fn invalid_length(expected: usize, actual: usize) -> DecodeError {
+    DecodeError::InvalidLength { expected, actual }
 }
 
 #[test]
-fn decode_rejects_invalid_lengths() {
+fn readers_reject_invalid_lengths() {
     let bytes: Vec<u8> = fields::SpecialFields::new(id(), "ab".to_string()).encode();
-    assert_eq!(
-        fields::SpecialFields::decode(&bytes[..19]),
-        invalid_length(20, 19)
-    );
-    assert_eq!(
-        fields::SpecialFields::decode(&bytes[..21]),
-        invalid_length(22, 21)
-    );
-    assert_eq!(
-        fields::SpecialFields::decode(&[&bytes[..], &[0]].concat()),
-        invalid_length(22, 23)
-    );
+    assert_special_fields_rejected!(&bytes[..19], invalid_length(20, 19));
+    assert_special_fields_rejected!(&bytes[..21], invalid_length(22, 21));
+    assert_special_fields_rejected!(&[&bytes[..], &[0]].concat(), invalid_length(22, 23));
     let mut huge: Vec<u8> = bytes.clone();
     huge[16..20].copy_from_slice(&u32::MAX.to_le_bytes());
-    assert_eq!(
-        fields::SpecialFields::decode(&huge),
-        invalid_length(20 + u32::MAX as usize, 22)
-    );
+    assert_special_fields_rejected!(&huge, invalid_length(20 + u32::MAX as usize, 22));
 
-    assert_eq!(CopyFields::decode(&[0; 50]), invalid_length(51, 50));
-    assert_eq!(Empty::decode(&[0]), invalid_length(0, 1));
+    assert_rejected!(
+        CopyFields,
+        CopyFieldsRef,
+        CopyFieldsBuf,
+        &[0; 50],
+        invalid_length(51, 50)
+    );
+    assert_rejected!(Empty, EmptyRef, EmptyBuf, &[0], invalid_length(0, 1));
 }
 
 #[test]
-fn decode_rejects_invalid_utf8() {
+fn readers_reject_invalid_utf8() {
     let mut bytes: Vec<u8> = fields::SpecialFields::new(id(), "ab".to_string()).encode();
     bytes[20] = 0xFF;
-    assert_eq!(
-        fields::SpecialFields::decode(&bytes),
-        Err(DecodeError::InvalidUtf8)
-    );
+    assert_special_fields_rejected!(&bytes, DecodeError::InvalidUtf8);
 }
 
 #[test]
-fn decode_rejects_unknown_enum_tag_numbers() {
+fn readers_reject_unknown_enum_tag_numbers() {
     let mut bytes: Vec<u8> = copy_fields().encode();
     bytes[48..50].copy_from_slice(&4_u16.to_le_bytes());
-    assert_eq!(
-        CopyFields::decode(&bytes),
-        Err(DecodeError::InvalidEnumTag { tag_number: 4 })
-    );
+    let error: DecodeError = DecodeError::InvalidEnumTag { tag_number: 4 };
+    assert_rejected!(CopyFields, CopyFieldsRef, CopyFieldsBuf, &bytes, error);
 }
 
 #[test]
-fn decode_rejects_dates_out_of_range() {
+fn readers_reject_dates_out_of_range() {
     let mut bytes: Vec<u8> = copy_fields().encode();
     bytes[36..40].copy_from_slice(&i32::MAX.to_le_bytes());
+    let error: DecodeError = DecodeError::InvalidDate { days: i32::MAX };
+    assert_rejected!(CopyFields, CopyFieldsRef, CopyFieldsBuf, &bytes, error);
+}
+
+#[test]
+fn readers_reject_nested_errors() {
+    let mut bytes: Vec<u8> = NestedCopy::new(copy_fields()).encode();
+    bytes[48..50].copy_from_slice(&0_u16.to_le_bytes());
+    let error: DecodeError = DecodeError::InvalidEnumTag { tag_number: 0 };
+    assert_rejected!(NestedCopy, NestedCopyRef, NestedCopyBuf, &bytes, error);
+}
+
+#[test]
+fn refs_read_the_fields() {
+    let value: S = S::new("ab".to_string(), 7, 1 << 100, "c".to_string(), true, 9);
+    let bytes: Vec<u8> = value.encode();
+    let result: SRef<'_> = SRef::new(&bytes).unwrap();
+    assert_eq!(result.a(), "ab");
+    assert_eq!(result.b(), 7);
+    assert_eq!(result.c(), 1 << 100);
+    assert_eq!(result.d(), "c");
+    assert!(result.e());
+    assert_eq!(result.f(), 9);
+
+    let value: CopyFields = copy_fields();
+    let bytes: Vec<u8> = value.encode();
+    let result: CopyFieldsRef<'_> = CopyFieldsRef::new(&bytes).unwrap();
+    assert_eq!(result.boolean(), value.boolean());
+    assert_eq!(result.integer(), value.integer());
+    assert_eq!(result.float().to_bits(), value.float().to_bits());
+    assert_eq!(result.id(), value.id());
+    assert_eq!(result.time(), value.time());
+    assert_eq!(result.day(), value.day());
+    assert_eq!(result.color(), value.color());
+    let point: PointRef<'_> = result.point();
     assert_eq!(
-        CopyFields::decode(&bytes),
-        Err(DecodeError::InvalidDate { days: i32::MAX })
+        (point.x(), point.y()),
+        (value.point().x(), value.point().y())
     );
 }
 
 #[test]
-fn nested_decode_errors_are_returned() {
-    let mut bytes: Vec<u8> = NestedCopy::new(copy_fields()).encode();
-    bytes[48..50].copy_from_slice(&0_u16.to_le_bytes());
-    assert_eq!(
-        NestedCopy::decode(&bytes),
-        Err(DecodeError::InvalidEnumTag { tag_number: 0 })
-    );
+fn refs_read_nested_structs() {
+    let bytes: Vec<u8> = T::new(Odd::new(1, 2), examples::Point::new(-1, 3), 4, true).encode();
+    let result: TRef<'_> = TRef::new(&bytes).unwrap();
+    assert_eq!((result.o().a(), result.o().b()), (1, 2));
+    assert_eq!((result.p().x(), result.p().y()), (-1, 3));
+    assert_eq!(result.n(), 4);
+    assert!(result.g());
+
+    let value: prelude::Box = prelude::Box::new(point());
+    let bytes: Vec<u8> = value.encode();
+    let result: prelude::BoxRef<'_> = prelude::BoxRef::new(&bytes).unwrap();
+    assert_eq!(result.point().decode(), point());
+}
+
+#[test]
+fn ref_fields_outlive_their_refs() {
+    let bytes: Vec<u8> = S::new("ab".to_string(), 7, 1, "c".to_string(), true, 9).encode();
+    let a: &str = SRef::new(&bytes).unwrap().a();
+    assert_eq!(a, "ab");
+}
+
+#[test]
+fn ref_floats_are_normalized() {
+    let mut bytes: Vec<u8> = copy_fields().encode();
+    bytes[32..36].copy_from_slice(&0xFFC0_0001_u32.to_le_bytes());
+    let result: CopyFieldsRef<'_> = CopyFieldsRef::new(&bytes).unwrap();
+    assert_eq!(result.float().to_bits(), f32::NAN.to_bits());
+}
+
+#[test]
+fn refs_convert() {
+    let value: S = S::new("ab".to_string(), 7, 1, "c".to_string(), true, 9);
+    let bytes: Vec<u8> = value.encode();
+    let result: SRef<'_> = SRef::new(&bytes).unwrap();
+    assert_eq!(result.as_bytes(), bytes);
+    assert_eq!(result.decode(), value);
+    assert_eq!(result.to_buf().as_bytes(), bytes);
+
+    let result: SRef<'_> = unsafe { SRef::new_unchecked(&bytes) };
+    assert_eq!(result.decode(), value);
+}
+
+#[test]
+fn bufs_convert() {
+    let value: S = S::new("ab".to_string(), 7, 1, "c".to_string(), true, 9);
+    let bytes: Vec<u8> = value.encode();
+    let result: SBuf = SBuf::from(&value);
+    assert_eq!(result.as_bytes(), bytes);
+    assert_eq!(result.as_ref().a(), "ab");
+    assert_eq!(result.decode(), value);
+    assert_eq!(result.into_bytes(), bytes);
+
+    let result: SBuf = SBuf::new(bytes.clone()).unwrap();
+    assert_eq!(result.decode(), value);
+    let result: SBuf = unsafe { SBuf::new_unchecked(bytes) };
+    assert_eq!(result.as_ref().d(), "c");
+}
+
+#[test]
+fn encoding_types_of_renamed_structs() {
+    let bytes: Vec<u8> = Self_::new(1).encode();
+    assert_eq!(SelfRef::new(&bytes).unwrap().value(), 1);
+    assert_eq!(SelfBuf::new(bytes).unwrap().decode(), Self_::new(1));
 }

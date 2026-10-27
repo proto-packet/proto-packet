@@ -88,11 +88,11 @@ impl HTTPServer {
 impl HTTPServer {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() < 4 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 4,
@@ -106,11 +106,18 @@ impl HTTPServer {
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            url: ::std::str::from_utf8(&bytes[4..end_0])
-                .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?
-                .to_string(),
-        })
+        ::std::str::from_utf8(&bytes[4..end_0])
+            .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -123,6 +130,137 @@ impl HTTPServer {
         Self {
             url: unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(4..end_0)) }
                 .to_string(),
+        }
+    }
+}
+
+/// The borrowed encoding of a [HTTPServer], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct HTTPServerRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> HTTPServerRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [HTTPServer] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [HTTPServer].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        HTTPServer::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [HTTPServer] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [HTTPServer].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> HTTPServerRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [HTTPServer].
+    #[must_use]
+    pub fn decode(&self) -> HTTPServer {
+        unsafe { HTTPServer::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> HTTPServerBuf {
+        HTTPServerBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> HTTPServerRef<'a> {
+    //! Fields
+
+    /// Gets the field: `url`.
+    #[must_use]
+    pub fn url(&self) -> &'a str {
+        let start: usize = 4;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
+        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+    }
+}
+
+/// The owned encoding of a [HTTPServer], read in place.
+#[derive(Clone, Debug)]
+pub struct HTTPServerBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl HTTPServerBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [HTTPServer] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [HTTPServer].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        HTTPServer::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [HTTPServer] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [HTTPServer].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl HTTPServerBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> HTTPServerRef<'_> {
+        unsafe { HTTPServerRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [HTTPServer].
+    #[must_use]
+    pub fn decode(&self) -> HTTPServer {
+        unsafe { HTTPServer::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&HTTPServer> for HTTPServerBuf {
+    fn from(value: &HTTPServer) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

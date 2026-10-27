@@ -167,23 +167,29 @@ impl T {
 impl T {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 26 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 26,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            o: crate::format::examples::Odd::decode(&bytes[16..25])?,
-            p: crate::format::examples::Point::decode(&bytes[8..16])?,
-            n: ::proto_packet::io::read_u64(bytes, 0),
-            g: ::proto_packet::io::read_bit(bytes, 25, 0),
-        })
+        crate::format::examples::Odd::validate(&bytes[16..25])?;
+        crate::format::examples::Point::validate(&bytes[8..16])?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -201,6 +207,152 @@ impl T {
             },
             n: unsafe { ::proto_packet::io::read_u64_unchecked(bytes, 0) },
             g: unsafe { ::proto_packet::io::read_bit_unchecked(bytes, 25, 0) },
+        }
+    }
+}
+
+/// The borrowed encoding of a [T], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct TRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> TRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [T] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [T].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        T::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [T] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [T].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> TRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [T].
+    #[must_use]
+    pub fn decode(&self) -> T {
+        unsafe { T::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> TBuf {
+        TBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> TRef<'a> {
+    //! Fields
+
+    /// Gets the field: `o`.
+    #[must_use]
+    pub fn o(&self) -> crate::format::examples::OddRef<'a> {
+        unsafe { crate::format::examples::OddRef::new_unchecked(self.bytes.get_unchecked(16..25)) }
+    }
+
+    /// Gets the field: `p`.
+    #[must_use]
+    pub fn p(&self) -> crate::format::examples::PointRef<'a> {
+        unsafe { crate::format::examples::PointRef::new_unchecked(self.bytes.get_unchecked(8..16)) }
+    }
+
+    /// Gets the field: `n`.
+    #[must_use]
+    pub fn n(&self) -> u64 {
+        unsafe { ::proto_packet::io::read_u64_unchecked(self.bytes, 0) }
+    }
+
+    /// Gets the field: `g`.
+    #[must_use]
+    pub fn g(&self) -> bool {
+        unsafe { ::proto_packet::io::read_bit_unchecked(self.bytes, 25, 0) }
+    }
+}
+
+/// The owned encoding of a [T], read in place.
+#[derive(Clone, Debug)]
+pub struct TBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl TBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [T] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [T].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        T::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [T] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [T].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl TBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> TRef<'_> {
+        unsafe { TRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [T].
+    #[must_use]
+    pub fn decode(&self) -> T {
+        unsafe { T::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&T> for TBuf {
+    fn from(value: &T) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

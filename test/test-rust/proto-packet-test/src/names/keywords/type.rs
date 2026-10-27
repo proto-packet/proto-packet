@@ -81,20 +81,27 @@ impl Type {
 impl Type {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 4 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 4,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            value: ::proto_packet::io::read_u32(bytes, 0),
-        })
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -105,6 +112,134 @@ impl Type {
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         Self {
             value: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) },
+        }
+    }
+}
+
+/// The borrowed encoding of a [Type], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct TypeRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> TypeRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [Type] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Type].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Type::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [Type] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Type].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> TypeRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [Type].
+    #[must_use]
+    pub fn decode(&self) -> Type {
+        unsafe { Type::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> TypeBuf {
+        TypeBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> TypeRef<'a> {
+    //! Fields
+
+    /// Gets the field: `value`.
+    #[must_use]
+    pub fn value(&self) -> u32 {
+        unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) }
+    }
+}
+
+/// The owned encoding of a [Type], read in place.
+#[derive(Clone, Debug)]
+pub struct TypeBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl TypeBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [Type] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Type].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Type::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [Type] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Type].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl TypeBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> TypeRef<'_> {
+        unsafe { TypeRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [Type].
+    #[must_use]
+    pub fn decode(&self) -> Type {
+        unsafe { Type::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&Type> for TypeBuf {
+    fn from(value: &Type) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

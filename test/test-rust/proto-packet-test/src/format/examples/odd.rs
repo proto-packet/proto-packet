@@ -108,21 +108,27 @@ impl Odd {
 impl Odd {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 9 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 9,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            a: ::proto_packet::io::read_u64(bytes, 0),
-            b: ::proto_packet::io::read_u8(bytes, 8),
-        })
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -134,6 +140,140 @@ impl Odd {
         Self {
             a: unsafe { ::proto_packet::io::read_u64_unchecked(bytes, 0) },
             b: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 8) },
+        }
+    }
+}
+
+/// The borrowed encoding of a [Odd], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct OddRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> OddRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [Odd] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Odd].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Odd::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [Odd] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Odd].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> OddRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [Odd].
+    #[must_use]
+    pub fn decode(&self) -> Odd {
+        unsafe { Odd::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> OddBuf {
+        OddBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> OddRef<'a> {
+    //! Fields
+
+    /// Gets the field: `a`.
+    #[must_use]
+    pub fn a(&self) -> u64 {
+        unsafe { ::proto_packet::io::read_u64_unchecked(self.bytes, 0) }
+    }
+
+    /// Gets the field: `b`.
+    #[must_use]
+    pub fn b(&self) -> u8 {
+        unsafe { ::proto_packet::io::read_u8_unchecked(self.bytes, 8) }
+    }
+}
+
+/// The owned encoding of a [Odd], read in place.
+#[derive(Clone, Debug)]
+pub struct OddBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl OddBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [Odd] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Odd].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Odd::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [Odd] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Odd].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl OddBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> OddRef<'_> {
+        unsafe { OddRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [Odd].
+    #[must_use]
+    pub fn decode(&self) -> Odd {
+        unsafe { Odd::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&Odd> for OddBuf {
+    fn from(value: &Odd) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

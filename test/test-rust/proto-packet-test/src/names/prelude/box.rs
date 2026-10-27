@@ -82,20 +82,28 @@ impl Box {
 impl Box {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 8 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 8,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            point: ::std::boxed::Box::new(crate::types::Point::decode(&bytes[0..8])?),
-        })
+        crate::types::Point::validate(&bytes[0..8])?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -108,6 +116,134 @@ impl Box {
             point: ::std::boxed::Box::new(unsafe {
                 crate::types::Point::decode_unchecked(bytes.get_unchecked(0..8))
             }),
+        }
+    }
+}
+
+/// The borrowed encoding of a [Box], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct BoxRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> BoxRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [Box] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Box].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Box::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [Box] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Box].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> BoxRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [Box].
+    #[must_use]
+    pub fn decode(&self) -> Box {
+        unsafe { Box::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> BoxBuf {
+        BoxBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> BoxRef<'a> {
+    //! Fields
+
+    /// Gets the field: `point`.
+    #[must_use]
+    pub fn point(&self) -> crate::types::PointRef<'a> {
+        unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(0..8)) }
+    }
+}
+
+/// The owned encoding of a [Box], read in place.
+#[derive(Clone, Debug)]
+pub struct BoxBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl BoxBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [Box] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [Box].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Box::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [Box] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [Box].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl BoxBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> BoxRef<'_> {
+        unsafe { BoxRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [Box].
+    #[must_use]
+    pub fn decode(&self) -> Box {
+        unsafe { Box::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&Box> for BoxBuf {
+    fn from(value: &Box) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

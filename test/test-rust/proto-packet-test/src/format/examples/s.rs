@@ -235,11 +235,11 @@ impl S {
 impl S {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() < 37 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 37,
@@ -255,18 +255,20 @@ impl S {
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            a: ::std::str::from_utf8(&bytes[37..end_0])
-                .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?
-                .to_string(),
-            b: ::proto_packet::io::read_u32(bytes, 24),
-            c: ::proto_packet::io::read_u128(bytes, 0),
-            d: ::std::str::from_utf8(&bytes[end_0..end_1])
-                .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?
-                .to_string(),
-            e: ::proto_packet::io::read_bit(bytes, 36, 0),
-            f: ::proto_packet::io::read_u64(bytes, 16),
-        })
+        ::std::str::from_utf8(&bytes[37..end_0])
+            .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?;
+        ::std::str::from_utf8(&bytes[end_0..end_1])
+            .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -288,6 +290,171 @@ impl S {
                 .to_string(),
             e: unsafe { ::proto_packet::io::read_bit_unchecked(bytes, 36, 0) },
             f: unsafe { ::proto_packet::io::read_u64_unchecked(bytes, 16) },
+        }
+    }
+}
+
+/// The borrowed encoding of a [S], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct SRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> SRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [S] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [S].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        S::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [S] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [S].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> SRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [S].
+    #[must_use]
+    pub fn decode(&self) -> S {
+        unsafe { S::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> SBuf {
+        SBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> SRef<'a> {
+    //! Fields
+
+    /// Gets the field: `a`.
+    #[must_use]
+    pub fn a(&self) -> &'a str {
+        let start: usize = 37;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 28) } as usize;
+        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+    }
+
+    /// Gets the field: `b`.
+    #[must_use]
+    pub fn b(&self) -> u32 {
+        unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 24) }
+    }
+
+    /// Gets the field: `c`.
+    #[must_use]
+    pub fn c(&self) -> u128 {
+        unsafe { ::proto_packet::io::read_u128_unchecked(self.bytes, 0) }
+    }
+
+    /// Gets the field: `d`.
+    #[must_use]
+    pub fn d(&self) -> &'a str {
+        let start: usize =
+            37 + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 28) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 32) } as usize;
+        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+    }
+
+    /// Gets the field: `e`.
+    #[must_use]
+    pub fn e(&self) -> bool {
+        unsafe { ::proto_packet::io::read_bit_unchecked(self.bytes, 36, 0) }
+    }
+
+    /// Gets the field: `f`.
+    #[must_use]
+    pub fn f(&self) -> u64 {
+        unsafe { ::proto_packet::io::read_u64_unchecked(self.bytes, 16) }
+    }
+}
+
+/// The owned encoding of a [S], read in place.
+#[derive(Clone, Debug)]
+pub struct SBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl SBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [S] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [S].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        S::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [S] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [S].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl SBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> SRef<'_> {
+        unsafe { SRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [S].
+    #[must_use]
+    pub fn decode(&self) -> S {
+        unsafe { S::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&S> for SBuf {
+    fn from(value: &S) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

@@ -213,24 +213,32 @@ impl QualifiedFields {
 impl QualifiedFields {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 24 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 24,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            point: crate::types::Point::decode(&bytes[0..8])?,
-            child: crate::mods::parent::child::Child::decode(&bytes[8..12])?,
-            raw: crate::names::r#move::MoveStruct::decode(&bytes[12..16])?,
-            non_raw: crate::names::r#type::self_::SelfStruct::decode(&bytes[16..20])?,
-            local: crate::links::qualified::Local::decode(&bytes[20..24])?,
-        })
+        crate::types::Point::validate(&bytes[0..8])?;
+        crate::mods::parent::child::Child::validate(&bytes[8..12])?;
+        crate::names::r#move::MoveStruct::validate(&bytes[12..16])?;
+        crate::names::r#type::self_::SelfStruct::validate(&bytes[16..20])?;
+        crate::links::qualified::Local::validate(&bytes[20..24])?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -255,6 +263,168 @@ impl QualifiedFields {
             local: unsafe {
                 crate::links::qualified::Local::decode_unchecked(bytes.get_unchecked(20..24))
             },
+        }
+    }
+}
+
+/// The borrowed encoding of a [QualifiedFields], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct QualifiedFieldsRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> QualifiedFieldsRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [QualifiedFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [QualifiedFields].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        QualifiedFields::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [QualifiedFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [QualifiedFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> QualifiedFieldsRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [QualifiedFields].
+    #[must_use]
+    pub fn decode(&self) -> QualifiedFields {
+        unsafe { QualifiedFields::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> QualifiedFieldsBuf {
+        QualifiedFieldsBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> QualifiedFieldsRef<'a> {
+    //! Fields
+
+    /// Gets the field: `point`.
+    #[must_use]
+    pub fn point(&self) -> crate::types::PointRef<'a> {
+        unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(0..8)) }
+    }
+
+    /// Gets the field: `child`.
+    #[must_use]
+    pub fn child(&self) -> crate::mods::parent::child::ChildRef<'a> {
+        unsafe {
+            crate::mods::parent::child::ChildRef::new_unchecked(self.bytes.get_unchecked(8..12))
+        }
+    }
+
+    /// Gets the field: `raw`.
+    #[must_use]
+    pub fn raw(&self) -> crate::names::r#move::MoveStructRef<'a> {
+        unsafe {
+            crate::names::r#move::MoveStructRef::new_unchecked(self.bytes.get_unchecked(12..16))
+        }
+    }
+
+    /// Gets the field: `non_raw`.
+    #[must_use]
+    pub fn non_raw(&self) -> crate::names::r#type::self_::SelfStructRef<'a> {
+        unsafe {
+            crate::names::r#type::self_::SelfStructRef::new_unchecked(
+                self.bytes.get_unchecked(16..20),
+            )
+        }
+    }
+
+    /// Gets the field: `local`.
+    #[must_use]
+    pub fn local(&self) -> crate::links::qualified::LocalRef<'a> {
+        unsafe {
+            crate::links::qualified::LocalRef::new_unchecked(self.bytes.get_unchecked(20..24))
+        }
+    }
+}
+
+/// The owned encoding of a [QualifiedFields], read in place.
+#[derive(Clone, Debug)]
+pub struct QualifiedFieldsBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl QualifiedFieldsBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [QualifiedFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [QualifiedFields].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        QualifiedFields::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [QualifiedFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [QualifiedFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl QualifiedFieldsBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> QualifiedFieldsRef<'_> {
+        unsafe { QualifiedFieldsRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [QualifiedFields].
+    #[must_use]
+    pub fn decode(&self) -> QualifiedFields {
+        unsafe { QualifiedFields::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&QualifiedFields> for QualifiedFieldsBuf {
+    fn from(value: &QualifiedFields) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }

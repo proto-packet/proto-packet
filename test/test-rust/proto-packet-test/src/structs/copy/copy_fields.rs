@@ -289,35 +289,38 @@ impl CopyFields {
 impl CopyFields {
     //! Decoding
 
-    /// Decodes the struct from its encoding, the `bytes`.
+    /// Validates the encoding of the struct, the `bytes`.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding of the struct.
-    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
         if bytes.len() != 51 {
             return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
                 expected: 51,
                 actual: bytes.len(),
             });
         }
-        ::std::result::Result::Ok(Self {
-            boolean: ::proto_packet::io::read_bit(bytes, 50, 0),
-            integer: ::proto_packet::io::read_u64(bytes, 0),
-            float: ::proto_packet::types::Float32::new(::proto_packet::io::read_f32(bytes, 32)),
-            id: ::proto_packet::types::Uuid::from_bytes(
-                ::proto_packet::io::read_u128(bytes, 8).to_le_bytes(),
-            ),
-            time: ::proto_packet::io::read_i64(bytes, 24),
-            day: ::proto_packet::types::date_from_days(::proto_packet::io::read_i32(bytes, 36))
-                .ok_or_else(|| ::proto_packet::io::DecodeError::InvalidDate {
-                    days: ::proto_packet::io::read_i32(bytes, 36),
-                })?,
-            color: crate::types::Color::from_tag_number(::proto_packet::io::read_u16(bytes, 48))
-                .ok_or_else(|| ::proto_packet::io::DecodeError::InvalidEnumTag {
-                    tag_number: ::proto_packet::io::read_u16(bytes, 48),
-                })?,
-            point: crate::types::Point::decode(&bytes[40..48])?,
-        })
+        ::proto_packet::types::date_from_days(::proto_packet::io::read_i32(bytes, 36)).ok_or_else(
+            || ::proto_packet::io::DecodeError::InvalidDate {
+                days: ::proto_packet::io::read_i32(bytes, 36),
+            },
+        )?;
+        crate::types::Color::from_tag_number(::proto_packet::io::read_u16(bytes, 48)).ok_or_else(
+            || ::proto_packet::io::DecodeError::InvalidEnumTag {
+                tag_number: ::proto_packet::io::read_u16(bytes, 48),
+            },
+        )?;
+        crate::types::Point::validate(&bytes[40..48])?;
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
     }
 
     /// Decodes the struct from its encoding, the `bytes`, without validating them.
@@ -349,6 +352,191 @@ impl CopyFields {
                 .unwrap_unchecked()
             },
             point: unsafe { crate::types::Point::decode_unchecked(bytes.get_unchecked(40..48)) },
+        }
+    }
+}
+
+/// The borrowed encoding of a [CopyFields], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct CopyFieldsRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> CopyFieldsRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [CopyFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [CopyFields].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        CopyFields::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [CopyFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [CopyFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> CopyFieldsRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [CopyFields].
+    #[must_use]
+    pub fn decode(&self) -> CopyFields {
+        unsafe { CopyFields::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> CopyFieldsBuf {
+        CopyFieldsBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> CopyFieldsRef<'a> {
+    //! Fields
+
+    /// Gets the field: `boolean`.
+    #[must_use]
+    pub fn boolean(&self) -> bool {
+        unsafe { ::proto_packet::io::read_bit_unchecked(self.bytes, 50, 0) }
+    }
+
+    /// Gets the field: `integer`.
+    #[must_use]
+    pub fn integer(&self) -> u64 {
+        unsafe { ::proto_packet::io::read_u64_unchecked(self.bytes, 0) }
+    }
+
+    /// Gets the field: `float`.
+    #[must_use]
+    pub fn float(&self) -> f32 {
+        ::proto_packet::types::Float32::new(unsafe {
+            ::proto_packet::io::read_f32_unchecked(self.bytes, 32)
+        })
+        .value()
+    }
+
+    /// Gets the field: `id`.
+    #[must_use]
+    pub fn id(&self) -> ::proto_packet::types::Uuid {
+        ::proto_packet::types::Uuid::from_bytes(
+            unsafe { ::proto_packet::io::read_u128_unchecked(self.bytes, 8) }.to_le_bytes(),
+        )
+    }
+
+    /// Gets the field: `time`.
+    #[must_use]
+    pub fn time(&self) -> i64 {
+        unsafe { ::proto_packet::io::read_i64_unchecked(self.bytes, 24) }
+    }
+
+    /// Gets the field: `day`.
+    #[must_use]
+    pub fn day(&self) -> ::proto_packet::types::Date {
+        unsafe {
+            ::proto_packet::types::date_from_days(::proto_packet::io::read_i32_unchecked(
+                self.bytes, 36,
+            ))
+            .unwrap_unchecked()
+        }
+    }
+
+    /// Gets the field: `color`.
+    #[must_use]
+    pub fn color(&self) -> crate::types::Color {
+        unsafe {
+            crate::types::Color::from_tag_number(::proto_packet::io::read_u16_unchecked(
+                self.bytes, 48,
+            ))
+            .unwrap_unchecked()
+        }
+    }
+
+    /// Gets the field: `point`.
+    #[must_use]
+    pub fn point(&self) -> crate::types::PointRef<'a> {
+        unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(40..48)) }
+    }
+}
+
+/// The owned encoding of a [CopyFields], read in place.
+#[derive(Clone, Debug)]
+pub struct CopyFieldsBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl CopyFieldsBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [CopyFields] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [CopyFields].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        CopyFields::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [CopyFields] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [CopyFields].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl CopyFieldsBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> CopyFieldsRef<'_> {
+        unsafe { CopyFieldsRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [CopyFields].
+    #[must_use]
+    pub fn decode(&self) -> CopyFields {
+        unsafe { CopyFields::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&CopyFields> for CopyFieldsBuf {
+    fn from(value: &CopyFields) -> Self {
+        Self {
+            bytes: value.encode(),
         }
     }
 }
