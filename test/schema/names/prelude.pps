@@ -76,6 +76,20 @@ service Future {
     call: u32 returns u32;
 }
 
+// A service named like `Send`, a supertrait of the services.
+service Send {
+
+    // A call.
+    call: u32 returns u32;
+}
+
+// A service named like `Sync`, a supertrait of the services.
+service Sync {
+
+    // A call.
+    call: u32 returns u32;
+}
+
 // A struct with fields of the types named like prelude types.
 struct PreludeFields {
 

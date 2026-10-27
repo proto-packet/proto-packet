@@ -1,6 +1,7 @@
 mod common;
 
 use common::*;
+use proto_packet::axum::Router;
 use proto_packet::axum::http::StatusCode;
 use proto_packet::service::ServiceError;
 use proto_packet_test::names::casing::{
@@ -186,10 +187,22 @@ fn prelude_names() {
     );
 }
 
-/// A service named like `Future`.
-struct TestFuture;
+/// The services named like prelude traits.
+struct TestPreludeServices;
 
-impl prelude::Future for TestFuture {
+impl prelude::Future for TestPreludeServices {
+    async fn call(&self, request: u32) -> Result<u32, ServiceError> {
+        Ok(request)
+    }
+}
+
+impl prelude::Send for TestPreludeServices {
+    async fn call(&self, request: u32) -> Result<u32, ServiceError> {
+        Ok(request)
+    }
+}
+
+impl prelude::Sync for TestPreludeServices {
     async fn call(&self, request: u32) -> Result<u32, ServiceError> {
         Ok(request)
     }
@@ -197,11 +210,20 @@ impl prelude::Future for TestFuture {
 
 #[tokio::test]
 async fn prelude_named_services() {
-    let result: (StatusCode, String) = post(
-        prelude::future_router(Arc::new(TestFuture)),
-        "/names.prelude.Future/call",
-        "1",
-    )
-    .await;
-    assert_eq!(result, (StatusCode::OK, "1".to_string()));
+    let services: Arc<TestPreludeServices> = Arc::new(TestPreludeServices);
+    let test_cases: Vec<(Router, &str)> = vec![
+        (
+            prelude::future_router(services.clone()),
+            "/names.prelude.Future/call",
+        ),
+        (
+            prelude::send_router(services.clone()),
+            "/names.prelude.Send/call",
+        ),
+        (prelude::sync_router(services), "/names.prelude.Sync/call"),
+    ];
+    for (router, path) in test_cases {
+        let result: (StatusCode, String) = post(router, path, "1").await;
+        assert_eq!(result, (StatusCode::OK, "1".to_string()), "path: {}", path);
+    }
 }
