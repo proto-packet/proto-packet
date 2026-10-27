@@ -182,3 +182,79 @@ impl QualifiedFields {
         self
     }
 }
+
+impl QualifiedFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        24
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        self.point.encode_to(out);
+        self.child.encode_to(out);
+        self.raw.encode_to(out);
+        self.non_raw.encode_to(out);
+        self.local.encode_to(out);
+    }
+}
+
+impl QualifiedFields {
+    //! Decoding
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        if bytes.len() != 24 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 24,
+                actual: bytes.len(),
+            });
+        }
+        ::std::result::Result::Ok(Self {
+            point: crate::types::Point::decode(&bytes[0..8])?,
+            child: crate::mods::parent::child::Child::decode(&bytes[8..12])?,
+            raw: crate::names::r#move::MoveStruct::decode(&bytes[12..16])?,
+            non_raw: crate::names::r#type::self_::SelfStruct::decode(&bytes[16..20])?,
+            local: crate::links::qualified::Local::decode(&bytes[20..24])?,
+        })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            point: unsafe { crate::types::Point::decode_unchecked(bytes.get_unchecked(0..8)) },
+            child: unsafe {
+                crate::mods::parent::child::Child::decode_unchecked(bytes.get_unchecked(8..12))
+            },
+            raw: unsafe {
+                crate::names::r#move::MoveStruct::decode_unchecked(bytes.get_unchecked(12..16))
+            },
+            non_raw: unsafe {
+                crate::names::r#type::self_::SelfStruct::decode_unchecked(
+                    bytes.get_unchecked(16..20),
+                )
+            },
+            local: unsafe {
+                crate::links::qualified::Local::decode_unchecked(bytes.get_unchecked(20..24))
+            },
+        }
+    }
+}

@@ -53,3 +53,76 @@ impl String {
         self
     }
 }
+
+impl String {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        4 + self.text.len()
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the encoding of a variable-size field is over `u32::MAX` bytes.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(
+            &u32::try_from(self.text.len())
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(self.text.as_bytes());
+    }
+}
+
+impl String {
+    //! Decoding
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        if bytes.len() < 4 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 4,
+                actual: bytes.len(),
+            });
+        }
+        let end_0: usize = 4_usize.saturating_add(::proto_packet::io::read_u32(bytes, 0) as usize);
+        if bytes.len() != end_0 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: end_0,
+                actual: bytes.len(),
+            });
+        }
+        ::std::result::Result::Ok(Self {
+            text: ::std::str::from_utf8(&bytes[4..end_0])
+                .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?
+                .to_string(),
+        })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        let end_0: usize = 4 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } as usize;
+        Self {
+            text: unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(4..end_0)) }
+                .to_string(),
+        }
+    }
+}

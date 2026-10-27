@@ -255,3 +255,78 @@ impl EightFields {
         self
     }
 }
+
+impl EightFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        8
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(&self.one.to_le_bytes());
+        out.extend_from_slice(&self.two.to_le_bytes());
+        out.extend_from_slice(&self.three.to_le_bytes());
+        out.extend_from_slice(&self.four.to_le_bytes());
+        out.extend_from_slice(&self.five.to_le_bytes());
+        out.extend_from_slice(&self.six.to_le_bytes());
+        out.extend_from_slice(&self.seven.to_le_bytes());
+        out.extend_from_slice(&self.eight.to_le_bytes());
+    }
+}
+
+impl EightFields {
+    //! Decoding
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        if bytes.len() != 8 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 8,
+                actual: bytes.len(),
+            });
+        }
+        ::std::result::Result::Ok(Self {
+            one: ::proto_packet::io::read_u8(bytes, 0),
+            two: ::proto_packet::io::read_u8(bytes, 1),
+            three: ::proto_packet::io::read_u8(bytes, 2),
+            four: ::proto_packet::io::read_u8(bytes, 3),
+            five: ::proto_packet::io::read_u8(bytes, 4),
+            six: ::proto_packet::io::read_u8(bytes, 5),
+            seven: ::proto_packet::io::read_u8(bytes, 6),
+            eight: ::proto_packet::io::read_u8(bytes, 7),
+        })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            one: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 0) },
+            two: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 1) },
+            three: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 2) },
+            four: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 3) },
+            five: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 4) },
+            six: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 5) },
+            seven: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 6) },
+            eight: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 7) },
+        }
+    }
+}

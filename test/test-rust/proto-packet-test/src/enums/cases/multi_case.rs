@@ -23,3 +23,28 @@ pub enum MultiCase {
     /// The third case.
     Three,
 }
+
+impl MultiCase {
+    //! Tag Numbers
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::One => 1,
+            Self::Two => 2,
+            Self::Three => 3,
+        }
+    }
+
+    /// Gets the optional case with the `tag_number`.
+    #[must_use]
+    pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
+        match tag_number {
+            1 => ::std::option::Option::Some(Self::One),
+            2 => ::std::option::Option::Some(Self::Two),
+            3 => ::std::option::Option::Some(Self::Three),
+            _ => ::std::option::Option::None,
+        }
+    }
+}

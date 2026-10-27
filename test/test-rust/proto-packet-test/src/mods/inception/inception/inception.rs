@@ -54,3 +54,57 @@ impl Inception {
         self
     }
 }
+
+impl Inception {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        4
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(&self.value.to_le_bytes());
+    }
+}
+
+impl Inception {
+    //! Decoding
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        if bytes.len() != 4 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 4,
+                actual: bytes.len(),
+            });
+        }
+        ::std::result::Result::Ok(Self {
+            value: ::proto_packet::io::read_u32(bytes, 0),
+        })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            value: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) },
+        }
+    }
+}

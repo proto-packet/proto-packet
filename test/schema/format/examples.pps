@@ -1,0 +1,101 @@
+// The `MyStruct` example of `FORMAT.md`. (a length after the fixed-size fields)
+struct MyStruct {
+
+    // A variable-size field.
+    x: string;
+
+    // A 4-byte field.
+    y: u32;
+
+    // A 16-byte field.
+    z: u128;
+}
+
+// The `S` example of `FORMAT.md`. (the lengths, bits & data of variable-size fields)
+struct S {
+
+    // The first variable-size field.
+    a: string;
+
+    // A 4-byte field.
+    b: u32;
+
+    // A 16-byte field.
+    c: u128;
+
+    // The second variable-size field.
+    d: string;
+
+    // A bit.
+    e: bool;
+
+    // An 8-byte field.
+    f: u64;
+}
+
+// The `Point` of the `T` example of `FORMAT.md`. (8 bytes, alignment 4)
+struct Point {
+
+    // The x coordinate.
+    x: i32;
+
+    // The y coordinate.
+    y: i32;
+}
+
+// The `Odd` of the `T` example of `FORMAT.md`. (9 bytes, alignment 1)
+struct Odd {
+
+    // An 8-byte field.
+    a: u64;
+
+    // A 1-byte field.
+    b: u8;
+}
+
+// The `T` example of `FORMAT.md`. (nested fixed structs in their alignment groups)
+struct T {
+
+    // A nested struct in the 1-byte alignment group.
+    o: Odd;
+
+    // A nested struct in the 4-byte alignment group.
+    p: Point;
+
+    // An 8-byte field.
+    n: u64;
+
+    // A bit.
+    g: bool;
+}
+
+// A struct with bits in two bytes.
+struct Bits {
+
+    // The first bit.
+    one: bool;
+
+    // The second bit.
+    two: bool;
+
+    // The third bit.
+    three: bool;
+
+    // The fourth bit.
+    four: bool;
+
+    // The fifth bit.
+    five: bool;
+
+    // The sixth bit.
+    six: bool;
+
+    // The seventh bit.
+    seven: bool;
+
+    // The eighth bit.
+    eight: bool;
+
+    // The ninth bit. (the first bit of the second byte)
+    nine: bool;
+}

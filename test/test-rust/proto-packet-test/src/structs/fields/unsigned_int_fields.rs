@@ -164,3 +164,69 @@ impl UnsignedIntFields {
         self
     }
 }
+
+impl UnsignedIntFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        31
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(&self.four.to_le_bytes());
+        out.extend_from_slice(&self.five.to_le_bytes());
+        out.extend_from_slice(&self.three.to_le_bytes());
+        out.extend_from_slice(&self.two.to_le_bytes());
+        out.extend_from_slice(&self.one.to_le_bytes());
+    }
+}
+
+impl UnsignedIntFields {
+    //! Decoding
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        if bytes.len() != 31 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 31,
+                actual: bytes.len(),
+            });
+        }
+        ::std::result::Result::Ok(Self {
+            one: ::proto_packet::io::read_u8(bytes, 30),
+            two: ::proto_packet::io::read_u16(bytes, 28),
+            three: ::proto_packet::io::read_u32(bytes, 24),
+            four: ::proto_packet::io::read_u64(bytes, 0),
+            five: ::proto_packet::io::read_u128(bytes, 8),
+        })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        Self {
+            one: unsafe { ::proto_packet::io::read_u8_unchecked(bytes, 30) },
+            two: unsafe { ::proto_packet::io::read_u16_unchecked(bytes, 28) },
+            three: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 24) },
+            four: unsafe { ::proto_packet::io::read_u64_unchecked(bytes, 0) },
+            five: unsafe { ::proto_packet::io::read_u128_unchecked(bytes, 8) },
+        }
+    }
+}
