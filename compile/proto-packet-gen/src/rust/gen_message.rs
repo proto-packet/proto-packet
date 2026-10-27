@@ -11,10 +11,13 @@ use proto_packet_tree::{
     Message, ModPathRef, Project, WithComments as _, WithFieldName, WithTypeName, WithTypeTag,
 };
 
+/// The name of the constructor. (from `Default`)
+const CONSTRUCTOR: &str = "default";
+
 /// Generates the Rust code of the `message` in the schema file at the `mod_path`.
 ///
 /// Every message field is optional, so messages are created with `Default`. No field can be named
-/// like a generated method. (ex: the setter `set_x` of the field `x`)
+/// like a generated method. (ex: the constructor `default`)
 pub fn gen_message(
     project: &Project,
     mod_path: ModPathRef<'_>,
@@ -35,7 +38,7 @@ pub fn gen_message(
     check_field_names(
         &format!("{}.{}", mod_path, message.type_name()),
         &fields,
-        &[],
+        &[CONSTRUCTOR],
     )?;
 
     let mut block: Block = Block::default().with_statement(gen_dec(typing, message, &fields));
@@ -82,4 +85,34 @@ fn gen_dec(typing: Typing<'_>, message: &Message, fields: &[Field<'_>]) -> RustS
         result.add_field(field.gen_dec(typing));
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::GenError;
+    use crate::rust::gen_message;
+    use proto_packet::io::TagNumber;
+    use proto_packet_tree::{
+        FieldName, Message, MessageField, ModPath, PrimitiveType, Project, TypeName,
+    };
+
+    #[test]
+    fn gen_message_rejects_the_constructor_name() {
+        let mod_path: ModPath = ModPath::try_from("a").unwrap();
+        let field: MessageField = MessageField::new(
+            FieldName::try_from("default").unwrap(),
+            PrimitiveType::UnsignedInt32,
+            TagNumber::new(1).unwrap(),
+        );
+        let message: Message = Message::from(TypeName::try_from("Foo").unwrap())
+            .with_field(field)
+            .unwrap();
+        let result: Result<String, GenError> =
+            gen_message(&Project::default(), mod_path.to_ref(), &message);
+        let expected: GenError = GenError::FieldNameConflict {
+            type_name: "a.Foo".to_string(),
+            field_name: "default".to_string(),
+        };
+        assert_eq!(result, Err(expected));
+    }
 }
