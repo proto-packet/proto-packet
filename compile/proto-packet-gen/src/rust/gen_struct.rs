@@ -1,5 +1,6 @@
 use crate::GenError;
 use crate::layout::StructLayout;
+use crate::rust::decoding::{DECODING_FUNCTIONS, gen_decoding};
 use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::{ENCODING_METHODS, gen_encoding};
@@ -34,7 +35,11 @@ pub fn gen_struct(
     let typing: Typing = Typing::new(project);
     let type_name: String = ident(&structure.type_name());
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
-    let methods: Vec<&str> = [CONSTRUCTOR].into_iter().chain(ENCODING_METHODS).collect();
+    let methods: Vec<&str> = [CONSTRUCTOR]
+        .into_iter()
+        .chain(ENCODING_METHODS)
+        .chain(DECODING_FUNCTIONS)
+        .collect();
     check_field_names(
         &format!("{}.{}", mod_path, structure.type_name()),
         &fields,
@@ -53,6 +58,8 @@ pub fn gen_struct(
     if let Some(layout) = StructLayout::new(project, structure) {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_encoding(project, structure, &layout, &type_name));
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_decoding(project, structure, &layout, &type_name));
     }
     Ok(block.to_code())
 }
