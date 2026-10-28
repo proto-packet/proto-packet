@@ -3,8 +3,6 @@
 #[derive(
     Copy,
     Clone,
-    Ord,
-    PartialOrd,
     Eq,
     PartialEq,
     Hash,
@@ -46,5 +44,17 @@ impl Color {
             3 => ::std::option::Option::Some(Self::Blue),
             _ => ::std::option::Option::None,
         }
+    }
+}
+
+impl ::std::cmp::Ord for Color {
+    fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
+        self.tag_number().cmp(&other.tag_number())
+    }
+}
+
+impl ::std::cmp::PartialOrd for Color {
+    fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
+        ::std::option::Option::Some(self.cmp(other))
     }
 }

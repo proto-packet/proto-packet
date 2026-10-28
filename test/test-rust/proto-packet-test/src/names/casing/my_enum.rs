@@ -3,8 +3,6 @@
 #[derive(
     Copy,
     Clone,
-    Ord,
-    PartialOrd,
     Eq,
     PartialEq,
     Hash,
@@ -42,5 +40,17 @@ impl My_Enum {
             2 => ::std::option::Option::Some(Self::CaseTwo),
             _ => ::std::option::Option::None,
         }
+    }
+}
+
+impl ::std::cmp::Ord for My_Enum {
+    fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
+        self.tag_number().cmp(&other.tag_number())
+    }
+}
+
+impl ::std::cmp::PartialOrd for My_Enum {
+    fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
+        ::std::option::Option::Some(self.cmp(other))
     }
 }

@@ -3,8 +3,6 @@
 #[derive(
     Copy,
     Clone,
-    Ord,
-    PartialOrd,
     Eq,
     PartialEq,
     Hash,
@@ -46,5 +44,17 @@ impl EdgeTags {
             8191 => ::std::option::Option::Some(Self::Max),
             _ => ::std::option::Option::None,
         }
+    }
+}
+
+impl ::std::cmp::Ord for EdgeTags {
+    fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
+        self.tag_number().cmp(&other.tag_number())
+    }
+}
+
+impl ::std::cmp::PartialOrd for EdgeTags {
+    fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
+        ::std::option::Option::Some(self.cmp(other))
     }
 }
