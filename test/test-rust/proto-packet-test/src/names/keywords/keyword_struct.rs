@@ -191,8 +191,10 @@ impl KeywordStruct {
             12 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 8) } as usize;
         Self {
             r#type: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) },
-            r#match: unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(12..end_0)) }
-                .to_string(),
+            r#match: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(12..end_0) };
+                unsafe { ::std::str::from_utf8_unchecked(data) }.to_string()
+            },
             self_: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 4) },
         }
     }
@@ -265,7 +267,8 @@ impl<'a> KeywordStructRef<'a> {
         let start: usize = 12;
         let end: usize =
             start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize;
-        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        unsafe { ::std::str::from_utf8_unchecked(data) }
     }
 
     /// Gets the field: `self`.

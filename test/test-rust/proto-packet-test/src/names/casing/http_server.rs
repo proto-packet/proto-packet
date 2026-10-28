@@ -130,8 +130,10 @@ impl HTTPServer {
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         let end_0: usize = 4 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } as usize;
         Self {
-            url: unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(4..end_0)) }
-                .to_string(),
+            url: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(4..end_0) };
+                unsafe { ::std::str::from_utf8_unchecked(data) }.to_string()
+            },
         }
     }
 }
@@ -197,7 +199,8 @@ impl<'a> HTTPServerRef<'a> {
         let start: usize = 4;
         let end: usize =
             start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
-        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        unsafe { ::std::str::from_utf8_unchecked(data) }
     }
 }
 

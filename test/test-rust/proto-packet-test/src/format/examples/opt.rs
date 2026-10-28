@@ -320,8 +320,8 @@ impl Opt {
             b: unsafe { ::proto_packet::io::read_bit_unchecked(bytes, 10, 1) },
             c: (unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 4) } != u32::MAX).then(
                 || {
-                    unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(11..end_0)) }
-                        .to_string()
+                    let data: &[u8] = unsafe { bytes.get_unchecked(11..end_0) };
+                    unsafe { ::std::str::from_utf8_unchecked(data) }.to_string()
                 },
             ),
             d: unsafe { ::proto_packet::io::read_bit_unchecked(bytes, 10, 2) }
@@ -410,9 +410,9 @@ impl<'a> OptRef<'a> {
                 u32::MAX => 0,
                 length => length as usize,
             };
-        (unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } != u32::MAX).then(
-            || unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) },
-        )
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        (unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } != u32::MAX)
+            .then(|| unsafe { ::std::str::from_utf8_unchecked(data) })
     }
 
     /// Gets the field: `d`.

@@ -155,8 +155,8 @@ impl Some {
         Self {
             value: (unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } != u32::MAX).then(
                 || {
-                    unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(4..end_0)) }
-                        .to_string()
+                    let data: &[u8] = unsafe { bytes.get_unchecked(4..end_0) };
+                    unsafe { ::std::str::from_utf8_unchecked(data) }.to_string()
                 },
             ),
         }
@@ -227,9 +227,9 @@ impl<'a> SomeRef<'a> {
                 u32::MAX => 0,
                 length => length as usize,
             };
-        (unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } != u32::MAX).then(
-            || unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) },
-        )
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        (unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } != u32::MAX)
+            .then(|| unsafe { ::std::str::from_utf8_unchecked(data) })
     }
 }
 

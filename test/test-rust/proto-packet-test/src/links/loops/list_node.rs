@@ -185,10 +185,9 @@ impl ListNode {
             value: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) },
             next: (unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 4) } != u32::MAX).then(
                 || {
-                    ::std::boxed::Box::new(unsafe {
-                        crate::links::loops::ListNode::decode_unchecked(
-                            bytes.get_unchecked(8..end_0),
-                        )
+                    ::std::boxed::Box::new({
+                        let data: &[u8] = unsafe { bytes.get_unchecked(8..end_0) };
+                        unsafe { crate::links::loops::ListNode::decode_unchecked(data) }
                     })
                 },
             ),
@@ -266,13 +265,9 @@ impl<'a> ListNodeRef<'a> {
                 u32::MAX => 0,
                 length => length as usize,
             };
-        (unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } != u32::MAX).then(
-            || unsafe {
-                crate::links::loops::ListNodeRef::new_unchecked(
-                    self.bytes.get_unchecked(start..end),
-                )
-            },
-        )
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        (unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } != u32::MAX)
+            .then(|| unsafe { crate::links::loops::ListNodeRef::new_unchecked(data) })
     }
 }
 

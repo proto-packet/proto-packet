@@ -186,8 +186,10 @@ impl MyStruct {
         let end_0: usize =
             24 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 20) } as usize;
         Self {
-            x: unsafe { ::std::str::from_utf8_unchecked(bytes.get_unchecked(24..end_0)) }
-                .to_string(),
+            x: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(24..end_0) };
+                unsafe { ::std::str::from_utf8_unchecked(data) }.to_string()
+            },
             y: unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 16) },
             z: unsafe { ::proto_packet::io::read_u128_unchecked(bytes, 0) },
         }
@@ -255,7 +257,8 @@ impl<'a> MyStructRef<'a> {
         let start: usize = 24;
         let end: usize =
             start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 20) } as usize;
-        unsafe { ::std::str::from_utf8_unchecked(self.bytes.get_unchecked(start..end)) }
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        unsafe { ::std::str::from_utf8_unchecked(data) }
     }
 
     /// Gets the field: `y`.

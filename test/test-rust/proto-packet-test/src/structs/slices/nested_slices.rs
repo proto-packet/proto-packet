@@ -91,3 +91,378 @@ impl NestedSlices {
         self
     }
 }
+
+impl NestedSlices {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        8 + 4
+            + 4 * self.one.len()
+            + self.one.iter().map(|value_0| value_0.len()).sum::<usize>()
+            + 4
+            + 4 * self.two.len()
+            + self
+                .two
+                .iter()
+                .map(|value_0| {
+                    4 + 4 * value_0.len()
+                        + value_0.iter().map(|value_1| value_1.len()).sum::<usize>()
+                })
+                .sum::<usize>()
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the encoding of a variable-size field is `u32::MAX` bytes or more.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(
+            &u32::try_from(
+                4 + 4 * self.one.len()
+                    + self.one.iter().map(|value_0| value_0.len()).sum::<usize>(),
+            )
+            .ok()
+            .filter(|length| *length != u32::MAX)
+            .expect("length out of range")
+            .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(
+                4 + 4 * self.two.len()
+                    + self
+                        .two
+                        .iter()
+                        .map(|value_0| {
+                            4 + 4 * value_0.len()
+                                + value_0.iter().map(|value_1| value_1.len()).sum::<usize>()
+                        })
+                        .sum::<usize>(),
+            )
+            .ok()
+            .filter(|length| *length != u32::MAX)
+            .expect("length out of range")
+            .to_le_bytes(),
+        );
+        {
+            out.extend_from_slice(
+                &u32::try_from(self.one.len())
+                    .expect("count out of range")
+                    .to_le_bytes(),
+            );
+            let mut end_0: usize = 0;
+            for value_0 in self.one.iter() {
+                end_0 += value_0.len();
+                out.extend_from_slice(
+                    &u32::try_from(end_0)
+                        .ok()
+                        .filter(|length| *length != u32::MAX)
+                        .expect("length out of range")
+                        .to_le_bytes(),
+                );
+            }
+            for value_0 in self.one.iter() {
+                out.extend_from_slice(value_0.as_slice());
+            }
+        }
+        {
+            out.extend_from_slice(
+                &u32::try_from(self.two.len())
+                    .expect("count out of range")
+                    .to_le_bytes(),
+            );
+            let mut end_0: usize = 0;
+            for value_0 in self.two.iter() {
+                end_0 += 4
+                    + 4 * value_0.len()
+                    + value_0.iter().map(|value_1| value_1.len()).sum::<usize>();
+                out.extend_from_slice(
+                    &u32::try_from(end_0)
+                        .ok()
+                        .filter(|length| *length != u32::MAX)
+                        .expect("length out of range")
+                        .to_le_bytes(),
+                );
+            }
+            for value_0 in self.two.iter() {
+                {
+                    out.extend_from_slice(
+                        &u32::try_from(value_0.len())
+                            .expect("count out of range")
+                            .to_le_bytes(),
+                    );
+                    let mut end_1: usize = 0;
+                    for value_1 in value_0.iter() {
+                        end_1 += value_1.len();
+                        out.extend_from_slice(
+                            &u32::try_from(end_1)
+                                .ok()
+                                .filter(|length| *length != u32::MAX)
+                                .expect("length out of range")
+                                .to_le_bytes(),
+                        );
+                    }
+                    for value_1 in value_0.iter() {
+                        out.extend_from_slice(value_1.as_bytes());
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl NestedSlices {
+    //! Decoding
+
+    /// Validates the encoding of the struct, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
+        if bytes.len() < 8 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 8,
+                actual: bytes.len(),
+            });
+        }
+        let end_0: usize = 8_usize.saturating_add(::proto_packet::io::read_u32(bytes, 0) as usize);
+        let end_1: usize = end_0.saturating_add(::proto_packet::io::read_u32(bytes, 4) as usize);
+        if bytes.len() != end_1 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: end_1,
+                actual: bytes.len(),
+            });
+        }
+        ::proto_packet::io::VarListRef::new(&bytes[8..end_0], ::std::convert::identity::<&[u8]>)?;
+        for bytes_0 in ::proto_packet::io::VarListRef::new(
+            &bytes[end_0..end_1],
+            ::std::convert::identity::<&[u8]>,
+        )?
+        .iter()
+        {
+            for bytes_1 in
+                ::proto_packet::io::VarListRef::new(bytes_0, ::std::convert::identity::<&[u8]>)?
+                    .iter()
+            {
+                ::std::str::from_utf8(bytes_1)
+                    .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?;
+            }
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        let end_0: usize = 8 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } as usize;
+        let end_1: usize =
+            end_0 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 4) } as usize;
+        Self {
+            one: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(8..end_0) };
+                {
+                    let list_0: &[u8] = data;
+                    let read_0 = |bytes_0: &[u8]| bytes_0.to_vec();
+                    unsafe { ::proto_packet::io::VarListRef::new_unchecked(list_0, read_0) }
+                        .to_vec()
+                }
+            },
+            two: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_0..end_1) };
+                {
+                    let list_0: &[u8] = data;
+                    let read_0 = |bytes_0: &[u8]| {
+                        let list_1: &[u8] = bytes_0;
+                        let read_1 = |bytes_1: &[u8]| {
+                            unsafe { ::std::str::from_utf8_unchecked(bytes_1) }.to_string()
+                        };
+                        unsafe { ::proto_packet::io::VarListRef::new_unchecked(list_1, read_1) }
+                            .to_vec()
+                    };
+                    unsafe { ::proto_packet::io::VarListRef::new_unchecked(list_0, read_0) }
+                        .to_vec()
+                }
+            },
+        }
+    }
+}
+
+/// The borrowed encoding of a [NestedSlices], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct NestedSlicesRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> NestedSlicesRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [NestedSlices] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [NestedSlices].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        NestedSlices::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [NestedSlices] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [NestedSlices].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> NestedSlicesRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [NestedSlices].
+    #[must_use]
+    pub fn decode(&self) -> NestedSlices {
+        unsafe { NestedSlices::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> NestedSlicesBuf {
+        NestedSlicesBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> NestedSlicesRef<'a> {
+    //! Fields
+
+    /// Gets the field: `one`.
+    #[must_use]
+    pub fn one(&self) -> ::proto_packet::io::VarListRef<'a, impl Fn(&'a [u8]) -> &'a [u8]> {
+        let start: usize = 8;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let read_0 = |bytes_0: &'a [u8]| bytes_0;
+            unsafe { ::proto_packet::io::VarListRef::new_unchecked(data, read_0) }
+        }
+    }
+
+    /// Gets the field: `two`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn two(
+        &self,
+    ) -> ::proto_packet::io::VarListRef<
+        'a,
+        impl Fn(&'a [u8]) -> ::proto_packet::io::VarListRef<'a, fn(&'a [u8]) -> &'a str>,
+    > {
+        let start: usize =
+            8 + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let read_0 = |bytes_0: &'a [u8]| {
+                let read_1: fn(&'a [u8]) -> &'a str =
+                    |bytes_1: &'a [u8]| unsafe { ::std::str::from_utf8_unchecked(bytes_1) };
+                unsafe { ::proto_packet::io::VarListRef::new_unchecked(bytes_0, read_1) }
+            };
+            unsafe { ::proto_packet::io::VarListRef::new_unchecked(data, read_0) }
+        }
+    }
+}
+
+/// The owned encoding of a [NestedSlices], read in place.
+#[derive(Clone, Debug)]
+pub struct NestedSlicesBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl NestedSlicesBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [NestedSlices] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [NestedSlices].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        NestedSlices::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [NestedSlices] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [NestedSlices].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl NestedSlicesBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> NestedSlicesRef<'_> {
+        unsafe { NestedSlicesRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [NestedSlices].
+    #[must_use]
+    pub fn decode(&self) -> NestedSlices {
+        unsafe { NestedSlices::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&NestedSlices> for NestedSlicesBuf {
+    fn from(value: &NestedSlices) -> Self {
+        Self {
+            bytes: value.encode(),
+        }
+    }
+}
