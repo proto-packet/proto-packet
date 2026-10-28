@@ -109,10 +109,12 @@ where
     }
 
     /// Gets the optional value of the `key`, scanning the keys.
+    ///
+    /// The keys are compared with `PartialEq`, so float keys are found, except NaN.
     pub fn get<Q>(&self, key: &Q) -> Option<V::Item>
     where
         K::Item: Borrow<Q>,
-        Q: Eq + ?Sized,
+        Q: PartialEq + ?Sized,
     {
         (0..self.len())
             .find(|index| {
@@ -171,7 +173,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::io::{DecodeError, FixedListRef, MapRef, VarListRef, read_u32, split_map};
+    use crate::io::{DecodeError, FixedListRef, MapRef, VarListRef, read_f32, read_u32, split_map};
 
     /// Encodes the map of the encodings of the `keys` & `values`.
     fn encode(keys: &[u8], values: &[u8]) -> Vec<u8> {
@@ -186,6 +188,11 @@ mod tests {
     /// Reads a `u32` key.
     fn number(bytes: &[u8]) -> u32 {
         read_u32(bytes, 0)
+    }
+
+    /// Reads an `f32` key.
+    fn float(bytes: &[u8]) -> f32 {
+        read_f32(bytes, 0)
     }
 
     /// Reads a `string` key.
@@ -241,6 +248,18 @@ mod tests {
         assert_eq!(map.get("a"), Some(1));
         assert_eq!(map.get(&String::from("b")[..]), Some(2));
         assert_eq!(map.get("c"), None);
+    }
+
+    #[test]
+    fn float_keys_are_found_except_nan() {
+        let keys: Vec<u8> = [1.5_f32, f32::NAN]
+            .iter()
+            .flat_map(|n| n.to_le_bytes())
+            .collect();
+        let keys = FixedListRef::new(&keys, 4, float).unwrap();
+        let map = unsafe { MapRef::new_unchecked(keys, &[1_u8, 2][..]) };
+        assert_eq!(map.get(&1.5), Some(1));
+        assert_eq!(map.get(&f32::NAN), None);
     }
 
     #[test]
