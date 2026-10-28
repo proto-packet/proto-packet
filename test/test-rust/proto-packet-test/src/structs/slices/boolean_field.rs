@@ -83,18 +83,23 @@ impl BooleanField {
                 .expect("length out of range")
                 .to_le_bytes(),
         );
-        out.extend_from_slice(
-            &u32::try_from(self.one.len())
-                .expect("count out of range")
-                .to_le_bytes(),
-        );
-        for chunk in self.one.chunks(8) {
-            out.push(
-                chunk
-                    .iter()
-                    .enumerate()
-                    .fold(0, |byte, (index, bit)| byte | (u8::from(*bit) << index)),
+        {
+            out.extend_from_slice(
+                &u32::try_from(self.one.len())
+                    .expect("count out of range")
+                    .to_le_bytes(),
             );
+            let mut byte: u8 = 0;
+            for (index, bit) in self.one.iter().enumerate() {
+                byte |= u8::from(*bit) << (index % 8);
+                if index % 8 == 7 {
+                    out.push(byte);
+                    byte = 0;
+                }
+            }
+            if !self.one.len().is_multiple_of(8) {
+                out.push(byte);
+            }
         }
     }
 }

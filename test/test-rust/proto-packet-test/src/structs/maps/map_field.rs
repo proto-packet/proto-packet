@@ -59,3 +59,325 @@ impl MapField {
         self
     }
 }
+
+impl MapField {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        4 + 4
+            + 4
+            + 4 * self.map.len()
+            + self.map.keys().map(|value_0| value_0.len()).sum::<usize>()
+            + self.map.len() * 4
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the encoding of a variable-size field is `u32::MAX` bytes or more.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(
+            &u32::try_from(
+                4 + 4
+                    + 4 * self.map.len()
+                    + self.map.keys().map(|value_0| value_0.len()).sum::<usize>()
+                    + self.map.len() * 4,
+            )
+            .ok()
+            .filter(|length| *length != u32::MAX)
+            .expect("length out of range")
+            .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(
+                4 + 4 * self.map.len()
+                    + self.map.keys().map(|value_0| value_0.len()).sum::<usize>(),
+            )
+            .ok()
+            .filter(|length| *length != u32::MAX)
+            .expect("length out of range")
+            .to_le_bytes(),
+        );
+        {
+            out.extend_from_slice(
+                &u32::try_from(self.map.len())
+                    .expect("count out of range")
+                    .to_le_bytes(),
+            );
+            let mut end_0: usize = 0;
+            for value_0 in self.map.keys() {
+                end_0 += value_0.len();
+                out.extend_from_slice(
+                    &u32::try_from(end_0)
+                        .ok()
+                        .filter(|length| *length != u32::MAX)
+                        .expect("length out of range")
+                        .to_le_bytes(),
+                );
+            }
+            for value_0 in self.map.keys() {
+                out.extend_from_slice(value_0.as_bytes());
+            }
+        }
+        for value_0 in self.map.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+    }
+}
+
+impl MapField {
+    //! Decoding
+
+    /// Validates the encoding of the struct, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
+        if bytes.len() < 4 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 4,
+                actual: bytes.len(),
+            });
+        }
+        let end_0: usize = 4_usize.saturating_add(::proto_packet::io::read_u32(bytes, 0) as usize);
+        if bytes.len() != end_0 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: end_0,
+                actual: bytes.len(),
+            });
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[4..end_0])?;
+            for bytes_0 in
+                ::proto_packet::io::VarListRef::new(keys_0, ::std::convert::identity::<&[u8]>)?
+                    .iter()
+            {
+                ::std::str::from_utf8(bytes_0)
+                    .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?;
+            }
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let keys_0 = unsafe {
+                ::proto_packet::io::VarListRef::new_unchecked(
+                    keys_0,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        let end_0: usize = 4 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } as usize;
+        Self {
+            map: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(4..end_0) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_keys_0 = |bytes_0: &[u8]| {
+                        unsafe { ::std::str::from_utf8_unchecked(bytes_0) }.to_string()
+                    };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe {
+                        ::proto_packet::io::VarListRef::new_unchecked(keys_0, read_keys_0)
+                    };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+        }
+    }
+}
+
+/// The borrowed encoding of a [MapField], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct MapFieldRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> MapFieldRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [MapField] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [MapField].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        MapField::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [MapField] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [MapField].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> MapFieldRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [MapField].
+    #[must_use]
+    pub fn decode(&self) -> MapField {
+        unsafe { MapField::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> MapFieldBuf {
+        MapFieldBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> MapFieldRef<'a> {
+    //! Fields
+
+    /// Gets the field: `map`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn map(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::VarListRef<'a, impl Fn(&'a [u8]) -> &'a str>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize = 4;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = {
+                let read_0 =
+                    |bytes_0: &'a [u8]| unsafe { ::std::str::from_utf8_unchecked(bytes_0) };
+                unsafe { ::proto_packet::io::VarListRef::new_unchecked(keys_0, read_0) }
+            };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+}
+
+/// The owned encoding of a [MapField], read in place.
+#[derive(Clone, Debug)]
+pub struct MapFieldBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl MapFieldBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [MapField] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [MapField].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        MapField::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [MapField] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [MapField].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl MapFieldBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> MapFieldRef<'_> {
+        unsafe { MapFieldRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [MapField].
+    #[must_use]
+    pub fn decode(&self) -> MapField {
+        unsafe { MapField::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&MapField> for MapFieldBuf {
+    fn from(value: &MapField) -> Self {
+        Self {
+            bytes: value.encode(),
+        }
+    }
+}

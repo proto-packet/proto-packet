@@ -290,3 +290,1084 @@ impl ScalarKeys {
         self
     }
 }
+
+impl ScalarKeys {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        32 + 4
+            + 4
+            + self.boolean.len().div_ceil(8)
+            + self.boolean.len() * 4
+            + 4
+            + self.unsigned.len() * 8
+            + self.unsigned.len() * 4
+            + 4
+            + self.signed.len() * 8
+            + self.signed.len() * 4
+            + 4
+            + self.float.len() * 8
+            + self.float.len() * 4
+            + 4
+            + self.id.len() * 16
+            + self.id.len() * 4
+            + 4
+            + 4
+            + 4 * self.text.len()
+            + self.text.keys().map(|value_0| value_0.len()).sum::<usize>()
+            + self.text.len() * 4
+            + 4
+            + self.time.len() * 8
+            + self.time.len() * 4
+            + 4
+            + self.day.len() * 4
+            + self.day.len() * 4
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> ::std::vec::Vec<u8> {
+        let mut result: ::std::vec::Vec<u8> = ::std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the encoding of a variable-size field is `u32::MAX` bytes or more.
+    pub fn encode_to(&self, out: &mut ::std::vec::Vec<u8>) {
+        out.extend_from_slice(
+            &u32::try_from(4 + 4 + self.boolean.len().div_ceil(8) + self.boolean.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(4 + self.unsigned.len() * 8 + self.unsigned.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(4 + self.signed.len() * 8 + self.signed.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(4 + self.float.len() * 8 + self.float.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(4 + self.id.len() * 16 + self.id.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(
+                4 + 4
+                    + 4 * self.text.len()
+                    + self.text.keys().map(|value_0| value_0.len()).sum::<usize>()
+                    + self.text.len() * 4,
+            )
+            .ok()
+            .filter(|length| *length != u32::MAX)
+            .expect("length out of range")
+            .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(4 + self.time.len() * 8 + self.time.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(4 + self.day.len() * 4 + self.day.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        out.extend_from_slice(
+            &u32::try_from(4 + self.boolean.len().div_ceil(8))
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        {
+            out.extend_from_slice(
+                &u32::try_from(self.boolean.len())
+                    .expect("count out of range")
+                    .to_le_bytes(),
+            );
+            let mut byte: u8 = 0;
+            for (index, bit) in self.boolean.keys().enumerate() {
+                byte |= u8::from(*bit) << (index % 8);
+                if index % 8 == 7 {
+                    out.push(byte);
+                    byte = 0;
+                }
+            }
+            if !self.boolean.len().is_multiple_of(8) {
+                out.push(byte);
+            }
+        }
+        for value_0 in self.boolean.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        out.extend_from_slice(
+            &u32::try_from(self.unsigned.len() * 8)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        for value_0 in self.unsigned.keys() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        for value_0 in self.unsigned.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        out.extend_from_slice(
+            &u32::try_from(self.signed.len() * 8)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        for value_0 in self.signed.keys() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        for value_0 in self.signed.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        out.extend_from_slice(
+            &u32::try_from(self.float.len() * 8)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        for value_0 in self.float.keys() {
+            out.extend_from_slice(&value_0.value().to_le_bytes());
+        }
+        for value_0 in self.float.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        out.extend_from_slice(
+            &u32::try_from(self.id.len() * 16)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        for value_0 in self.id.keys() {
+            out.extend_from_slice(value_0.as_bytes());
+        }
+        for value_0 in self.id.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        out.extend_from_slice(
+            &u32::try_from(
+                4 + 4 * self.text.len()
+                    + self.text.keys().map(|value_0| value_0.len()).sum::<usize>(),
+            )
+            .ok()
+            .filter(|length| *length != u32::MAX)
+            .expect("length out of range")
+            .to_le_bytes(),
+        );
+        {
+            out.extend_from_slice(
+                &u32::try_from(self.text.len())
+                    .expect("count out of range")
+                    .to_le_bytes(),
+            );
+            let mut end_0: usize = 0;
+            for value_0 in self.text.keys() {
+                end_0 += value_0.len();
+                out.extend_from_slice(
+                    &u32::try_from(end_0)
+                        .ok()
+                        .filter(|length| *length != u32::MAX)
+                        .expect("length out of range")
+                        .to_le_bytes(),
+                );
+            }
+            for value_0 in self.text.keys() {
+                out.extend_from_slice(value_0.as_bytes());
+            }
+        }
+        for value_0 in self.text.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        out.extend_from_slice(
+            &u32::try_from(self.time.len() * 8)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        for value_0 in self.time.keys() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        for value_0 in self.time.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+        out.extend_from_slice(
+            &u32::try_from(self.day.len() * 4)
+                .ok()
+                .filter(|length| *length != u32::MAX)
+                .expect("length out of range")
+                .to_le_bytes(),
+        );
+        for value_0 in self.day.keys() {
+            out.extend_from_slice(&::proto_packet::types::date_to_days(*value_0).to_le_bytes());
+        }
+        for value_0 in self.day.values() {
+            out.extend_from_slice(&value_0.to_le_bytes());
+        }
+    }
+}
+
+impl ScalarKeys {
+    //! Decoding
+
+    /// Validates the encoding of the struct, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn validate(bytes: &[u8]) -> ::std::result::Result<(), ::proto_packet::io::DecodeError> {
+        if bytes.len() < 32 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: 32,
+                actual: bytes.len(),
+            });
+        }
+        let end_0: usize = 32_usize.saturating_add(::proto_packet::io::read_u32(bytes, 0) as usize);
+        let end_1: usize = end_0.saturating_add(::proto_packet::io::read_u32(bytes, 4) as usize);
+        let end_2: usize = end_1.saturating_add(::proto_packet::io::read_u32(bytes, 8) as usize);
+        let end_3: usize = end_2.saturating_add(::proto_packet::io::read_u32(bytes, 12) as usize);
+        let end_4: usize = end_3.saturating_add(::proto_packet::io::read_u32(bytes, 16) as usize);
+        let end_5: usize = end_4.saturating_add(::proto_packet::io::read_u32(bytes, 20) as usize);
+        let end_6: usize = end_5.saturating_add(::proto_packet::io::read_u32(bytes, 24) as usize);
+        let end_7: usize = end_6.saturating_add(::proto_packet::io::read_u32(bytes, 28) as usize);
+        if bytes.len() != end_7 {
+            return ::std::result::Result::Err(::proto_packet::io::DecodeError::InvalidLength {
+                expected: end_7,
+                actual: bytes.len(),
+            });
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[32..end_0])?;
+            ::proto_packet::io::BitListRef::new(keys_0)?;
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let keys_0 = unsafe { ::proto_packet::io::BitListRef::new_unchecked(keys_0) };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[end_0..end_1])?;
+            ::proto_packet::io::FixedListRef::new(keys_0, 8, ::std::convert::identity::<&[u8]>)?;
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let read_0 =
+                |bytes_0: &[u8]| unsafe { ::proto_packet::io::read_u64_unchecked(bytes_0, 0) };
+            let keys_0 =
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_0) };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[end_1..end_2])?;
+            ::proto_packet::io::FixedListRef::new(keys_0, 8, ::std::convert::identity::<&[u8]>)?;
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let read_0 =
+                |bytes_0: &[u8]| unsafe { ::proto_packet::io::read_i64_unchecked(bytes_0, 0) };
+            let keys_0 =
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_0) };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[end_2..end_3])?;
+            ::proto_packet::io::FixedListRef::new(keys_0, 8, ::std::convert::identity::<&[u8]>)?;
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let read_0 = |bytes_0: &[u8]| {
+                ::proto_packet::types::Float64::new(unsafe {
+                    ::proto_packet::io::read_f64_unchecked(bytes_0, 0)
+                })
+            };
+            let keys_0 =
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_0) };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[end_3..end_4])?;
+            ::proto_packet::io::FixedListRef::new(keys_0, 16, ::std::convert::identity::<&[u8]>)?;
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let read_0 = |bytes_0: &[u8]| {
+                ::proto_packet::types::Uuid::from_bytes(
+                    unsafe { ::proto_packet::io::read_u128_unchecked(bytes_0, 0) }.to_le_bytes(),
+                )
+            };
+            let keys_0 =
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 16, read_0) };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[end_4..end_5])?;
+            for bytes_0 in
+                ::proto_packet::io::VarListRef::new(keys_0, ::std::convert::identity::<&[u8]>)?
+                    .iter()
+            {
+                ::std::str::from_utf8(bytes_0)
+                    .map_err(|_| ::proto_packet::io::DecodeError::InvalidUtf8)?;
+            }
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let keys_0 = unsafe {
+                ::proto_packet::io::VarListRef::new_unchecked(
+                    keys_0,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[end_5..end_6])?;
+            ::proto_packet::io::FixedListRef::new(keys_0, 8, ::std::convert::identity::<&[u8]>)?;
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let read_0 =
+                |bytes_0: &[u8]| unsafe { ::proto_packet::io::read_i64_unchecked(bytes_0, 0) };
+            let keys_0 =
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_0) };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        {
+            let (keys_0, values_0): (&[u8], &[u8]) =
+                ::proto_packet::io::split_map(&bytes[end_6..end_7])?;
+            for bytes_0 in
+                ::proto_packet::io::FixedListRef::new(keys_0, 4, ::std::convert::identity::<&[u8]>)?
+                    .iter()
+            {
+                ::proto_packet::types::date_from_days(::proto_packet::io::read_i32(bytes_0, 0))
+                    .ok_or_else(|| ::proto_packet::io::DecodeError::InvalidDate {
+                        days: ::proto_packet::io::read_i32(bytes_0, 0),
+                    })?;
+            }
+            ::proto_packet::io::FixedListRef::new(values_0, 4, ::std::convert::identity::<&[u8]>)?;
+            let read_0 = |bytes_0: &[u8]| unsafe {
+                ::proto_packet::types::date_from_days(::proto_packet::io::read_i32_unchecked(
+                    bytes_0, 0,
+                ))
+                .unwrap_unchecked()
+            };
+            let keys_0 =
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 4, read_0) };
+            let values_0 = unsafe {
+                ::proto_packet::io::FixedListRef::new_unchecked(
+                    values_0,
+                    4,
+                    ::std::convert::identity::<&[u8]>,
+                )
+            };
+            ::proto_packet::io::MapRef::new(keys_0, values_0)?;
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of the struct.
+    pub fn decode(bytes: &[u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        Self::validate(bytes)?;
+        ::std::result::Result::Ok(unsafe { Self::decode_unchecked(bytes) })
+    }
+
+    /// Decodes the struct from its encoding, the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of the struct.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        let end_0: usize =
+            32 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 0) } as usize;
+        let end_1: usize =
+            end_0 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 4) } as usize;
+        let end_2: usize =
+            end_1 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 8) } as usize;
+        let end_3: usize =
+            end_2 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 12) } as usize;
+        let end_4: usize =
+            end_3 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 16) } as usize;
+        let end_5: usize =
+            end_4 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 20) } as usize;
+        let end_6: usize =
+            end_5 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 24) } as usize;
+        let end_7: usize =
+            end_6 + unsafe { ::proto_packet::io::read_u32_unchecked(bytes, 28) } as usize;
+        Self {
+            boolean: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(32..end_0) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe { ::proto_packet::io::BitListRef::new_unchecked(keys_0) };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+            unsigned: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_0..end_1) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_keys_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u64_unchecked(bytes_0, 0)
+                    };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_keys_0)
+                    };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+            signed: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_1..end_2) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_keys_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_i64_unchecked(bytes_0, 0)
+                    };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_keys_0)
+                    };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+            float: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_2..end_3) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_keys_0 = |bytes_0: &[u8]| {
+                        ::proto_packet::types::Float64::new(unsafe {
+                            ::proto_packet::io::read_f64_unchecked(bytes_0, 0)
+                        })
+                    };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_keys_0)
+                    };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+            id: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_3..end_4) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_keys_0 = |bytes_0: &[u8]| {
+                        ::proto_packet::types::Uuid::from_bytes(
+                            unsafe { ::proto_packet::io::read_u128_unchecked(bytes_0, 0) }
+                                .to_le_bytes(),
+                        )
+                    };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 16, read_keys_0)
+                    };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+            text: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_4..end_5) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_keys_0 = |bytes_0: &[u8]| {
+                        unsafe { ::std::str::from_utf8_unchecked(bytes_0) }.to_string()
+                    };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe {
+                        ::proto_packet::io::VarListRef::new_unchecked(keys_0, read_keys_0)
+                    };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+            time: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_5..end_6) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_keys_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_i64_unchecked(bytes_0, 0)
+                    };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_keys_0)
+                    };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+            day: {
+                let data: &[u8] = unsafe { bytes.get_unchecked(end_6..end_7) };
+                {
+                    let (keys_0, values_0): (&[u8], &[u8]) =
+                        unsafe { ::proto_packet::io::split_map_unchecked(data) };
+                    let read_keys_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::types::date_from_days(
+                            ::proto_packet::io::read_i32_unchecked(bytes_0, 0),
+                        )
+                        .unwrap_unchecked()
+                    };
+                    let read_values_0 = |bytes_0: &[u8]| unsafe {
+                        ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                    };
+                    let keys_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 4, read_keys_0)
+                    };
+                    let values_0 = unsafe {
+                        ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_values_0)
+                    };
+                    keys_0
+                        .iter()
+                        .zip(values_0.iter())
+                        .collect::<::std::collections::BTreeMap<_, _>>()
+                }
+            },
+        }
+    }
+}
+
+/// The borrowed encoding of a [ScalarKeys], read in place.
+#[derive(Copy, Clone, Debug)]
+pub struct ScalarKeysRef<'a> {
+    bytes: &'a [u8],
+}
+
+impl<'a> ScalarKeysRef<'a> {
+    //! Construction
+
+    /// Creates the borrowed encoding of a [ScalarKeys] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [ScalarKeys].
+    pub fn new(bytes: &'a [u8]) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        ScalarKeys::validate(bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the borrowed encoding of a [ScalarKeys] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [ScalarKeys].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+}
+
+impl<'a> ScalarKeysRef<'a> {
+    //! Encoding
+
+    /// Gets the encoding.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
+
+    /// Decodes the [ScalarKeys].
+    #[must_use]
+    pub fn decode(&self) -> ScalarKeys {
+        unsafe { ScalarKeys::decode_unchecked(self.bytes) }
+    }
+
+    /// Copies the encoding into an owned encoding.
+    #[must_use]
+    pub fn to_buf(&self) -> ScalarKeysBuf {
+        ScalarKeysBuf {
+            bytes: self.bytes.to_vec(),
+        }
+    }
+}
+
+impl<'a> ScalarKeysRef<'a> {
+    //! Fields
+
+    /// Gets the field: `boolean`.
+    #[must_use]
+    pub fn boolean(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::BitListRef<'a>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize = 32;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = unsafe { ::proto_packet::io::BitListRef::new_unchecked(keys_0) };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+
+    /// Gets the field: `unsigned`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn unsigned(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u64>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize =
+            32 + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u64_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_0) }
+            };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+
+    /// Gets the field: `signed`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn signed(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> i64>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize = 32
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_i64_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_0) }
+            };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+
+    /// Gets the field: `float`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn float(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> f64>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize = 32
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 12) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = {
+                let read_0 = |bytes_0: &'a [u8]| {
+                    ::proto_packet::types::Float64::new(unsafe {
+                        ::proto_packet::io::read_f64_unchecked(bytes_0, 0)
+                    })
+                    .value()
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_0) }
+            };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+
+    /// Gets the field: `id`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn id(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> ::proto_packet::types::Uuid>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize = 32
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 12) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 16) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = {
+                let read_0 = |bytes_0: &'a [u8]| {
+                    ::proto_packet::types::Uuid::from_bytes(
+                        unsafe { ::proto_packet::io::read_u128_unchecked(bytes_0, 0) }
+                            .to_le_bytes(),
+                    )
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 16, read_0) }
+            };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+
+    /// Gets the field: `text`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn text(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::VarListRef<'a, impl Fn(&'a [u8]) -> &'a str>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize = 32
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 12) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 16) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 20) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = {
+                let read_0 =
+                    |bytes_0: &'a [u8]| unsafe { ::std::str::from_utf8_unchecked(bytes_0) };
+                unsafe { ::proto_packet::io::VarListRef::new_unchecked(keys_0, read_0) }
+            };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+
+    /// Gets the field: `time`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn time(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> i64>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize = 32
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 12) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 16) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 20) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 24) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_i64_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 8, read_0) }
+            };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+
+    /// Gets the field: `day`.
+    #[must_use]
+    #[allow(clippy::type_complexity)]
+    pub fn day(
+        &self,
+    ) -> ::proto_packet::io::MapRef<
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> ::proto_packet::types::Date>,
+        ::proto_packet::io::FixedListRef<'a, impl Fn(&'a [u8]) -> u32>,
+    > {
+        let start: usize = 32
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 0) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 4) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 8) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 12) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 16) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 20) } as usize
+            + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 24) } as usize;
+        let end: usize =
+            start + unsafe { ::proto_packet::io::read_u32_unchecked(self.bytes, 28) } as usize;
+        let data: &'a [u8] = unsafe { self.bytes.get_unchecked(start..end) };
+        {
+            let (keys_0, values_0): (&'a [u8], &'a [u8]) =
+                unsafe { ::proto_packet::io::split_map_unchecked(data) };
+            let keys_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::types::date_from_days(::proto_packet::io::read_i32_unchecked(
+                        bytes_0, 0,
+                    ))
+                    .unwrap_unchecked()
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(keys_0, 4, read_0) }
+            };
+            let values_0 = {
+                let read_0 = |bytes_0: &'a [u8]| unsafe {
+                    ::proto_packet::io::read_u32_unchecked(bytes_0, 0)
+                };
+                unsafe { ::proto_packet::io::FixedListRef::new_unchecked(values_0, 4, read_0) }
+            };
+            unsafe { ::proto_packet::io::MapRef::new_unchecked(keys_0, values_0) }
+        }
+    }
+}
+
+/// The owned encoding of a [ScalarKeys], read in place.
+#[derive(Clone, Debug)]
+pub struct ScalarKeysBuf {
+    bytes: ::std::vec::Vec<u8>,
+}
+
+impl ScalarKeysBuf {
+    //! Construction
+
+    /// Creates the owned encoding of a [ScalarKeys] from the `bytes`, validating them.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding of a [ScalarKeys].
+    pub fn new(
+        bytes: ::std::vec::Vec<u8>,
+    ) -> ::std::result::Result<Self, ::proto_packet::io::DecodeError> {
+        ScalarKeys::validate(&bytes)?;
+        ::std::result::Result::Ok(Self { bytes })
+    }
+
+    /// Creates the owned encoding of a [ScalarKeys] from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding of a [ScalarKeys].
+    #[must_use]
+    pub const unsafe fn new_unchecked(bytes: ::std::vec::Vec<u8>) -> Self {
+        Self { bytes }
+    }
+}
+
+impl ScalarKeysBuf {
+    //! Encoding
+
+    /// Gets the borrowed encoding, to read the fields.
+    #[must_use]
+    pub fn as_ref(&self) -> ScalarKeysRef<'_> {
+        unsafe { ScalarKeysRef::new_unchecked(&self.bytes) }
+    }
+
+    /// Gets the encoding.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    /// Converts the `Buf` into its encoding.
+    #[must_use]
+    pub fn into_bytes(self) -> ::std::vec::Vec<u8> {
+        self.bytes
+    }
+
+    /// Decodes the [ScalarKeys].
+    #[must_use]
+    pub fn decode(&self) -> ScalarKeys {
+        unsafe { ScalarKeys::decode_unchecked(&self.bytes) }
+    }
+}
+
+impl ::std::convert::From<&ScalarKeys> for ScalarKeysBuf {
+    fn from(value: &ScalarKeys) -> Self {
+        Self {
+            bytes: value.encode(),
+        }
+    }
+}
