@@ -1,4 +1,4 @@
-use crate::io::{DecodeError, read_u32, read_u32_unchecked};
+use crate::io::{DecodeError, ListView, read_u32, read_u32_unchecked};
 use std::fmt::{Debug, Formatter};
 
 /// The size of a list's count & of each end offset.
@@ -117,6 +117,21 @@ where
     /// Copies the elements into a `Vec`.
     pub fn to_vec(&self) -> Vec<T> {
         self.iter().collect()
+    }
+}
+
+impl<'a, T, F> ListView for VarListRef<'a, F>
+where
+    F: Fn(&'a [u8]) -> T,
+{
+    type Item = T;
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    unsafe fn get_unchecked(&self, index: usize) -> T {
+        unsafe { self.get_unchecked(index) }
     }
 }
 

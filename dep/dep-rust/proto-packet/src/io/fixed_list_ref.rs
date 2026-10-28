@@ -1,4 +1,4 @@
-use crate::io::DecodeError;
+use crate::io::{DecodeError, ListView};
 use std::fmt::{Debug, Formatter};
 
 /// A borrowed list of fixed-size elements, read in place. (see `FORMAT.md`)
@@ -81,6 +81,21 @@ where
     /// Copies the elements into a `Vec`.
     pub fn to_vec(&self) -> Vec<T> {
         self.iter().collect()
+    }
+}
+
+impl<'a, T, F> ListView for FixedListRef<'a, F>
+where
+    F: Fn(&'a [u8]) -> T,
+{
+    type Item = T;
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    unsafe fn get_unchecked(&self, index: usize) -> T {
+        unsafe { self.get_unchecked(index) }
     }
 }
 

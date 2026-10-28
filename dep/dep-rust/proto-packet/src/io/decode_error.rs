@@ -19,6 +19,12 @@ pub enum DecodeError {
 
     /// A list's encoding is not valid. (ex: a length that is not a multiple of the element size)
     InvalidList,
+
+    /// A map's encoding is not valid. (ex: keys & values with different counts)
+    InvalidMap,
+
+    /// Two of a map's keys are equal.
+    DuplicateKey,
 }
 
 impl Display for DecodeError {
@@ -35,6 +41,8 @@ impl Display for DecodeError {
                 write!(f, "the date {} days from 1970-01-01 is out of range", days)
             }
             Self::InvalidList => f.write_str("invalid list"),
+            Self::InvalidMap => f.write_str("invalid map"),
+            Self::DuplicateKey => f.write_str("duplicate map key"),
         }
     }
 }
