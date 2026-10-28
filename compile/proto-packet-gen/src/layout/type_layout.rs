@@ -69,7 +69,11 @@ impl TypeLayout {
                 Self::new_visiting(project, base, visiting)?;
                 Some(Self::Variable)
             }
-            TypeTag::Map { .. } => None,
+            TypeTag::Map { key, value } => {
+                Self::new_visiting(project, key, visiting)?;
+                Self::new_visiting(project, value, visiting)?;
+                Some(Self::Variable)
+            }
         }
     }
 }

@@ -20,5 +20,6 @@ mod gen_struct;
 mod gen_variant;
 mod generate;
 mod lists;
+mod maps;
 mod refs;
 mod typing;
