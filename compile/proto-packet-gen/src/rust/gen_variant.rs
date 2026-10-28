@@ -15,7 +15,7 @@ pub fn gen_variant(project: &Project, variant: &Variant) -> String {
     let typing: Typing = Typing::new(project);
     let mut result: RustEnum = RustEnum::from(ident(&variant.type_name()));
     add_docs(&mut result, variant.comments());
-    add_derives(&mut result, false, false);
+    add_derives(&mut result, false, true, false);
     result.add_attribute("serde(tag = \"var\", content = \"val\")");
     let is_camel_case: bool = is_upper_camel_case(&variant.type_name())
         && variant

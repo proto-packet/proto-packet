@@ -17,7 +17,11 @@ pub fn gen_enum(enumeration: &Enum) -> String {
     let block: Block = Block::default()
         .with_statement(gen_dec(enumeration))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_tag_numbers(enumeration));
+        .with_statement(gen_tag_numbers(enumeration))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_ord(enumeration))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_partial_ord(enumeration));
     block.to_code()
 }
 
@@ -25,7 +29,7 @@ pub fn gen_enum(enumeration: &Enum) -> String {
 fn gen_dec(enumeration: &Enum) -> RustEnum {
     let mut result: RustEnum = RustEnum::from(ident(&enumeration.type_name()));
     add_docs(&mut result, enumeration.comments());
-    add_derives(&mut result, true, false);
+    add_derives(&mut result, true, false, false);
     let is_camel_case: bool = is_upper_camel_case(&enumeration.type_name())
         && enumeration
             .cases()
@@ -97,4 +101,31 @@ fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
         .with_comment(" Tag Numbers")
         .with_function(to)
         .with_function(from)
+}
+
+/// Generates the `Ord` impl of the `enumeration`, ordering its cases by tag number instead of
+/// declaration order. (see `FORMAT.md`)
+fn gen_ord(enumeration: &Enum) -> ImplBlock {
+    let signature: Signature = Signature::from("cmp")
+        .with_receiver(Receiver::Borrowed)
+        .with_param(Var::from(("other", "&Self")))
+        .with_result("::std::cmp::Ordering");
+    let cmp: Function =
+        Function::from(signature).with_literal("self.tag_number().cmp(&other.tag_number())");
+    ImplBlock::from(ident(&enumeration.type_name()))
+        .with_for_trait("::std::cmp::Ord")
+        .with_function(cmp)
+}
+
+/// Generates the `PartialOrd` impl of the `enumeration`, consistent with its `Ord` impl.
+fn gen_partial_ord(enumeration: &Enum) -> ImplBlock {
+    let signature: Signature = Signature::from("partial_cmp")
+        .with_receiver(Receiver::Borrowed)
+        .with_param(Var::from(("other", "&Self")))
+        .with_result("::std::option::Option<::std::cmp::Ordering>");
+    let partial_cmp: Function =
+        Function::from(signature).with_literal("::std::option::Option::Some(self.cmp(other))");
+    ImplBlock::from(ident(&enumeration.type_name()))
+        .with_for_trait("::std::cmp::PartialOrd")
+        .with_function(partial_cmp)
 }

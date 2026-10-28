@@ -73,7 +73,7 @@ fn gen_dec(typing: Typing<'_>, message: &Message, fields: &[Field<'_>]) -> RustS
         message.comments(),
         &lines,
     );
-    add_derives(&mut result, false, true);
+    add_derives(&mut result, false, true, true);
     if !is_upper_camel_case(&message.type_name()) {
         result.add_attribute("allow(non_camel_case_types)");
     }
