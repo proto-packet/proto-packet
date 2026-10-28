@@ -3,8 +3,6 @@
 #[derive(
     Copy,
     Clone,
-    Ord,
-    PartialOrd,
     Eq,
     PartialEq,
     Hash,
@@ -28,5 +26,17 @@ impl Empty {
     #[must_use]
     pub const fn from_tag_number(_tag_number: u16) -> ::std::option::Option<Self> {
         ::std::option::Option::None
+    }
+}
+
+impl ::std::cmp::Ord for Empty {
+    fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
+        self.tag_number().cmp(&other.tag_number())
+    }
+}
+
+impl ::std::cmp::PartialOrd for Empty {
+    fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
+        ::std::option::Option::Some(self.cmp(other))
     }
 }

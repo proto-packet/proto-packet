@@ -30,3 +30,16 @@ enum EdgeTags {
     // The maximum tag number.
     Max = 8191;
 }
+
+// An enum with the tag numbers out of declaration order.
+enum UnorderedTags {
+
+    // The last tag number, declared first.
+    Last = 3;
+
+    // The first tag number.
+    First = 1;
+
+    // The middle tag number.
+    Middle = 2;
+}

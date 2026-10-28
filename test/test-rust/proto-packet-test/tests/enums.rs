@@ -1,7 +1,7 @@
 mod common;
 
 use common::*;
-use proto_packet_test::enums::cases::{EdgeTags, MultiCase, SingleCase};
+use proto_packet_test::enums::cases::{EdgeTags, MultiCase, SingleCase, UnorderedTags};
 
 /// Asserts the type `T` is `Copy`.
 fn assert_copy<T: Copy>() {}
@@ -13,10 +13,20 @@ fn enums_are_copy() {
 }
 
 #[test]
-fn enums_order_by_declaration() {
-    let mut result: Vec<MultiCase> = vec![MultiCase::Three, MultiCase::One, MultiCase::Two];
+fn enums_order_by_tag_number() {
+    let mut result: Vec<UnorderedTags> = vec![
+        UnorderedTags::Middle,
+        UnorderedTags::Last,
+        UnorderedTags::First,
+    ];
     result.sort();
-    assert_eq!(result, [MultiCase::One, MultiCase::Two, MultiCase::Three]);
+    let expected: [UnorderedTags; 3] = [
+        UnorderedTags::First,
+        UnorderedTags::Middle,
+        UnorderedTags::Last,
+    ];
+    assert_eq!(result, expected);
+    assert!(UnorderedTags::First < UnorderedTags::Last);
 }
 
 #[test]

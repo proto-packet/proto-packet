@@ -2,7 +2,9 @@
 pub use edge_tags::*;
 pub use multi_case::*;
 pub use single_case::*;
+pub use unordered_tags::*;
 
 mod edge_tags;
 mod multi_case;
 mod single_case;
+mod unordered_tags;
