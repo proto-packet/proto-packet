@@ -179,18 +179,23 @@ impl Lists {
         for value_0 in self.numbers.iter() {
             out.extend_from_slice(&value_0.to_le_bytes());
         }
-        out.extend_from_slice(
-            &u32::try_from(self.bits.len())
-                .expect("count out of range")
-                .to_le_bytes(),
-        );
-        for chunk in self.bits.chunks(8) {
-            out.push(
-                chunk
-                    .iter()
-                    .enumerate()
-                    .fold(0, |byte, (index, bit)| byte | (u8::from(*bit) << index)),
+        {
+            out.extend_from_slice(
+                &u32::try_from(self.bits.len())
+                    .expect("count out of range")
+                    .to_le_bytes(),
             );
+            let mut byte: u8 = 0;
+            for (index, bit) in self.bits.iter().enumerate() {
+                byte |= u8::from(*bit) << (index % 8);
+                if index % 8 == 7 {
+                    out.push(byte);
+                    byte = 0;
+                }
+            }
+            if !self.bits.len().is_multiple_of(8) {
+                out.push(byte);
+            }
         }
         {
             out.extend_from_slice(

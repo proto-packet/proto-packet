@@ -159,3 +159,29 @@ struct ValidatedLists {
     // An optional list of strings.
     names: optional []string;
 }
+
+// The map examples of `FORMAT.md`.
+struct Maps {
+
+    // A map of variable-size keys.
+    counts: map<string, u32>;
+
+    // A map of bit values.
+    flags: map<u32, bool>;
+}
+
+// A struct with maps of keys that are validated & compared by their values.
+struct ValidatedMaps {
+
+    // A map of enum keys.
+    colors: map<Color, u32>;
+
+    // A map of float keys. (`0.0` & `-0.0` are equal)
+    floats: map<f32, u32>;
+
+    // A map of struct keys. (equal when they only differ in their unused bits)
+    bits: map<Bits, u32>;
+
+    // An optional map of list values.
+    lists: optional map<string, []u32>;
+}
