@@ -10,7 +10,8 @@ are read & written by copying, & can be read in place without decoding.
 - Everything is little-endian.
 - There is no padding.
 - A value has exactly one encoding, so equal values have equal bytes.
-- Writers always write the canonical encoding. Safe readers accept any float & normalize it.
+- Writers always write the canonical encoding. Safe readers accept any float & normalize it, &
+  accept a map's keys in any order.
 
 ## Fixed-Size Types
 
@@ -53,6 +54,7 @@ language can represent.
 | `string`             | The UTF-8 bytes, without a terminator.                    |
 | non-fixed struct     | The struct's head & data. (see [Structs](#structs))       |
 | list (`[]T`)         | The list's elements. (see [Lists](#lists))                |
+| map (`map<K, V>`)    | The map's keys & values. (see [Maps](#maps))              |
 
 The length of a variable-size value is not part of its encoding. It is stored by its container.
 (ex: in the head of a struct) A length is at most `u32::MAX - 1`, since `u32::MAX` is the length of
@@ -238,10 +240,60 @@ Safe readers reject a list:
 
 They validate each element like any value of its type. (ex: the UTF-8 of each `string`)
 
+## Maps
+
+A map (`map<K, V>`) is a variable-size value. It is the `u32` length of its keys' encoding, followed
+by its keys as a list (`[]K`), followed by its values as a list (`[]V`). The `n`th value (from 0) is
+the value of the `n`th key.
+
+```text
+map<string, u32> {"a": 1, "bc": 2}
+
+[keys length: u32 = 15][count: u32 = 2][ends: u32 = 1, 3][a][bc][1: u32][2: u32]       27 bytes
+```
+
+```text
+map<u32, bool> {1: true, 2: false}
+
+[keys length: u32 = 8][1: u32][2: u32][count: u32 = 2][bits: 0b0000_0001]              17 bytes
+```
+
+### Key Order
+
+Writers write the keys in increasing order, by the order of their type:
+
+| Type                          | Order                                                       |
+|-------------------------------|-------------------------------------------------------------|
+| `bool`                        | `false` before `true`.                                      |
+| integers, `timestamp`, `date` | Numeric.                                                    |
+| floats                        | Numeric, with the canonical NaN after every other value.    |
+| `uuid`, `string`              | Lexicographic by bytes.                                     |
+| enum                          | By tag number.                                              |
+| struct                        | Lexicographic by fields, in declaration order.              |
+| list                          | Lexicographic by elements.                                  |
+| map                           | Lexicographic by entries in key order, by key then value.   |
+
+Lexicographic order compares two sequences item by item: the first items that differ decide, & a
+sequence that is a prefix of the other is before it. (ex: `"ab"` is before `"abc"` & `"b"`) An
+absent optional field is before every present value.
+
+Readers don't depend on the order: safe readers accept the keys in any order.
+
+### Validation
+
+Safe readers reject a map:
+
+- Whose keys' length is more than the bytes after it.
+- Whose keys or values are rejected as a list, or whose keys & values have different counts.
+- With two equal keys.
+
+Keys are equal when their values are, not their bytes. (ex: `0.0` & `-0.0`, since floats are
+normalized, or structs that only differ in the ignored value of an absent field)
+
 ## Reading
 
-Safe readers validate the bytes: the lengths, the UTF-8 of strings, the enum tag numbers & the
-dates of the present values. They normalize the floats.
+Safe readers validate the bytes: the lengths, the UTF-8 of strings, the enum tag numbers, the dates
+& the unique map keys of the present values. They normalize the floats.
 
 Unsafe readers skip the validation & normalization, for speed when the bytes are known to be valid.
 Only Rust has unsafe readers, as `unsafe` functions, since invalid bytes break its memory safety.
@@ -265,11 +317,11 @@ Creating a `MyTypeBuf` or `MyTypeRef` from bytes validates them, or skips the va
 read.
 
 A `MyTypeRef` reads a list field's elements through a view of them, reading each element from its
-offset. A `[]u8` is borrowed as the bytes instead.
+offset. A `[]u8` is borrowed as the bytes instead. A map field is read through the views of its keys
+& values.
 
 ## Not Yet Specified
 
-- Maps. (a list of structs with a key & a value)
 - Messages. (a `u16` header of a 13-bit tag number & a 3-bit wire type)
 - Variants.
 - Values outside a struct. (ex: a `bool` or a `u32` as a service request)
