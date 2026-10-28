@@ -377,7 +377,14 @@ mod tests {
         let message: Message = Message::from(TypeName::try_from("Label").unwrap());
         let test_cases: Vec<(&str, StructField)> = vec![
             ("list of messages", field("x", named("Label").into_slice())),
-            ("map", field("x", TypeTag::map(string(), string()))),
+            (
+                "map of message keys",
+                field("x", TypeTag::map(named("Label"), string())),
+            ),
+            (
+                "map of message values",
+                field("x", TypeTag::map(string(), named("Label"))),
+            ),
             ("message", field("x", named("Label"))),
         ];
         for (name, field) in test_cases {
@@ -463,6 +470,23 @@ mod tests {
         );
         let result: StructLayout = layout(vec![point(), lists.into()], "Lists").unwrap();
         assert_eq!(result.fields(), [length(0), length(4), length(8)]);
+        assert!(!result.is_fixed());
+    }
+
+    #[test]
+    fn maps_are_variable_size() {
+        let maps: Struct = structure(
+            "Maps",
+            vec![
+                field(
+                    "counts",
+                    TypeTag::map(string(), primitive(PrimitiveType::UnsignedInt32)),
+                ),
+                field("points", TypeTag::map(named("Point"), named("Point"))),
+            ],
+        );
+        let result: StructLayout = layout(vec![point(), maps.into()], "Maps").unwrap();
+        assert_eq!(result.fields(), [length(0), length(4)]);
         assert!(!result.is_fixed());
     }
 }

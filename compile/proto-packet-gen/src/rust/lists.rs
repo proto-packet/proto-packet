@@ -6,6 +6,7 @@
 use crate::layout::TypeLayout;
 use crate::rust::decoding::{IO, fixed_value, struct_path};
 use crate::rust::encoding::{checked_length, fixed_statement};
+use crate::rust::maps::{map_len, map_ref, map_validation, map_value, map_write};
 use crate::rust::refs::ref_path;
 use crate::rust::typing::Typing;
 use code_gen::Expression;
@@ -21,45 +22,77 @@ fn is_bytes(base: &TypeTag) -> bool {
     matches!(base, TypeTag::Primitive(PrimitiveType::UnsignedInt8))
 }
 
-/// Checks if the `tag` is a list of lists read through views. (their view types are complex)
-pub(crate) fn has_nested_views(tag: &TypeTag) -> bool {
+/// Checks if the `tag` is read through a view. (a list that is not a `[]u8`, or a map)
+fn is_view(tag: &TypeTag) -> bool {
     match tag {
-        TypeTag::Slice { base } => match base.as_ref() {
-            TypeTag::Slice { base } => !is_bytes(base),
-            _ => false,
-        },
+        TypeTag::Slice { base } => !is_bytes(base),
+        TypeTag::Map { .. } => true,
         _ => false,
     }
 }
 
-/// Gets the expression of the `u32` count of the elements of the list `value`.
-fn count(value: &str) -> String {
-    format!(
-        "u32::try_from({}.len()).expect(\"count out of range\")",
-        value
+/// Checks if the elements of a list of the `base` are read with a closure. (not a `bool` or `u8`)
+fn has_reader(base: &TypeTag) -> bool {
+    !matches!(
+        base,
+        TypeTag::Primitive(PrimitiveType::Boolean | PrimitiveType::UnsignedInt8)
     )
+}
+
+/// Checks if the `tag` is read through views with complex types: a list of views, or a map of
+/// views, or of keys & values both read with closures.
+pub(crate) fn has_nested_views(tag: &TypeTag) -> bool {
+    match tag {
+        TypeTag::Slice { base } => is_view(base),
+        TypeTag::Map { key, value } => {
+            is_view(key) || is_view(value) || (has_reader(key) && has_reader(value))
+        }
+        _ => false,
+    }
+}
+
+/// Gets the expression of the `u32` count of the elements, from the expression of their `len`.
+fn count(len: &str) -> String {
+    format!("u32::try_from({}).expect(\"count out of range\")", len)
 }
 
 /// Gets the expression of the encoding length of the variable-size `value` of the `tag`.
 pub(crate) fn variable_len(project: &Project, value: &str, tag: &TypeTag, depth: usize) -> String {
     match tag {
         TypeTag::Special(SpecialType::String) => format!("{}.len()", value),
-        TypeTag::Slice { base } => {
-            let element: String = format!("value_{}", depth);
-            match element_layout(project, base) {
-                TypeLayout::Fixed { size: 1, .. } => format!("{}.len()", value),
-                TypeLayout::Fixed { size, .. } => format!("{}.len() * {}", value, size),
-                TypeLayout::Bit => format!("4 + {}.len().div_ceil(8)", value),
-                TypeLayout::Variable => format!(
-                    "4 + 4 * {}.len() + {}.iter().map(|{}| {}).sum::<usize>()",
-                    value,
-                    value,
-                    element,
-                    variable_len(project, &element, base, depth + 1)
-                ),
-            }
-        }
+        TypeTag::Slice { base } => elements_len(
+            project,
+            &format!("{}.len()", value),
+            &format!("{}.iter()", value),
+            base,
+            depth,
+        ),
+        TypeTag::Map { key, value: base } => map_len(project, value, key, base, depth),
         _ => format!("{}.encoded_len()", value),
+    }
+}
+
+/// Gets the expression of the encoding length of a list of the `len` elements of the `base`,
+/// iterated by the `iter` expression.
+pub(crate) fn elements_len(
+    project: &Project,
+    len: &str,
+    iter: &str,
+    base: &TypeTag,
+    depth: usize,
+) -> String {
+    let element: String = format!("value_{}", depth);
+    match element_layout(project, base) {
+        TypeLayout::Fixed { size: 1, .. } => len.to_string(),
+        TypeLayout::Fixed { size, .. } => format!("{} * {}", len, size),
+        TypeLayout::Bit => format!("4 + {}.div_ceil(8)", len),
+        TypeLayout::Variable => format!(
+            "4 + 4 * {} + {}.map(|{}| {}).sum::<usize>()",
+            len,
+            iter,
+            element,
+            variable_len(project, &element, base, depth + 1)
+        ),
     }
 }
 
@@ -77,43 +110,62 @@ pub(crate) fn variable_write(
         TypeTag::Slice { base } if is_bytes(base) => {
             format!("out.extend_from_slice({}.as_slice());", value)
         }
-        TypeTag::Slice { base } => {
-            let element: String = format!("value_{}", depth);
-            match element_layout(project, base) {
-                TypeLayout::Fixed { .. } => format!(
-                    "for {} in {}.iter() {{ {} }}",
-                    element,
-                    value,
-                    fixed_statement(project, &element, base, true)
-                ),
-                TypeLayout::Bit => format!(
-                    "out.extend_from_slice(&{}.to_le_bytes()); for chunk in {}.chunks(8) {{ \
-                    out.push(chunk.iter().enumerate().fold(0, |byte, (index, bit)| \
-                    byte | (u8::from(*bit) << index))); }}",
-                    count(value),
-                    value
-                ),
-                TypeLayout::Variable => {
-                    let end: String = format!("end_{}", depth);
-                    format!(
-                        "{{ out.extend_from_slice(&{}.to_le_bytes()); let mut {}: usize = 0; \
-                        for {} in {}.iter() {{ {} += {}; out.extend_from_slice(&{}.to_le_bytes()); }} \
-                        for {} in {}.iter() {{ {} }} }}",
-                        count(value),
-                        end,
-                        element,
-                        value,
-                        end,
-                        variable_len(project, &element, base, depth + 1),
-                        checked_length(&end),
-                        element,
-                        value,
-                        variable_write(project, &element, base, depth + 1)
-                    )
-                }
-            }
-        }
+        TypeTag::Slice { base } => elements_write(
+            project,
+            &format!("{}.len()", value),
+            &format!("{}.iter()", value),
+            base,
+            depth,
+        ),
+        TypeTag::Map { key, value: base } => map_write(project, value, key, base, depth),
         _ => format!("{}.encode_to(out);", value),
+    }
+}
+
+/// Gets the statements writing a list of the `len` elements of the `base`, iterated by the `iter`
+/// expression, to `out`.
+pub(crate) fn elements_write(
+    project: &Project,
+    len: &str,
+    iter: &str,
+    base: &TypeTag,
+    depth: usize,
+) -> String {
+    let element: String = format!("value_{}", depth);
+    match element_layout(project, base) {
+        TypeLayout::Fixed { .. } => format!(
+            "for {} in {} {{ {} }}",
+            element,
+            iter,
+            fixed_statement(project, &element, base, true)
+        ),
+        TypeLayout::Bit => format!(
+            "{{ out.extend_from_slice(&{}.to_le_bytes()); let mut byte: u8 = 0; \
+            for (index, bit) in {}.enumerate() {{ byte |= u8::from(*bit) << (index % 8); \
+            if index % 8 == 7 {{ out.push(byte); byte = 0; }} }} \
+            if !{}.is_multiple_of(8) {{ out.push(byte); }} }}",
+            count(len),
+            iter,
+            len
+        ),
+        TypeLayout::Variable => {
+            let end: String = format!("end_{}", depth);
+            format!(
+                "{{ out.extend_from_slice(&{}.to_le_bytes()); let mut {}: usize = 0; \
+                for {} in {} {{ {} += {}; out.extend_from_slice(&{}.to_le_bytes()); }} \
+                for {} in {} {{ {} }} }}",
+                count(len),
+                end,
+                element,
+                iter,
+                end,
+                variable_len(project, &element, base, depth + 1),
+                checked_length(&end),
+                element,
+                iter,
+                variable_write(project, &element, base, depth + 1)
+            )
+        }
     }
 }
 
@@ -157,6 +209,7 @@ pub(crate) fn variable_validation(
                 None => format!("{};", list),
             })
         }
+        TypeTag::Map { key, value } => Some(map_validation(project, bytes, key, value, depth)),
         _ => Some(format!("{}::validate({})?;", struct_path(tag), bytes)),
     }
 }
@@ -206,40 +259,57 @@ pub(crate) fn variable_value(
         TypeTag::Slice { base } if is_bytes(base) => format!("{}.to_vec()", bytes),
         TypeTag::Slice { base } => {
             let list: String = format!("list_{}", depth);
-            let element: String = format!("bytes_{}", depth);
             let read: String = format!("read_{}", depth);
-            let (view, element_value): (String, Option<String>) =
-                match element_layout(project, base) {
-                    TypeLayout::Fixed { size, .. } => (
-                        format!("FixedListRef::new_unchecked({}, {}, {})", list, size, read),
-                        Some(fixed_value(project, base, 0, &element).unwrap_or_else(|| {
-                            format!(
-                                "unsafe {{ {}::decode_unchecked({}) }}",
-                                struct_path(base),
-                                element
-                            )
-                        })),
-                    ),
-                    TypeLayout::Bit => (format!("BitListRef::new_unchecked({})", list), None),
-                    TypeLayout::Variable => (
-                        format!("VarListRef::new_unchecked({}, {})", list, read),
-                        Some(variable_value(project, &element, base, depth + 1)),
-                    ),
-                };
-            let read: String = match element_value {
-                Some(value) => format!("let {} = |{}: &[u8]| {}; ", read, element, value),
-                None => String::default(),
-            };
             format!(
-                "{{ let {}: &[u8] = {}; {}unsafe {{ {}::{} }}.to_vec() }}",
-                list, bytes, read, IO, view
+                "{{ let {}: &[u8] = {}; {}unsafe {{ {} }}.to_vec() }}",
+                list,
+                bytes,
+                element_reader(project, &read, base, depth),
+                view(project, &list, base, &read)
             )
         }
+        TypeTag::Map { key, value } => map_value(project, bytes, key, value, depth),
         _ => format!(
             "unsafe {{ {}::decode_unchecked({}) }}",
             struct_path(tag),
             bytes
         ),
+    }
+}
+
+/// Gets the statement declaring the `read` closure, decoding a valid element of the `base` from its
+/// bytes as its storage type, or nothing for `bool` elements, which are read without one.
+pub(crate) fn element_reader(
+    project: &Project,
+    read: &str,
+    base: &TypeTag,
+    depth: usize,
+) -> String {
+    let element: String = format!("bytes_{}", depth);
+    let value: String = match element_layout(project, base) {
+        TypeLayout::Fixed { .. } => fixed_value(project, base, 0, &element).unwrap_or_else(|| {
+            format!(
+                "unsafe {{ {}::decode_unchecked({}) }}",
+                struct_path(base),
+                element
+            )
+        }),
+        TypeLayout::Bit => return String::default(),
+        TypeLayout::Variable => variable_value(project, &element, base, depth + 1),
+    };
+    format!("let {} = |{}: &[u8]| {}; ", read, element, value)
+}
+
+/// Gets the expression creating the view of the valid list of the `base` elements in the `list`
+/// bytes, read by the `read` function, without its `unsafe` block.
+pub(crate) fn view(project: &Project, list: &str, base: &TypeTag, read: &str) -> String {
+    match element_layout(project, base) {
+        TypeLayout::Fixed { size, .. } => format!(
+            "{}::FixedListRef::new_unchecked({}, {}, {})",
+            IO, list, size, read
+        ),
+        TypeLayout::Bit => format!("{}::BitListRef::new_unchecked({})", IO, list),
+        TypeLayout::Variable => format!("{}::VarListRef::new_unchecked({}, {})", IO, list, read),
     }
 }
 
@@ -320,6 +390,7 @@ pub(crate) fn variable_ref(
                 ),
             }
         }
+        TypeTag::Map { key, value } => map_ref(typing, project, bytes, key, value, depth),
         _ => (
             format!("{}<'a>", ref_path(tag)),
             format!("unsafe {{ {}::new_unchecked({}) }}", ref_path(tag), bytes),
