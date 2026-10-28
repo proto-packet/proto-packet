@@ -1,3 +1,5 @@
+import types.Color;
+
 // The `MyStruct` example of `FORMAT.md`. (a length after the fixed-size fields)
 struct MyStruct {
 
@@ -98,4 +100,36 @@ struct Bits {
 
     // The ninth bit. (the first bit of the second byte)
     nine: bool;
+}
+
+// The `Opt` example of `FORMAT.md`. (optional fields with presence bits & absent values)
+struct Opt {
+
+    // An optional field with a presence bit.
+    a: optional u32;
+
+    // A bit.
+    b: bool;
+
+    // An optional field absent as the length `u32::MAX`.
+    c: optional string;
+
+    // An optional `bool`, with a presence bit & a value bit.
+    d: optional bool;
+
+    // An optional field absent as the tag number 0.
+    e: optional Color;
+}
+
+// A struct with optional fields that are only validated when present.
+struct OptionalValues {
+
+    // An optional date, validated when present.
+    day: optional date;
+
+    // An optional nested struct.
+    point: optional Point;
+
+    // A required enum, still validated.
+    color: Color;
 }

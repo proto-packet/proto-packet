@@ -2,6 +2,8 @@
 pub use bits::*;
 pub use my_struct::*;
 pub use odd::*;
+pub use opt::*;
+pub use optional_values::*;
 pub use point::*;
 pub use s::*;
 pub use t::*;
@@ -9,6 +11,8 @@ pub use t::*;
 mod bits;
 mod my_struct;
 mod odd;
+mod opt;
+mod optional_values;
 mod point;
 mod s;
 mod t;
