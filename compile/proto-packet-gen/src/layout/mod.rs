@@ -3,9 +3,11 @@
 pub use bit_layout::*;
 pub use field_layout::*;
 pub use struct_layout::*;
+pub use type_layout::*;
 pub use value_layout::*;
 
 mod bit_layout;
 mod field_layout;
 mod struct_layout;
+mod type_layout;
 mod value_layout;
