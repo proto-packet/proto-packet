@@ -1,4 +1,4 @@
-use crate::io::{DecodeError, read_bit_unchecked, read_u32, read_u32_unchecked};
+use crate::io::{DecodeError, ListView, read_bit_unchecked, read_u32, read_u32_unchecked};
 use std::fmt::{Debug, Formatter};
 
 /// The size of a list's count.
@@ -81,6 +81,18 @@ impl BitListRef<'_> {
     /// Copies the elements into a `Vec`.
     pub fn to_vec(&self) -> Vec<bool> {
         self.iter().collect()
+    }
+}
+
+impl ListView for BitListRef<'_> {
+    type Item = bool;
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    unsafe fn get_unchecked(&self, index: usize) -> bool {
+        unsafe { self.get_unchecked(index) }
     }
 }
 
