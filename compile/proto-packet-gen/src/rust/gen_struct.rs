@@ -112,6 +112,7 @@ fn gen_dec(typing: Typing<'_>, structure: &Struct, fields: &[Field<'_>]) -> Rust
     add_derives(
         &mut result,
         typing.is_copy_struct(structure),
+        true,
         fields.is_empty(),
     );
     if !is_upper_camel_case(&structure.type_name()) {
