@@ -6,13 +6,15 @@ use proto_packet::types::{Float32, Float64};
 use proto_packet_test::enums::cases::{EdgeTags, MultiCase};
 use proto_packet_test::enums::empty::Empty as EmptyEnum;
 use proto_packet_test::format::examples::{
-    self, Bits, Lists, ListsBuf, ListsRef, MyStruct, Odd, Opt, OptRef, OptionalValues,
-    OptionalValuesBuf, OptionalValuesRef, S, SBuf, SRef, T, TRef, ValidatedLists,
-    ValidatedListsBuf, ValidatedListsRef,
+    self, Bits, Lists, ListsBuf, ListsRef, Maps, MapsBuf, MapsRef, MyStruct, Odd, Opt, OptRef,
+    OptionalValues, OptionalValuesBuf, OptionalValuesRef, S, SBuf, SRef, T, TRef, ValidatedLists,
+    ValidatedListsBuf, ValidatedListsRef, ValidatedMaps, ValidatedMapsBuf, ValidatedMapsRef,
 };
 use proto_packet_test::links::imports::ImportedFields;
 use proto_packet_test::links::local::{After, Before};
-use proto_packet_test::links::loops::{ListNode, ListNodeRef, TreeNode, TreeNodeRef};
+use proto_packet_test::links::loops::{
+    GraphNode, GraphNodeRef, ListNode, ListNodeRef, TreeNode, TreeNodeRef,
+};
 use proto_packet_test::mods::parent::child::Child;
 use proto_packet_test::names::casing::{HTTPServer, My_Struct, Vec3};
 use proto_packet_test::names::keywords::{KeywordStruct, Self_, SelfBuf, SelfRef};
@@ -26,8 +28,12 @@ use proto_packet_test::structs::copy::{
     OptionalCopy,
 };
 use proto_packet_test::structs::empty::{Empty, EmptyBuf, EmptyRef};
+use proto_packet_test::structs::maps::{
+    MapField, NestedKeys, NestedKeysRef, OptionalMap, ScalarKeys, ScalarKeysRef,
+};
 use proto_packet_test::structs::{fields, slices};
 use proto_packet_test::types::{Color, Point, PointRef};
+use std::collections::BTreeMap;
 
 /// Asserts the `value` of the `type` encodes to bytes that decode back to it, with & without
 /// validation.
@@ -704,4 +710,232 @@ fn absent_lists() {
     assert_eq!(bytes[8..12], u32::MAX.to_le_bytes());
     assert_round_trip!(ValidatedLists, value);
     assert!(ValidatedListsRef::new(&bytes).unwrap().names().is_none());
+}
+
+#[test]
+fn map_examples() {
+    let value: Maps = Maps::new(
+        BTreeMap::from([("a".to_string(), 1), ("bc".to_string(), 2)]),
+        BTreeMap::from([(1, true), (2, false)]),
+    );
+    let counts: Vec<u8> = [
+        &15_u32.to_le_bytes()[..],
+        &2_u32.to_le_bytes(),
+        &1_u32.to_le_bytes(),
+        &3_u32.to_le_bytes(),
+        b"abc",
+        &1_u32.to_le_bytes(),
+        &2_u32.to_le_bytes(),
+    ]
+    .concat();
+    let flags: Vec<u8> = [
+        &8_u32.to_le_bytes()[..],
+        &1_u32.to_le_bytes(),
+        &2_u32.to_le_bytes(),
+        &2_u32.to_le_bytes(),
+        &[0b0000_0001],
+    ]
+    .concat();
+    assert_eq!((counts.len(), flags.len()), (27, 17));
+    let expected: Vec<u8> = [
+        &27_u32.to_le_bytes()[..],
+        &17_u32.to_le_bytes(),
+        &counts,
+        &flags,
+    ]
+    .concat();
+    assert_eq!(value.encode(), expected);
+    assert_round_trip!(Maps, value);
+    let result: MapsRef<'_> = MapsRef::new(&expected).unwrap();
+    assert_eq!(result.counts().get("bc"), Some(2));
+    assert_eq!(result.counts().get("b"), None);
+    let flags: Vec<(u32, bool)> = result.flags().iter().collect();
+    assert_eq!(flags, [(1, true), (2, false)]);
+}
+
+#[test]
+fn map_keys_are_read_in_any_order() {
+    let value: Maps = Maps::new(BTreeMap::new(), BTreeMap::from([(1, true), (2, false)]));
+    let mut bytes: Vec<u8> = value.encode();
+    bytes[20..24].copy_from_slice(&2_u32.to_le_bytes());
+    bytes[24..28].copy_from_slice(&1_u32.to_le_bytes());
+    bytes[32] = 0b0000_0010;
+    assert_eq!(Maps::decode(&bytes), Ok(value));
+    let result: MapsRef<'_> = MapsRef::new(&bytes).unwrap();
+    assert_eq!(result.flags().get(&1), Some(true));
+    let flags: Vec<(u32, bool)> = result.flags().iter().collect();
+    assert_eq!(flags, [(2, false), (1, true)]);
+    assert!(MapsBuf::new(bytes).is_ok());
+}
+
+#[test]
+fn maps_round_trip() {
+    assert_round_trip!(
+        ScalarKeys,
+        ScalarKeys::new(
+            BTreeMap::from([(true, 1), (false, 2)]),
+            BTreeMap::from([(u64::MAX, 3), (0, 4)]),
+            BTreeMap::from([(-1, 5), (1, 6)]),
+            BTreeMap::from([(Float64::new(-2.5), 7), (Float64::new(f64::NAN), 8)]),
+            BTreeMap::from([(id(), 9)]),
+            BTreeMap::from([("b".to_string(), 10), ("a".to_string(), 11)]),
+            BTreeMap::from([(-1, 12)]),
+            BTreeMap::from([(day(), 13)]),
+        )
+    );
+    assert_round_trip!(
+        NestedKeys,
+        NestedKeys::new(
+            BTreeMap::from([(vec![1, 2], 1), (vec![], 2)]),
+            BTreeMap::from([
+                (BTreeMap::from([("a".to_string(), 1)]), 2),
+                (BTreeMap::new(), 3)
+            ]),
+        )
+    );
+    assert_round_trip!(MapField, MapField::new(BTreeMap::new()));
+    assert_round_trip!(OptionalMap, OptionalMap::new(None));
+    assert_round_trip!(
+        OptionalMap,
+        OptionalMap::new(Some(BTreeMap::from([("a".to_string(), 1)])))
+    );
+}
+
+#[test]
+fn map_views() {
+    let value: NestedKeys = NestedKeys::new(
+        BTreeMap::from([(vec![1, 2], 1)]),
+        BTreeMap::from([(BTreeMap::from([("a".to_string(), 1)]), 2)]),
+    );
+    let bytes: Vec<u8> = value.encode();
+    let result: NestedKeysRef<'_> = NestedKeysRef::new(&bytes).unwrap();
+    assert_eq!(result.slice().get(&[1_u8, 2][..]), Some(1));
+    let (key, value) = result.nested().iter().next().unwrap();
+    assert_eq!(key.get("a"), Some(1));
+    assert_eq!(value, 2);
+    assert_eq!(format!("{:?}", result.nested()), r#"{{"a": 1}: 2}"#);
+
+    let value: ScalarKeys = ScalarKeys::new(
+        BTreeMap::from([(true, 1)]),
+        BTreeMap::new(),
+        BTreeMap::new(),
+        BTreeMap::from([(Float64::new(-2.5), 2)]),
+        BTreeMap::new(),
+        BTreeMap::new(),
+        BTreeMap::new(),
+        BTreeMap::new(),
+    );
+    let bytes: Vec<u8> = value.encode();
+    let result: ScalarKeysRef<'_> = ScalarKeysRef::new(&bytes).unwrap();
+    assert_eq!(result.boolean().get(&true), Some(1));
+    assert_eq!(
+        result.float().iter().collect::<Vec<(f64, u32)>>(),
+        [(-2.5, 2)]
+    );
+    assert!(result.text().is_empty());
+}
+
+#[test]
+fn structs_containing_themselves_through_maps_round_trip() {
+    let leaf: GraphNode = GraphNode::new(4, BTreeMap::new());
+    let value: GraphNode = GraphNode::new(
+        1,
+        BTreeMap::from([
+            ("a".to_string(), GraphNode::new(2, BTreeMap::new())),
+            (
+                "b".to_string(),
+                GraphNode::new(3, BTreeMap::from([("c".to_string(), leaf)])),
+            ),
+        ]),
+    );
+    let bytes: Vec<u8> = value.encode();
+    assert_round_trip!(GraphNode, value);
+    let result: GraphNodeRef<'_> = GraphNodeRef::new(&bytes).unwrap();
+    let leaf: Option<u32> = result
+        .children()
+        .get("b")
+        .and_then(|node| node.children().get("c"))
+        .map(|node| node.value());
+    assert_eq!(leaf, Some(4));
+}
+
+/// Gets the `Bits` with only its `nine` bit, the first bit of its second byte.
+fn bits(nine: bool) -> Bits {
+    Bits::new(false, false, false, false, false, false, false, false, nine)
+}
+
+/// Gets the test `ValidatedMaps`.
+///
+/// Its head is the lengths of `colors` at 0, `floats` at 4, `bits` at 8 & `lists` at 12. Its data
+/// is `colors` at 16, `floats` at 26, `bits` at 46 & `lists` at 62. (their keys lengths) Its keys
+/// are the `Color` at 20, the floats at 30 & 34, the `Bits` at 50 & 52 & the `a` at 74.
+fn validated_maps() -> ValidatedMaps {
+    ValidatedMaps::new(
+        BTreeMap::from([(Color::Red, 1)]),
+        BTreeMap::from([(Float32::new(0.0), 1), (Float32::new(1.0), 2)]),
+        BTreeMap::from([(bits(false), 1), (bits(true), 2)]),
+        Some(BTreeMap::from([("a".to_string(), vec![1])])),
+    )
+}
+
+/// Asserts the `bytes` of `ValidatedMaps` are rejected with the `error`.
+macro_rules! assert_validated_maps_rejected {
+    ($bytes:expr, $error:expr) => {
+        assert_rejected!(
+            ValidatedMaps,
+            ValidatedMapsRef,
+            ValidatedMapsBuf,
+            $bytes,
+            $error
+        )
+    };
+}
+
+#[test]
+fn readers_reject_invalid_map_keys() {
+    let bytes: Vec<u8> = validated_maps().encode();
+    assert_round_trip!(ValidatedMaps, validated_maps());
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[20..22].copy_from_slice(&9_u16.to_le_bytes());
+    assert_validated_maps_rejected!(&invalid, DecodeError::InvalidEnumTag { tag_number: 9 });
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[74] = 0xFF;
+    assert_validated_maps_rejected!(&invalid, DecodeError::InvalidUtf8);
+}
+
+#[test]
+fn readers_reject_keys_with_equal_values() {
+    let bytes: Vec<u8> = validated_maps().encode();
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[34..38].copy_from_slice(&(-0.0_f32).to_le_bytes());
+    assert_validated_maps_rejected!(&invalid, DecodeError::DuplicateKey);
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[53] = 0b0000_0010;
+    assert_validated_maps_rejected!(&invalid, DecodeError::DuplicateKey);
+}
+
+#[test]
+fn readers_reject_invalid_maps() {
+    let bytes: Vec<u8> = validated_maps().encode();
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[16..20].copy_from_slice(&7_u32.to_le_bytes());
+    assert_validated_maps_rejected!(&invalid, DecodeError::InvalidMap);
+
+    let mut invalid: Vec<u8> = bytes.clone();
+    invalid[26..30].copy_from_slice(&4_u32.to_le_bytes());
+    assert_validated_maps_rejected!(&invalid, DecodeError::InvalidMap);
+}
+
+#[test]
+fn absent_maps() {
+    let value: ValidatedMaps = validated_maps().with_lists(None);
+    let bytes: Vec<u8> = value.encode();
+    assert_eq!(bytes[12..16], u32::MAX.to_le_bytes());
+    assert_round_trip!(ValidatedMaps, value);
+    assert!(ValidatedMapsRef::new(&bytes).unwrap().lists().is_none());
 }
