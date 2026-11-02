@@ -1,5 +1,5 @@
-use crate::{Location, Member, NameResolver};
-use proto_packet_tree::{ModPathRef, Project, SchemaFile, TypeNameRef, WithComments};
+use crate::{LinkError, Location, Member, NameResolver};
+use proto_packet_tree::{ModPathRef, Project, SchemaFile, TypeDec, TypeNameRef, WithComments};
 
 /// Responsible for linking a schema file.
 #[derive(Copy, Clone, Debug)]
@@ -21,6 +21,21 @@ impl<'a> SchemaLinker<'a> {
             mod_path,
             resolver: NameResolver::new(project, mod_path, schema_file),
         }
+    }
+}
+
+impl SchemaLinker<'_> {
+    //! Linking
+
+    /// Links the `type_dec`.
+    pub fn link_type_dec(self, type_dec: &TypeDec) -> Result<TypeDec, LinkError> {
+        Ok(match type_dec {
+            TypeDec::Struct(structure) => self.link_struct(structure)?.into(),
+            TypeDec::Message(message) => self.link_message(message)?.into(),
+            TypeDec::Enum(enumeration) => enumeration.clone().into(),
+            TypeDec::Variant(variant) => self.link_variant(variant)?.into(),
+            TypeDec::Service(service) => self.link_service(service)?.into(),
+        })
     }
 }
 
