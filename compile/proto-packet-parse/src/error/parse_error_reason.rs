@@ -16,6 +16,9 @@ pub enum ParseErrorReason {
     /// Expected the field's name.
     ExpectedFieldName,
 
+    /// Expected the case's name.
+    ExpectedCaseName,
+
     /// Expected a `{`.
     ExpectedOpenBrace,
 
@@ -46,6 +49,7 @@ impl ParseErrorReason {
             Self::ExpectedTypeDeclaration => "expected a type declaration",
             Self::ExpectedTypeName => "expected the type's name",
             Self::ExpectedFieldName => "expected the field's name",
+            Self::ExpectedCaseName => "expected the case's name",
             Self::ExpectedOpenBrace => "expected a `{`",
             Self::ExpectedCloseBrace => "expected a `}`",
             Self::ExpectedColon => "expected a `:`",
@@ -63,6 +67,7 @@ impl ParseErrorReason {
             Self::ExpectedTypeDeclaration => "P_EXPECTED_TYPE_DECLARATION",
             Self::ExpectedTypeName => "P_EXPECTED_TYPE_NAME",
             Self::ExpectedFieldName => "P_EXPECTED_FIELD_NAME",
+            Self::ExpectedCaseName => "P_EXPECTED_CASE_NAME",
             Self::ExpectedOpenBrace => "P_EXPECTED_OPEN_BRACE",
             Self::ExpectedCloseBrace => "P_EXPECTED_CLOSE_BRACE",
             Self::ExpectedColon => "P_EXPECTED_COLON",
