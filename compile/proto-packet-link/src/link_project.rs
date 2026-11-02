@@ -1,10 +1,12 @@
+use crate::loops::check_unboxed_loops;
 use crate::{LinkError, SchemaLinker};
 use proto_packet_tree::{Project, SchemaFile};
 
 /// Links the `project`.
 ///
 /// Every named type of the linked project is fully qualified & refers to a data type declared in
-/// the project, and every import refers to a type declared in the project.
+/// the project, every import refers to a type declared in the project, and no loop of types is
+/// without a `box`.
 pub fn link_project(project: &Project) -> Result<Project, LinkError> {
     let mut linked: Project = Project::default();
     for (mod_path, schema_file) in project.schema_files() {
@@ -14,5 +16,6 @@ pub fn link_project(project: &Project) -> Result<Project, LinkError> {
             .add_schema_file(mod_path.clone(), linked_file)
             .expect("linking keeps the mod paths unique");
     }
+    check_unboxed_loops(&linked)?;
     Ok(linked)
 }
