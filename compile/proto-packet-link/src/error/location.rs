@@ -1,4 +1,4 @@
-use proto_packet_tree::{FieldName, ModPath, TypeName};
+use proto_packet_tree::{CaseName, FieldName, ModPath, TypeName};
 use std::fmt::{Display, Formatter};
 
 /// The location of a type tag in a project. (ex: the `name` field of `a.b.Person`)
@@ -14,12 +14,16 @@ pub struct Location {
 pub enum Member {
     /// A struct or message field.
     Field(FieldName),
+
+    /// A variant case.
+    Case(CaseName),
 }
 
 impl Display for Location {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let (member, name): (&str, &str) = match &self.member {
             Member::Field(field_name) => ("field", field_name),
+            Member::Case(case_name) => ("case", case_name),
         };
         write!(
             f,
