@@ -11,6 +11,9 @@ pub enum ValidateErrorReason {
     /// An invalid tag number.
     InvalidTagNumber,
 
+    /// An import without a mod path. (ex: `import Foo;`)
+    ImportWithoutModPath,
+
     /// A boxed type that is not a named type. (ex: `box u8`)
     BoxedNonNamedType,
 
@@ -26,6 +29,7 @@ impl ValidateErrorReason {
         match self {
             Self::InvalidName { .. } => "V_INVALID_NAME",
             Self::InvalidTagNumber => "V_INVALID_TAG_NUMBER",
+            Self::ImportWithoutModPath => "V_IMPORT_WITHOUT_MOD_PATH",
             Self::BoxedNonNamedType => "V_BOXED_NON_NAMED_TYPE",
             Self::Tree(error) => match error {
                 TreeError::DuplicateFieldName { .. } => "V_DUPLICATE_FIELD_NAME",
@@ -51,6 +55,7 @@ impl Display for ValidateErrorReason {
                 TagNumber::MIN,
                 TagNumber::MAX
             ),
+            Self::ImportWithoutModPath => f.write_str("imports must include a mod path"),
             Self::BoxedNonNamedType => f.write_str("only named types can be boxed"),
             Self::Tree(error) => Display::fmt(error, f),
         }
