@@ -1,3 +1,4 @@
+pub use gen_enum::*;
 pub use gen_struct::*;
 
 pub mod naming;
@@ -5,5 +6,6 @@ pub mod naming;
 mod derives;
 mod docs;
 mod fields;
+mod gen_enum;
 mod gen_struct;
 mod typing;
