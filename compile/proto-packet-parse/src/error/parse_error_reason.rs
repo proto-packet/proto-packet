@@ -7,6 +7,9 @@ pub enum ParseErrorReason {
     /// Expected a type tag.
     ExpectedTypeTag,
 
+    /// Expected an import.
+    ExpectedImport,
+
     /// Expected a type declaration. (ex: `struct`)
     ExpectedTypeDeclaration,
 
@@ -52,6 +55,7 @@ impl ParseErrorReason {
         match self {
             Self::ExpectedName => "expected a name",
             Self::ExpectedTypeTag => "expected a type",
+            Self::ExpectedImport => "expected an import",
             Self::ExpectedTypeDeclaration => "expected a type declaration",
             Self::ExpectedTypeName => "expected the type's name",
             Self::ExpectedFieldName => "expected the field's name",
@@ -72,6 +76,7 @@ impl ParseErrorReason {
         match self {
             Self::ExpectedName => "P_EXPECTED_NAME",
             Self::ExpectedTypeTag => "P_EXPECTED_TYPE_TAG",
+            Self::ExpectedImport => "P_EXPECTED_IMPORT",
             Self::ExpectedTypeDeclaration => "P_EXPECTED_TYPE_DECLARATION",
             Self::ExpectedTypeName => "P_EXPECTED_TYPE_NAME",
             Self::ExpectedFieldName => "P_EXPECTED_FIELD_NAME",
