@@ -9,4 +9,5 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+proto-packet = { workspace = true }
 proto-packet-tree = { workspace = true }
