@@ -1,6 +1,7 @@
+use crate::GenError;
 use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
-use crate::rust::fields::Field;
+use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
@@ -9,8 +10,8 @@ use code_gen::rust::{
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet_tree::{
-    Project, Struct, StructField as SchemaField, WithComments as _, WithFieldName, WithTypeName,
-    WithTypeTag,
+    ModPathRef, Project, Struct, StructField as SchemaField, WithComments as _, WithFieldName,
+    WithTypeName, WithTypeTag,
 };
 
 /// The name of the constructor.
@@ -19,18 +20,33 @@ const CONSTRUCTOR: &str = "new";
 /// The most constructor parameters before clippy's `too_many_arguments` lint.
 const MAX_ARGUMENTS: usize = 7;
 
-/// Generates the Rust code of the `structure`.
-pub fn gen_struct(project: &Project, structure: &Struct) -> String {
+/// Generates the Rust code of the `structure` in the schema file at the `mod_path`.
+///
+/// No field can be named like a generated method. (ex: the constructor `new`)
+pub fn gen_struct(
+    project: &Project,
+    mod_path: ModPathRef<'_>,
+    structure: &Struct,
+) -> Result<String, GenError> {
     let typing: Typing = Typing::new(project);
     let type_name: String = ident(&structure.type_name());
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
+    check_field_names(
+        &format!("{}.{}", mod_path, structure.type_name()),
+        &fields,
+        &[CONSTRUCTOR],
+    )?;
 
     let mut block: Block = Block::default().with_statement(gen_dec(typing, structure, &fields));
     if !fields.is_empty() {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_constructor(typing, &type_name, &fields));
     }
-    block.to_code()
+    for field in &fields {
+        block.add_statement(EmptyLine::default());
+        block.add_statement(field.gen_impl(typing, &type_name));
+    }
+    Ok(block.to_code())
 }
 
 /// Gets the generated field of the schema `field`.
@@ -121,4 +137,32 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
     ImplBlock::from(type_name)
         .with_comment(" Construction")
         .with_function(constructor)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::GenError;
+    use crate::rust::gen_struct;
+    use proto_packet_tree::{
+        FieldName, ModPath, PrimitiveType, Project, Struct, StructField, TypeName,
+    };
+
+    #[test]
+    fn gen_struct_rejects_the_constructor_name() {
+        let mod_path: ModPath = ModPath::try_from("a").unwrap();
+        let field: StructField = StructField::new(
+            FieldName::try_from("new").unwrap(),
+            PrimitiveType::UnsignedInt32,
+        );
+        let structure: Struct = Struct::from(TypeName::try_from("Foo").unwrap())
+            .with_field(field)
+            .unwrap();
+        let result: Result<String, GenError> =
+            gen_struct(&Project::default(), mod_path.to_ref(), &structure);
+        let expected: GenError = GenError::FieldNameConflict {
+            type_name: "a.Foo".to_string(),
+            field_name: "new".to_string(),
+        };
+        assert_eq!(result, Err(expected));
+    }
 }

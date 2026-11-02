@@ -1,5 +1,5 @@
 use crate::rust::naming::type_path;
-use code_gen::rust::RustType;
+use code_gen::rust::{Reference, RustType};
 use proto_packet_tree::{
     Project, QualifiedName, SpecialType, Struct, TypeDec, TypeTag, WithTypeTag,
 };
@@ -36,6 +36,11 @@ impl Typing<'_> {
 impl Typing<'_> {
     //! Copy
 
+    /// Checks if the `tag` is a `Copy` type.
+    pub(crate) fn is_copy(self, tag: &TypeTag) -> bool {
+        self.is_copy_visiting(tag, &mut Vec::default())
+    }
+
     /// Checks if all the fields of the `structure` are `Copy` types.
     pub(crate) fn is_copy_struct(self, structure: &Struct) -> bool {
         self.is_copy_struct_visiting(structure, &mut Vec::default())
@@ -67,6 +72,44 @@ impl Typing<'_> {
             .fields()
             .iter()
             .all(|field| !field.is_boxed() && self.is_copy_visiting(field.type_tag(), visiting))
+    }
+}
+
+impl Typing<'_> {
+    //! Getters
+
+    /// Gets the return type & expression of the getter for the `tag` field stored in `field`.
+    pub(crate) fn getter(
+        self,
+        tag: &TypeTag,
+        field: &str,
+        is_optional: bool,
+    ) -> (RustType, String) {
+        let field: String = format!("self.{}", field);
+        let reference = |rust_type: RustType| rust_type.to_ref(Reference::default());
+        let (result, expr): (RustType, String) = match tag {
+            _ if self.is_copy(tag) => (self.rust_type(tag), field),
+            TypeTag::Special(SpecialType::String) => {
+                let method: &str = if is_optional { "as_deref" } else { "as_str" };
+                (
+                    reference(RustType::from("str")),
+                    format!("{}.{}()", field, method),
+                )
+            }
+            _ => {
+                let expr: String = if is_optional {
+                    format!("{}.as_ref()", field)
+                } else {
+                    format!("&{}", field)
+                };
+                (reference(self.rust_type(tag)), expr)
+            }
+        };
+        if is_optional {
+            (option(result), expr)
+        } else {
+            (result, expr)
+        }
     }
 }
 
