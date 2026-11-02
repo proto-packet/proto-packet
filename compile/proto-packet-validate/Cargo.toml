@@ -8,6 +8,9 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 proto-packet-parse = { workspace = true }
 proto-packet-tree = { workspace = true }
