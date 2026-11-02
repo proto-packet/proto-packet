@@ -1,4 +1,4 @@
-use proto_packet_tree::{CaseName, FieldName, ModPath, TypeName};
+use proto_packet_tree::{CallName, CaseName, FieldName, ModPath, TypeName};
 use std::fmt::{Display, Formatter};
 
 /// The location of a type tag in a project. (ex: the `name` field of `a.b.Person`)
@@ -17,6 +17,12 @@ pub enum Member {
 
     /// A variant case.
     Case(CaseName),
+
+    /// The request of a service call.
+    Request(CallName),
+
+    /// The response of a service call.
+    Response(CallName),
 }
 
 impl Display for Location {
@@ -24,6 +30,8 @@ impl Display for Location {
         let (member, name): (&str, &str) = match &self.member {
             Member::Field(field_name) => ("field", field_name),
             Member::Case(case_name) => ("case", case_name),
+            Member::Request(call_name) => ("call request", call_name),
+            Member::Response(call_name) => ("call response", call_name),
         };
         write!(
             f,
