@@ -24,3 +24,5 @@ The workspaces:
 
 - `[compile]`: the compiler, if working on the compiler as a whole.
 - `[compile/{slice}]:` the compiler, if working on a specific slice.
+- `[dep]`: the runtime libraries, if working on the runtime libraries as a whole.
+- `[dep/{language}]`: the runtime libraries, if working on a specific language.
