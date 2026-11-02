@@ -23,3 +23,4 @@ module_inception = "allow"
 proto-packet = { path = "../dep/dep-rust/proto-packet" } # todo -- path dependency
 
 custom-string = "0.11.0-rc.2" # todo -- release candidate
+lex = "0.16.0"
