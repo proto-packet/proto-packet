@@ -3,6 +3,9 @@
 pub enum ParseErrorReason {
     /// Expected a name. (ex: after a `.`)
     ExpectedName,
+
+    /// Expected a type tag.
+    ExpectedTypeTag,
 }
 
 impl ParseErrorReason {
@@ -12,6 +15,7 @@ impl ParseErrorReason {
     pub const fn message(self) -> &'static str {
         match self {
             Self::ExpectedName => "expected a name",
+            Self::ExpectedTypeTag => "expected a type",
         }
     }
 
@@ -19,6 +23,7 @@ impl ParseErrorReason {
     pub const fn code(self) -> &'static str {
         match self {
             Self::ExpectedName => "P_EXPECTED_NAME",
+            Self::ExpectedTypeTag => "P_EXPECTED_TYPE_TAG",
         }
     }
 }
