@@ -27,6 +27,12 @@ pub enum ParseErrorReason {
 
     /// Expected a `;`.
     ExpectedSemicolon,
+
+    /// Expected a `=`.
+    ExpectedEqual,
+
+    /// Expected an integer tag number.
+    ExpectedTagNumber,
 }
 
 impl ParseErrorReason {
@@ -44,6 +50,8 @@ impl ParseErrorReason {
             Self::ExpectedCloseBrace => "expected a `}`",
             Self::ExpectedColon => "expected a `:`",
             Self::ExpectedSemicolon => "expected a `;`",
+            Self::ExpectedEqual => "expected a `=`",
+            Self::ExpectedTagNumber => "expected an integer tag number",
         }
     }
 
@@ -59,6 +67,8 @@ impl ParseErrorReason {
             Self::ExpectedCloseBrace => "P_EXPECTED_CLOSE_BRACE",
             Self::ExpectedColon => "P_EXPECTED_COLON",
             Self::ExpectedSemicolon => "P_EXPECTED_SEMICOLON",
+            Self::ExpectedEqual => "P_EXPECTED_EQUAL",
+            Self::ExpectedTagNumber => "P_EXPECTED_TAG_NUMBER",
         }
     }
 }
