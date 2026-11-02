@@ -10,7 +10,8 @@ repository.workspace = true
 
 [features]
 default = ["types"]
-types = ["dep:serde"]
+types = ["dep:serde", "dep:uuid"]
 
 [dependencies]
 serde = { workspace = true, optional = true }
+uuid = { workspace = true, optional = true }
