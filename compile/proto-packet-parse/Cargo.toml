@@ -9,4 +9,5 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+clerr = { workspace = true }
 lex = { workspace = true }
