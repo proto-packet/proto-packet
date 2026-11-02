@@ -1,9 +1,12 @@
 use crate::{LinkError, Location, Member, NameResolver};
-use proto_packet_tree::{ModPathRef, Project, SchemaFile, TypeDec, TypeNameRef, WithComments};
+use proto_packet_tree::{
+    Import, ModPathRef, Project, SchemaFile, TypeDec, TypeNameRef, WithComments,
+};
 
 /// Responsible for linking a schema file.
 #[derive(Copy, Clone, Debug)]
 pub struct SchemaLinker<'a> {
+    pub(in crate::linker) project: &'a Project,
     pub(in crate::linker) mod_path: ModPathRef<'a>,
     pub(in crate::linker) resolver: NameResolver<'a>,
 }
@@ -18,6 +21,7 @@ impl<'a> SchemaLinker<'a> {
         schema_file: &'a SchemaFile,
     ) -> Self {
         Self {
+            project,
             mod_path,
             resolver: NameResolver::new(project, mod_path, schema_file),
         }
@@ -26,6 +30,17 @@ impl<'a> SchemaLinker<'a> {
 
 impl SchemaLinker<'_> {
     //! Linking
+
+    /// Links the `import` by checking it is declared in the project.
+    pub fn link_import(self, import: &Import) -> Result<Import, LinkError> {
+        match self.project.type_dec_with_name(import.name().to_ref()) {
+            Some(_) => Ok(import.clone()),
+            None => Err(LinkError::UnresolvedImport {
+                mod_path: self.mod_path.into_owned(),
+                name: import.name().clone(),
+            }),
+        }
+    }
 
     /// Links the `type_dec`.
     pub fn link_type_dec(self, type_dec: &TypeDec) -> Result<TypeDec, LinkError> {

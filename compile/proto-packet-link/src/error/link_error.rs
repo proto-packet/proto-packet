@@ -1,5 +1,5 @@
 use crate::Location;
-use proto_packet_tree::QualifiedName;
+use proto_packet_tree::{ModPath, QualifiedName};
 use std::fmt::{Display, Formatter};
 
 /// An error linking a project.
@@ -16,6 +16,12 @@ pub enum LinkError {
         location: Location,
         name: QualifiedName,
     },
+
+    /// An import of a type that is not declared in the project.
+    UnresolvedImport {
+        mod_path: ModPath,
+        name: QualifiedName,
+    },
 }
 
 impl Display for LinkError {
@@ -30,6 +36,9 @@ impl Display for LinkError {
                     "the service `{}` is used as a type in {}",
                     name, location
                 )
+            }
+            Self::UnresolvedImport { mod_path, name } => {
+                write!(f, "unresolved import `{}` in `{}`", name, mod_path)
             }
         }
     }
