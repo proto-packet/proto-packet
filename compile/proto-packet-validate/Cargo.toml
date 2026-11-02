@@ -7,3 +7,11 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[dependencies]
+proto-packet-parse = { workspace = true }
+proto-packet-tree = { workspace = true }
+
+clerr = { workspace = true }
+custom-string = { workspace = true }
+lex = { workspace = true }
