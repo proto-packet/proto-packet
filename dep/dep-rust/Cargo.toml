@@ -9,3 +9,6 @@ version = "0.0.0"
 repository = "https://github.com/proto-packet/proto-packet"
 edition = "2024"
 license = "MIT"
+
+[workspace.dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
