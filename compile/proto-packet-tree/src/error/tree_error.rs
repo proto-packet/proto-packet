@@ -1,4 +1,4 @@
-use crate::{CaseName, FieldName, TypeName};
+use crate::{CallName, CaseName, FieldName, TypeName};
 use proto_packet::io::TagNumber;
 use std::fmt::{Display, Formatter};
 
@@ -15,6 +15,12 @@ pub enum TreeError {
     DuplicateCaseName {
         type_name: TypeName,
         case_name: CaseName,
+    },
+
+    /// A call with the same name already exists. (services)
+    DuplicateCallName {
+        type_name: TypeName,
+        call_name: CallName,
     },
 
     /// A field or case with the same tag number already exists. (messages, enums & variants)
@@ -39,6 +45,10 @@ impl Display for TreeError {
                 type_name,
                 case_name,
             } => write!(f, "duplicate case name `{}` in `{}`", case_name, type_name),
+            Self::DuplicateCallName {
+                type_name,
+                call_name,
+            } => write!(f, "duplicate call name `{}` in `{}`", call_name, type_name),
             Self::DuplicateTagNumber {
                 type_name,
                 tag_number,
