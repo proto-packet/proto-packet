@@ -16,5 +16,8 @@ repository = "https://github.com/proto-packet/proto-packet"
 edition = "2024"
 license = "MIT"
 
+[workspace.lints.clippy]
+module_inception = "allow"
+
 [workspace.dependencies]
 custom-string = "0.11.0-rc.2" # todo -- release candidate
