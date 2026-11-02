@@ -6,6 +6,15 @@ pub enum ParseErrorReason {
 
     /// Expected a type tag.
     ExpectedTypeTag,
+
+    /// Expected the field's name.
+    ExpectedFieldName,
+
+    /// Expected a `:`.
+    ExpectedColon,
+
+    /// Expected a `;`.
+    ExpectedSemicolon,
 }
 
 impl ParseErrorReason {
@@ -16,6 +25,9 @@ impl ParseErrorReason {
         match self {
             Self::ExpectedName => "expected a name",
             Self::ExpectedTypeTag => "expected a type",
+            Self::ExpectedFieldName => "expected the field's name",
+            Self::ExpectedColon => "expected a `:`",
+            Self::ExpectedSemicolon => "expected a `;`",
         }
     }
 
@@ -24,6 +36,9 @@ impl ParseErrorReason {
         match self {
             Self::ExpectedName => "P_EXPECTED_NAME",
             Self::ExpectedTypeTag => "P_EXPECTED_TYPE_TAG",
+            Self::ExpectedFieldName => "P_EXPECTED_FIELD_NAME",
+            Self::ExpectedColon => "P_EXPECTED_COLON",
+            Self::ExpectedSemicolon => "P_EXPECTED_SEMICOLON",
         }
     }
 }
