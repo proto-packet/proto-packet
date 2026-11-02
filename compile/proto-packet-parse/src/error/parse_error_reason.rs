@@ -10,6 +10,9 @@ pub enum ParseErrorReason {
     /// Expected an import.
     ExpectedImport,
 
+    /// An import after a type declaration. (imports come first)
+    ImportAfterTypeDeclaration,
+
     /// Expected a type declaration. (ex: `struct`)
     ExpectedTypeDeclaration,
 
@@ -56,6 +59,7 @@ impl ParseErrorReason {
             Self::ExpectedName => "expected a name",
             Self::ExpectedTypeTag => "expected a type",
             Self::ExpectedImport => "expected an import",
+            Self::ImportAfterTypeDeclaration => "imports must come before type declarations",
             Self::ExpectedTypeDeclaration => "expected a type declaration",
             Self::ExpectedTypeName => "expected the type's name",
             Self::ExpectedFieldName => "expected the field's name",
@@ -77,6 +81,7 @@ impl ParseErrorReason {
             Self::ExpectedName => "P_EXPECTED_NAME",
             Self::ExpectedTypeTag => "P_EXPECTED_TYPE_TAG",
             Self::ExpectedImport => "P_EXPECTED_IMPORT",
+            Self::ImportAfterTypeDeclaration => "P_IMPORT_AFTER_TYPE_DECLARATION",
             Self::ExpectedTypeDeclaration => "P_EXPECTED_TYPE_DECLARATION",
             Self::ExpectedTypeName => "P_EXPECTED_TYPE_NAME",
             Self::ExpectedFieldName => "P_EXPECTED_FIELD_NAME",
