@@ -1,0 +1,9 @@
+[package]
+name = "proto-packet"
+description = "This library provides the dependencies for generated ProtoPacket code."
+homepage = "https://github.com/proto-packet/proto-packet/tree/master/dep/dep-rust/proto-packet"
+readme = "README.md"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
