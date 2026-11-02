@@ -8,6 +8,9 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 clerr = { workspace = true }
 lex = { workspace = true }
