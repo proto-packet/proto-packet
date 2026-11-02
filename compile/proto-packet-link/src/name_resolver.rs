@@ -1,4 +1,7 @@
-use proto_packet_tree::{ModPathRef, QualifiedName, QualifiedNameRef, SchemaFile};
+use crate::{LinkError, Location};
+use proto_packet_tree::{
+    ModPathRef, Project, QualifiedName, QualifiedNameRef, SchemaFile, TypeDec, TypeTag,
+};
 
 /// Responsible for resolving the type names of a schema file.
 ///
@@ -8,6 +11,7 @@ use proto_packet_tree::{ModPathRef, QualifiedName, QualifiedNameRef, SchemaFile}
 /// 3. An import's effective name resolves to the import's name.
 #[derive(Copy, Clone, Debug)]
 pub struct NameResolver<'a> {
+    project: &'a Project,
     mod_path: ModPathRef<'a>,
     schema_file: &'a SchemaFile,
 }
@@ -15,9 +19,14 @@ pub struct NameResolver<'a> {
 impl<'a> NameResolver<'a> {
     //! Construction
 
-    /// Creates a new name resolver for the `schema_file` at the `mod_path`.
-    pub fn new(mod_path: ModPathRef<'a>, schema_file: &'a SchemaFile) -> Self {
+    /// Creates a new name resolver for the `schema_file` at the `mod_path` of the `project`.
+    pub fn new(
+        project: &'a Project,
+        mod_path: ModPathRef<'a>,
+        schema_file: &'a SchemaFile,
+    ) -> Self {
         Self {
+            project,
             mod_path,
             schema_file,
         }
@@ -44,6 +53,41 @@ impl NameResolver<'_> {
             self.schema_file
                 .import_with_effective_name(name.type_name())
                 .map(|import| import.name().clone())
+        }
+    }
+}
+
+impl NameResolver<'_> {
+    //! Linking
+
+    /// Links the type `tag` at the `location` by resolving its named types.
+    ///
+    /// The named types must be declared in the project & be data types, not services.
+    pub fn link_type_tag(self, tag: &TypeTag, location: &Location) -> Result<TypeTag, LinkError> {
+        match tag {
+            TypeTag::Named(name) => self.link_name(name, location).map(TypeTag::Named),
+            TypeTag::Primitive(_) | TypeTag::Special(_) => Ok(tag.clone()),
+        }
+    }
+
+    /// Links the type `name` at the `location`.
+    fn link_name(
+        self,
+        name: &QualifiedName,
+        location: &Location,
+    ) -> Result<QualifiedName, LinkError> {
+        let unresolved = || LinkError::UnresolvedType {
+            location: location.clone(),
+            name: name.clone(),
+        };
+        let resolved: QualifiedName = self.resolve(name.to_ref()).ok_or_else(unresolved)?;
+        match self.project.type_dec_with_name(resolved.to_ref()) {
+            None => Err(unresolved()),
+            Some(TypeDec::Service(_)) => Err(LinkError::ServiceAsType {
+                location: location.clone(),
+                name: resolved,
+            }),
+            Some(_) => Ok(resolved),
         }
     }
 }
