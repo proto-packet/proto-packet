@@ -31,6 +31,22 @@ impl<'a> SchemaLinker<'a> {
 impl SchemaLinker<'_> {
     //! Linking
 
+    /// Links the `schema_file`.
+    pub fn link(self, schema_file: &SchemaFile) -> Result<SchemaFile, LinkError> {
+        let mut linked: SchemaFile = SchemaFile::default();
+        for import in schema_file.imports() {
+            linked
+                .add_import(self.link_import(import)?)
+                .expect("linking keeps the import names unique");
+        }
+        for type_dec in schema_file.type_decs() {
+            linked
+                .add_type_dec(self.link_type_dec(type_dec)?)
+                .expect("linking keeps the type names unique");
+        }
+        Ok(linked)
+    }
+
     /// Links the `import` by checking it is declared in the project.
     pub fn link_import(self, import: &Import) -> Result<Import, LinkError> {
         match self.project.type_dec_with_name(import.name().to_ref()) {
