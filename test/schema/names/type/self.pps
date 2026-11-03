@@ -1,0 +1,13 @@
+// A struct in a non-raw keyword mod, in a raw keyword mod. (`self_` in `r#type`)
+struct SelfStruct {
+
+    // The value.
+    value: u32;
+}
+
+// A struct with a non-raw keyword name. (`Self_`)
+struct Self {
+
+    // The value.
+    value: u32;
+}

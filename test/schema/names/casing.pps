@@ -1,0 +1,16 @@
+// A struct with an acronym in its name. (`http_server.rs`)
+struct HTTPServer {
+
+    // A camel case field. (`#[allow(non_snake_case)]`)
+    maxConnections: u32;
+}
+
+// An enum with an underscore in its name. (`#[allow(non_camel_case_types)]`)
+enum Log_Level {
+
+    // An upper case case.
+    INFO = 1;
+
+    // An underscore case.
+    Very_Verbose = 2;
+}
