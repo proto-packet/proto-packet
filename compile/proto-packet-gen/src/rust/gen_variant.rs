@@ -1,4 +1,4 @@
-use crate::rust::derives::add_derives;
+use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::add_docs;
 use crate::rust::naming::{ident, is_renamed, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
@@ -18,6 +18,7 @@ pub fn gen_variant(project: &Project, variant: &Variant) -> String {
     let mut result: RustEnum = RustEnum::from(type_name);
     add_docs(&mut result, variant.comments());
     add_derives(&mut result, false, true, false);
+    add_serde_derives(&mut result);
     result.add_attribute("serde(tag = \"var\", content = \"val\")");
     let is_camel_case: bool = is_upper_camel_case(&variant.type_name())
         && variant

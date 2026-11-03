@@ -22,6 +22,15 @@ where
     if is_default {
         result.add_derive("Default");
     }
+}
+
+/// Adds the serde derives of a generated data type to the `result`.
+///
+/// Enums write their serde impls by hand instead. (see `gen_enum`)
+pub(crate) fn add_serde_derives<R>(result: &mut R)
+where
+    R: WithDerives + WithAttributes,
+{
     result.add_derive("proto_packet::serde::Serialize");
     result.add_derive("proto_packet::serde::Deserialize");
     result.add_attribute("serde(crate = \"proto_packet::serde\")");

@@ -1,5 +1,5 @@
 use crate::GenError;
-use crate::rust::derives::add_derives;
+use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
@@ -75,6 +75,7 @@ fn gen_dec(typing: Typing<'_>, message: &Message, fields: &[Field<'_>]) -> RustS
         &lines,
     );
     add_derives(&mut result, false, true, true);
+    add_serde_derives(&mut result);
     if !is_upper_camel_case(&message.type_name()) {
         result.add_attribute("allow(non_camel_case_types)");
     }

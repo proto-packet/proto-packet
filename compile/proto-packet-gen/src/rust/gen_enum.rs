@@ -1,11 +1,11 @@
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
-use crate::rust::naming::{ident, is_renamed, is_upper_camel_case};
+use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use code_gen::rust::{
     Access, Enum as RustEnum, EnumCase, Function, ImplBlock, MatchCase, MatchStatement, Receiver,
-    Signature, Var, WithAccess, WithAttributes, WithComments, WithFunctions, WithReceiver,
-    WithResult, WithVarParams,
+    Signature, Var, WithAccess, WithAttributes, WithComments, WithFnGenerics, WithFunctions,
+    WithGenerics, WithReceiver, WithResult, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet::io::WithTagNumber;
@@ -13,7 +13,8 @@ use proto_packet_tree::{Enum, WithCaseName, WithComments as _, WithTypeName};
 
 /// Generates the Rust code of the `enumeration`.
 ///
-/// A renamed case keeps its schema name in serde. (ex: `Self_` is `Self`)
+/// The serde impls are written by hand, since they go through `from_tag_number`. A case is its
+/// schema name, even when renamed. (ex: `Self_` is `Self`)
 pub fn gen_enum(enumeration: &Enum) -> String {
     let prelude: Prelude = Prelude::new(&ident(&enumeration.type_name()));
     let block: Block = Block::default()
@@ -24,6 +25,10 @@ pub fn gen_enum(enumeration: &Enum) -> String {
         .with_statement(gen_ord(prelude, enumeration))
         .with_statement(EmptyLine::default())
         .with_statement(gen_partial_ord(prelude, enumeration))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_serialize(prelude, enumeration))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_deserialize(prelude, enumeration))
         .with_statement(EmptyLine::default())
         .with_statement(gen_properties(enumeration));
     block.to_code()
@@ -46,9 +51,6 @@ fn gen_dec(enumeration: &Enum) -> RustEnum {
     for case in enumeration.cases() {
         let mut rust_case: EnumCase = EnumCase::from(ident(&case.case_name()));
         add_docs(&mut rust_case, case.comments());
-        if is_renamed(&case.case_name()) {
-            rust_case.add_attribute(format!("serde(rename = \"{}\")", case.case_name()));
-        }
         result.add_case(rust_case);
     }
     result
@@ -117,6 +119,77 @@ fn gen_partial_ord(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
     ImplBlock::from(ident(&enumeration.type_name()))
         .with_for_trait(prelude.path(PreludeName::PartialOrd))
         .with_function(partial_cmp)
+}
+
+/// Generates the `Serialize` impl of the `enumeration`, writing each case as its schema name.
+fn gen_serialize(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
+    let param: &str = if enumeration.cases().is_empty() {
+        "_serializer"
+    } else {
+        "serializer"
+    };
+    let signature: Signature = Signature::from("serialize")
+        .with_generic(Var::from(("S", "proto_packet::serde::Serializer")))
+        .with_receiver(Receiver::Borrowed)
+        .with_param(Var::from((param, "S")))
+        .with_result(format!(
+            "{}<S::Ok, S::Error>",
+            prelude.path(PreludeName::Result)
+        ));
+    let mut serialize: Function = Function::from(signature);
+    if enumeration.cases().is_empty() {
+        serialize.add_literal("match *self {}");
+    } else {
+        let mut cases: MatchStatement = MatchStatement::from("self");
+        for case in enumeration.cases() {
+            cases.add_match_case(
+                MatchCase::from(format!("Self::{}", ident(&case.case_name()))).with_literal(
+                    format!("serializer.serialize_str(\"{}\")", case.case_name()),
+                ),
+            );
+        }
+        serialize.add_statement(cases);
+    }
+    ImplBlock::from(ident(&enumeration.type_name()))
+        .with_for_trait("proto_packet::serde::Serialize")
+        .with_function(serialize)
+}
+
+/// Generates the `Deserialize` impl of the `enumeration`, reading each case from its schema name or
+/// its tag number. (with `from_tag_number`)
+fn gen_deserialize(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
+    let signature: Signature = Signature::from("deserialize")
+        .with_generic(Var::from(("D", "proto_packet::serde::Deserializer<'de>")))
+        .with_param(Var::from(("deserializer", "D")))
+        .with_result(format!(
+            "{}<Self, D::Error>",
+            prelude.path(PreludeName::Result)
+        ));
+    let from_name: String = if enumeration.cases().is_empty() {
+        "|_| None".to_string()
+    } else {
+        let cases: Vec<String> = enumeration
+            .cases()
+            .iter()
+            .map(|case| {
+                format!(
+                    "\"{}\" => Some(Self::{})",
+                    case.case_name(),
+                    ident(&case.case_name())
+                )
+            })
+            .collect();
+        format!("|name| match name {{ {}, _ => None }}", cases.join(", "))
+    };
+    let deserialize: Function = Function::from(signature).with_literal(format!(
+        "proto_packet::types::deserialize_enum(deserializer, \"{}\", {}, Self::from_tag_number)",
+        enumeration.type_name(),
+        from_name
+    ));
+    ImplBlock::from(ident(&enumeration.type_name()))
+        .with_generic("'de")
+        .with_for_trait("proto_packet::serde::Deserialize<'de>")
+        .with_function(deserialize)
 }
 
 /// Generates the impl block with the tag numbers of the cases of the `enumeration`.
