@@ -11,7 +11,7 @@ pub struct SchemaSource {
     /// The mod path. (ex: `a.b` for `a/b.pps`)
     pub mod_path: ModPath,
 
-    /// The file path, relative to the project's source folder. (ex: `a/b.pps`)
+    /// The file path, in the source folder as given. (ex: `schemas/a/b.pps`)
     pub path: PathBuf,
 
     /// The source text.
@@ -70,7 +70,7 @@ fn read_schema_source(
     path: PathBuf,
 ) -> Result<SchemaSource, Report> {
     let relative: PathBuf = path.strip_prefix(source).unwrap_or(&path).to_path_buf();
-    let mod_path: ModPath = mod_path(&relative, extension)?;
+    let mod_path: ModPath = mod_path(&path, &relative, extension)?;
     let text: String = std::fs::read_to_string(&path).map_err(|error| {
         path_report(
             "C_READ_SCHEMA",
@@ -81,18 +81,19 @@ fn read_schema_source(
     })?;
     Ok(SchemaSource {
         mod_path,
-        path: relative,
+        path,
         source: text,
     })
 }
 
-/// Gets the mod path of the schema file at the `relative` path.
+/// Gets the mod path of the schema file at the `path`, from its `relative` path in the source
+/// folder.
 ///
 /// Each folder & the file name without the `extension` must be a valid mod name.
-fn mod_path(relative: &Path, extension: &str) -> Result<ModPath, Report> {
+fn mod_path(path: &Path, relative: &Path, extension: &str) -> Result<ModPath, Report> {
     let invalid = |message: &str| {
         let properties: Properties = Properties::default()
-            .with_property("path", relative.display().to_string())
+            .with_property("path", path.display().to_string())
             .with_property("error", message);
         Report::from(Code::error(
             "C_INVALID_MOD_PATH",
