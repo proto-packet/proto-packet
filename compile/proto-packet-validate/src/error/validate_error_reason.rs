@@ -1,5 +1,5 @@
 use proto_packet::io::TagNumber;
-use proto_packet_tree::TreeError;
+use proto_packet_tree::{PrimitiveType, SpecialType, TreeError};
 use std::fmt::{Display, Formatter};
 
 /// The reason for a validation error.
@@ -13,6 +13,9 @@ pub enum ValidateErrorReason {
 
     /// An import without a mod path. (ex: `import Foo;`)
     ImportWithoutModPath,
+
+    /// A lowercase type name that is not a primitive or special type. (ex: `i32`)
+    UnknownType { name: String },
 
     /// A boxed type that is not a named type. (ex: `box u8`)
     BoxedNonNamedType,
@@ -30,6 +33,7 @@ impl ValidateErrorReason {
             Self::InvalidName { .. } => "V_INVALID_NAME",
             Self::InvalidTagNumber => "V_INVALID_TAG_NUMBER",
             Self::ImportWithoutModPath => "V_IMPORT_WITHOUT_MOD_PATH",
+            Self::UnknownType { .. } => "V_UNKNOWN_TYPE",
             Self::BoxedNonNamedType => "V_BOXED_NON_NAMED_TYPE",
             Self::Tree(error) => match error {
                 TreeError::DuplicateFieldName { .. } => "V_DUPLICATE_FIELD_NAME",
@@ -56,6 +60,19 @@ impl Display for ValidateErrorReason {
                 TagNumber::MAX
             ),
             Self::ImportWithoutModPath => f.write_str("imports must include a mod path"),
+            Self::UnknownType { name } => {
+                let names: Vec<&str> = PrimitiveType::ALL
+                    .iter()
+                    .map(|primitive| primitive.name())
+                    .chain(SpecialType::ALL.iter().map(|special| special.name()))
+                    .collect();
+                write!(
+                    f,
+                    "unknown type `{}` (expected: {}, or a type name)",
+                    name,
+                    names.join(", ")
+                )
+            }
             Self::BoxedNonNamedType => f.write_str("only named types can be boxed"),
             Self::Tree(error) => Display::fmt(error, f),
         }
