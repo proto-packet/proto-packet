@@ -3,6 +3,7 @@ use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
+use crate::rust::prelude::Prelude;
 use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, ImplBlock, Signature, Struct as RustStruct, Var, WithAccess, WithAttributes,
@@ -28,8 +29,8 @@ pub fn gen_struct(
     mod_path: ModPathRef<'_>,
     structure: &Struct,
 ) -> Result<String, GenError> {
-    let typing: Typing = Typing::new(project);
     let type_name: String = ident(&structure.type_name());
+    let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
     check_field_names(
         &format!("{}.{}", mod_path, structure.type_name()),
@@ -116,7 +117,7 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
         .iter()
         .map(|field| {
             let name: String = ident(&field.name);
-            let value: String = field.storage_expr(&name);
+            let value: String = field.storage_expr(typing, &name);
             if value == name {
                 name
             } else {

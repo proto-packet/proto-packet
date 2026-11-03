@@ -25,14 +25,14 @@
 #[serde(crate = "::proto_packet::serde")]
 pub struct SpecialFields {
     id: ::proto_packet::types::Uuid,
-    text: ::std::string::String,
+    text: String,
 }
 
 impl SpecialFields {
     //! Construction
 
     /// Creates a new [SpecialFields].
-    pub fn new(id: ::proto_packet::types::Uuid, text: ::std::string::String) -> Self {
+    pub fn new(id: ::proto_packet::types::Uuid, text: String) -> Self {
         Self { id, text }
     }
 }
@@ -69,13 +69,13 @@ impl SpecialFields {
     }
 
     /// Sets the field: `text`. Returns the previous value.
-    pub fn set_text(&mut self, text: ::std::string::String) -> ::std::string::String {
+    pub fn set_text(&mut self, text: String) -> String {
         ::std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)
     #[must_use]
-    pub fn with_text(mut self, text: ::std::string::String) -> Self {
+    pub fn with_text(mut self, text: String) -> Self {
         self.set_text(text);
         self
     }

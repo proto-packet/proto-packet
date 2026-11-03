@@ -37,18 +37,18 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct PrimitiveFields {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    boolean: ::std::option::Option<bool>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    unsigned8: ::std::option::Option<u8>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    unsigned16: ::std::option::Option<u16>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    unsigned32: ::std::option::Option<u32>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    unsigned64: ::std::option::Option<u64>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    unsigned128: ::std::option::Option<u128>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    boolean: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    unsigned8: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    unsigned16: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    unsigned32: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    unsigned64: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    unsigned128: Option<u128>,
 }
 
 impl PrimitiveFields {
@@ -56,16 +56,16 @@ impl PrimitiveFields {
 
     /// Gets the field: `boolean`.
     #[must_use]
-    pub fn boolean(&self) -> ::std::option::Option<bool> {
+    pub fn boolean(&self) -> Option<bool> {
         self.boolean
     }
 
     /// Sets the field: `boolean`. Returns the previous value.
-    pub fn set_boolean<F>(&mut self, boolean: F) -> ::std::option::Option<bool>
+    pub fn set_boolean<F>(&mut self, boolean: F) -> Option<bool>
     where
-        F: ::std::convert::Into<::std::option::Option<bool>>,
+        F: Into<Option<bool>>,
     {
-        let boolean: ::std::option::Option<bool> = boolean.into();
+        let boolean: Option<bool> = boolean.into();
         ::std::mem::replace(&mut self.boolean, boolean)
     }
 
@@ -73,7 +73,7 @@ impl PrimitiveFields {
     #[must_use]
     pub fn with_boolean<F>(mut self, boolean: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<bool>>,
+        F: Into<Option<bool>>,
     {
         self.set_boolean(boolean);
         self
@@ -85,16 +85,16 @@ impl PrimitiveFields {
 
     /// Gets the field: `unsigned8`.
     #[must_use]
-    pub fn unsigned8(&self) -> ::std::option::Option<u8> {
+    pub fn unsigned8(&self) -> Option<u8> {
         self.unsigned8
     }
 
     /// Sets the field: `unsigned8`. Returns the previous value.
-    pub fn set_unsigned8<F>(&mut self, unsigned8: F) -> ::std::option::Option<u8>
+    pub fn set_unsigned8<F>(&mut self, unsigned8: F) -> Option<u8>
     where
-        F: ::std::convert::Into<::std::option::Option<u8>>,
+        F: Into<Option<u8>>,
     {
-        let unsigned8: ::std::option::Option<u8> = unsigned8.into();
+        let unsigned8: Option<u8> = unsigned8.into();
         ::std::mem::replace(&mut self.unsigned8, unsigned8)
     }
 
@@ -102,7 +102,7 @@ impl PrimitiveFields {
     #[must_use]
     pub fn with_unsigned8<F>(mut self, unsigned8: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u8>>,
+        F: Into<Option<u8>>,
     {
         self.set_unsigned8(unsigned8);
         self
@@ -114,16 +114,16 @@ impl PrimitiveFields {
 
     /// Gets the field: `unsigned16`.
     #[must_use]
-    pub fn unsigned16(&self) -> ::std::option::Option<u16> {
+    pub fn unsigned16(&self) -> Option<u16> {
         self.unsigned16
     }
 
     /// Sets the field: `unsigned16`. Returns the previous value.
-    pub fn set_unsigned16<F>(&mut self, unsigned16: F) -> ::std::option::Option<u16>
+    pub fn set_unsigned16<F>(&mut self, unsigned16: F) -> Option<u16>
     where
-        F: ::std::convert::Into<::std::option::Option<u16>>,
+        F: Into<Option<u16>>,
     {
-        let unsigned16: ::std::option::Option<u16> = unsigned16.into();
+        let unsigned16: Option<u16> = unsigned16.into();
         ::std::mem::replace(&mut self.unsigned16, unsigned16)
     }
 
@@ -131,7 +131,7 @@ impl PrimitiveFields {
     #[must_use]
     pub fn with_unsigned16<F>(mut self, unsigned16: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u16>>,
+        F: Into<Option<u16>>,
     {
         self.set_unsigned16(unsigned16);
         self
@@ -143,16 +143,16 @@ impl PrimitiveFields {
 
     /// Gets the field: `unsigned32`.
     #[must_use]
-    pub fn unsigned32(&self) -> ::std::option::Option<u32> {
+    pub fn unsigned32(&self) -> Option<u32> {
         self.unsigned32
     }
 
     /// Sets the field: `unsigned32`. Returns the previous value.
-    pub fn set_unsigned32<F>(&mut self, unsigned32: F) -> ::std::option::Option<u32>
+    pub fn set_unsigned32<F>(&mut self, unsigned32: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let unsigned32: ::std::option::Option<u32> = unsigned32.into();
+        let unsigned32: Option<u32> = unsigned32.into();
         ::std::mem::replace(&mut self.unsigned32, unsigned32)
     }
 
@@ -160,7 +160,7 @@ impl PrimitiveFields {
     #[must_use]
     pub fn with_unsigned32<F>(mut self, unsigned32: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_unsigned32(unsigned32);
         self
@@ -172,16 +172,16 @@ impl PrimitiveFields {
 
     /// Gets the field: `unsigned64`.
     #[must_use]
-    pub fn unsigned64(&self) -> ::std::option::Option<u64> {
+    pub fn unsigned64(&self) -> Option<u64> {
         self.unsigned64
     }
 
     /// Sets the field: `unsigned64`. Returns the previous value.
-    pub fn set_unsigned64<F>(&mut self, unsigned64: F) -> ::std::option::Option<u64>
+    pub fn set_unsigned64<F>(&mut self, unsigned64: F) -> Option<u64>
     where
-        F: ::std::convert::Into<::std::option::Option<u64>>,
+        F: Into<Option<u64>>,
     {
-        let unsigned64: ::std::option::Option<u64> = unsigned64.into();
+        let unsigned64: Option<u64> = unsigned64.into();
         ::std::mem::replace(&mut self.unsigned64, unsigned64)
     }
 
@@ -189,7 +189,7 @@ impl PrimitiveFields {
     #[must_use]
     pub fn with_unsigned64<F>(mut self, unsigned64: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u64>>,
+        F: Into<Option<u64>>,
     {
         self.set_unsigned64(unsigned64);
         self
@@ -201,16 +201,16 @@ impl PrimitiveFields {
 
     /// Gets the field: `unsigned128`.
     #[must_use]
-    pub fn unsigned128(&self) -> ::std::option::Option<u128> {
+    pub fn unsigned128(&self) -> Option<u128> {
         self.unsigned128
     }
 
     /// Sets the field: `unsigned128`. Returns the previous value.
-    pub fn set_unsigned128<F>(&mut self, unsigned128: F) -> ::std::option::Option<u128>
+    pub fn set_unsigned128<F>(&mut self, unsigned128: F) -> Option<u128>
     where
-        F: ::std::convert::Into<::std::option::Option<u128>>,
+        F: Into<Option<u128>>,
     {
-        let unsigned128: ::std::option::Option<u128> = unsigned128.into();
+        let unsigned128: Option<u128> = unsigned128.into();
         ::std::mem::replace(&mut self.unsigned128, unsigned128)
     }
 
@@ -218,7 +218,7 @@ impl PrimitiveFields {
     #[must_use]
     pub fn with_unsigned128<F>(mut self, unsigned128: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u128>>,
+        F: Into<Option<u128>>,
     {
         self.set_unsigned128(unsigned128);
         self

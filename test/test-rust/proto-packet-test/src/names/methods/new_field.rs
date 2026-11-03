@@ -22,8 +22,8 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct NewField {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    new: ::std::option::Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    new: Option<u32>,
 }
 
 impl NewField {
@@ -32,16 +32,16 @@ impl NewField {
     /// Gets the field: `new`.
     #[must_use]
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(&self) -> ::std::option::Option<u32> {
+    pub fn new(&self) -> Option<u32> {
         self.new
     }
 
     /// Sets the field: `new`. Returns the previous value.
-    pub fn set_new<F>(&mut self, new: F) -> ::std::option::Option<u32>
+    pub fn set_new<F>(&mut self, new: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let new: ::std::option::Option<u32> = new.into();
+        let new: Option<u32> = new.into();
         ::std::mem::replace(&mut self.new, new)
     }
 
@@ -49,7 +49,7 @@ impl NewField {
     #[must_use]
     pub fn with_new<F>(mut self, new: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_new(new);
         self

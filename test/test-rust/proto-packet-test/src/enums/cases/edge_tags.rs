@@ -34,7 +34,7 @@ impl EdgeTags {
 
     /// Gets the optional case with the `tag_number`.
     #[must_use]
-    pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
+    pub const fn from_tag_number(tag_number: u16) -> Option<Self> {
         match tag_number {
             1 => Some(Self::Min),
             8191 => Some(Self::Max),
@@ -43,14 +43,14 @@ impl EdgeTags {
     }
 }
 
-impl ::std::cmp::Ord for EdgeTags {
+impl Ord for EdgeTags {
     fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
         self.tag_number().cmp(&other.tag_number())
     }
 }
 
-impl ::std::cmp::PartialOrd for EdgeTags {
-    fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
+impl PartialOrd for EdgeTags {
+    fn partial_cmp(&self, other: &Self) -> Option<::std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }

@@ -28,7 +28,7 @@
 #[serde(crate = "::proto_packet::serde")]
 pub struct KeywordStruct {
     r#type: u32,
-    r#match: ::std::string::String,
+    r#match: String,
     #[serde(rename = "self")]
     self_: u32,
 }
@@ -37,7 +37,7 @@ impl KeywordStruct {
     //! Construction
 
     /// Creates a new [KeywordStruct].
-    pub fn new(r#type: u32, r#match: ::std::string::String, self_: u32) -> Self {
+    pub fn new(r#type: u32, r#match: String, self_: u32) -> Self {
         Self {
             r#type,
             r#match,
@@ -78,13 +78,13 @@ impl KeywordStruct {
     }
 
     /// Sets the field: `match`. Returns the previous value.
-    pub fn set_match(&mut self, r#match: ::std::string::String) -> ::std::string::String {
+    pub fn set_match(&mut self, r#match: String) -> String {
         ::std::mem::replace(&mut self.r#match, r#match)
     }
 
     /// Sets the field: `match`. (builder pattern)
     #[must_use]
-    pub fn with_match(mut self, r#match: ::std::string::String) -> Self {
+    pub fn with_match(mut self, r#match: String) -> Self {
         self.set_match(r#match);
         self
     }

@@ -1,6 +1,7 @@
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
 use crate::rust::naming::{ident, is_renamed, is_upper_camel_case};
+use crate::rust::prelude::{Prelude, PreludeName};
 use code_gen::rust::{
     Access, Enum as RustEnum, EnumCase, Function, ImplBlock, MatchCase, MatchStatement, Receiver,
     Signature, Var, WithAccess, WithAttributes, WithComments, WithFunctions, WithReceiver,
@@ -14,14 +15,15 @@ use proto_packet_tree::{Enum, WithCaseName, WithComments as _, WithTypeName};
 ///
 /// A renamed case keeps its schema name in serde. (ex: `Self_` is `Self`)
 pub fn gen_enum(enumeration: &Enum) -> String {
+    let prelude: Prelude = Prelude::new(&ident(&enumeration.type_name()));
     let block: Block = Block::default()
         .with_statement(gen_dec(enumeration))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_tag_numbers(enumeration))
+        .with_statement(gen_tag_numbers(prelude, enumeration))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_ord(enumeration))
+        .with_statement(gen_ord(prelude, enumeration))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_partial_ord(enumeration));
+        .with_statement(gen_partial_ord(prelude, enumeration));
     block.to_code()
 }
 
@@ -53,7 +55,7 @@ fn gen_dec(enumeration: &Enum) -> RustEnum {
 /// Generates the impl block converting the cases of the `enumeration` to & from tag numbers.
 ///
 /// `Some` & `None` are bare, since generated types are never values, so they cannot shadow them.
-fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
+fn gen_tag_numbers(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
     let mut to_tag_number: MatchStatement = MatchStatement::from("self");
     let mut from_tag_number: MatchStatement = MatchStatement::from("tag_number");
     for case in enumeration.cases() {
@@ -82,7 +84,7 @@ fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
     };
     let signature: Signature = Signature::from("from_tag_number")
         .with_param(Var::from((param, "u16")))
-        .with_result("::std::option::Option<Self>");
+        .with_result(format!("{}<Self>", prelude.path(PreludeName::Option)));
     let mut from: Function = Function::from(signature)
         .with_comment(" Gets the optional case with the `tag_number`.")
         .with_attribute("must_use")
@@ -104,7 +106,7 @@ fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
 
 /// Generates the `Ord` impl of the `enumeration`, ordering its cases by tag number instead of
 /// declaration order.
-fn gen_ord(enumeration: &Enum) -> ImplBlock {
+fn gen_ord(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
     let signature: Signature = Signature::from("cmp")
         .with_receiver(Receiver::Borrowed)
         .with_param(Var::from(("other", "&Self")))
@@ -112,18 +114,21 @@ fn gen_ord(enumeration: &Enum) -> ImplBlock {
     let cmp: Function =
         Function::from(signature).with_literal("self.tag_number().cmp(&other.tag_number())");
     ImplBlock::from(ident(&enumeration.type_name()))
-        .with_for_trait("::std::cmp::Ord")
+        .with_for_trait(prelude.path(PreludeName::Ord))
         .with_function(cmp)
 }
 
 /// Generates the `PartialOrd` impl of the `enumeration`, consistent with its `Ord` impl.
-fn gen_partial_ord(enumeration: &Enum) -> ImplBlock {
+fn gen_partial_ord(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
     let signature: Signature = Signature::from("partial_cmp")
         .with_receiver(Receiver::Borrowed)
         .with_param(Var::from(("other", "&Self")))
-        .with_result("::std::option::Option<::std::cmp::Ordering>");
+        .with_result(format!(
+            "{}<::std::cmp::Ordering>",
+            prelude.path(PreludeName::Option)
+        ));
     let partial_cmp: Function = Function::from(signature).with_literal("Some(self.cmp(other))");
     ImplBlock::from(ident(&enumeration.type_name()))
-        .with_for_trait("::std::cmp::PartialOrd")
+        .with_for_trait(prelude.path(PreludeName::PartialOrd))
         .with_function(partial_cmp)
 }

@@ -24,8 +24,8 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct Sum {
-    left: ::std::boxed::Box<crate::variants::boxed::Expr>,
-    right: ::std::boxed::Box<crate::variants::boxed::Expr>,
+    left: Box<crate::variants::boxed::Expr>,
+    right: Box<crate::variants::boxed::Expr>,
 }
 
 impl Sum {
@@ -34,8 +34,8 @@ impl Sum {
     /// Creates a new [Sum].
     pub fn new(left: crate::variants::boxed::Expr, right: crate::variants::boxed::Expr) -> Self {
         Self {
-            left: ::std::boxed::Box::new(left),
-            right: ::std::boxed::Box::new(right),
+            left: Box::new(left),
+            right: Box::new(right),
         }
     }
 }
@@ -51,7 +51,7 @@ impl Sum {
 
     /// Sets the field: `left`. Returns the previous value.
     pub fn set_left(&mut self, left: crate::variants::boxed::Expr) -> crate::variants::boxed::Expr {
-        *::std::mem::replace(&mut self.left, ::std::boxed::Box::new(left))
+        *::std::mem::replace(&mut self.left, Box::new(left))
     }
 
     /// Sets the field: `left`. (builder pattern)
@@ -76,7 +76,7 @@ impl Sum {
         &mut self,
         right: crate::variants::boxed::Expr,
     ) -> crate::variants::boxed::Expr {
-        *::std::mem::replace(&mut self.right, ::std::boxed::Box::new(right))
+        *::std::mem::replace(&mut self.right, Box::new(right))
     }
 
     /// Sets the field: `right`. (builder pattern)

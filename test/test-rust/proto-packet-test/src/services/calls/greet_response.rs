@@ -22,8 +22,8 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct GreetResponse {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    greeting: ::std::option::Option<::std::string::String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    greeting: Option<String>,
 }
 
 impl GreetResponse {
@@ -31,16 +31,16 @@ impl GreetResponse {
 
     /// Gets the field: `greeting`.
     #[must_use]
-    pub fn greeting(&self) -> ::std::option::Option<&str> {
+    pub fn greeting(&self) -> Option<&str> {
         self.greeting.as_deref()
     }
 
     /// Sets the field: `greeting`. Returns the previous value.
-    pub fn set_greeting<F>(&mut self, greeting: F) -> ::std::option::Option<::std::string::String>
+    pub fn set_greeting<F>(&mut self, greeting: F) -> Option<String>
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
-        let greeting: ::std::option::Option<::std::string::String> = greeting.into();
+        let greeting: Option<String> = greeting.into();
         ::std::mem::replace(&mut self.greeting, greeting)
     }
 
@@ -48,7 +48,7 @@ impl GreetResponse {
     #[must_use]
     pub fn with_greeting<F>(mut self, greeting: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
         self.set_greeting(greeting);
         self

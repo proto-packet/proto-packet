@@ -1,6 +1,7 @@
 use crate::GenError;
 use crate::rust::naming::{ident, is_renamed, is_snake_case};
-use crate::rust::typing::{Typing, option};
+use crate::rust::prelude::PreludeName;
+use crate::rust::typing::Typing;
 use code_gen::WithStatements;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, Reference, RustType, Signature, StructField, Var,
@@ -26,7 +27,7 @@ impl Field<'_> {
     pub(crate) fn value_type(self, typing: Typing<'_>) -> RustType {
         let value_type: RustType = typing.rust_type(self.tag);
         if self.is_optional {
-            option(value_type)
+            typing.option(value_type)
         } else {
             value_type
         }
@@ -36,23 +37,25 @@ impl Field<'_> {
     pub(crate) fn storage_type(self, typing: Typing<'_>) -> RustType {
         let mut storage_type: RustType = typing.rust_type(self.tag);
         if self.is_boxed {
-            storage_type = RustType::from("::std::boxed::Box").with_generic(storage_type);
+            storage_type =
+                RustType::from(typing.prelude(PreludeName::Box)).with_generic(storage_type);
         }
         if self.is_optional {
-            option(storage_type)
+            typing.option(storage_type)
         } else {
             storage_type
         }
     }
 
     /// Converts the value `expr` of the field to its storage type. (it boxes boxed fields)
-    pub(crate) fn storage_expr(self, expr: &str) -> String {
+    pub(crate) fn storage_expr(self, typing: Typing<'_>, expr: &str) -> String {
+        let boxed: &str = typing.prelude(PreludeName::Box);
         if !self.is_boxed {
             expr.to_string()
         } else if self.is_optional {
-            format!("{}.map(::std::boxed::Box::new)", expr)
+            format!("{}.map({}::new)", expr, boxed)
         } else {
-            format!("::std::boxed::Box::new({})", expr)
+            format!("{}::new({})", boxed, expr)
         }
     }
 
@@ -96,7 +99,7 @@ impl Field<'_> {
             )
         };
         if self.is_optional {
-            (option(result), expr)
+            (typing.option(result), expr)
         } else {
             (result, expr)
         }
@@ -116,7 +119,10 @@ impl Field<'_> {
             field.add_attribute(format!("serde(rename = \"{}\")", self.name));
         }
         if self.is_optional {
-            field.add_attribute("serde(skip_serializing_if = \"::std::option::Option::is_none\")");
+            field.add_attribute(format!(
+                "serde(skip_serializing_if = \"{}::is_none\")",
+                typing.prelude(PreludeName::Option)
+            ));
         }
         field
     }
@@ -187,7 +193,7 @@ impl Field<'_> {
             .with_receiver(Receiver::BorrowedMut)
             .with_result(value_type.clone());
         if self.is_optional {
-            signature.add_generic(Var::from(("F", into(value_type.clone()))));
+            signature.add_generic(Var::from(("F", into(typing, value_type.clone()))));
             signature.add_param(Var::from((field.clone(), "F")));
         } else {
             signature.add_param(Var::from((field.clone(), value_type.clone())));
@@ -204,7 +210,7 @@ impl Field<'_> {
         let replace: String = format!(
             "::std::mem::replace(&mut self.{}, {})",
             field,
-            self.storage_expr(&field)
+            self.storage_expr(typing, &field)
         );
         function.with_literal(self.value_expr(&replace))
     }
@@ -216,7 +222,7 @@ impl Field<'_> {
             .with_receiver(Receiver::OwnedMut)
             .with_result("Self");
         if self.is_optional {
-            signature.add_generic(Var::from(("F", into(self.value_type(typing)))));
+            signature.add_generic(Var::from(("F", into(typing, self.value_type(typing)))));
             signature.add_param(Var::from((field.clone(), "F")));
         } else {
             signature.add_param(Var::from((field.clone(), self.value_type(typing))));
@@ -262,6 +268,6 @@ pub(crate) fn check_field_names(
 }
 
 /// Gets the `Into` bound of the `rust_type`.
-fn into(rust_type: RustType) -> RustType {
-    RustType::from("::std::convert::Into").with_generic(rust_type)
+fn into(typing: Typing<'_>, rust_type: RustType) -> RustType {
+    RustType::from(typing.prelude(PreludeName::Into)).with_generic(rust_type)
 }

@@ -33,11 +33,11 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct BoxedFields {
-    point: ::std::boxed::Box<crate::types::Point>,
-    person: ::std::boxed::Box<crate::types::Person>,
-    label: ::std::boxed::Box<crate::types::Label>,
-    color: ::std::boxed::Box<crate::types::Color>,
-    shape: ::std::boxed::Box<crate::types::Shape>,
+    point: Box<crate::types::Point>,
+    person: Box<crate::types::Person>,
+    label: Box<crate::types::Label>,
+    color: Box<crate::types::Color>,
+    shape: Box<crate::types::Shape>,
 }
 
 impl BoxedFields {
@@ -52,11 +52,11 @@ impl BoxedFields {
         shape: crate::types::Shape,
     ) -> Self {
         Self {
-            point: ::std::boxed::Box::new(point),
-            person: ::std::boxed::Box::new(person),
-            label: ::std::boxed::Box::new(label),
-            color: ::std::boxed::Box::new(color),
-            shape: ::std::boxed::Box::new(shape),
+            point: Box::new(point),
+            person: Box::new(person),
+            label: Box::new(label),
+            color: Box::new(color),
+            shape: Box::new(shape),
         }
     }
 }
@@ -72,7 +72,7 @@ impl BoxedFields {
 
     /// Sets the field: `point`. Returns the previous value.
     pub fn set_point(&mut self, point: crate::types::Point) -> crate::types::Point {
-        *::std::mem::replace(&mut self.point, ::std::boxed::Box::new(point))
+        *::std::mem::replace(&mut self.point, Box::new(point))
     }
 
     /// Sets the field: `point`. (builder pattern)
@@ -94,7 +94,7 @@ impl BoxedFields {
 
     /// Sets the field: `person`. Returns the previous value.
     pub fn set_person(&mut self, person: crate::types::Person) -> crate::types::Person {
-        *::std::mem::replace(&mut self.person, ::std::boxed::Box::new(person))
+        *::std::mem::replace(&mut self.person, Box::new(person))
     }
 
     /// Sets the field: `person`. (builder pattern)
@@ -116,7 +116,7 @@ impl BoxedFields {
 
     /// Sets the field: `label`. Returns the previous value.
     pub fn set_label(&mut self, label: crate::types::Label) -> crate::types::Label {
-        *::std::mem::replace(&mut self.label, ::std::boxed::Box::new(label))
+        *::std::mem::replace(&mut self.label, Box::new(label))
     }
 
     /// Sets the field: `label`. (builder pattern)
@@ -138,7 +138,7 @@ impl BoxedFields {
 
     /// Sets the field: `color`. Returns the previous value.
     pub fn set_color(&mut self, color: crate::types::Color) -> crate::types::Color {
-        *::std::mem::replace(&mut self.color, ::std::boxed::Box::new(color))
+        *::std::mem::replace(&mut self.color, Box::new(color))
     }
 
     /// Sets the field: `color`. (builder pattern)
@@ -160,7 +160,7 @@ impl BoxedFields {
 
     /// Sets the field: `shape`. Returns the previous value.
     pub fn set_shape(&mut self, shape: crate::types::Shape) -> crate::types::Shape {
-        *::std::mem::replace(&mut self.shape, ::std::boxed::Box::new(shape))
+        *::std::mem::replace(&mut self.shape, Box::new(shape))
     }
 
     /// Sets the field: `shape`. (builder pattern)

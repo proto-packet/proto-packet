@@ -22,8 +22,8 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct GreetRequest {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    name: ::std::option::Option<::std::string::String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
 }
 
 impl GreetRequest {
@@ -31,16 +31,16 @@ impl GreetRequest {
 
     /// Gets the field: `name`.
     #[must_use]
-    pub fn name(&self) -> ::std::option::Option<&str> {
+    pub fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }
 
     /// Sets the field: `name`. Returns the previous value.
-    pub fn set_name<F>(&mut self, name: F) -> ::std::option::Option<::std::string::String>
+    pub fn set_name<F>(&mut self, name: F) -> Option<String>
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
-        let name: ::std::option::Option<::std::string::String> = name.into();
+        let name: Option<String> = name.into();
         ::std::mem::replace(&mut self.name, name)
     }
 
@@ -48,7 +48,7 @@ impl GreetRequest {
     #[must_use]
     pub fn with_name<F>(mut self, name: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
         self.set_name(name);
         self

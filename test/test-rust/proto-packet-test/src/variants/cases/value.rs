@@ -25,7 +25,7 @@ pub enum Value {
     Id(::proto_packet::types::Uuid),
 
     /// A string case.
-    Text(::std::string::String),
+    Text(String),
 
     /// A `Copy` struct case.
     Point(crate::types::Point),

@@ -3,6 +3,7 @@ use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
+use crate::rust::prelude::Prelude;
 use crate::rust::typing::Typing;
 use code_gen::rust::{Access, Struct as RustStruct, WithAccess, WithAttributes, WithStructFields};
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
@@ -23,8 +24,8 @@ pub fn gen_message(
     mod_path: ModPathRef<'_>,
     message: &Message,
 ) -> Result<String, GenError> {
-    let typing: Typing = Typing::new(project);
     let type_name: String = ident(&message.type_name());
+    let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = message
         .fields()
         .iter()

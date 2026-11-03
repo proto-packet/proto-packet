@@ -19,7 +19,7 @@ pub enum Expr {
     Number(u64),
 
     /// The negation of an expression.
-    Negate(::std::boxed::Box<crate::variants::boxed::Expr>),
+    Negate(Box<crate::variants::boxed::Expr>),
 
     /// The sum of two expressions.
     Add(crate::variants::boxed::Sum),

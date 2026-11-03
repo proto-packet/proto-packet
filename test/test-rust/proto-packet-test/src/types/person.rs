@@ -24,7 +24,7 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct Person {
-    name: ::std::string::String,
+    name: String,
     age: u8,
 }
 
@@ -32,7 +32,7 @@ impl Person {
     //! Construction
 
     /// Creates a new [Person].
-    pub fn new(name: ::std::string::String, age: u8) -> Self {
+    pub fn new(name: String, age: u8) -> Self {
         Self { name, age }
     }
 }
@@ -47,13 +47,13 @@ impl Person {
     }
 
     /// Sets the field: `name`. Returns the previous value.
-    pub fn set_name(&mut self, name: ::std::string::String) -> ::std::string::String {
+    pub fn set_name(&mut self, name: String) -> String {
         ::std::mem::replace(&mut self.name, name)
     }
 
     /// Sets the field: `name`. (builder pattern)
     #[must_use]
-    pub fn with_name(mut self, name: ::std::string::String) -> Self {
+    pub fn with_name(mut self, name: String) -> Self {
         self.set_name(name);
         self
     }

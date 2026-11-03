@@ -25,18 +25,18 @@
 #[serde(crate = "::proto_packet::serde")]
 pub struct ListNode {
     value: u32,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    next: ::std::option::Option<::std::boxed::Box<crate::structs::boxed::ListNode>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    next: Option<Box<crate::structs::boxed::ListNode>>,
 }
 
 impl ListNode {
     //! Construction
 
     /// Creates a new [ListNode].
-    pub fn new(value: u32, next: ::std::option::Option<crate::structs::boxed::ListNode>) -> Self {
+    pub fn new(value: u32, next: Option<crate::structs::boxed::ListNode>) -> Self {
         Self {
             value,
-            next: next.map(::std::boxed::Box::new),
+            next: next.map(Box::new),
         }
     }
 }
@@ -68,24 +68,24 @@ impl ListNode {
 
     /// Gets the field: `next`.
     #[must_use]
-    pub fn next(&self) -> ::std::option::Option<&crate::structs::boxed::ListNode> {
+    pub fn next(&self) -> Option<&crate::structs::boxed::ListNode> {
         self.next.as_deref()
     }
 
     /// Sets the field: `next`. Returns the previous value.
-    pub fn set_next<F>(&mut self, next: F) -> ::std::option::Option<crate::structs::boxed::ListNode>
+    pub fn set_next<F>(&mut self, next: F) -> Option<crate::structs::boxed::ListNode>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::structs::boxed::ListNode>>,
+        F: Into<Option<crate::structs::boxed::ListNode>>,
     {
-        let next: ::std::option::Option<crate::structs::boxed::ListNode> = next.into();
-        ::std::mem::replace(&mut self.next, next.map(::std::boxed::Box::new)).map(|value| *value)
+        let next: Option<crate::structs::boxed::ListNode> = next.into();
+        ::std::mem::replace(&mut self.next, next.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `next`. (builder pattern)
     #[must_use]
     pub fn with_next<F>(mut self, next: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::structs::boxed::ListNode>>,
+        F: Into<Option<crate::structs::boxed::ListNode>>,
     {
         self.set_next(next);
         self

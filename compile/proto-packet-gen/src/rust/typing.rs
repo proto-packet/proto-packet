@@ -1,4 +1,5 @@
 use crate::rust::naming::type_path;
+use crate::rust::prelude::{Prelude, PreludeName};
 use code_gen::rust::{Reference, RustType};
 use proto_packet_tree::{
     Project, QualifiedName, SpecialType, Struct, TypeDec, TypeTag, WithTypeTag,
@@ -8,26 +9,38 @@ use proto_packet_tree::{
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct Typing<'a> {
     project: &'a Project,
+    prelude: Prelude,
 }
 
 impl<'a> Typing<'a> {
     //! Construction
 
-    /// Creates a new typing for the type tags of the `project`.
-    pub(crate) fn new(project: &'a Project) -> Self {
-        Self { project }
+    /// Creates a new typing for the type tags of the `project`, in a file with the `prelude`.
+    pub(crate) fn new(project: &'a Project, prelude: Prelude) -> Self {
+        Self { project, prelude }
+    }
+}
+
+impl Typing<'_> {
+    //! Prelude
+
+    /// Gets the path of the prelude `name` in the file. (ex: `Option`)
+    pub(crate) fn prelude(self, name: PreludeName) -> &'static str {
+        self.prelude.path(name)
     }
 }
 
 impl Typing<'_> {
     //! Types
 
-    /// Gets the Rust type of the `tag`. (ex: `::std::string::String`)
+    /// Gets the Rust type of the `tag`. (ex: `String`)
     pub(crate) fn rust_type(self, tag: &TypeTag) -> RustType {
         match tag {
             TypeTag::Primitive(primitive) => RustType::from(primitive.name()),
             TypeTag::Special(SpecialType::Uuid) => RustType::from("::proto_packet::types::Uuid"),
-            TypeTag::Special(SpecialType::String) => RustType::from("::std::string::String"),
+            TypeTag::Special(SpecialType::String) => {
+                RustType::from(self.prelude(PreludeName::String))
+            }
             TypeTag::Named(name) => RustType::from(type_path(name.to_ref())),
         }
     }
@@ -108,14 +121,14 @@ impl Typing<'_> {
             }
         };
         if is_optional {
-            (option(result), expr)
+            (self.option(result), expr)
         } else {
             (result, expr)
         }
     }
-}
 
-/// Gets the optional type of the `rust_type`.
-pub(crate) fn option(rust_type: RustType) -> RustType {
-    RustType::from("::std::option::Option").with_generic(rust_type)
+    /// Gets the optional type of the `rust_type`.
+    pub(crate) fn option(self, rust_type: RustType) -> RustType {
+        RustType::from(self.prelude(PreludeName::Option)).with_generic(rust_type)
+    }
 }

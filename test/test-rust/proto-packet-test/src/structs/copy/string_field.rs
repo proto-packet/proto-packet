@@ -21,14 +21,14 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct StringField {
-    text: ::std::string::String,
+    text: String,
 }
 
 impl StringField {
     //! Construction
 
     /// Creates a new [StringField].
-    pub fn new(text: ::std::string::String) -> Self {
+    pub fn new(text: String) -> Self {
         Self { text }
     }
 }
@@ -43,13 +43,13 @@ impl StringField {
     }
 
     /// Sets the field: `text`. Returns the previous value.
-    pub fn set_text(&mut self, text: ::std::string::String) -> ::std::string::String {
+    pub fn set_text(&mut self, text: String) -> String {
         ::std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)
     #[must_use]
-    pub fn with_text(mut self, text: ::std::string::String) -> Self {
+    pub fn with_text(mut self, text: String) -> Self {
         self.set_text(text);
         self
     }

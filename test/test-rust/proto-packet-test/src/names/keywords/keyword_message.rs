@@ -25,11 +25,11 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct KeywordMessage {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    r#type: ::std::option::Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    r#type: Option<u32>,
     #[serde(rename = "self")]
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    self_: ::std::option::Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    self_: Option<u32>,
 }
 
 impl KeywordMessage {
@@ -37,16 +37,16 @@ impl KeywordMessage {
 
     /// Gets the field: `type`.
     #[must_use]
-    pub fn r#type(&self) -> ::std::option::Option<u32> {
+    pub fn r#type(&self) -> Option<u32> {
         self.r#type
     }
 
     /// Sets the field: `type`. Returns the previous value.
-    pub fn set_type<F>(&mut self, r#type: F) -> ::std::option::Option<u32>
+    pub fn set_type<F>(&mut self, r#type: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let r#type: ::std::option::Option<u32> = r#type.into();
+        let r#type: Option<u32> = r#type.into();
         ::std::mem::replace(&mut self.r#type, r#type)
     }
 
@@ -54,7 +54,7 @@ impl KeywordMessage {
     #[must_use]
     pub fn with_type<F>(mut self, r#type: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_type(r#type);
         self
@@ -66,16 +66,16 @@ impl KeywordMessage {
 
     /// Gets the field: `self`.
     #[must_use]
-    pub fn self_(&self) -> ::std::option::Option<u32> {
+    pub fn self_(&self) -> Option<u32> {
         self.self_
     }
 
     /// Sets the field: `self`. Returns the previous value.
-    pub fn set_self<F>(&mut self, self_: F) -> ::std::option::Option<u32>
+    pub fn set_self<F>(&mut self, self_: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let self_: ::std::option::Option<u32> = self_.into();
+        let self_: Option<u32> = self_.into();
         ::std::mem::replace(&mut self.self_, self_)
     }
 
@@ -83,7 +83,7 @@ impl KeywordMessage {
     #[must_use]
     pub fn with_self<F>(mut self, self_: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_self(self_);
         self

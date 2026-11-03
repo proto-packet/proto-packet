@@ -25,10 +25,10 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct EdgeTags {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    min: ::std::option::Option<u32>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    max: ::std::option::Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    min: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max: Option<u32>,
 }
 
 impl EdgeTags {
@@ -36,16 +36,16 @@ impl EdgeTags {
 
     /// Gets the field: `min`.
     #[must_use]
-    pub fn min(&self) -> ::std::option::Option<u32> {
+    pub fn min(&self) -> Option<u32> {
         self.min
     }
 
     /// Sets the field: `min`. Returns the previous value.
-    pub fn set_min<F>(&mut self, min: F) -> ::std::option::Option<u32>
+    pub fn set_min<F>(&mut self, min: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let min: ::std::option::Option<u32> = min.into();
+        let min: Option<u32> = min.into();
         ::std::mem::replace(&mut self.min, min)
     }
 
@@ -53,7 +53,7 @@ impl EdgeTags {
     #[must_use]
     pub fn with_min<F>(mut self, min: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_min(min);
         self
@@ -65,16 +65,16 @@ impl EdgeTags {
 
     /// Gets the field: `max`.
     #[must_use]
-    pub fn max(&self) -> ::std::option::Option<u32> {
+    pub fn max(&self) -> Option<u32> {
         self.max
     }
 
     /// Sets the field: `max`. Returns the previous value.
-    pub fn set_max<F>(&mut self, max: F) -> ::std::option::Option<u32>
+    pub fn set_max<F>(&mut self, max: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let max: ::std::option::Option<u32> = max.into();
+        let max: Option<u32> = max.into();
         ::std::mem::replace(&mut self.max, max)
     }
 
@@ -82,7 +82,7 @@ impl EdgeTags {
     #[must_use]
     pub fn with_max<F>(mut self, max: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_max(max);
         self

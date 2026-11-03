@@ -1,5 +1,6 @@
 use crate::rust::docs::add_docs;
 use crate::rust::naming::{ident, is_snake_case, is_upper_camel_case, snake_case};
+use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, Receiver, RustType, Signature, SignatureDec, Trait, Var, WithAccess,
@@ -15,7 +16,7 @@ use proto_packet_tree::{
 ///
 /// The service is a trait with a function per call, plus a function that creates its axum router.
 pub fn gen_service(project: &Project, mod_path: ModPathRef<'_>, service: &Service) -> String {
-    let typing: Typing = Typing::new(project);
+    let typing: Typing = Typing::new(project, Prelude::new(&ident(&service.type_name())));
     Block::default()
         .with_statement(gen_trait(typing, service))
         .with_statement(EmptyLine::default())
@@ -26,8 +27,8 @@ pub fn gen_service(project: &Project, mod_path: ModPathRef<'_>, service: &Servic
 /// Generates the trait of the `service`.
 fn gen_trait(typing: Typing<'_>, service: &Service) -> Trait {
     let mut result: Trait = Trait::from(ident(&service.type_name()))
-        .with_supertrait("::std::marker::Send")
-        .with_supertrait("::std::marker::Sync");
+        .with_supertrait(typing.prelude(PreludeName::Send))
+        .with_supertrait(typing.prelude(PreludeName::Sync));
     add_docs(&mut result, service.comments());
     if !is_upper_camel_case(&service.type_name()) {
         result.add_attribute("allow(non_camel_case_types)");
@@ -53,13 +54,13 @@ fn gen_trait(typing: Typing<'_>, service: &Service) -> Trait {
 /// It returns a `Send` future, so the calls can be served by axum.
 /// (ex: `fn greet(&self, request: Req) -> impl Future<Output = Result<Res, Error>> + Send + '_`)
 fn gen_signature(typing: Typing<'_>, call: &ServiceCall) -> Signature {
-    let result: RustType = RustType::from("::std::result::Result")
+    let result: RustType = RustType::from(typing.prelude(PreludeName::Result))
         .with_generic(typing.rust_type(call.response()))
         .with_generic("::proto_packet::service::ServiceError");
     let future: RustType = RustType::from("::std::future::Future")
         .with_generic(result.to_binding("Output"))
         .to_impl()
-        .with_bound("::std::marker::Send")
+        .with_bound(typing.prelude(PreludeName::Send))
         .with_bound("'_");
     Signature::from(ident(&call.call_name()))
         .with_receiver(Receiver::Borrowed)

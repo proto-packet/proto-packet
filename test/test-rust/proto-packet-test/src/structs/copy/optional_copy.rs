@@ -25,20 +25,17 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct OptionalCopy {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    count: ::std::option::Option<u32>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    point: ::std::option::Option<crate::types::Point>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    point: Option<crate::types::Point>,
 }
 
 impl OptionalCopy {
     //! Construction
 
     /// Creates a new [OptionalCopy].
-    pub fn new(
-        count: ::std::option::Option<u32>,
-        point: ::std::option::Option<crate::types::Point>,
-    ) -> Self {
+    pub fn new(count: Option<u32>, point: Option<crate::types::Point>) -> Self {
         Self { count, point }
     }
 }
@@ -48,16 +45,16 @@ impl OptionalCopy {
 
     /// Gets the field: `count`.
     #[must_use]
-    pub fn count(&self) -> ::std::option::Option<u32> {
+    pub fn count(&self) -> Option<u32> {
         self.count
     }
 
     /// Sets the field: `count`. Returns the previous value.
-    pub fn set_count<F>(&mut self, count: F) -> ::std::option::Option<u32>
+    pub fn set_count<F>(&mut self, count: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let count: ::std::option::Option<u32> = count.into();
+        let count: Option<u32> = count.into();
         ::std::mem::replace(&mut self.count, count)
     }
 
@@ -65,7 +62,7 @@ impl OptionalCopy {
     #[must_use]
     pub fn with_count<F>(mut self, count: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_count(count);
         self
@@ -77,16 +74,16 @@ impl OptionalCopy {
 
     /// Gets the field: `point`.
     #[must_use]
-    pub fn point(&self) -> ::std::option::Option<crate::types::Point> {
+    pub fn point(&self) -> Option<crate::types::Point> {
         self.point
     }
 
     /// Sets the field: `point`. Returns the previous value.
-    pub fn set_point<F>(&mut self, point: F) -> ::std::option::Option<crate::types::Point>
+    pub fn set_point<F>(&mut self, point: F) -> Option<crate::types::Point>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Point>>,
+        F: Into<Option<crate::types::Point>>,
     {
-        let point: ::std::option::Option<crate::types::Point> = point.into();
+        let point: Option<crate::types::Point> = point.into();
         ::std::mem::replace(&mut self.point, point)
     }
 
@@ -94,7 +91,7 @@ impl OptionalCopy {
     #[must_use]
     pub fn with_point<F>(mut self, point: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Point>>,
+        F: Into<Option<crate::types::Point>>,
     {
         self.set_point(point);
         self

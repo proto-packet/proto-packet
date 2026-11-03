@@ -28,12 +28,12 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct UnorderedTags {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    three: ::std::option::Option<u32>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    one: ::std::option::Option<u32>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    two: ::std::option::Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    three: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    one: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    two: Option<u32>,
 }
 
 impl UnorderedTags {
@@ -41,16 +41,16 @@ impl UnorderedTags {
 
     /// Gets the field: `three`.
     #[must_use]
-    pub fn three(&self) -> ::std::option::Option<u32> {
+    pub fn three(&self) -> Option<u32> {
         self.three
     }
 
     /// Sets the field: `three`. Returns the previous value.
-    pub fn set_three<F>(&mut self, three: F) -> ::std::option::Option<u32>
+    pub fn set_three<F>(&mut self, three: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let three: ::std::option::Option<u32> = three.into();
+        let three: Option<u32> = three.into();
         ::std::mem::replace(&mut self.three, three)
     }
 
@@ -58,7 +58,7 @@ impl UnorderedTags {
     #[must_use]
     pub fn with_three<F>(mut self, three: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_three(three);
         self
@@ -70,16 +70,16 @@ impl UnorderedTags {
 
     /// Gets the field: `one`.
     #[must_use]
-    pub fn one(&self) -> ::std::option::Option<u32> {
+    pub fn one(&self) -> Option<u32> {
         self.one
     }
 
     /// Sets the field: `one`. Returns the previous value.
-    pub fn set_one<F>(&mut self, one: F) -> ::std::option::Option<u32>
+    pub fn set_one<F>(&mut self, one: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let one: ::std::option::Option<u32> = one.into();
+        let one: Option<u32> = one.into();
         ::std::mem::replace(&mut self.one, one)
     }
 
@@ -87,7 +87,7 @@ impl UnorderedTags {
     #[must_use]
     pub fn with_one<F>(mut self, one: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_one(one);
         self
@@ -99,16 +99,16 @@ impl UnorderedTags {
 
     /// Gets the field: `two`.
     #[must_use]
-    pub fn two(&self) -> ::std::option::Option<u32> {
+    pub fn two(&self) -> Option<u32> {
         self.two
     }
 
     /// Sets the field: `two`. Returns the previous value.
-    pub fn set_two<F>(&mut self, two: F) -> ::std::option::Option<u32>
+    pub fn set_two<F>(&mut self, two: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let two: ::std::option::Option<u32> = two.into();
+        let two: Option<u32> = two.into();
         ::std::mem::replace(&mut self.two, two)
     }
 
@@ -116,7 +116,7 @@ impl UnorderedTags {
     #[must_use]
     pub fn with_two<F>(mut self, two: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_two(two);
         self

@@ -34,16 +34,16 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct NamedFields {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    point: ::std::option::Option<crate::types::Point>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    person: ::std::option::Option<crate::types::Person>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    label: ::std::option::Option<crate::types::Label>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    color: ::std::option::Option<crate::types::Color>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    shape: ::std::option::Option<crate::types::Shape>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    point: Option<crate::types::Point>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    person: Option<crate::types::Person>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    label: Option<crate::types::Label>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    color: Option<crate::types::Color>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    shape: Option<crate::types::Shape>,
 }
 
 impl NamedFields {
@@ -51,16 +51,16 @@ impl NamedFields {
 
     /// Gets the field: `point`.
     #[must_use]
-    pub fn point(&self) -> ::std::option::Option<crate::types::Point> {
+    pub fn point(&self) -> Option<crate::types::Point> {
         self.point
     }
 
     /// Sets the field: `point`. Returns the previous value.
-    pub fn set_point<F>(&mut self, point: F) -> ::std::option::Option<crate::types::Point>
+    pub fn set_point<F>(&mut self, point: F) -> Option<crate::types::Point>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Point>>,
+        F: Into<Option<crate::types::Point>>,
     {
-        let point: ::std::option::Option<crate::types::Point> = point.into();
+        let point: Option<crate::types::Point> = point.into();
         ::std::mem::replace(&mut self.point, point)
     }
 
@@ -68,7 +68,7 @@ impl NamedFields {
     #[must_use]
     pub fn with_point<F>(mut self, point: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Point>>,
+        F: Into<Option<crate::types::Point>>,
     {
         self.set_point(point);
         self
@@ -80,16 +80,16 @@ impl NamedFields {
 
     /// Gets the field: `person`.
     #[must_use]
-    pub fn person(&self) -> ::std::option::Option<&crate::types::Person> {
+    pub fn person(&self) -> Option<&crate::types::Person> {
         self.person.as_ref()
     }
 
     /// Sets the field: `person`. Returns the previous value.
-    pub fn set_person<F>(&mut self, person: F) -> ::std::option::Option<crate::types::Person>
+    pub fn set_person<F>(&mut self, person: F) -> Option<crate::types::Person>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Person>>,
+        F: Into<Option<crate::types::Person>>,
     {
-        let person: ::std::option::Option<crate::types::Person> = person.into();
+        let person: Option<crate::types::Person> = person.into();
         ::std::mem::replace(&mut self.person, person)
     }
 
@@ -97,7 +97,7 @@ impl NamedFields {
     #[must_use]
     pub fn with_person<F>(mut self, person: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Person>>,
+        F: Into<Option<crate::types::Person>>,
     {
         self.set_person(person);
         self
@@ -109,16 +109,16 @@ impl NamedFields {
 
     /// Gets the field: `label`.
     #[must_use]
-    pub fn label(&self) -> ::std::option::Option<&crate::types::Label> {
+    pub fn label(&self) -> Option<&crate::types::Label> {
         self.label.as_ref()
     }
 
     /// Sets the field: `label`. Returns the previous value.
-    pub fn set_label<F>(&mut self, label: F) -> ::std::option::Option<crate::types::Label>
+    pub fn set_label<F>(&mut self, label: F) -> Option<crate::types::Label>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Label>>,
+        F: Into<Option<crate::types::Label>>,
     {
-        let label: ::std::option::Option<crate::types::Label> = label.into();
+        let label: Option<crate::types::Label> = label.into();
         ::std::mem::replace(&mut self.label, label)
     }
 
@@ -126,7 +126,7 @@ impl NamedFields {
     #[must_use]
     pub fn with_label<F>(mut self, label: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Label>>,
+        F: Into<Option<crate::types::Label>>,
     {
         self.set_label(label);
         self
@@ -138,16 +138,16 @@ impl NamedFields {
 
     /// Gets the field: `color`.
     #[must_use]
-    pub fn color(&self) -> ::std::option::Option<crate::types::Color> {
+    pub fn color(&self) -> Option<crate::types::Color> {
         self.color
     }
 
     /// Sets the field: `color`. Returns the previous value.
-    pub fn set_color<F>(&mut self, color: F) -> ::std::option::Option<crate::types::Color>
+    pub fn set_color<F>(&mut self, color: F) -> Option<crate::types::Color>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Color>>,
+        F: Into<Option<crate::types::Color>>,
     {
-        let color: ::std::option::Option<crate::types::Color> = color.into();
+        let color: Option<crate::types::Color> = color.into();
         ::std::mem::replace(&mut self.color, color)
     }
 
@@ -155,7 +155,7 @@ impl NamedFields {
     #[must_use]
     pub fn with_color<F>(mut self, color: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Color>>,
+        F: Into<Option<crate::types::Color>>,
     {
         self.set_color(color);
         self
@@ -167,16 +167,16 @@ impl NamedFields {
 
     /// Gets the field: `shape`.
     #[must_use]
-    pub fn shape(&self) -> ::std::option::Option<&crate::types::Shape> {
+    pub fn shape(&self) -> Option<&crate::types::Shape> {
         self.shape.as_ref()
     }
 
     /// Sets the field: `shape`. Returns the previous value.
-    pub fn set_shape<F>(&mut self, shape: F) -> ::std::option::Option<crate::types::Shape>
+    pub fn set_shape<F>(&mut self, shape: F) -> Option<crate::types::Shape>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Shape>>,
+        F: Into<Option<crate::types::Shape>>,
     {
-        let shape: ::std::option::Option<crate::types::Shape> = shape.into();
+        let shape: Option<crate::types::Shape> = shape.into();
         ::std::mem::replace(&mut self.shape, shape)
     }
 
@@ -184,7 +184,7 @@ impl NamedFields {
     #[must_use]
     pub fn with_shape<F>(mut self, shape: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Shape>>,
+        F: Into<Option<crate::types::Shape>>,
     {
         self.set_shape(shape);
         self

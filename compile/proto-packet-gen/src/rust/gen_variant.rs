@@ -1,6 +1,7 @@
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
 use crate::rust::naming::{ident, is_renamed, is_upper_camel_case};
+use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::typing::Typing;
 use code_gen::Statement;
 use code_gen::rust::{
@@ -12,8 +13,9 @@ use proto_packet_tree::{Project, Variant, WithCaseName, WithComments, WithTypeNa
 ///
 /// A renamed case keeps its schema name in serde. (ex: `Self_` is `Self`)
 pub fn gen_variant(project: &Project, variant: &Variant) -> String {
-    let typing: Typing = Typing::new(project);
-    let mut result: RustEnum = RustEnum::from(ident(&variant.type_name()));
+    let type_name: String = ident(&variant.type_name());
+    let typing: Typing = Typing::new(project, Prelude::new(&type_name));
+    let mut result: RustEnum = RustEnum::from(type_name);
     add_docs(&mut result, variant.comments());
     add_derives(&mut result, false, true, false);
     result.add_attribute("serde(tag = \"var\", content = \"val\")");
@@ -29,7 +31,7 @@ pub fn gen_variant(project: &Project, variant: &Variant) -> String {
     for case in variant.cases() {
         let mut case_type: RustType = typing.rust_type(case.type_tag());
         if case.is_boxed() {
-            case_type = RustType::from("::std::boxed::Box").with_generic(case_type);
+            case_type = RustType::from(typing.prelude(PreludeName::Box)).with_generic(case_type);
         }
         let fields: EnumFields = EnumFields::Unnamed(vec![case_type]);
         let mut rust_case: EnumCase = EnumCase::from(ident(&case.case_name())).with_fields(fields);

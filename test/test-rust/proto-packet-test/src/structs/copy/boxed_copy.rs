@@ -21,7 +21,7 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct BoxedCopy {
-    point: ::std::boxed::Box<crate::types::Point>,
+    point: Box<crate::types::Point>,
 }
 
 impl BoxedCopy {
@@ -30,7 +30,7 @@ impl BoxedCopy {
     /// Creates a new [BoxedCopy].
     pub fn new(point: crate::types::Point) -> Self {
         Self {
-            point: ::std::boxed::Box::new(point),
+            point: Box::new(point),
         }
     }
 }
@@ -46,7 +46,7 @@ impl BoxedCopy {
 
     /// Sets the field: `point`. Returns the previous value.
     pub fn set_point(&mut self, point: crate::types::Point) -> crate::types::Point {
-        *::std::mem::replace(&mut self.point, ::std::boxed::Box::new(point))
+        *::std::mem::replace(&mut self.point, Box::new(point))
     }
 
     /// Sets the field: `point`. (builder pattern)

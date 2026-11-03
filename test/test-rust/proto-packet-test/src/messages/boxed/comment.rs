@@ -25,10 +25,10 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct Comment {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    text: ::std::option::Option<::std::string::String>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    reply: ::std::option::Option<::std::boxed::Box<crate::messages::boxed::Comment>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reply: Option<Box<crate::messages::boxed::Comment>>,
 }
 
 impl Comment {
@@ -36,16 +36,16 @@ impl Comment {
 
     /// Gets the field: `text`.
     #[must_use]
-    pub fn text(&self) -> ::std::option::Option<&str> {
+    pub fn text(&self) -> Option<&str> {
         self.text.as_deref()
     }
 
     /// Sets the field: `text`. Returns the previous value.
-    pub fn set_text<F>(&mut self, text: F) -> ::std::option::Option<::std::string::String>
+    pub fn set_text<F>(&mut self, text: F) -> Option<String>
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
-        let text: ::std::option::Option<::std::string::String> = text.into();
+        let text: Option<String> = text.into();
         ::std::mem::replace(&mut self.text, text)
     }
 
@@ -53,7 +53,7 @@ impl Comment {
     #[must_use]
     pub fn with_text<F>(mut self, text: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
         self.set_text(text);
         self
@@ -65,27 +65,24 @@ impl Comment {
 
     /// Gets the field: `reply`.
     #[must_use]
-    pub fn reply(&self) -> ::std::option::Option<&crate::messages::boxed::Comment> {
+    pub fn reply(&self) -> Option<&crate::messages::boxed::Comment> {
         self.reply.as_deref()
     }
 
     /// Sets the field: `reply`. Returns the previous value.
-    pub fn set_reply<F>(
-        &mut self,
-        reply: F,
-    ) -> ::std::option::Option<crate::messages::boxed::Comment>
+    pub fn set_reply<F>(&mut self, reply: F) -> Option<crate::messages::boxed::Comment>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::messages::boxed::Comment>>,
+        F: Into<Option<crate::messages::boxed::Comment>>,
     {
-        let reply: ::std::option::Option<crate::messages::boxed::Comment> = reply.into();
-        ::std::mem::replace(&mut self.reply, reply.map(::std::boxed::Box::new)).map(|value| *value)
+        let reply: Option<crate::messages::boxed::Comment> = reply.into();
+        ::std::mem::replace(&mut self.reply, reply.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `reply`. (builder pattern)
     #[must_use]
     pub fn with_reply<F>(mut self, reply: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::messages::boxed::Comment>>,
+        F: Into<Option<crate::messages::boxed::Comment>>,
     {
         self.set_reply(reply);
         self

@@ -28,12 +28,12 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct BoxedFields {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    point: ::std::option::Option<::std::boxed::Box<crate::types::Point>>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    label: ::std::option::Option<::std::boxed::Box<crate::types::Label>>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    shape: ::std::option::Option<::std::boxed::Box<crate::types::Shape>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    point: Option<Box<crate::types::Point>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    label: Option<Box<crate::types::Label>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    shape: Option<Box<crate::types::Shape>>,
 }
 
 impl BoxedFields {
@@ -41,24 +41,24 @@ impl BoxedFields {
 
     /// Gets the field: `point`.
     #[must_use]
-    pub fn point(&self) -> ::std::option::Option<crate::types::Point> {
+    pub fn point(&self) -> Option<crate::types::Point> {
         self.point.as_deref().copied()
     }
 
     /// Sets the field: `point`. Returns the previous value.
-    pub fn set_point<F>(&mut self, point: F) -> ::std::option::Option<crate::types::Point>
+    pub fn set_point<F>(&mut self, point: F) -> Option<crate::types::Point>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Point>>,
+        F: Into<Option<crate::types::Point>>,
     {
-        let point: ::std::option::Option<crate::types::Point> = point.into();
-        ::std::mem::replace(&mut self.point, point.map(::std::boxed::Box::new)).map(|value| *value)
+        let point: Option<crate::types::Point> = point.into();
+        ::std::mem::replace(&mut self.point, point.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `point`. (builder pattern)
     #[must_use]
     pub fn with_point<F>(mut self, point: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Point>>,
+        F: Into<Option<crate::types::Point>>,
     {
         self.set_point(point);
         self
@@ -70,24 +70,24 @@ impl BoxedFields {
 
     /// Gets the field: `label`.
     #[must_use]
-    pub fn label(&self) -> ::std::option::Option<&crate::types::Label> {
+    pub fn label(&self) -> Option<&crate::types::Label> {
         self.label.as_deref()
     }
 
     /// Sets the field: `label`. Returns the previous value.
-    pub fn set_label<F>(&mut self, label: F) -> ::std::option::Option<crate::types::Label>
+    pub fn set_label<F>(&mut self, label: F) -> Option<crate::types::Label>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Label>>,
+        F: Into<Option<crate::types::Label>>,
     {
-        let label: ::std::option::Option<crate::types::Label> = label.into();
-        ::std::mem::replace(&mut self.label, label.map(::std::boxed::Box::new)).map(|value| *value)
+        let label: Option<crate::types::Label> = label.into();
+        ::std::mem::replace(&mut self.label, label.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `label`. (builder pattern)
     #[must_use]
     pub fn with_label<F>(mut self, label: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Label>>,
+        F: Into<Option<crate::types::Label>>,
     {
         self.set_label(label);
         self
@@ -99,24 +99,24 @@ impl BoxedFields {
 
     /// Gets the field: `shape`.
     #[must_use]
-    pub fn shape(&self) -> ::std::option::Option<&crate::types::Shape> {
+    pub fn shape(&self) -> Option<&crate::types::Shape> {
         self.shape.as_deref()
     }
 
     /// Sets the field: `shape`. Returns the previous value.
-    pub fn set_shape<F>(&mut self, shape: F) -> ::std::option::Option<crate::types::Shape>
+    pub fn set_shape<F>(&mut self, shape: F) -> Option<crate::types::Shape>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Shape>>,
+        F: Into<Option<crate::types::Shape>>,
     {
-        let shape: ::std::option::Option<crate::types::Shape> = shape.into();
-        ::std::mem::replace(&mut self.shape, shape.map(::std::boxed::Box::new)).map(|value| *value)
+        let shape: Option<crate::types::Shape> = shape.into();
+        ::std::mem::replace(&mut self.shape, shape.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `shape`. (builder pattern)
     #[must_use]
     pub fn with_shape<F>(mut self, shape: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Shape>>,
+        F: Into<Option<crate::types::Shape>>,
     {
         self.set_shape(shape);
         self

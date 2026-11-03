@@ -25,10 +25,10 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct SpecialFields {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    id: ::std::option::Option<::proto_packet::types::Uuid>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    text: ::std::option::Option<::std::string::String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    id: Option<::proto_packet::types::Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<String>,
 }
 
 impl SpecialFields {
@@ -36,16 +36,16 @@ impl SpecialFields {
 
     /// Gets the field: `id`.
     #[must_use]
-    pub fn id(&self) -> ::std::option::Option<::proto_packet::types::Uuid> {
+    pub fn id(&self) -> Option<::proto_packet::types::Uuid> {
         self.id
     }
 
     /// Sets the field: `id`. Returns the previous value.
-    pub fn set_id<F>(&mut self, id: F) -> ::std::option::Option<::proto_packet::types::Uuid>
+    pub fn set_id<F>(&mut self, id: F) -> Option<::proto_packet::types::Uuid>
     where
-        F: ::std::convert::Into<::std::option::Option<::proto_packet::types::Uuid>>,
+        F: Into<Option<::proto_packet::types::Uuid>>,
     {
-        let id: ::std::option::Option<::proto_packet::types::Uuid> = id.into();
+        let id: Option<::proto_packet::types::Uuid> = id.into();
         ::std::mem::replace(&mut self.id, id)
     }
 
@@ -53,7 +53,7 @@ impl SpecialFields {
     #[must_use]
     pub fn with_id<F>(mut self, id: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::proto_packet::types::Uuid>>,
+        F: Into<Option<::proto_packet::types::Uuid>>,
     {
         self.set_id(id);
         self
@@ -65,16 +65,16 @@ impl SpecialFields {
 
     /// Gets the field: `text`.
     #[must_use]
-    pub fn text(&self) -> ::std::option::Option<&str> {
+    pub fn text(&self) -> Option<&str> {
         self.text.as_deref()
     }
 
     /// Sets the field: `text`. Returns the previous value.
-    pub fn set_text<F>(&mut self, text: F) -> ::std::option::Option<::std::string::String>
+    pub fn set_text<F>(&mut self, text: F) -> Option<String>
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
-        let text: ::std::option::Option<::std::string::String> = text.into();
+        let text: Option<String> = text.into();
         ::std::mem::replace(&mut self.text, text)
     }
 
@@ -82,7 +82,7 @@ impl SpecialFields {
     #[must_use]
     pub fn with_text<F>(mut self, text: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
         self.set_text(text);
         self

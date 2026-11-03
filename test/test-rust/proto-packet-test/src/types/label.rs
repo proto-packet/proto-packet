@@ -22,8 +22,8 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct Label {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    text: ::std::option::Option<::std::string::String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<String>,
 }
 
 impl Label {
@@ -31,16 +31,16 @@ impl Label {
 
     /// Gets the field: `text`.
     #[must_use]
-    pub fn text(&self) -> ::std::option::Option<&str> {
+    pub fn text(&self) -> Option<&str> {
         self.text.as_deref()
     }
 
     /// Sets the field: `text`. Returns the previous value.
-    pub fn set_text<F>(&mut self, text: F) -> ::std::option::Option<::std::string::String>
+    pub fn set_text<F>(&mut self, text: F) -> Option<String>
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
-        let text: ::std::option::Option<::std::string::String> = text.into();
+        let text: Option<String> = text.into();
         ::std::mem::replace(&mut self.text, text)
     }
 
@@ -48,7 +48,7 @@ impl Label {
     #[must_use]
     pub fn with_text<F>(mut self, text: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
         self.set_text(text);
         self

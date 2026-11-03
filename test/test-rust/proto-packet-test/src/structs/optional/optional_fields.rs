@@ -42,22 +42,22 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct OptionalFields {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    count: ::std::option::Option<u32>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    id: ::std::option::Option<::proto_packet::types::Uuid>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    text: ::std::option::Option<::std::string::String>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    point: ::std::option::Option<crate::types::Point>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    person: ::std::option::Option<crate::types::Person>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    label: ::std::option::Option<crate::types::Label>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    color: ::std::option::Option<crate::types::Color>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    shape: ::std::option::Option<crate::types::Shape>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    id: Option<::proto_packet::types::Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    point: Option<crate::types::Point>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    person: Option<crate::types::Person>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    label: Option<crate::types::Label>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    color: Option<crate::types::Color>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    shape: Option<crate::types::Shape>,
 }
 
 impl OptionalFields {
@@ -66,14 +66,14 @@ impl OptionalFields {
     /// Creates a new [OptionalFields].
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        count: ::std::option::Option<u32>,
-        id: ::std::option::Option<::proto_packet::types::Uuid>,
-        text: ::std::option::Option<::std::string::String>,
-        point: ::std::option::Option<crate::types::Point>,
-        person: ::std::option::Option<crate::types::Person>,
-        label: ::std::option::Option<crate::types::Label>,
-        color: ::std::option::Option<crate::types::Color>,
-        shape: ::std::option::Option<crate::types::Shape>,
+        count: Option<u32>,
+        id: Option<::proto_packet::types::Uuid>,
+        text: Option<String>,
+        point: Option<crate::types::Point>,
+        person: Option<crate::types::Person>,
+        label: Option<crate::types::Label>,
+        color: Option<crate::types::Color>,
+        shape: Option<crate::types::Shape>,
     ) -> Self {
         Self {
             count,
@@ -93,16 +93,16 @@ impl OptionalFields {
 
     /// Gets the field: `count`.
     #[must_use]
-    pub fn count(&self) -> ::std::option::Option<u32> {
+    pub fn count(&self) -> Option<u32> {
         self.count
     }
 
     /// Sets the field: `count`. Returns the previous value.
-    pub fn set_count<F>(&mut self, count: F) -> ::std::option::Option<u32>
+    pub fn set_count<F>(&mut self, count: F) -> Option<u32>
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
-        let count: ::std::option::Option<u32> = count.into();
+        let count: Option<u32> = count.into();
         ::std::mem::replace(&mut self.count, count)
     }
 
@@ -110,7 +110,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_count<F>(mut self, count: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<u32>>,
+        F: Into<Option<u32>>,
     {
         self.set_count(count);
         self
@@ -122,16 +122,16 @@ impl OptionalFields {
 
     /// Gets the field: `id`.
     #[must_use]
-    pub fn id(&self) -> ::std::option::Option<::proto_packet::types::Uuid> {
+    pub fn id(&self) -> Option<::proto_packet::types::Uuid> {
         self.id
     }
 
     /// Sets the field: `id`. Returns the previous value.
-    pub fn set_id<F>(&mut self, id: F) -> ::std::option::Option<::proto_packet::types::Uuid>
+    pub fn set_id<F>(&mut self, id: F) -> Option<::proto_packet::types::Uuid>
     where
-        F: ::std::convert::Into<::std::option::Option<::proto_packet::types::Uuid>>,
+        F: Into<Option<::proto_packet::types::Uuid>>,
     {
-        let id: ::std::option::Option<::proto_packet::types::Uuid> = id.into();
+        let id: Option<::proto_packet::types::Uuid> = id.into();
         ::std::mem::replace(&mut self.id, id)
     }
 
@@ -139,7 +139,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_id<F>(mut self, id: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::proto_packet::types::Uuid>>,
+        F: Into<Option<::proto_packet::types::Uuid>>,
     {
         self.set_id(id);
         self
@@ -151,16 +151,16 @@ impl OptionalFields {
 
     /// Gets the field: `text`.
     #[must_use]
-    pub fn text(&self) -> ::std::option::Option<&str> {
+    pub fn text(&self) -> Option<&str> {
         self.text.as_deref()
     }
 
     /// Sets the field: `text`. Returns the previous value.
-    pub fn set_text<F>(&mut self, text: F) -> ::std::option::Option<::std::string::String>
+    pub fn set_text<F>(&mut self, text: F) -> Option<String>
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
-        let text: ::std::option::Option<::std::string::String> = text.into();
+        let text: Option<String> = text.into();
         ::std::mem::replace(&mut self.text, text)
     }
 
@@ -168,7 +168,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_text<F>(mut self, text: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: Into<Option<String>>,
     {
         self.set_text(text);
         self
@@ -180,16 +180,16 @@ impl OptionalFields {
 
     /// Gets the field: `point`.
     #[must_use]
-    pub fn point(&self) -> ::std::option::Option<crate::types::Point> {
+    pub fn point(&self) -> Option<crate::types::Point> {
         self.point
     }
 
     /// Sets the field: `point`. Returns the previous value.
-    pub fn set_point<F>(&mut self, point: F) -> ::std::option::Option<crate::types::Point>
+    pub fn set_point<F>(&mut self, point: F) -> Option<crate::types::Point>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Point>>,
+        F: Into<Option<crate::types::Point>>,
     {
-        let point: ::std::option::Option<crate::types::Point> = point.into();
+        let point: Option<crate::types::Point> = point.into();
         ::std::mem::replace(&mut self.point, point)
     }
 
@@ -197,7 +197,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_point<F>(mut self, point: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Point>>,
+        F: Into<Option<crate::types::Point>>,
     {
         self.set_point(point);
         self
@@ -209,16 +209,16 @@ impl OptionalFields {
 
     /// Gets the field: `person`.
     #[must_use]
-    pub fn person(&self) -> ::std::option::Option<&crate::types::Person> {
+    pub fn person(&self) -> Option<&crate::types::Person> {
         self.person.as_ref()
     }
 
     /// Sets the field: `person`. Returns the previous value.
-    pub fn set_person<F>(&mut self, person: F) -> ::std::option::Option<crate::types::Person>
+    pub fn set_person<F>(&mut self, person: F) -> Option<crate::types::Person>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Person>>,
+        F: Into<Option<crate::types::Person>>,
     {
-        let person: ::std::option::Option<crate::types::Person> = person.into();
+        let person: Option<crate::types::Person> = person.into();
         ::std::mem::replace(&mut self.person, person)
     }
 
@@ -226,7 +226,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_person<F>(mut self, person: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Person>>,
+        F: Into<Option<crate::types::Person>>,
     {
         self.set_person(person);
         self
@@ -238,16 +238,16 @@ impl OptionalFields {
 
     /// Gets the field: `label`.
     #[must_use]
-    pub fn label(&self) -> ::std::option::Option<&crate::types::Label> {
+    pub fn label(&self) -> Option<&crate::types::Label> {
         self.label.as_ref()
     }
 
     /// Sets the field: `label`. Returns the previous value.
-    pub fn set_label<F>(&mut self, label: F) -> ::std::option::Option<crate::types::Label>
+    pub fn set_label<F>(&mut self, label: F) -> Option<crate::types::Label>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Label>>,
+        F: Into<Option<crate::types::Label>>,
     {
-        let label: ::std::option::Option<crate::types::Label> = label.into();
+        let label: Option<crate::types::Label> = label.into();
         ::std::mem::replace(&mut self.label, label)
     }
 
@@ -255,7 +255,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_label<F>(mut self, label: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Label>>,
+        F: Into<Option<crate::types::Label>>,
     {
         self.set_label(label);
         self
@@ -267,16 +267,16 @@ impl OptionalFields {
 
     /// Gets the field: `color`.
     #[must_use]
-    pub fn color(&self) -> ::std::option::Option<crate::types::Color> {
+    pub fn color(&self) -> Option<crate::types::Color> {
         self.color
     }
 
     /// Sets the field: `color`. Returns the previous value.
-    pub fn set_color<F>(&mut self, color: F) -> ::std::option::Option<crate::types::Color>
+    pub fn set_color<F>(&mut self, color: F) -> Option<crate::types::Color>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Color>>,
+        F: Into<Option<crate::types::Color>>,
     {
-        let color: ::std::option::Option<crate::types::Color> = color.into();
+        let color: Option<crate::types::Color> = color.into();
         ::std::mem::replace(&mut self.color, color)
     }
 
@@ -284,7 +284,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_color<F>(mut self, color: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Color>>,
+        F: Into<Option<crate::types::Color>>,
     {
         self.set_color(color);
         self
@@ -296,16 +296,16 @@ impl OptionalFields {
 
     /// Gets the field: `shape`.
     #[must_use]
-    pub fn shape(&self) -> ::std::option::Option<&crate::types::Shape> {
+    pub fn shape(&self) -> Option<&crate::types::Shape> {
         self.shape.as_ref()
     }
 
     /// Sets the field: `shape`. Returns the previous value.
-    pub fn set_shape<F>(&mut self, shape: F) -> ::std::option::Option<crate::types::Shape>
+    pub fn set_shape<F>(&mut self, shape: F) -> Option<crate::types::Shape>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Shape>>,
+        F: Into<Option<crate::types::Shape>>,
     {
-        let shape: ::std::option::Option<crate::types::Shape> = shape.into();
+        let shape: Option<crate::types::Shape> = shape.into();
         ::std::mem::replace(&mut self.shape, shape)
     }
 
@@ -313,7 +313,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_shape<F>(mut self, shape: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::types::Shape>>,
+        F: Into<Option<crate::types::Shape>>,
     {
         self.set_shape(shape);
         self
