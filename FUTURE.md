@@ -37,10 +37,11 @@ Some schema names generate Rust that doesn't compile, or that hides other items.
   harmless root mod named `mod` is rejected instead. (`generate.rs`)
 - A field named like a prelude trait method (ex: `clone`, `eq`, `cmp`, `into`, `max`) gets a getter
   that hides the trait method, since inherent methods win. (ex: `a.clone()` returns the field, &
-  `a.eq(&b)` stops compiling) Only the constructor & the setters & builders are reserved.
+  `a.eq(&b)` stops compiling) A non-`Copy` field named `deref` or `borrow` fails clippy's
+  `should_implement_trait`. Only the constructor & the setters & builders are reserved.
   (`fields.rs`)
-- The module name conflict errors name the Rust folder, not the schema mod path: empty at the root,
-  & `self_` instead of `self`. (`generate.rs`)
+- The errors for a conflict with a child mod name the Rust folder, not the schema mod path: empty at
+  the root, & `self_` instead of `self`. (`generate.rs`)
 
 ### Ordering
 
@@ -51,18 +52,22 @@ their order, & so the order of the maps keyed by them. (`gen_variant.rs` & `gen_
 
 ### Doc Comments
 
-Schema comments are copied into the rustdoc unchanged. An indented comment becomes a code block, &
-so a doctest that fails `cargo test` on the generated crate. (ex: `//     foo bar baz`) In the pps
-doc blocks of structs & messages, a comment with ```` ``` ```` closes the block early. (`docs.rs`)
+The comments of enums, variants, services & their members are copied into the rustdoc unchanged, so
+rustdoc reads them as Markdown. (`docs.rs`)
+
+- An indented line after a blank comment line becomes a code block, & so a doctest that fails
+  `cargo test` on the generated crate. (ex: `// Line one.`, `//`, `//     foo bar baz`)
+- Ordinary text can fail `cargo doc` with `-D warnings`. (ex: `Vec<u32>` is an unclosed HTML tag, &
+  `[Thing]` a broken intra-doc link)
 
 ### Variant `u128` Cases
 
 A variant is `{"var": ..., "val": ...}` in JSON. When `val` comes before `var`, serde buffers it
-until the case is known, & the buffer has no `u128`, so a variant with a `u128` anywhere in its cases
-fails to read. (ex: `{"val":5,"var":"Value"}` fails with `u128 is not supported`) The generated code
-writes `var` first, so only reordered input fails. (ex: sorted keys) serde_json reports a buffered
-number above `u64::MAX` as a float, so the full fix waits for a JSON encoding without serde.
-(`gen_variant.rs`)
+until the case is known, & the buffer has no `u128`, so a variant with a `u128` anywhere in its
+cases fails to read. (ex: `{"val":5,"var":"Value"}` fails with `u128 is not supported`) The
+generated code writes `var` first, so only reordered input fails. (ex: sorted keys) serde_json
+reports a buffered number above `u64::MAX` as a float, so the full fix waits for a JSON encoding
+without serde. (`gen_variant.rs`)
 
 ## Compile
 
