@@ -1,5 +1,6 @@
 use crate::service::ServiceErrorReason;
 use axum::Json;
+use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
@@ -22,6 +23,19 @@ impl ServiceError {
 impl From<ServiceErrorReason> for ServiceError {
     fn from(reason: ServiceErrorReason) -> Self {
         Self::new(reason)
+    }
+}
+
+impl From<JsonRejection> for ServiceError {
+    /// Converts a request body that isn't valid JSON for a call. (a missing JSON content type is an
+    /// `UnsupportedMediaType`, anything else a `BadRequest`)
+    fn from(rejection: JsonRejection) -> Self {
+        match rejection {
+            JsonRejection::MissingJsonContentType(_) => {
+                Self::new(ServiceErrorReason::UnsupportedMediaType)
+            }
+            _ => Self::new(ServiceErrorReason::BadRequest),
+        }
     }
 }
 
