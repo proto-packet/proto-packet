@@ -1,0 +1,40 @@
+// A struct named like a prelude type. (its file uses the full prelude paths)
+struct Option {
+
+    // An optional string field.
+    text: optional string;
+
+    // An optional boxed field of itself.
+    next: optional box Option;
+}
+
+// A message named like a prelude type.
+message String {
+
+    // A string field.
+    text: string = 1;
+}
+
+// An enum named like a prelude trait.
+enum Ord {
+
+    // The only case.
+    Only = 1;
+}
+
+// A variant named like a prelude type.
+variant Box {
+
+    // A boxed case of itself.
+    Inner: box Box = 1;
+
+    // A string case.
+    Text: string = 2;
+}
+
+// A service named like a prelude trait.
+service Send {
+
+    // A call.
+    call: u32 returns u32;
+}

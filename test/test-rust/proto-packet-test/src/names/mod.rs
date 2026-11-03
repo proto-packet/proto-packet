@@ -4,4 +4,5 @@ pub mod casing;
 pub mod keywords;
 pub mod methods;
 pub mod r#move;
+pub mod prelude;
 pub mod r#type;
