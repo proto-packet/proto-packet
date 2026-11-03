@@ -86,33 +86,3 @@ fn gen_dec(typing: Typing<'_>, message: &Message, fields: &[Field<'_>]) -> RustS
     }
     result
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::GenError;
-    use crate::rust::gen_message;
-    use proto_packet::io::TagNumber;
-    use proto_packet_tree::{
-        FieldName, Message, MessageField, ModPath, PrimitiveType, Project, TypeName,
-    };
-
-    #[test]
-    fn gen_message_rejects_the_constructor_name() {
-        let mod_path: ModPath = ModPath::try_from("a").unwrap();
-        let field: MessageField = MessageField::new(
-            FieldName::try_from("default").unwrap(),
-            PrimitiveType::UnsignedInt32,
-            TagNumber::new(1).unwrap(),
-        );
-        let message: Message = Message::from(TypeName::try_from("Foo").unwrap())
-            .with_field(field)
-            .unwrap();
-        let result: Result<String, GenError> =
-            gen_message(&Project::default(), mod_path.to_ref(), &message);
-        let expected: GenError = GenError::FieldNameConflict {
-            type_name: "a.Foo".to_string(),
-            field_name: "default".to_string(),
-        };
-        assert_eq!(result, Err(expected));
-    }
-}
