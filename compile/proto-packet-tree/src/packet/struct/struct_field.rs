@@ -11,8 +11,6 @@ pub struct StructField {
     is_boxed: bool,
 }
 
-impl_with_comments!(StructField);
-
 impl StructField {
     //! Construction
 
@@ -73,6 +71,8 @@ impl StructField {
         self
     }
 }
+
+impl_with_comments!(StructField);
 
 impl WithFieldName for StructField {
     fn field_name(&self) -> FieldNameRef<'_> {

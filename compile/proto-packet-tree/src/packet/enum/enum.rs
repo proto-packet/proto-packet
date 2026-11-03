@@ -14,8 +14,6 @@ pub struct Enum {
     cases: Vec<EnumCase>,
 }
 
-impl_with_comments!(Enum);
-
 impl From<TypeName> for Enum {
     fn from(type_name: TypeName) -> Self {
         Self {
@@ -74,6 +72,8 @@ impl Enum {
         Ok(self)
     }
 }
+
+impl_with_comments!(Enum);
 
 impl WithTypeName for Enum {
     fn type_name(&self) -> TypeNameRef<'_> {

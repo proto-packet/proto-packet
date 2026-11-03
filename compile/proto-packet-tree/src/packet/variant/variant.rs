@@ -14,8 +14,6 @@ pub struct Variant {
     cases: Vec<VariantCase>,
 }
 
-impl_with_comments!(Variant);
-
 impl From<TypeName> for Variant {
     fn from(type_name: TypeName) -> Self {
         Self {
@@ -74,6 +72,8 @@ impl Variant {
         Ok(self)
     }
 }
+
+impl_with_comments!(Variant);
 
 impl WithTypeName for Variant {
     fn type_name(&self) -> TypeNameRef<'_> {

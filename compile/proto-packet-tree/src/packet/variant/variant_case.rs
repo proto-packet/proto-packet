@@ -12,8 +12,6 @@ pub struct VariantCase {
     is_boxed: bool,
 }
 
-impl_with_comments!(VariantCase);
-
 impl VariantCase {
     //! Construction
 
@@ -53,6 +51,8 @@ impl VariantCase {
         self
     }
 }
+
+impl_with_comments!(VariantCase);
 
 impl WithCaseName for VariantCase {
     fn case_name(&self) -> CaseNameRef<'_> {

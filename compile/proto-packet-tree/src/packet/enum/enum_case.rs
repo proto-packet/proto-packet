@@ -10,8 +10,6 @@ pub struct EnumCase {
     tag_number: TagNumber,
 }
 
-impl_with_comments!(EnumCase);
-
 impl EnumCase {
     //! Construction
 
@@ -27,6 +25,8 @@ impl EnumCase {
         }
     }
 }
+
+impl_with_comments!(EnumCase);
 
 impl WithCaseName for EnumCase {
     fn case_name(&self) -> CaseNameRef<'_> {

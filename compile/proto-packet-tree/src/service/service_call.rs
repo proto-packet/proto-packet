@@ -10,8 +10,6 @@ pub struct ServiceCall {
     response: TypeTag,
 }
 
-impl_with_comments!(ServiceCall);
-
 impl ServiceCall {
     //! Construction
 
@@ -44,6 +42,8 @@ impl ServiceCall {
         &self.response
     }
 }
+
+impl_with_comments!(ServiceCall);
 
 impl WithCallName for ServiceCall {
     fn call_name(&self) -> CallNameRef<'_> {

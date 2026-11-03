@@ -14,8 +14,6 @@ pub struct Message {
     fields: Vec<MessageField>,
 }
 
-impl_with_comments!(Message);
-
 impl From<TypeName> for Message {
     fn from(type_name: TypeName) -> Self {
         Self {
@@ -76,6 +74,8 @@ impl Message {
         Ok(self)
     }
 }
+
+impl_with_comments!(Message);
 
 impl WithTypeName for Message {
     fn type_name(&self) -> TypeNameRef<'_> {

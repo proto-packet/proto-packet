@@ -12,8 +12,6 @@ pub struct Struct {
     fields: Vec<StructField>,
 }
 
-impl_with_comments!(Struct);
-
 impl From<TypeName> for Struct {
     fn from(type_name: TypeName) -> Self {
         Self {
@@ -61,6 +59,8 @@ impl Struct {
         Ok(self)
     }
 }
+
+impl_with_comments!(Struct);
 
 impl WithTypeName for Struct {
     fn type_name(&self) -> TypeNameRef<'_> {

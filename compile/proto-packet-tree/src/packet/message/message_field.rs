@@ -12,8 +12,6 @@ pub struct MessageField {
     is_boxed: bool,
 }
 
-impl_with_comments!(MessageField);
-
 impl MessageField {
     //! Construction
 
@@ -53,6 +51,8 @@ impl MessageField {
         self
     }
 }
+
+impl_with_comments!(MessageField);
 
 impl WithFieldName for MessageField {
     fn field_name(&self) -> FieldNameRef<'_> {

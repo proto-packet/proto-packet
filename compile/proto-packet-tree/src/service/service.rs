@@ -12,8 +12,6 @@ pub struct Service {
     calls: Vec<ServiceCall>,
 }
 
-impl_with_comments!(Service);
-
 impl From<TypeName> for Service {
     fn from(type_name: TypeName) -> Self {
         Self {
@@ -59,6 +57,8 @@ impl Service {
         Ok(self)
     }
 }
+
+impl_with_comments!(Service);
 
 impl WithTypeName for Service {
     fn type_name(&self) -> TypeNameRef<'_> {
