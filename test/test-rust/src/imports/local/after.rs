@@ -29,7 +29,7 @@ impl After {
     //! Construction
 
     /// Creates a new [After].
-    pub fn new(value: u32) -> Self {
+    pub const fn new(value: u32) -> Self {
         Self { value }
     }
 }

@@ -37,7 +37,7 @@ impl KeywordStruct {
     //! Construction
 
     /// Creates a new [KeywordStruct].
-    pub fn new(r#type: u32, r#match: String, self_: u32) -> Self {
+    pub const fn new(r#type: u32, r#match: String, self_: u32) -> Self {
         Self {
             r#type,
             r#match,

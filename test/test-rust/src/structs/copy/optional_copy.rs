@@ -35,7 +35,7 @@ impl OptionalCopy {
     //! Construction
 
     /// Creates a new [OptionalCopy].
-    pub fn new(count: Option<u32>, point: Option<crate::types::Point>) -> Self {
+    pub const fn new(count: Option<u32>, point: Option<crate::types::Point>) -> Self {
         Self { count, point }
     }
 }

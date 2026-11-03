@@ -33,7 +33,7 @@ impl ImportedFields {
     //! Construction
 
     /// Creates a new [ImportedFields].
-    pub fn new(point: crate::types::Point, child: crate::mods::parent::child::Child) -> Self {
+    pub const fn new(point: crate::types::Point, child: crate::mods::parent::child::Child) -> Self {
         Self { point, child }
     }
 }

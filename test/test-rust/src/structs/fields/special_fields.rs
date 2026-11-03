@@ -32,7 +32,7 @@ impl SpecialFields {
     //! Construction
 
     /// Creates a new [SpecialFields].
-    pub fn new(id: proto_packet::types::Uuid, text: String) -> Self {
+    pub const fn new(id: proto_packet::types::Uuid, text: String) -> Self {
         Self { id, text }
     }
 }

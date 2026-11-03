@@ -29,7 +29,7 @@ impl SelfStruct {
     //! Construction
 
     /// Creates a new [SelfStruct].
-    pub fn new(value: u32) -> Self {
+    pub const fn new(value: u32) -> Self {
         Self { value }
     }
 }

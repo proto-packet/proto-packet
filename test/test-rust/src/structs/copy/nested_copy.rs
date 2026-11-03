@@ -29,7 +29,7 @@ impl NestedCopy {
     //! Construction
 
     /// Creates a new [NestedCopy].
-    pub fn new(fields: crate::structs::copy::CopyFields) -> Self {
+    pub const fn new(fields: crate::structs::copy::CopyFields) -> Self {
         Self { fields }
     }
 }

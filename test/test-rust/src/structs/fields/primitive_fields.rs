@@ -49,7 +49,7 @@ impl PrimitiveFields {
     //! Construction
 
     /// Creates a new [PrimitiveFields].
-    pub fn new(
+    pub const fn new(
         boolean: bool,
         unsigned8: u8,
         unsigned16: u16,

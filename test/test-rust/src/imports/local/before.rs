@@ -29,7 +29,7 @@ impl Before {
     //! Construction
 
     /// Creates a new [Before].
-    pub fn new(after: crate::imports::local::After) -> Self {
+    pub const fn new(after: crate::imports::local::After) -> Self {
         Self { after }
     }
 }

@@ -29,7 +29,7 @@ impl Self_ {
     //! Construction
 
     /// Creates a new [Self_].
-    pub fn new(value: u32) -> Self {
+    pub const fn new(value: u32) -> Self {
         Self { value }
     }
 }

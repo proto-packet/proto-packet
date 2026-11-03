@@ -29,7 +29,7 @@ impl DefaultField {
     //! Construction
 
     /// Creates a new [DefaultField].
-    pub fn new(default: u32) -> Self {
+    pub const fn new(default: u32) -> Self {
         Self { default }
     }
 }

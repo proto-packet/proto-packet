@@ -44,7 +44,7 @@ impl NamedFields {
     //! Construction
 
     /// Creates a new [NamedFields].
-    pub fn new(
+    pub const fn new(
         point: crate::types::Point,
         person: crate::types::Person,
         label: crate::types::Label,

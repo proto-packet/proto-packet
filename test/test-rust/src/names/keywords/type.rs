@@ -29,7 +29,7 @@ impl Type {
     //! Construction
 
     /// Creates a new [Type].
-    pub fn new(value: u32) -> Self {
+    pub const fn new(value: u32) -> Self {
         Self { value }
     }
 }

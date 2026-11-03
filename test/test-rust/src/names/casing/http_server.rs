@@ -31,7 +31,7 @@ impl HTTPServer {
 
     /// Creates a new [HTTPServer].
     #[allow(non_snake_case)]
-    pub fn new(maxConnections: u32) -> Self {
+    pub const fn new(maxConnections: u32) -> Self {
         Self { maxConnections }
     }
 }

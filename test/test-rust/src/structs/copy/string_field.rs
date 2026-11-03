@@ -28,7 +28,7 @@ impl StringField {
     //! Construction
 
     /// Creates a new [StringField].
-    pub fn new(text: String) -> Self {
+    pub const fn new(text: String) -> Self {
         Self { text }
     }
 }

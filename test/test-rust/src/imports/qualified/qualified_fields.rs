@@ -45,7 +45,7 @@ impl QualifiedFields {
     //! Construction
 
     /// Creates a new [QualifiedFields].
-    pub fn new(
+    pub const fn new(
         point: crate::types::Point,
         child: crate::mods::parent::child::Child,
         raw: crate::names::r#move::MoveStruct,

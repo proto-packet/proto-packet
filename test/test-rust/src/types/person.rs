@@ -32,7 +32,7 @@ impl Person {
     //! Construction
 
     /// Creates a new [Person].
-    pub fn new(name: String, age: u8) -> Self {
+    pub const fn new(name: String, age: u8) -> Self {
         Self { name, age }
     }
 }

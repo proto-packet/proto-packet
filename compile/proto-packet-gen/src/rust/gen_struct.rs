@@ -109,6 +109,8 @@ fn gen_dec(typing: Typing<'_>, structure: &Struct, fields: &[Field<'_>]) -> Rust
 }
 
 /// Generates the constructor of the struct with the `fields`.
+///
+/// It is `const`, unless a field is boxed, since `Box::new` is not.
 fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) -> ImplBlock {
     let mut signature: Signature = Signature::from(CONSTRUCTOR).with_result("Self");
     for field in fields {
@@ -129,6 +131,7 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
     let mut constructor: Function = Function::from(signature)
         .with_comment(format!(" Creates a new [{}].", type_name))
         .with_access(Access::Public)
+        .with_const(!fields.iter().any(|field| field.is_boxed))
         .with_literal(format!("Self {{ {} }}", inits.join(", ")));
     if fields.len() > MAX_ARGUMENTS {
         constructor.add_attribute("allow(clippy::too_many_arguments)");

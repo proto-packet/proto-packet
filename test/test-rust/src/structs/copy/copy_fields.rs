@@ -41,7 +41,7 @@ impl CopyFields {
     //! Construction
 
     /// Creates a new [CopyFields].
-    pub fn new(
+    pub const fn new(
         count: u32,
         id: proto_packet::types::Uuid,
         point: crate::types::Point,

@@ -65,7 +65,7 @@ impl OptionalFields {
 
     /// Creates a new [OptionalFields].
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
+    pub const fn new(
         count: Option<u32>,
         id: Option<proto_packet::types::Uuid>,
         text: Option<String>,

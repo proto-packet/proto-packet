@@ -28,7 +28,7 @@ impl NonCopyStruct {
     //! Construction
 
     /// Creates a new [NonCopyStruct].
-    pub fn new(person: crate::types::Person) -> Self {
+    pub const fn new(person: crate::types::Person) -> Self {
         Self { person }
     }
 }
