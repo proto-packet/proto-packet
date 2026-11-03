@@ -2,6 +2,9 @@ mod common;
 
 use common::assert_json;
 use proto_packet::io::TagNumber;
+use proto_packet::serde::Deserialize;
+use proto_packet::serde::de::IntoDeserializer;
+use proto_packet::serde::de::value::Error;
 use proto_packet_test::enums::cases::{EdgeTags, SingleCase, UnorderedTags};
 use proto_packet_test::enums::empty::EmptyEnum;
 
@@ -117,5 +120,17 @@ fn json_tag_numbers() {
             "{}",
             json
         );
+    }
+}
+
+#[test]
+fn signed_tag_numbers() {
+    let read = |tag_number: i64| {
+        UnorderedTags::deserialize(IntoDeserializer::<Error>::into_deserializer(tag_number))
+    };
+    assert_eq!(read(3).unwrap(), UnorderedTags::Three);
+    assert_eq!(read(4).unwrap(), unrecognized(4));
+    for tag_number in [-1, 0, 8192, i64::MAX] {
+        assert!(read(tag_number).is_err(), "{}", tag_number);
     }
 }
