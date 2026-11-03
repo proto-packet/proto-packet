@@ -1,0 +1,49 @@
+import types.Color;
+import types.Label;
+import types.Person;
+import types.Point;
+import types.Shape;
+
+// A variant with a case of each kind of type.
+variant Value {
+
+    // A boolean case.
+    Boolean: bool = 1;
+
+    // A 64-bit unsigned integer case.
+    Unsigned64: u64 = 2;
+
+    // A UUID case.
+    Id: uuid = 3;
+
+    // A string case.
+    Text: string = 4;
+
+    // A `Copy` struct case.
+    Point: Point = 5;
+
+    // A non-`Copy` struct case.
+    Person: Person = 6;
+
+    // A message case.
+    Label: Label = 7;
+
+    // An enum case.
+    Color: Color = 8;
+
+    // A variant case.
+    Shape: Shape = 9;
+}
+
+// A variant with the tag numbers out of declaration order.
+variant UnorderedTags {
+
+    // The third tag number.
+    Three: u32 = 3;
+
+    // The first tag number.
+    One: u32 = 1;
+
+    // The second tag number.
+    Two: u32 = 2;
+}

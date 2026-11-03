@@ -1,0 +1,22 @@
+// An expression. (a variant containing itself)
+variant Expr {
+
+    // A number.
+    Number: u64 = 1;
+
+    // The negation of an expression.
+    Negate: box Expr = 2;
+
+    // The sum of two expressions.
+    Add: Sum = 3;
+}
+
+// The sum of two expressions.
+struct Sum {
+
+    // The left expression.
+    left: box Expr;
+
+    // The right expression.
+    right: box Expr;
+}

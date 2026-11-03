@@ -3,3 +3,4 @@ pub mod enums;
 pub mod messages;
 pub mod structs;
 pub mod types;
+pub mod variants;
