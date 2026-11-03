@@ -1,3 +1,4 @@
+use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
@@ -48,21 +49,21 @@ impl ServiceErrorReason {
     //! Properties
 
     /// Gets the HTTP status code.
-    pub const fn status_code(self) -> u16 {
+    pub const fn status_code(self) -> StatusCode {
         match self {
-            Self::BadRequest => 400,
-            Self::Unauthorized => 401,
-            Self::Forbidden => 403,
-            Self::NotFound => 404,
-            Self::MethodNotAllowed => 405,
-            Self::RequestTimeout => 408,
-            Self::Conflict => 409,
-            Self::TooManyRequests => 429,
-            Self::InternalServerError => 500,
-            Self::NotImplemented => 501,
-            Self::BadGateway => 502,
-            Self::ServiceUnavailable => 503,
-            Self::GatewayTimeout => 504,
+            Self::BadRequest => StatusCode::BAD_REQUEST,
+            Self::Unauthorized => StatusCode::UNAUTHORIZED,
+            Self::Forbidden => StatusCode::FORBIDDEN,
+            Self::NotFound => StatusCode::NOT_FOUND,
+            Self::MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
+            Self::RequestTimeout => StatusCode::REQUEST_TIMEOUT,
+            Self::Conflict => StatusCode::CONFLICT,
+            Self::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
+            Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::NotImplemented => StatusCode::NOT_IMPLEMENTED,
+            Self::BadGateway => StatusCode::BAD_GATEWAY,
+            Self::ServiceUnavailable => StatusCode::SERVICE_UNAVAILABLE,
+            Self::GatewayTimeout => StatusCode::GATEWAY_TIMEOUT,
         }
     }
 
@@ -88,6 +89,11 @@ impl ServiceErrorReason {
 
 impl Display for ServiceErrorReason {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.status_code(), self.reason_phrase())
+        write!(
+            f,
+            "{} {}",
+            self.status_code().as_u16(),
+            self.reason_phrase()
+        )
     }
 }
