@@ -51,7 +51,7 @@ impl UnorderedTags {
         F: Into<Option<u32>>,
     {
         let three: Option<u32> = three.into();
-        ::std::mem::replace(&mut self.three, three)
+        std::mem::replace(&mut self.three, three)
     }
 
     /// Sets the field: `three`. (builder pattern)
@@ -80,7 +80,7 @@ impl UnorderedTags {
         F: Into<Option<u32>>,
     {
         let one: Option<u32> = one.into();
-        ::std::mem::replace(&mut self.one, one)
+        std::mem::replace(&mut self.one, one)
     }
 
     /// Sets the field: `one`. (builder pattern)
@@ -109,7 +109,7 @@ impl UnorderedTags {
         F: Into<Option<u32>>,
     {
         let two: Option<u32> = two.into();
-        ::std::mem::replace(&mut self.two, two)
+        std::mem::replace(&mut self.two, two)
     }
 
     /// Sets the field: `two`. (builder pattern)

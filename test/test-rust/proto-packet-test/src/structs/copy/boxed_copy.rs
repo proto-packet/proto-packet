@@ -46,7 +46,7 @@ impl BoxedCopy {
 
     /// Sets the field: `point`. Returns the previous value.
     pub fn set_point(&mut self, point: crate::types::Point) -> crate::types::Point {
-        *::std::mem::replace(&mut self.point, Box::new(point))
+        *std::mem::replace(&mut self.point, Box::new(point))
     }
 
     /// Sets the field: `point`. (builder pattern)

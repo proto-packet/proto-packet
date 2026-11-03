@@ -49,7 +49,7 @@ impl Point {
 
     /// Sets the field: `x`. Returns the previous value.
     pub fn set_x(&mut self, x: u32) -> u32 {
-        ::std::mem::replace(&mut self.x, x)
+        std::mem::replace(&mut self.x, x)
     }
 
     /// Sets the field: `x`. (builder pattern)
@@ -71,7 +71,7 @@ impl Point {
 
     /// Sets the field: `y`. Returns the previous value.
     pub fn set_y(&mut self, y: u32) -> u32 {
-        ::std::mem::replace(&mut self.y, y)
+        std::mem::replace(&mut self.y, y)
     }
 
     /// Sets the field: `y`. (builder pattern)

@@ -44,7 +44,7 @@ impl NonCopyStruct {
 
     /// Sets the field: `person`. Returns the previous value.
     pub fn set_person(&mut self, person: crate::types::Person) -> crate::types::Person {
-        ::std::mem::replace(&mut self.person, person)
+        std::mem::replace(&mut self.person, person)
     }
 
     /// Sets the field: `person`. (builder pattern)

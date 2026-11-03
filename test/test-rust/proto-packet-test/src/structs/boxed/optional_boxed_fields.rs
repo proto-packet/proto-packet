@@ -81,7 +81,7 @@ impl OptionalBoxedFields {
         F: Into<Option<crate::types::Point>>,
     {
         let point: Option<crate::types::Point> = point.into();
-        ::std::mem::replace(&mut self.point, point.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.point, point.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `point`. (builder pattern)
@@ -110,7 +110,7 @@ impl OptionalBoxedFields {
         F: Into<Option<crate::types::Person>>,
     {
         let person: Option<crate::types::Person> = person.into();
-        ::std::mem::replace(&mut self.person, person.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.person, person.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `person`. (builder pattern)
@@ -139,7 +139,7 @@ impl OptionalBoxedFields {
         F: Into<Option<crate::types::Label>>,
     {
         let label: Option<crate::types::Label> = label.into();
-        ::std::mem::replace(&mut self.label, label.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.label, label.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `label`. (builder pattern)
@@ -168,7 +168,7 @@ impl OptionalBoxedFields {
         F: Into<Option<crate::types::Color>>,
     {
         let color: Option<crate::types::Color> = color.into();
-        ::std::mem::replace(&mut self.color, color.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.color, color.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `color`. (builder pattern)
@@ -197,7 +197,7 @@ impl OptionalBoxedFields {
         F: Into<Option<crate::types::Shape>>,
     {
         let shape: Option<crate::types::Shape> = shape.into();
-        ::std::mem::replace(&mut self.shape, shape.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.shape, shape.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `shape`. (builder pattern)

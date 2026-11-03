@@ -22,8 +22,8 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct String {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    text: ::std::option::Option<::std::string::String>,
+    #[serde(skip_serializing_if = "std::option::Option::is_none")]
+    text: std::option::Option<std::string::String>,
 }
 
 impl String {
@@ -31,24 +31,24 @@ impl String {
 
     /// Gets the field: `text`.
     #[must_use]
-    pub fn text(&self) -> ::std::option::Option<&str> {
+    pub fn text(&self) -> std::option::Option<&str> {
         self.text.as_deref()
     }
 
     /// Sets the field: `text`. Returns the previous value.
-    pub fn set_text<F>(&mut self, text: F) -> ::std::option::Option<::std::string::String>
+    pub fn set_text<F>(&mut self, text: F) -> std::option::Option<std::string::String>
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: std::convert::Into<std::option::Option<std::string::String>>,
     {
-        let text: ::std::option::Option<::std::string::String> = text.into();
-        ::std::mem::replace(&mut self.text, text)
+        let text: std::option::Option<std::string::String> = text.into();
+        std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)
     #[must_use]
     pub fn with_text<F>(mut self, text: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: std::convert::Into<std::option::Option<std::string::String>>,
     {
         self.set_text(text);
         self

@@ -48,7 +48,7 @@ impl SpecialFields {
 
     /// Sets the field: `id`. Returns the previous value.
     pub fn set_id(&mut self, id: ::proto_packet::types::Uuid) -> ::proto_packet::types::Uuid {
-        ::std::mem::replace(&mut self.id, id)
+        std::mem::replace(&mut self.id, id)
     }
 
     /// Sets the field: `id`. (builder pattern)
@@ -70,7 +70,7 @@ impl SpecialFields {
 
     /// Sets the field: `text`. Returns the previous value.
     pub fn set_text(&mut self, text: String) -> String {
-        ::std::mem::replace(&mut self.text, text)
+        std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)

@@ -46,7 +46,7 @@ impl EdgeTags {
         F: Into<Option<u32>>,
     {
         let min: Option<u32> = min.into();
-        ::std::mem::replace(&mut self.min, min)
+        std::mem::replace(&mut self.min, min)
     }
 
     /// Sets the field: `min`. (builder pattern)
@@ -75,7 +75,7 @@ impl EdgeTags {
         F: Into<Option<u32>>,
     {
         let max: Option<u32> = max.into();
-        ::std::mem::replace(&mut self.max, max)
+        std::mem::replace(&mut self.max, max)
     }
 
     /// Sets the field: `max`. (builder pattern)

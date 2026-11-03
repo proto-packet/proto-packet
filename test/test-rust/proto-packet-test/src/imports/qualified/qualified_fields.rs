@@ -73,7 +73,7 @@ impl QualifiedFields {
 
     /// Sets the field: `point`. Returns the previous value.
     pub fn set_point(&mut self, point: crate::types::Point) -> crate::types::Point {
-        ::std::mem::replace(&mut self.point, point)
+        std::mem::replace(&mut self.point, point)
     }
 
     /// Sets the field: `point`. (builder pattern)
@@ -98,7 +98,7 @@ impl QualifiedFields {
         &mut self,
         child: crate::mods::parent::child::Child,
     ) -> crate::mods::parent::child::Child {
-        ::std::mem::replace(&mut self.child, child)
+        std::mem::replace(&mut self.child, child)
     }
 
     /// Sets the field: `child`. (builder pattern)
@@ -123,7 +123,7 @@ impl QualifiedFields {
         &mut self,
         raw: crate::names::r#move::MoveStruct,
     ) -> crate::names::r#move::MoveStruct {
-        ::std::mem::replace(&mut self.raw, raw)
+        std::mem::replace(&mut self.raw, raw)
     }
 
     /// Sets the field: `raw`. (builder pattern)
@@ -148,7 +148,7 @@ impl QualifiedFields {
         &mut self,
         non_raw: crate::names::r#type::self_::SelfStruct,
     ) -> crate::names::r#type::self_::SelfStruct {
-        ::std::mem::replace(&mut self.non_raw, non_raw)
+        std::mem::replace(&mut self.non_raw, non_raw)
     }
 
     /// Sets the field: `non_raw`. (builder pattern)
@@ -173,7 +173,7 @@ impl QualifiedFields {
         &mut self,
         local: crate::imports::qualified::Local,
     ) -> crate::imports::qualified::Local {
-        ::std::mem::replace(&mut self.local, local)
+        std::mem::replace(&mut self.local, local)
     }
 
     /// Sets the field: `local`. (builder pattern)

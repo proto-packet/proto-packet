@@ -41,7 +41,7 @@ impl GreetResponse {
         F: Into<Option<String>>,
     {
         let greeting: Option<String> = greeting.into();
-        ::std::mem::replace(&mut self.greeting, greeting)
+        std::mem::replace(&mut self.greeting, greeting)
     }
 
     /// Sets the field: `greeting`. (builder pattern)

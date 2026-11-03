@@ -55,7 +55,7 @@ impl OptionalCopy {
         F: Into<Option<u32>>,
     {
         let count: Option<u32> = count.into();
-        ::std::mem::replace(&mut self.count, count)
+        std::mem::replace(&mut self.count, count)
     }
 
     /// Sets the field: `count`. (builder pattern)
@@ -84,7 +84,7 @@ impl OptionalCopy {
         F: Into<Option<crate::types::Point>>,
     {
         let point: Option<crate::types::Point> = point.into();
-        ::std::mem::replace(&mut self.point, point)
+        std::mem::replace(&mut self.point, point)
     }
 
     /// Sets the field: `point`. (builder pattern)

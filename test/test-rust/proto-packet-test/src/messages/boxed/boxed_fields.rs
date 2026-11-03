@@ -51,7 +51,7 @@ impl BoxedFields {
         F: Into<Option<crate::types::Point>>,
     {
         let point: Option<crate::types::Point> = point.into();
-        ::std::mem::replace(&mut self.point, point.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.point, point.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `point`. (builder pattern)
@@ -80,7 +80,7 @@ impl BoxedFields {
         F: Into<Option<crate::types::Label>>,
     {
         let label: Option<crate::types::Label> = label.into();
-        ::std::mem::replace(&mut self.label, label.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.label, label.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `label`. (builder pattern)
@@ -109,7 +109,7 @@ impl BoxedFields {
         F: Into<Option<crate::types::Shape>>,
     {
         let shape: Option<crate::types::Shape> = shape.into();
-        ::std::mem::replace(&mut self.shape, shape.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.shape, shape.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `shape`. (builder pattern)

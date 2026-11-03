@@ -45,7 +45,7 @@ impl SelfStruct {
 
     /// Sets the field: `value`. Returns the previous value.
     pub fn set_value(&mut self, value: u32) -> u32 {
-        ::std::mem::replace(&mut self.value, value)
+        std::mem::replace(&mut self.value, value)
     }
 
     /// Sets the field: `value`. (builder pattern)

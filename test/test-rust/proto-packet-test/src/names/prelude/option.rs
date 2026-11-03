@@ -24,10 +24,10 @@
 )]
 #[serde(crate = "::proto_packet::serde")]
 pub struct Option {
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    text: ::std::option::Option<::std::string::String>,
-    #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-    next: ::std::option::Option<::std::boxed::Box<crate::names::prelude::Option>>,
+    #[serde(skip_serializing_if = "std::option::Option::is_none")]
+    text: std::option::Option<std::string::String>,
+    #[serde(skip_serializing_if = "std::option::Option::is_none")]
+    next: std::option::Option<std::boxed::Box<crate::names::prelude::Option>>,
 }
 
 impl Option {
@@ -35,12 +35,12 @@ impl Option {
 
     /// Creates a new [Option].
     pub fn new(
-        text: ::std::option::Option<::std::string::String>,
-        next: ::std::option::Option<crate::names::prelude::Option>,
+        text: std::option::Option<std::string::String>,
+        next: std::option::Option<crate::names::prelude::Option>,
     ) -> Self {
         Self {
             text,
-            next: next.map(::std::boxed::Box::new),
+            next: next.map(std::boxed::Box::new),
         }
     }
 }
@@ -50,24 +50,24 @@ impl Option {
 
     /// Gets the field: `text`.
     #[must_use]
-    pub fn text(&self) -> ::std::option::Option<&str> {
+    pub fn text(&self) -> std::option::Option<&str> {
         self.text.as_deref()
     }
 
     /// Sets the field: `text`. Returns the previous value.
-    pub fn set_text<F>(&mut self, text: F) -> ::std::option::Option<::std::string::String>
+    pub fn set_text<F>(&mut self, text: F) -> std::option::Option<std::string::String>
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: std::convert::Into<std::option::Option<std::string::String>>,
     {
-        let text: ::std::option::Option<::std::string::String> = text.into();
-        ::std::mem::replace(&mut self.text, text)
+        let text: std::option::Option<std::string::String> = text.into();
+        std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)
     #[must_use]
     pub fn with_text<F>(mut self, text: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<::std::string::String>>,
+        F: std::convert::Into<std::option::Option<std::string::String>>,
     {
         self.set_text(text);
         self
@@ -79,24 +79,24 @@ impl Option {
 
     /// Gets the field: `next`.
     #[must_use]
-    pub fn next(&self) -> ::std::option::Option<&crate::names::prelude::Option> {
+    pub fn next(&self) -> std::option::Option<&crate::names::prelude::Option> {
         self.next.as_deref()
     }
 
     /// Sets the field: `next`. Returns the previous value.
-    pub fn set_next<F>(&mut self, next: F) -> ::std::option::Option<crate::names::prelude::Option>
+    pub fn set_next<F>(&mut self, next: F) -> std::option::Option<crate::names::prelude::Option>
     where
-        F: ::std::convert::Into<::std::option::Option<crate::names::prelude::Option>>,
+        F: std::convert::Into<std::option::Option<crate::names::prelude::Option>>,
     {
-        let next: ::std::option::Option<crate::names::prelude::Option> = next.into();
-        ::std::mem::replace(&mut self.next, next.map(::std::boxed::Box::new)).map(|value| *value)
+        let next: std::option::Option<crate::names::prelude::Option> = next.into();
+        std::mem::replace(&mut self.next, next.map(std::boxed::Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `next`. (builder pattern)
     #[must_use]
     pub fn with_next<F>(mut self, next: F) -> Self
     where
-        F: ::std::convert::Into<::std::option::Option<crate::names::prelude::Option>>,
+        F: std::convert::Into<std::option::Option<crate::names::prelude::Option>>,
     {
         self.set_next(next);
         self

@@ -31,13 +31,13 @@ impl EmptyEnum {
 }
 
 impl Ord for EmptyEnum {
-    fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.tag_number().cmp(&other.tag_number())
     }
 }
 
 impl PartialOrd for EmptyEnum {
-    fn partial_cmp(&self, other: &Self) -> Option<::std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }

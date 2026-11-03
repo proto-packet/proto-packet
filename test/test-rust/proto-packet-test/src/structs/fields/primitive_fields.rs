@@ -79,7 +79,7 @@ impl PrimitiveFields {
 
     /// Sets the field: `boolean`. Returns the previous value.
     pub fn set_boolean(&mut self, boolean: bool) -> bool {
-        ::std::mem::replace(&mut self.boolean, boolean)
+        std::mem::replace(&mut self.boolean, boolean)
     }
 
     /// Sets the field: `boolean`. (builder pattern)
@@ -101,7 +101,7 @@ impl PrimitiveFields {
 
     /// Sets the field: `unsigned8`. Returns the previous value.
     pub fn set_unsigned8(&mut self, unsigned8: u8) -> u8 {
-        ::std::mem::replace(&mut self.unsigned8, unsigned8)
+        std::mem::replace(&mut self.unsigned8, unsigned8)
     }
 
     /// Sets the field: `unsigned8`. (builder pattern)
@@ -123,7 +123,7 @@ impl PrimitiveFields {
 
     /// Sets the field: `unsigned16`. Returns the previous value.
     pub fn set_unsigned16(&mut self, unsigned16: u16) -> u16 {
-        ::std::mem::replace(&mut self.unsigned16, unsigned16)
+        std::mem::replace(&mut self.unsigned16, unsigned16)
     }
 
     /// Sets the field: `unsigned16`. (builder pattern)
@@ -145,7 +145,7 @@ impl PrimitiveFields {
 
     /// Sets the field: `unsigned32`. Returns the previous value.
     pub fn set_unsigned32(&mut self, unsigned32: u32) -> u32 {
-        ::std::mem::replace(&mut self.unsigned32, unsigned32)
+        std::mem::replace(&mut self.unsigned32, unsigned32)
     }
 
     /// Sets the field: `unsigned32`. (builder pattern)
@@ -167,7 +167,7 @@ impl PrimitiveFields {
 
     /// Sets the field: `unsigned64`. Returns the previous value.
     pub fn set_unsigned64(&mut self, unsigned64: u64) -> u64 {
-        ::std::mem::replace(&mut self.unsigned64, unsigned64)
+        std::mem::replace(&mut self.unsigned64, unsigned64)
     }
 
     /// Sets the field: `unsigned64`. (builder pattern)
@@ -189,7 +189,7 @@ impl PrimitiveFields {
 
     /// Sets the field: `unsigned128`. Returns the previous value.
     pub fn set_unsigned128(&mut self, unsigned128: u128) -> u128 {
-        ::std::mem::replace(&mut self.unsigned128, unsigned128)
+        std::mem::replace(&mut self.unsigned128, unsigned128)
     }
 
     /// Sets the field: `unsigned128`. (builder pattern)

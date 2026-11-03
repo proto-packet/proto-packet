@@ -6,21 +6,17 @@ pub trait KeywordService: Send + Sync {
     fn r#type(
         &self,
         request: u32,
-    ) -> impl ::std::future::Future<Output = Result<u32, ::proto_packet::service::ServiceError>>
-    + Send
-    + '_;
+    ) -> impl std::future::Future<Output = Result<u32, ::proto_packet::service::ServiceError>> + Send + '_;
 
     /// A non-raw keyword call. (`self_`)
     fn self_(
         &self,
         request: u32,
-    ) -> impl ::std::future::Future<Output = Result<u32, ::proto_packet::service::ServiceError>>
-    + Send
-    + '_;
+    ) -> impl std::future::Future<Output = Result<u32, ::proto_packet::service::ServiceError>> + Send + '_;
 }
 
 /// Creates the axum router of the `KeywordService` service.
-pub fn keyword_service_router<S>(service: ::std::sync::Arc<S>) -> ::proto_packet::axum::Router
+pub fn keyword_service_router<S>(service: std::sync::Arc<S>) -> ::proto_packet::axum::Router
 where
     S: KeywordService + 'static,
 {

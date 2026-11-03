@@ -49,7 +49,7 @@ impl HTTPServer {
     /// Sets the field: `maxConnections`. Returns the previous value.
     #[allow(non_snake_case)]
     pub fn set_maxConnections(&mut self, maxConnections: u32) -> u32 {
-        ::std::mem::replace(&mut self.maxConnections, maxConnections)
+        std::mem::replace(&mut self.maxConnections, maxConnections)
     }
 
     /// Sets the field: `maxConnections`. (builder pattern)

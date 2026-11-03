@@ -46,7 +46,7 @@ impl SpecialFields {
         F: Into<Option<::proto_packet::types::Uuid>>,
     {
         let id: Option<::proto_packet::types::Uuid> = id.into();
-        ::std::mem::replace(&mut self.id, id)
+        std::mem::replace(&mut self.id, id)
     }
 
     /// Sets the field: `id`. (builder pattern)
@@ -75,7 +75,7 @@ impl SpecialFields {
         F: Into<Option<String>>,
     {
         let text: Option<String> = text.into();
-        ::std::mem::replace(&mut self.text, text)
+        std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)

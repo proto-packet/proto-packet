@@ -48,7 +48,7 @@ impl NestedCopy {
         &mut self,
         fields: crate::structs::copy::CopyFields,
     ) -> crate::structs::copy::CopyFields {
-        ::std::mem::replace(&mut self.fields, fields)
+        std::mem::replace(&mut self.fields, fields)
     }
 
     /// Sets the field: `fields`. (builder pattern)

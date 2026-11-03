@@ -6,7 +6,7 @@ pub trait Greeter: Send + Sync {
     fn greet(
         &self,
         request: crate::services::calls::GreetRequest,
-    ) -> impl ::std::future::Future<
+    ) -> impl std::future::Future<
         Output = Result<
             crate::services::calls::GreetResponse,
             ::proto_packet::service::ServiceError,
@@ -18,7 +18,7 @@ pub trait Greeter: Send + Sync {
     fn step(
         &self,
         request: crate::types::Point,
-    ) -> impl ::std::future::Future<
+    ) -> impl std::future::Future<
         Output = Result<crate::types::Point, ::proto_packet::service::ServiceError>,
     > + Send
     + '_;
@@ -27,14 +27,14 @@ pub trait Greeter: Send + Sync {
     fn color(
         &self,
         request: u32,
-    ) -> impl ::std::future::Future<
+    ) -> impl std::future::Future<
         Output = Result<crate::types::Color, ::proto_packet::service::ServiceError>,
     > + Send
     + '_;
 }
 
 /// Creates the axum router of the `Greeter` service.
-pub fn greeter_router<S>(service: ::std::sync::Arc<S>) -> ::proto_packet::axum::Router
+pub fn greeter_router<S>(service: std::sync::Arc<S>) -> ::proto_packet::axum::Router
 where
     S: Greeter + 'static,
 {

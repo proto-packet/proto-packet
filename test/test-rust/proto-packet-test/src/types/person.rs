@@ -48,7 +48,7 @@ impl Person {
 
     /// Sets the field: `name`. Returns the previous value.
     pub fn set_name(&mut self, name: String) -> String {
-        ::std::mem::replace(&mut self.name, name)
+        std::mem::replace(&mut self.name, name)
     }
 
     /// Sets the field: `name`. (builder pattern)
@@ -70,7 +70,7 @@ impl Person {
 
     /// Sets the field: `age`. Returns the previous value.
     pub fn set_age(&mut self, age: u8) -> u8 {
-        ::std::mem::replace(&mut self.age, age)
+        std::mem::replace(&mut self.age, age)
     }
 
     /// Sets the field: `age`. (builder pattern)

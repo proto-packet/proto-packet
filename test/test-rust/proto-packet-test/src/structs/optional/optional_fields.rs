@@ -103,7 +103,7 @@ impl OptionalFields {
         F: Into<Option<u32>>,
     {
         let count: Option<u32> = count.into();
-        ::std::mem::replace(&mut self.count, count)
+        std::mem::replace(&mut self.count, count)
     }
 
     /// Sets the field: `count`. (builder pattern)
@@ -132,7 +132,7 @@ impl OptionalFields {
         F: Into<Option<::proto_packet::types::Uuid>>,
     {
         let id: Option<::proto_packet::types::Uuid> = id.into();
-        ::std::mem::replace(&mut self.id, id)
+        std::mem::replace(&mut self.id, id)
     }
 
     /// Sets the field: `id`. (builder pattern)
@@ -161,7 +161,7 @@ impl OptionalFields {
         F: Into<Option<String>>,
     {
         let text: Option<String> = text.into();
-        ::std::mem::replace(&mut self.text, text)
+        std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)
@@ -190,7 +190,7 @@ impl OptionalFields {
         F: Into<Option<crate::types::Point>>,
     {
         let point: Option<crate::types::Point> = point.into();
-        ::std::mem::replace(&mut self.point, point)
+        std::mem::replace(&mut self.point, point)
     }
 
     /// Sets the field: `point`. (builder pattern)
@@ -219,7 +219,7 @@ impl OptionalFields {
         F: Into<Option<crate::types::Person>>,
     {
         let person: Option<crate::types::Person> = person.into();
-        ::std::mem::replace(&mut self.person, person)
+        std::mem::replace(&mut self.person, person)
     }
 
     /// Sets the field: `person`. (builder pattern)
@@ -248,7 +248,7 @@ impl OptionalFields {
         F: Into<Option<crate::types::Label>>,
     {
         let label: Option<crate::types::Label> = label.into();
-        ::std::mem::replace(&mut self.label, label)
+        std::mem::replace(&mut self.label, label)
     }
 
     /// Sets the field: `label`. (builder pattern)
@@ -277,7 +277,7 @@ impl OptionalFields {
         F: Into<Option<crate::types::Color>>,
     {
         let color: Option<crate::types::Color> = color.into();
-        ::std::mem::replace(&mut self.color, color)
+        std::mem::replace(&mut self.color, color)
     }
 
     /// Sets the field: `color`. (builder pattern)
@@ -306,7 +306,7 @@ impl OptionalFields {
         F: Into<Option<crate::types::Shape>>,
     {
         let shape: Option<crate::types::Shape> = shape.into();
-        ::std::mem::replace(&mut self.shape, shape)
+        std::mem::replace(&mut self.shape, shape)
     }
 
     /// Sets the field: `shape`. (builder pattern)

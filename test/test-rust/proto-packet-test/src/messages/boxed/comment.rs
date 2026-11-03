@@ -46,7 +46,7 @@ impl Comment {
         F: Into<Option<String>>,
     {
         let text: Option<String> = text.into();
-        ::std::mem::replace(&mut self.text, text)
+        std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)
@@ -75,7 +75,7 @@ impl Comment {
         F: Into<Option<crate::messages::boxed::Comment>>,
     {
         let reply: Option<crate::messages::boxed::Comment> = reply.into();
-        ::std::mem::replace(&mut self.reply, reply.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.reply, reply.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `reply`. (builder pattern)

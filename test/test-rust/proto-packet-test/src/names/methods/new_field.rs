@@ -42,7 +42,7 @@ impl NewField {
         F: Into<Option<u32>>,
     {
         let new: Option<u32> = new.into();
-        ::std::mem::replace(&mut self.new, new)
+        std::mem::replace(&mut self.new, new)
     }
 
     /// Sets the field: `new`. (builder pattern)

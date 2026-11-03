@@ -47,7 +47,7 @@ impl KeywordMessage {
         F: Into<Option<u32>>,
     {
         let r#type: Option<u32> = r#type.into();
-        ::std::mem::replace(&mut self.r#type, r#type)
+        std::mem::replace(&mut self.r#type, r#type)
     }
 
     /// Sets the field: `type`. (builder pattern)
@@ -76,7 +76,7 @@ impl KeywordMessage {
         F: Into<Option<u32>>,
     {
         let self_: Option<u32> = self_.into();
-        ::std::mem::replace(&mut self.self_, self_)
+        std::mem::replace(&mut self.self_, self_)
     }
 
     /// Sets the field: `self`. (builder pattern)

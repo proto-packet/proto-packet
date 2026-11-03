@@ -72,7 +72,7 @@ impl NamedFields {
 
     /// Sets the field: `point`. Returns the previous value.
     pub fn set_point(&mut self, point: crate::types::Point) -> crate::types::Point {
-        ::std::mem::replace(&mut self.point, point)
+        std::mem::replace(&mut self.point, point)
     }
 
     /// Sets the field: `point`. (builder pattern)
@@ -94,7 +94,7 @@ impl NamedFields {
 
     /// Sets the field: `person`. Returns the previous value.
     pub fn set_person(&mut self, person: crate::types::Person) -> crate::types::Person {
-        ::std::mem::replace(&mut self.person, person)
+        std::mem::replace(&mut self.person, person)
     }
 
     /// Sets the field: `person`. (builder pattern)
@@ -116,7 +116,7 @@ impl NamedFields {
 
     /// Sets the field: `label`. Returns the previous value.
     pub fn set_label(&mut self, label: crate::types::Label) -> crate::types::Label {
-        ::std::mem::replace(&mut self.label, label)
+        std::mem::replace(&mut self.label, label)
     }
 
     /// Sets the field: `label`. (builder pattern)
@@ -138,7 +138,7 @@ impl NamedFields {
 
     /// Sets the field: `color`. Returns the previous value.
     pub fn set_color(&mut self, color: crate::types::Color) -> crate::types::Color {
-        ::std::mem::replace(&mut self.color, color)
+        std::mem::replace(&mut self.color, color)
     }
 
     /// Sets the field: `color`. (builder pattern)
@@ -160,7 +160,7 @@ impl NamedFields {
 
     /// Sets the field: `shape`. Returns the previous value.
     pub fn set_shape(&mut self, shape: crate::types::Shape) -> crate::types::Shape {
-        ::std::mem::replace(&mut self.shape, shape)
+        std::mem::replace(&mut self.shape, shape)
     }
 
     /// Sets the field: `shape`. (builder pattern)

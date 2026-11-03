@@ -49,7 +49,7 @@ impl ImportedFields {
 
     /// Sets the field: `point`. Returns the previous value.
     pub fn set_point(&mut self, point: crate::types::Point) -> crate::types::Point {
-        ::std::mem::replace(&mut self.point, point)
+        std::mem::replace(&mut self.point, point)
     }
 
     /// Sets the field: `point`. (builder pattern)
@@ -74,7 +74,7 @@ impl ImportedFields {
         &mut self,
         child: crate::mods::parent::child::Child,
     ) -> crate::mods::parent::child::Child {
-        ::std::mem::replace(&mut self.child, child)
+        std::mem::replace(&mut self.child, child)
     }
 
     /// Sets the field: `child`. (builder pattern)

@@ -45,7 +45,7 @@ impl DefaultField {
 
     /// Sets the field: `default`. Returns the previous value.
     pub fn set_default(&mut self, default: u32) -> u32 {
-        ::std::mem::replace(&mut self.default, default)
+        std::mem::replace(&mut self.default, default)
     }
 
     /// Sets the field: `default`. (builder pattern)

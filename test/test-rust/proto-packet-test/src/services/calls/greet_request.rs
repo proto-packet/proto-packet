@@ -41,7 +41,7 @@ impl GreetRequest {
         F: Into<Option<String>>,
     {
         let name: Option<String> = name.into();
-        ::std::mem::replace(&mut self.name, name)
+        std::mem::replace(&mut self.name, name)
     }
 
     /// Sets the field: `name`. (builder pattern)

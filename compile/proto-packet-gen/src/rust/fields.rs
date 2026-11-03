@@ -208,7 +208,7 @@ impl Field<'_> {
             function.add_semi(format!("let {}: {} = {}.into()", field, value_type, field));
         }
         let replace: String = format!(
-            "::std::mem::replace(&mut self.{}, {})",
+            "std::mem::replace(&mut self.{}, {})",
             field,
             self.storage_expr(typing, &field)
         );

@@ -57,7 +57,7 @@ fn gen_signature(typing: Typing<'_>, call: &ServiceCall) -> Signature {
     let result: RustType = RustType::from(typing.prelude(PreludeName::Result))
         .with_generic(typing.rust_type(call.response()))
         .with_generic("::proto_packet::service::ServiceError");
-    let future: RustType = RustType::from("::std::future::Future")
+    let future: RustType = RustType::from("std::future::Future")
         .with_generic(result.to_binding("Output"))
         .to_impl()
         .with_bound(typing.prelude(PreludeName::Send))
@@ -83,7 +83,7 @@ fn gen_router(typing: Typing<'_>, mod_path: ModPathRef<'_>, service: &Service) -
             .with_generic(Var::from(("S", format!("{} + 'static", service_type))))
             .with_param(Var::from((
                 param,
-                RustType::from("::std::sync::Arc").with_generic("S"),
+                RustType::from("std::sync::Arc").with_generic("S"),
             )))
             .with_result("::proto_packet::axum::Router");
     let mut function: Function = Function::from(signature)

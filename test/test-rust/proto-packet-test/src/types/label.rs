@@ -41,7 +41,7 @@ impl Label {
         F: Into<Option<String>>,
     {
         let text: Option<String> = text.into();
-        ::std::mem::replace(&mut self.text, text)
+        std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)

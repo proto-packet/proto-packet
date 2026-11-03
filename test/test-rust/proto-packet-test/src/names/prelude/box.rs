@@ -16,8 +16,8 @@
 #[serde(tag = "var", content = "val")]
 pub enum Box {
     /// A boxed case of itself.
-    Inner(::std::boxed::Box<crate::names::prelude::Box>),
+    Inner(std::boxed::Box<crate::names::prelude::Box>),
 
     /// A string case.
-    Text(::std::string::String),
+    Text(std::string::String),
 }

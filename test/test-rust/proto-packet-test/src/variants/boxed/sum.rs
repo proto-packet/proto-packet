@@ -51,7 +51,7 @@ impl Sum {
 
     /// Sets the field: `left`. Returns the previous value.
     pub fn set_left(&mut self, left: crate::variants::boxed::Expr) -> crate::variants::boxed::Expr {
-        *::std::mem::replace(&mut self.left, Box::new(left))
+        *std::mem::replace(&mut self.left, Box::new(left))
     }
 
     /// Sets the field: `left`. (builder pattern)
@@ -76,7 +76,7 @@ impl Sum {
         &mut self,
         right: crate::variants::boxed::Expr,
     ) -> crate::variants::boxed::Expr {
-        *::std::mem::replace(&mut self.right, Box::new(right))
+        *std::mem::replace(&mut self.right, Box::new(right))
     }
 
     /// Sets the field: `right`. (builder pattern)

@@ -66,7 +66,7 @@ impl PrimitiveFields {
         F: Into<Option<bool>>,
     {
         let boolean: Option<bool> = boolean.into();
-        ::std::mem::replace(&mut self.boolean, boolean)
+        std::mem::replace(&mut self.boolean, boolean)
     }
 
     /// Sets the field: `boolean`. (builder pattern)
@@ -95,7 +95,7 @@ impl PrimitiveFields {
         F: Into<Option<u8>>,
     {
         let unsigned8: Option<u8> = unsigned8.into();
-        ::std::mem::replace(&mut self.unsigned8, unsigned8)
+        std::mem::replace(&mut self.unsigned8, unsigned8)
     }
 
     /// Sets the field: `unsigned8`. (builder pattern)
@@ -124,7 +124,7 @@ impl PrimitiveFields {
         F: Into<Option<u16>>,
     {
         let unsigned16: Option<u16> = unsigned16.into();
-        ::std::mem::replace(&mut self.unsigned16, unsigned16)
+        std::mem::replace(&mut self.unsigned16, unsigned16)
     }
 
     /// Sets the field: `unsigned16`. (builder pattern)
@@ -153,7 +153,7 @@ impl PrimitiveFields {
         F: Into<Option<u32>>,
     {
         let unsigned32: Option<u32> = unsigned32.into();
-        ::std::mem::replace(&mut self.unsigned32, unsigned32)
+        std::mem::replace(&mut self.unsigned32, unsigned32)
     }
 
     /// Sets the field: `unsigned32`. (builder pattern)
@@ -182,7 +182,7 @@ impl PrimitiveFields {
         F: Into<Option<u64>>,
     {
         let unsigned64: Option<u64> = unsigned64.into();
-        ::std::mem::replace(&mut self.unsigned64, unsigned64)
+        std::mem::replace(&mut self.unsigned64, unsigned64)
     }
 
     /// Sets the field: `unsigned64`. (builder pattern)
@@ -211,7 +211,7 @@ impl PrimitiveFields {
         F: Into<Option<u128>>,
     {
         let unsigned128: Option<u128> = unsigned128.into();
-        ::std::mem::replace(&mut self.unsigned128, unsigned128)
+        std::mem::replace(&mut self.unsigned128, unsigned128)
     }
 
     /// Sets the field: `unsigned128`. (builder pattern)

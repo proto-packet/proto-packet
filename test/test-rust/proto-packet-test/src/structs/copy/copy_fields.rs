@@ -67,7 +67,7 @@ impl CopyFields {
 
     /// Sets the field: `count`. Returns the previous value.
     pub fn set_count(&mut self, count: u32) -> u32 {
-        ::std::mem::replace(&mut self.count, count)
+        std::mem::replace(&mut self.count, count)
     }
 
     /// Sets the field: `count`. (builder pattern)
@@ -89,7 +89,7 @@ impl CopyFields {
 
     /// Sets the field: `id`. Returns the previous value.
     pub fn set_id(&mut self, id: ::proto_packet::types::Uuid) -> ::proto_packet::types::Uuid {
-        ::std::mem::replace(&mut self.id, id)
+        std::mem::replace(&mut self.id, id)
     }
 
     /// Sets the field: `id`. (builder pattern)
@@ -111,7 +111,7 @@ impl CopyFields {
 
     /// Sets the field: `point`. Returns the previous value.
     pub fn set_point(&mut self, point: crate::types::Point) -> crate::types::Point {
-        ::std::mem::replace(&mut self.point, point)
+        std::mem::replace(&mut self.point, point)
     }
 
     /// Sets the field: `point`. (builder pattern)
@@ -133,7 +133,7 @@ impl CopyFields {
 
     /// Sets the field: `color`. Returns the previous value.
     pub fn set_color(&mut self, color: crate::types::Color) -> crate::types::Color {
-        ::std::mem::replace(&mut self.color, color)
+        std::mem::replace(&mut self.color, color)
     }
 
     /// Sets the field: `color`. (builder pattern)

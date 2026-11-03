@@ -44,7 +44,7 @@ impl StringField {
 
     /// Sets the field: `text`. Returns the previous value.
     pub fn set_text(&mut self, text: String) -> String {
-        ::std::mem::replace(&mut self.text, text)
+        std::mem::replace(&mut self.text, text)
     }
 
     /// Sets the field: `text`. (builder pattern)

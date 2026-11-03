@@ -48,7 +48,7 @@ impl Before {
         &mut self,
         after: crate::imports::local::After,
     ) -> crate::imports::local::After {
-        ::std::mem::replace(&mut self.after, after)
+        std::mem::replace(&mut self.after, after)
     }
 
     /// Sets the field: `after`. (builder pattern)

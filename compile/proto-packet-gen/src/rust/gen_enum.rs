@@ -110,7 +110,7 @@ fn gen_ord(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
     let signature: Signature = Signature::from("cmp")
         .with_receiver(Receiver::Borrowed)
         .with_param(Var::from(("other", "&Self")))
-        .with_result("::std::cmp::Ordering");
+        .with_result("std::cmp::Ordering");
     let cmp: Function =
         Function::from(signature).with_literal("self.tag_number().cmp(&other.tag_number())");
     ImplBlock::from(ident(&enumeration.type_name()))
@@ -124,7 +124,7 @@ fn gen_partial_ord(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
         .with_receiver(Receiver::Borrowed)
         .with_param(Var::from(("other", "&Self")))
         .with_result(format!(
-            "{}<::std::cmp::Ordering>",
+            "{}<std::cmp::Ordering>",
             prelude.path(PreludeName::Option)
         ));
     let partial_cmp: Function = Function::from(signature).with_literal("Some(self.cmp(other))");

@@ -52,7 +52,7 @@ impl ListNode {
 
     /// Sets the field: `value`. Returns the previous value.
     pub fn set_value(&mut self, value: u32) -> u32 {
-        ::std::mem::replace(&mut self.value, value)
+        std::mem::replace(&mut self.value, value)
     }
 
     /// Sets the field: `value`. (builder pattern)
@@ -78,7 +78,7 @@ impl ListNode {
         F: Into<Option<crate::structs::boxed::ListNode>>,
     {
         let next: Option<crate::structs::boxed::ListNode> = next.into();
-        ::std::mem::replace(&mut self.next, next.map(Box::new)).map(|value| *value)
+        std::mem::replace(&mut self.next, next.map(Box::new)).map(|value| *value)
     }
 
     /// Sets the field: `next`. (builder pattern)

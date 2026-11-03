@@ -57,7 +57,7 @@ impl KeywordStruct {
 
     /// Sets the field: `type`. Returns the previous value.
     pub fn set_type(&mut self, r#type: u32) -> u32 {
-        ::std::mem::replace(&mut self.r#type, r#type)
+        std::mem::replace(&mut self.r#type, r#type)
     }
 
     /// Sets the field: `type`. (builder pattern)
@@ -79,7 +79,7 @@ impl KeywordStruct {
 
     /// Sets the field: `match`. Returns the previous value.
     pub fn set_match(&mut self, r#match: String) -> String {
-        ::std::mem::replace(&mut self.r#match, r#match)
+        std::mem::replace(&mut self.r#match, r#match)
     }
 
     /// Sets the field: `match`. (builder pattern)
@@ -101,7 +101,7 @@ impl KeywordStruct {
 
     /// Sets the field: `self`. Returns the previous value.
     pub fn set_self(&mut self, self_: u32) -> u32 {
-        ::std::mem::replace(&mut self.self_, self_)
+        std::mem::replace(&mut self.self_, self_)
     }
 
     /// Sets the field: `self`. (builder pattern)
