@@ -54,6 +54,21 @@ impl PartialOrd for Color {
     }
 }
 
+impl Color {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
+            Self::Red => 1,
+            Self::Green => 2,
+            Self::Blue => 3,
+        }
+    }
+}
+
 impl proto_packet::serde::Serialize for Color {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -84,20 +99,5 @@ impl<'de> proto_packet::serde::Deserialize<'de> for Color {
             },
             Self::from_tag_number,
         )
-    }
-}
-
-impl Color {
-    //! Properties
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Unrecognized(unrecognized) => unrecognized.0,
-            Self::Red => 1,
-            Self::Green => 2,
-            Self::Blue => 3,
-        }
     }
 }

@@ -46,6 +46,19 @@ impl std::cmp::PartialOrd for Ord {
     }
 }
 
+impl Ord {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
+            Self::Only => 1,
+        }
+    }
+}
+
 impl proto_packet::serde::Serialize for Ord {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -72,18 +85,5 @@ impl<'de> proto_packet::serde::Deserialize<'de> for Ord {
             },
             Self::from_tag_number,
         )
-    }
-}
-
-impl Ord {
-    //! Properties
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Unrecognized(unrecognized) => unrecognized.0,
-            Self::Only => 1,
-        }
     }
 }

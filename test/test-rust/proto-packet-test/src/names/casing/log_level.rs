@@ -51,6 +51,20 @@ impl PartialOrd for Log_Level {
     }
 }
 
+impl Log_Level {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
+            Self::INFO => 1,
+            Self::Very_Verbose => 2,
+        }
+    }
+}
+
 impl proto_packet::serde::Serialize for Log_Level {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -79,19 +93,5 @@ impl<'de> proto_packet::serde::Deserialize<'de> for Log_Level {
             },
             Self::from_tag_number,
         )
-    }
-}
-
-impl Log_Level {
-    //! Properties
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Unrecognized(unrecognized) => unrecognized.0,
-            Self::INFO => 1,
-            Self::Very_Verbose => 2,
-        }
     }
 }

@@ -54,6 +54,21 @@ impl PartialOrd for UnorderedTags {
     }
 }
 
+impl UnorderedTags {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
+            Self::Three => 3,
+            Self::One => 1,
+            Self::Two => 2,
+        }
+    }
+}
+
 impl proto_packet::serde::Serialize for UnorderedTags {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -84,20 +99,5 @@ impl<'de> proto_packet::serde::Deserialize<'de> for UnorderedTags {
             },
             Self::from_tag_number,
         )
-    }
-}
-
-impl UnorderedTags {
-    //! Properties
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Unrecognized(unrecognized) => unrecognized.0,
-            Self::Three => 3,
-            Self::One => 1,
-            Self::Two => 2,
-        }
     }
 }

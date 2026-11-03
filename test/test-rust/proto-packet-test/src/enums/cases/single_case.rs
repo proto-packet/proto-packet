@@ -46,6 +46,19 @@ impl PartialOrd for SingleCase {
     }
 }
 
+impl SingleCase {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
+            Self::Only => 1,
+        }
+    }
+}
+
 impl proto_packet::serde::Serialize for SingleCase {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -72,18 +85,5 @@ impl<'de> proto_packet::serde::Deserialize<'de> for SingleCase {
             },
             Self::from_tag_number,
         )
-    }
-}
-
-impl SingleCase {
-    //! Properties
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Unrecognized(unrecognized) => unrecognized.0,
-            Self::Only => 1,
-        }
     }
 }

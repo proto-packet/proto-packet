@@ -50,6 +50,20 @@ impl PartialOrd for EdgeTags {
     }
 }
 
+impl EdgeTags {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
+            Self::Min => 1,
+            Self::Max => 8191,
+        }
+    }
+}
+
 impl proto_packet::serde::Serialize for EdgeTags {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -78,19 +92,5 @@ impl<'de> proto_packet::serde::Deserialize<'de> for EdgeTags {
             },
             Self::from_tag_number,
         )
-    }
-}
-
-impl EdgeTags {
-    //! Properties
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Unrecognized(unrecognized) => unrecognized.0,
-            Self::Min => 1,
-            Self::Max => 8191,
-        }
     }
 }

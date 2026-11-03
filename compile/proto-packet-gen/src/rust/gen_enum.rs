@@ -28,11 +28,11 @@ pub fn gen_enum(enumeration: &Enum) -> String {
         .with_statement(EmptyLine::default())
         .with_statement(gen_partial_ord(prelude, enumeration))
         .with_statement(EmptyLine::default())
+        .with_statement(gen_properties(enumeration))
+        .with_statement(EmptyLine::default())
         .with_statement(gen_serialize(prelude, enumeration))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_deserialize(prelude, enumeration))
-        .with_statement(EmptyLine::default())
-        .with_statement(gen_properties(enumeration));
+        .with_statement(gen_deserialize(prelude, enumeration));
     format!(
         "{}\n{}\n{}",
         dec.to_code(),
@@ -146,6 +146,31 @@ fn gen_partial_ord(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
         .with_function(partial_cmp)
 }
 
+/// Generates the impl block with the tag numbers of the cases of the `enumeration`.
+fn gen_properties(enumeration: &Enum) -> ImplBlock {
+    let mut to_tag_number: MatchStatement = MatchStatement::from("self").with_match_case(
+        MatchCase::from("Self::Unrecognized(unrecognized)").with_literal("unrecognized.0"),
+    );
+    for case in enumeration.cases() {
+        to_tag_number.add_match_case(
+            MatchCase::from(format!("Self::{}", ident(&case.case_name())))
+                .with_literal(case.tag_number().to_string()),
+        );
+    }
+    let signature: Signature = Signature::from("tag_number")
+        .with_receiver(Receiver::Owned)
+        .with_result("u16");
+    let to: Function = Function::from(signature)
+        .with_comment(" Gets the tag number.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_const(true)
+        .with_statement(to_tag_number);
+    ImplBlock::from(ident(&enumeration.type_name()))
+        .with_comment(" Properties")
+        .with_function(to)
+}
+
 /// Generates the `Serialize` impl of the `enumeration`, writing each case as its schema name, & an
 /// unrecognized case as its tag number.
 fn gen_serialize(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
@@ -209,29 +234,4 @@ fn gen_deserialize(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
         .with_generic("'de")
         .with_for_trait("proto_packet::serde::Deserialize<'de>")
         .with_function(deserialize)
-}
-
-/// Generates the impl block with the tag numbers of the cases of the `enumeration`.
-fn gen_properties(enumeration: &Enum) -> ImplBlock {
-    let mut to_tag_number: MatchStatement = MatchStatement::from("self").with_match_case(
-        MatchCase::from("Self::Unrecognized(unrecognized)").with_literal("unrecognized.0"),
-    );
-    for case in enumeration.cases() {
-        to_tag_number.add_match_case(
-            MatchCase::from(format!("Self::{}", ident(&case.case_name())))
-                .with_literal(case.tag_number().to_string()),
-        );
-    }
-    let signature: Signature = Signature::from("tag_number")
-        .with_receiver(Receiver::Owned)
-        .with_result("u16");
-    let to: Function = Function::from(signature)
-        .with_comment(" Gets the tag number.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_const(true)
-        .with_statement(to_tag_number);
-    ImplBlock::from(ident(&enumeration.type_name()))
-        .with_comment(" Properties")
-        .with_function(to)
 }
