@@ -22,7 +22,7 @@ where
     if is_default {
         result.add_derive("Default");
     }
-    result.add_derive("::proto_packet::serde::Serialize");
-    result.add_derive("::proto_packet::serde::Deserialize");
-    result.add_attribute("serde(crate = \"::proto_packet::serde\")");
+    result.add_derive("proto_packet::serde::Serialize");
+    result.add_derive("proto_packet::serde::Deserialize");
+    result.add_attribute("serde(crate = \"proto_packet::serde\")");
 }

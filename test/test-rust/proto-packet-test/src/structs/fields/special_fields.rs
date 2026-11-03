@@ -19,12 +19,12 @@
     PartialEq,
     Hash,
     Debug,
-    ::proto_packet::serde::Serialize,
-    ::proto_packet::serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
-#[serde(crate = "::proto_packet::serde")]
+#[serde(crate = "proto_packet::serde")]
 pub struct SpecialFields {
-    id: ::proto_packet::types::Uuid,
+    id: proto_packet::types::Uuid,
     text: String,
 }
 
@@ -32,7 +32,7 @@ impl SpecialFields {
     //! Construction
 
     /// Creates a new [SpecialFields].
-    pub fn new(id: ::proto_packet::types::Uuid, text: String) -> Self {
+    pub fn new(id: proto_packet::types::Uuid, text: String) -> Self {
         Self { id, text }
     }
 }
@@ -42,18 +42,18 @@ impl SpecialFields {
 
     /// Gets the field: `id`.
     #[must_use]
-    pub fn id(&self) -> ::proto_packet::types::Uuid {
+    pub fn id(&self) -> proto_packet::types::Uuid {
         self.id
     }
 
     /// Sets the field: `id`. Returns the previous value.
-    pub fn set_id(&mut self, id: ::proto_packet::types::Uuid) -> ::proto_packet::types::Uuid {
+    pub fn set_id(&mut self, id: proto_packet::types::Uuid) -> proto_packet::types::Uuid {
         std::mem::replace(&mut self.id, id)
     }
 
     /// Sets the field: `id`. (builder pattern)
     #[must_use]
-    pub fn with_id(mut self, id: ::proto_packet::types::Uuid) -> Self {
+    pub fn with_id(mut self, id: proto_packet::types::Uuid) -> Self {
         self.set_id(id);
         self
     }

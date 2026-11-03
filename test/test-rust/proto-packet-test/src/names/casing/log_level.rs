@@ -8,10 +8,10 @@
     PartialEq,
     Hash,
     Debug,
-    ::proto_packet::serde::Serialize,
-    ::proto_packet::serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
-#[serde(crate = "::proto_packet::serde")]
+#[serde(crate = "proto_packet::serde")]
 #[allow(non_camel_case_types)]
 pub enum Log_Level {
     /// An upper case case.

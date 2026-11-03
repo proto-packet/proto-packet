@@ -37,15 +37,15 @@
     PartialEq,
     Hash,
     Debug,
-    ::proto_packet::serde::Serialize,
-    ::proto_packet::serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
-#[serde(crate = "::proto_packet::serde")]
+#[serde(crate = "proto_packet::serde")]
 pub struct OptionalFields {
     #[serde(skip_serializing_if = "Option::is_none")]
     count: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    id: Option<::proto_packet::types::Uuid>,
+    id: Option<proto_packet::types::Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -67,7 +67,7 @@ impl OptionalFields {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         count: Option<u32>,
-        id: Option<::proto_packet::types::Uuid>,
+        id: Option<proto_packet::types::Uuid>,
         text: Option<String>,
         point: Option<crate::types::Point>,
         person: Option<crate::types::Person>,
@@ -122,16 +122,16 @@ impl OptionalFields {
 
     /// Gets the field: `id`.
     #[must_use]
-    pub fn id(&self) -> Option<::proto_packet::types::Uuid> {
+    pub fn id(&self) -> Option<proto_packet::types::Uuid> {
         self.id
     }
 
     /// Sets the field: `id`. Returns the previous value.
-    pub fn set_id<F>(&mut self, id: F) -> Option<::proto_packet::types::Uuid>
+    pub fn set_id<F>(&mut self, id: F) -> Option<proto_packet::types::Uuid>
     where
-        F: Into<Option<::proto_packet::types::Uuid>>,
+        F: Into<Option<proto_packet::types::Uuid>>,
     {
-        let id: Option<::proto_packet::types::Uuid> = id.into();
+        let id: Option<proto_packet::types::Uuid> = id.into();
         std::mem::replace(&mut self.id, id)
     }
 
@@ -139,7 +139,7 @@ impl OptionalFields {
     #[must_use]
     pub fn with_id<F>(mut self, id: F) -> Self
     where
-        F: Into<Option<::proto_packet::types::Uuid>>,
+        F: Into<Option<proto_packet::types::Uuid>>,
     {
         self.set_id(id);
         self

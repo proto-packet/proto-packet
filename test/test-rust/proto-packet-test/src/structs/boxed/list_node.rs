@@ -19,10 +19,10 @@
     PartialEq,
     Hash,
     Debug,
-    ::proto_packet::serde::Serialize,
-    ::proto_packet::serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
-#[serde(crate = "::proto_packet::serde")]
+#[serde(crate = "proto_packet::serde")]
 pub struct ListNode {
     value: u32,
     #[serde(skip_serializing_if = "Option::is_none")]

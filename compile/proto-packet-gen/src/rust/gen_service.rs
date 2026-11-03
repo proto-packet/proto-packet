@@ -56,7 +56,7 @@ fn gen_trait(typing: Typing<'_>, service: &Service) -> Trait {
 fn gen_signature(typing: Typing<'_>, call: &ServiceCall) -> Signature {
     let result: RustType = RustType::from(typing.prelude(PreludeName::Result))
         .with_generic(typing.rust_type(call.response()))
-        .with_generic("::proto_packet::service::ServiceError");
+        .with_generic("proto_packet::service::ServiceError");
     let future: RustType = RustType::from("std::future::Future")
         .with_generic(result.to_binding("Output"))
         .to_impl()
@@ -85,22 +85,22 @@ fn gen_router(typing: Typing<'_>, mod_path: ModPathRef<'_>, service: &Service) -
                 param,
                 RustType::from("std::sync::Arc").with_generic("S"),
             )))
-            .with_result("::proto_packet::axum::Router");
+            .with_result("proto_packet::axum::Router");
     let mut function: Function = Function::from(signature)
         .with_comment(format!(
             " Creates the axum router of the `{}` service.",
             service.type_name()
         ))
         .with_access(Access::Public)
-        .with_literal("::proto_packet::axum::Router::new()");
+        .with_literal("proto_packet::axum::Router::new()");
     for call in service.calls() {
         let path: String = format!("/{}.{}/{}", mod_path, service.type_name(), call.call_name());
         function.add_literal(format!(
-            ".route(\"{}\", ::proto_packet::axum::routing::post({{ \
+            ".route(\"{}\", proto_packet::axum::routing::post({{ \
                 let service = service.clone(); \
-                move |::proto_packet::axum::Json(request): ::proto_packet::axum::Json<{}>| {{ \
+                move |proto_packet::axum::Json(request): proto_packet::axum::Json<{}>| {{ \
                     let service = service.clone(); \
-                    async move {{ service.{}(request).await.map(::proto_packet::axum::Json) }} \
+                    async move {{ service.{}(request).await.map(proto_packet::axum::Json) }} \
                 }} \
             }}))",
             path,

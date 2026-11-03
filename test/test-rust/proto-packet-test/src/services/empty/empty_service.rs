@@ -4,9 +4,9 @@
 pub trait EmptyService: Send + Sync {}
 
 /// Creates the axum router of the `EmptyService` service.
-pub fn empty_service_router<S>(_service: std::sync::Arc<S>) -> ::proto_packet::axum::Router
+pub fn empty_service_router<S>(_service: std::sync::Arc<S>) -> proto_packet::axum::Router
 where
     S: EmptyService + 'static,
 {
-    ::proto_packet::axum::Router::new()
+    proto_packet::axum::Router::new()
 }

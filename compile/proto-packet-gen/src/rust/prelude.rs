@@ -58,7 +58,8 @@ impl PreludeName {
 /// The prelude names are bare, unless the type is named like one of them. Then every prelude name
 /// in the file has its full path. (ex: `std::option::Option` in the file of a struct `Option`)
 ///
-/// The `std` paths need no leading `::`, since a type name cannot be `std`.
+/// The `std` & `proto_packet` paths need no leading `::`, since a type name cannot be `std` or
+/// `proto_packet`.
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct Prelude {
     is_shadowed: bool,

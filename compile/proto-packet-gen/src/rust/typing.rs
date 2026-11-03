@@ -37,7 +37,7 @@ impl Typing<'_> {
     pub(crate) fn rust_type(self, tag: &TypeTag) -> RustType {
         match tag {
             TypeTag::Primitive(primitive) => RustType::from(primitive.name()),
-            TypeTag::Special(SpecialType::Uuid) => RustType::from("::proto_packet::types::Uuid"),
+            TypeTag::Special(SpecialType::Uuid) => RustType::from("proto_packet::types::Uuid"),
             TypeTag::Special(SpecialType::String) => {
                 RustType::from(self.prelude(PreludeName::String))
             }

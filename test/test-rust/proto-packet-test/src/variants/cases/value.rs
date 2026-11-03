@@ -9,10 +9,10 @@
     PartialEq,
     Hash,
     Debug,
-    ::proto_packet::serde::Serialize,
-    ::proto_packet::serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
-#[serde(crate = "::proto_packet::serde")]
+#[serde(crate = "proto_packet::serde")]
 #[serde(tag = "var", content = "val")]
 pub enum Value {
     /// A boolean case.
@@ -22,7 +22,7 @@ pub enum Value {
     Unsigned64(u64),
 
     /// A UUID case.
-    Id(::proto_packet::types::Uuid),
+    Id(proto_packet::types::Uuid),
 
     /// A string case.
     Text(String),

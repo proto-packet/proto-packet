@@ -7,10 +7,7 @@ pub trait Greeter: Send + Sync {
         &self,
         request: crate::services::calls::GreetRequest,
     ) -> impl std::future::Future<
-        Output = Result<
-            crate::services::calls::GreetResponse,
-            ::proto_packet::service::ServiceError,
-        >,
+        Output = Result<crate::services::calls::GreetResponse, proto_packet::service::ServiceError>,
     > + Send
     + '_;
 
@@ -19,7 +16,7 @@ pub trait Greeter: Send + Sync {
         &self,
         request: crate::types::Point,
     ) -> impl std::future::Future<
-        Output = Result<crate::types::Point, ::proto_packet::service::ServiceError>,
+        Output = Result<crate::types::Point, proto_packet::service::ServiceError>,
     > + Send
     + '_;
 
@@ -28,48 +25,48 @@ pub trait Greeter: Send + Sync {
         &self,
         request: u32,
     ) -> impl std::future::Future<
-        Output = Result<crate::types::Color, ::proto_packet::service::ServiceError>,
+        Output = Result<crate::types::Color, proto_packet::service::ServiceError>,
     > + Send
     + '_;
 }
 
 /// Creates the axum router of the `Greeter` service.
-pub fn greeter_router<S>(service: std::sync::Arc<S>) -> ::proto_packet::axum::Router
+pub fn greeter_router<S>(service: std::sync::Arc<S>) -> proto_packet::axum::Router
 where
     S: Greeter + 'static,
 {
-    ::proto_packet::axum::Router::new()
+    proto_packet::axum::Router::new()
         .route(
             "/services.calls.Greeter/greet",
-            ::proto_packet::axum::routing::post({
+            proto_packet::axum::routing::post({
                 let service = service.clone();
-                move |::proto_packet::axum::Json(request): ::proto_packet::axum::Json<
+                move |proto_packet::axum::Json(request): proto_packet::axum::Json<
                     crate::services::calls::GreetRequest,
                 >| {
                     let service = service.clone();
-                    async move { service.greet(request).await.map(::proto_packet::axum::Json) }
+                    async move { service.greet(request).await.map(proto_packet::axum::Json) }
                 }
             }),
         )
         .route(
             "/services.calls.Greeter/step",
-            ::proto_packet::axum::routing::post({
+            proto_packet::axum::routing::post({
                 let service = service.clone();
-                move |::proto_packet::axum::Json(request): ::proto_packet::axum::Json<
+                move |proto_packet::axum::Json(request): proto_packet::axum::Json<
                     crate::types::Point,
                 >| {
                     let service = service.clone();
-                    async move { service.step(request).await.map(::proto_packet::axum::Json) }
+                    async move { service.step(request).await.map(proto_packet::axum::Json) }
                 }
             }),
         )
         .route(
             "/services.calls.Greeter/color",
-            ::proto_packet::axum::routing::post({
+            proto_packet::axum::routing::post({
                 let service = service.clone();
-                move |::proto_packet::axum::Json(request): ::proto_packet::axum::Json<u32>| {
+                move |proto_packet::axum::Json(request): proto_packet::axum::Json<u32>| {
                     let service = service.clone();
-                    async move { service.color(request).await.map(::proto_packet::axum::Json) }
+                    async move { service.color(request).await.map(proto_packet::axum::Json) }
                 }
             }),
         )

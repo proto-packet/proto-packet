@@ -17,10 +17,10 @@
     Hash,
     Debug,
     Default,
-    ::proto_packet::serde::Serialize,
-    ::proto_packet::serde::Deserialize,
+    proto_packet::serde::Serialize,
+    proto_packet::serde::Deserialize,
 )]
-#[serde(crate = "::proto_packet::serde")]
+#[serde(crate = "proto_packet::serde")]
 pub struct String {
     #[serde(skip_serializing_if = "std::option::Option::is_none")]
     text: std::option::Option<std::string::String>,
