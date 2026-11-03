@@ -1,0 +1,12 @@
+import mods.parent.child.Child;
+import types.Point;
+
+// A struct with fields of imported types.
+struct ImportedFields {
+
+    // A type imported from a root mod.
+    point: Point;
+
+    // A type imported from a child mod.
+    child: Child;
+}

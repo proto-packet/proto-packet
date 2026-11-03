@@ -1,0 +1,25 @@
+// A struct with fields of fully qualified types.
+struct QualifiedFields {
+
+    // A type in a root mod.
+    point: types.Point;
+
+    // A type in a child mod.
+    child: mods.parent.child.Child;
+
+    // A type in a raw keyword mod.
+    raw: names.move.MoveStruct;
+
+    // A type in a non-raw keyword mod.
+    non_raw: names.type.self.SelfStruct;
+
+    // A type in the same schema file.
+    local: imports.qualified.Local;
+}
+
+// A struct in the same schema file.
+struct Local {
+
+    // The value.
+    value: u32;
+}
