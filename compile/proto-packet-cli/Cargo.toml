@@ -7,3 +7,9 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[dependencies]
+proto-packet-compile = { workspace = true }
+
+clap = { workspace = true, features = ["derive"] }
+clerr = { workspace = true }
