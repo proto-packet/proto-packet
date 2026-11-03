@@ -36,18 +36,18 @@ impl TagNumber {
     }
 }
 
+impl From<TagNumber> for u16 {
+    fn from(tag_number: TagNumber) -> Self {
+        tag_number.value
+    }
+}
+
 impl TagNumber {
     //! Properties
 
     /// Gets the value.
     pub const fn value(self) -> u16 {
         self.value
-    }
-}
-
-impl From<TagNumber> for u16 {
-    fn from(tag_number: TagNumber) -> Self {
-        tag_number.value
     }
 }
 
