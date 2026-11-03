@@ -52,4 +52,14 @@ impl<E> Visitor<'_> for EnumVisitor<E> {
             .and_then(self.from_tag_number)
             .ok_or_else(|| R::invalid_value(Unexpected::Unsigned(tag_number), &self))
     }
+
+    fn visit_i64<R>(self, tag_number: i64) -> Result<E, R>
+    where
+        R: Error,
+    {
+        u32::try_from(tag_number)
+            .ok()
+            .and_then(self.from_tag_number)
+            .ok_or_else(|| R::invalid_value(Unexpected::Signed(tag_number), &self))
+    }
 }
