@@ -1,0 +1,10 @@
+[package]
+name = "proto-packet-test"
+description = "This library tests the generated ProtoPacket Rust code."
+homepage = "https://github.com/proto-packet/proto-packet/tree/master/test/test-rust/proto-packet-test"
+readme = "README.md"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
