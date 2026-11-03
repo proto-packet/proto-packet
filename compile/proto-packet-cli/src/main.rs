@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use clerr::{Code, Properties, Report};
 use proto_packet_compile::Language;
 use proto_packet_parse::SchemaFileTree;
+use proto_packet_tree::SchemaFile;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -17,6 +18,12 @@ struct Cli {
 enum Command {
     /// Parses a schema file & prints its syntax tree.
     Parse {
+        /// The schema file.
+        file: PathBuf,
+    },
+
+    /// Validates a schema file & prints its semantic tree.
+    Validate {
         /// The schema file.
         file: PathBuf,
     },
@@ -40,6 +47,7 @@ enum Command {
 fn main() -> ExitCode {
     let result: Result<(), Report> = match Cli::parse().command {
         Command::Parse { file } => parse(&file),
+        Command::Validate { file } => validate(&file),
         Command::Compile {
             language,
             source,
@@ -64,6 +72,16 @@ fn parse_language(name: &str) -> Result<Language, String> {
 fn parse(file: &Path) -> Result<(), Report> {
     let source: String = read(file)?;
     println!("{:#?}", parse_tree(file, &source)?);
+    Ok(())
+}
+
+/// Validates the schema `file` & prints its semantic tree.
+fn validate(file: &Path) -> Result<(), Report> {
+    let source: String = read(file)?;
+    let tree: SchemaFileTree = parse_tree(file, &source)?;
+    let schema_file: SchemaFile = proto_packet_validate::validate_schema_file(&tree, &source)
+        .map_err(|error| error.report(&file.display().to_string(), &source))?;
+    println!("{:#?}", schema_file);
     Ok(())
 }
 
