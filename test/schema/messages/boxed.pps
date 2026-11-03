@@ -1,0 +1,26 @@
+import types.Label;
+import types.Point;
+import types.Shape;
+
+// A message with boxed fields.
+message BoxedFields {
+
+    // A boxed struct field.
+    point: box Point = 1;
+
+    // A boxed message field.
+    label: box Label = 2;
+
+    // A boxed variant field.
+    shape: box Shape = 3;
+}
+
+// A comment with its reply. (a message containing itself)
+message Comment {
+
+    // The text.
+    text: string = 1;
+
+    // The reply.
+    reply: box Comment = 2;
+}
