@@ -12,6 +12,6 @@ cargo run --quiet --manifest-path "$ROOT_DIR/compile/Cargo.toml" -p proto-packet
 
 # Rust: Format, Lint & Test
 cargo fmt --manifest-path "$RUST_DIR/Cargo.toml" --all
-cargo clippy --manifest-path "$RUST_DIR/Cargo.toml" --workspace --all-targets -- -D warnings
-RUSTDOCFLAGS="-D warnings" cargo doc --manifest-path "$RUST_DIR/Cargo.toml" --workspace --no-deps
-cargo test --manifest-path "$RUST_DIR/Cargo.toml" --workspace
+cargo clippy --manifest-path "$RUST_DIR/Cargo.toml" --all-targets -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --manifest-path "$RUST_DIR/Cargo.toml" --no-deps
+cargo test --manifest-path "$RUST_DIR/Cargo.toml"
