@@ -1,9 +1,9 @@
 use crate::comments::add_comments;
 use crate::naming::validate_name;
-use crate::{ValidateError, ValidateErrorReason, validate_message_field};
-use lex::lexer::Span;
+use crate::var::tagged_member_error;
+use crate::{ValidateError, validate_message_field};
 use proto_packet_parse::MessageTree;
-use proto_packet_tree::{Message, MessageField, TreeError, TypeName};
+use proto_packet_tree::{Message, MessageField, TypeName};
 
 /// Validates the message `tree`.
 pub fn validate_message(tree: &MessageTree, source: &str) -> Result<Message, ValidateError> {
@@ -13,11 +13,7 @@ pub fn validate_message(tree: &MessageTree, source: &str) -> Result<Message, Val
     for field_tree in &tree.fields {
         let field: MessageField = validate_message_field(field_tree, source)?;
         message.add_field(field).map_err(|error| {
-            let span: Span = match error {
-                TreeError::DuplicateTagNumber { .. } => field_tree.tag_number,
-                _ => field_tree.field_name,
-            };
-            ValidateError::new(span, ValidateErrorReason::Tree(error))
+            tagged_member_error(error, field_tree.field_name, field_tree.tag_number)
         })?;
     }
     Ok(message)

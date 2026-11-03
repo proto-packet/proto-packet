@@ -1,9 +1,9 @@
 use crate::comments::add_comments;
 use crate::naming::validate_name;
-use crate::{ValidateError, ValidateErrorReason, validate_enum_case};
-use lex::lexer::Span;
+use crate::var::tagged_member_error;
+use crate::{ValidateError, validate_enum_case};
 use proto_packet_parse::EnumTree;
-use proto_packet_tree::{Enum, EnumCase, TreeError, TypeName};
+use proto_packet_tree::{Enum, EnumCase, TypeName};
 
 /// Validates the enum `tree`.
 pub fn validate_enum(tree: &EnumTree, source: &str) -> Result<Enum, ValidateError> {
@@ -13,11 +13,7 @@ pub fn validate_enum(tree: &EnumTree, source: &str) -> Result<Enum, ValidateErro
     for case_tree in &tree.cases {
         let case: EnumCase = validate_enum_case(case_tree, source)?;
         enumeration.add_case(case).map_err(|error| {
-            let span: Span = match error {
-                TreeError::DuplicateTagNumber { .. } => case_tree.tag_number,
-                _ => case_tree.case_name,
-            };
-            ValidateError::new(span, ValidateErrorReason::Tree(error))
+            tagged_member_error(error, case_tree.case_name, case_tree.tag_number)
         })?;
     }
     Ok(enumeration)

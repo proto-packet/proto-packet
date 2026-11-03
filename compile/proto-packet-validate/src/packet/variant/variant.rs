@@ -1,9 +1,9 @@
 use crate::comments::add_comments;
 use crate::naming::validate_name;
-use crate::{ValidateError, ValidateErrorReason, validate_variant_case};
-use lex::lexer::Span;
+use crate::var::tagged_member_error;
+use crate::{ValidateError, validate_variant_case};
 use proto_packet_parse::VariantTree;
-use proto_packet_tree::{TreeError, TypeName, Variant, VariantCase};
+use proto_packet_tree::{TypeName, Variant, VariantCase};
 
 /// Validates the variant `tree`.
 pub fn validate_variant(tree: &VariantTree, source: &str) -> Result<Variant, ValidateError> {
@@ -13,11 +13,7 @@ pub fn validate_variant(tree: &VariantTree, source: &str) -> Result<Variant, Val
     for case_tree in &tree.cases {
         let case: VariantCase = validate_variant_case(case_tree, source)?;
         variant.add_case(case).map_err(|error| {
-            let span: Span = match error {
-                TreeError::DuplicateTagNumber { .. } => case_tree.tag_number,
-                _ => case_tree.case_name,
-            };
-            ValidateError::new(span, ValidateErrorReason::Tree(error))
+            tagged_member_error(error, case_tree.case_name, case_tree.tag_number)
         })?;
     }
     Ok(variant)
