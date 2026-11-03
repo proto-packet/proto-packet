@@ -21,16 +21,7 @@ pub enum EdgeTags {
 }
 
 impl EdgeTags {
-    //! Tag Numbers
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Min => 1,
-            Self::Max => 8191,
-        }
-    }
+    //! Construction
 
     /// Gets the optional case with the `tag_number`.
     #[must_use]
@@ -52,5 +43,18 @@ impl Ord for EdgeTags {
 impl PartialOrd for EdgeTags {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl EdgeTags {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Min => 1,
+            Self::Max => 8191,
+        }
     }
 }

@@ -24,17 +24,7 @@ pub enum Color {
 }
 
 impl Color {
-    //! Tag Numbers
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Red => 1,
-            Self::Green => 2,
-            Self::Blue => 3,
-        }
-    }
+    //! Construction
 
     /// Gets the optional case with the `tag_number`.
     #[must_use]
@@ -57,5 +47,19 @@ impl Ord for Color {
 impl PartialOrd for Color {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl Color {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Red => 1,
+            Self::Green => 2,
+            Self::Blue => 3,
+        }
     }
 }

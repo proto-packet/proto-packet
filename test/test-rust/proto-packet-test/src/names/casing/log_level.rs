@@ -22,16 +22,7 @@ pub enum Log_Level {
 }
 
 impl Log_Level {
-    //! Tag Numbers
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::INFO => 1,
-            Self::Very_Verbose => 2,
-        }
-    }
+    //! Construction
 
     /// Gets the optional case with the `tag_number`.
     #[must_use]
@@ -53,5 +44,18 @@ impl Ord for Log_Level {
 impl PartialOrd for Log_Level {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl Log_Level {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::INFO => 1,
+            Self::Very_Verbose => 2,
+        }
     }
 }

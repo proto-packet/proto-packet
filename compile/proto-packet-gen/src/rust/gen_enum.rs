@@ -19,11 +19,13 @@ pub fn gen_enum(enumeration: &Enum) -> String {
     let block: Block = Block::default()
         .with_statement(gen_dec(enumeration))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_tag_numbers(prelude, enumeration))
+        .with_statement(gen_construction(prelude, enumeration))
         .with_statement(EmptyLine::default())
         .with_statement(gen_ord(prelude, enumeration))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_partial_ord(prelude, enumeration));
+        .with_statement(gen_partial_ord(prelude, enumeration))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_properties(enumeration));
     block.to_code()
 }
 
@@ -52,31 +54,10 @@ fn gen_dec(enumeration: &Enum) -> RustEnum {
     result
 }
 
-/// Generates the impl block converting the cases of the `enumeration` to & from tag numbers.
+/// Generates the impl block creating the cases of the `enumeration` from tag numbers.
 ///
 /// `Some` & `None` are bare, since generated types are never values, so they cannot shadow them.
-fn gen_tag_numbers(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
-    let mut to_tag_number: MatchStatement = MatchStatement::from("self");
-    let mut from_tag_number: MatchStatement = MatchStatement::from("tag_number");
-    for case in enumeration.cases() {
-        let path: String = format!("Self::{}", ident(&case.case_name()));
-        let tag_number: String = case.tag_number().to_string();
-        to_tag_number
-            .add_match_case(MatchCase::from(path.as_str()).with_literal(tag_number.as_str()));
-        from_tag_number
-            .add_match_case(MatchCase::from(tag_number).with_literal(format!("Some({})", path)));
-    }
-
-    let signature: Signature = Signature::from("tag_number")
-        .with_receiver(Receiver::Owned)
-        .with_result("u16");
-    let to: Function = Function::from(signature)
-        .with_comment(" Gets the tag number.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_const(true)
-        .with_statement(to_tag_number);
-
+fn gen_construction(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
     let param: &str = if enumeration.cases().is_empty() {
         "_tag_number"
     } else {
@@ -93,14 +74,19 @@ fn gen_tag_numbers(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
     if enumeration.cases().is_empty() {
         from.add_literal("None");
     } else {
+        let mut from_tag_number: MatchStatement = MatchStatement::from("tag_number");
+        for case in enumeration.cases() {
+            from_tag_number.add_match_case(
+                MatchCase::from(case.tag_number().to_string())
+                    .with_literal(format!("Some(Self::{})", ident(&case.case_name()))),
+            );
+        }
         from.add_statement(
             from_tag_number.with_match_case(MatchCase::from("_").with_literal("None")),
         );
     }
-
     ImplBlock::from(ident(&enumeration.type_name()))
-        .with_comment(" Tag Numbers")
-        .with_function(to)
+        .with_comment(" Construction")
         .with_function(from)
 }
 
@@ -131,4 +117,27 @@ fn gen_partial_ord(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
     ImplBlock::from(ident(&enumeration.type_name()))
         .with_for_trait(prelude.path(PreludeName::PartialOrd))
         .with_function(partial_cmp)
+}
+
+/// Generates the impl block with the tag numbers of the cases of the `enumeration`.
+fn gen_properties(enumeration: &Enum) -> ImplBlock {
+    let mut to_tag_number: MatchStatement = MatchStatement::from("self");
+    for case in enumeration.cases() {
+        to_tag_number.add_match_case(
+            MatchCase::from(format!("Self::{}", ident(&case.case_name())))
+                .with_literal(case.tag_number().to_string()),
+        );
+    }
+    let signature: Signature = Signature::from("tag_number")
+        .with_receiver(Receiver::Owned)
+        .with_result("u16");
+    let to: Function = Function::from(signature)
+        .with_comment(" Gets the tag number.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_const(true)
+        .with_statement(to_tag_number);
+    ImplBlock::from(ident(&enumeration.type_name()))
+        .with_comment(" Properties")
+        .with_function(to)
 }

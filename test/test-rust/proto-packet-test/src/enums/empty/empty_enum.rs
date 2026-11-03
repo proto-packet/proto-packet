@@ -15,13 +15,7 @@
 pub enum EmptyEnum {}
 
 impl EmptyEnum {
-    //! Tag Numbers
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {}
-    }
+    //! Construction
 
     /// Gets the optional case with the `tag_number`.
     #[must_use]
@@ -39,5 +33,15 @@ impl Ord for EmptyEnum {
 impl PartialOrd for EmptyEnum {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl EmptyEnum {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {}
     }
 }

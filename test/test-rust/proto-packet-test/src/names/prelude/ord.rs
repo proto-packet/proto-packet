@@ -18,15 +18,7 @@ pub enum Ord {
 }
 
 impl Ord {
-    //! Tag Numbers
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Only => 1,
-        }
-    }
+    //! Construction
 
     /// Gets the optional case with the `tag_number`.
     #[must_use]
@@ -47,5 +39,17 @@ impl std::cmp::Ord for Ord {
 impl std::cmp::PartialOrd for Ord {
     fn partial_cmp(&self, other: &Self) -> std::option::Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl Ord {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Only => 1,
+        }
     }
 }

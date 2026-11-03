@@ -24,17 +24,7 @@ pub enum UnorderedTags {
 }
 
 impl UnorderedTags {
-    //! Tag Numbers
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Three => 3,
-            Self::One => 1,
-            Self::Two => 2,
-        }
-    }
+    //! Construction
 
     /// Gets the optional case with the `tag_number`.
     #[must_use]
@@ -57,5 +47,19 @@ impl Ord for UnorderedTags {
 impl PartialOrd for UnorderedTags {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl UnorderedTags {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Three => 3,
+            Self::One => 1,
+            Self::Two => 2,
+        }
     }
 }

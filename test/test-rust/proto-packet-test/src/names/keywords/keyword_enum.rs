@@ -19,15 +19,7 @@ pub enum KeywordEnum {
 }
 
 impl KeywordEnum {
-    //! Tag Numbers
-
-    /// Gets the tag number.
-    #[must_use]
-    pub const fn tag_number(self) -> u16 {
-        match self {
-            Self::Self_ => 1,
-        }
-    }
+    //! Construction
 
     /// Gets the optional case with the `tag_number`.
     #[must_use]
@@ -48,5 +40,17 @@ impl Ord for KeywordEnum {
 impl PartialOrd for KeywordEnum {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl KeywordEnum {
+    //! Properties
+
+    /// Gets the tag number.
+    #[must_use]
+    pub const fn tag_number(self) -> u16 {
+        match self {
+            Self::Self_ => 1,
+        }
     }
 }
