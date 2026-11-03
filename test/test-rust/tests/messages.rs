@@ -1,7 +1,7 @@
 mod common;
 
 use common::{ID, ID_JSON, assert_json};
-use proto_packet_test::messages::boxed::Comment;
+use proto_packet_test::messages::boxed::{BoxedFields, Comment};
 use proto_packet_test::messages::empty::EmptyMessage;
 use proto_packet_test::messages::fields::{NamedFields, PrimitiveFields, SpecialFields};
 use proto_packet_test::types::{Color, Label, Person, Point, Shape};
@@ -65,4 +65,12 @@ fn setters_return_the_previous_value() {
     let reply: Comment = Comment::default().with_text("reply".to_string());
     assert_eq!(comment.set_reply(reply.clone()), None);
     assert_eq!(comment.set_reply(None), Some(reply));
+}
+
+#[test]
+fn boxed_copy_fields() {
+    let mut boxed: BoxedFields = BoxedFields::default().with_point(Point::new(1, 2));
+    assert_eq!(boxed.point(), Some(Point::new(1, 2)));
+    assert_eq!(boxed.set_point(None), Some(Point::new(1, 2)));
+    assert_eq!(boxed.point(), None);
 }

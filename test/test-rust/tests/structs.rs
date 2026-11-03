@@ -2,7 +2,7 @@ mod common;
 
 use common::{ID, ID_JSON, assert_json};
 use proto_packet_test::structs::boxed::{BoxedFields, ListNode, OptionalBoxedFields};
-use proto_packet_test::structs::copy::{CopyFields, NestedCopy, OptionalCopy};
+use proto_packet_test::structs::copy::{BoxedCopy, CopyFields, NestedCopy, OptionalCopy};
 use proto_packet_test::structs::empty::EmptyStruct;
 use proto_packet_test::structs::fields::{NamedFields, PrimitiveFields, SpecialFields};
 use proto_packet_test::structs::optional::OptionalFields;
@@ -113,4 +113,30 @@ fn const_constructors() {
     const OPTIONAL: OptionalCopy = OptionalCopy::new(Some(1), None);
     assert_eq!(POINT.x(), 1);
     assert_eq!(OPTIONAL.count(), Some(1));
+}
+
+#[test]
+fn boxed_copy_fields() {
+    let mut copy: BoxedCopy = BoxedCopy::new(Point::new(1, 2));
+    assert_eq!(copy.point(), Point::new(1, 2));
+    assert_eq!(copy.set_point(Point::new(3, 4)), Point::new(1, 2));
+    assert_eq!(copy.point(), Point::new(3, 4));
+
+    let mut boxed: BoxedFields = BoxedFields::new(
+        Point::new(1, 2),
+        person(),
+        Label::default(),
+        Color::Red,
+        Shape::Circle(1),
+    );
+    assert_eq!(boxed.point(), Point::new(1, 2));
+    assert_eq!(boxed.set_color(Color::Blue), Color::Red);
+    assert_eq!(boxed.color(), Color::Blue);
+
+    let mut optional: OptionalBoxedFields = OptionalBoxedFields::new(None, None, None, None, None);
+    assert_eq!(optional.set_point(Point::new(1, 2)), None);
+    assert_eq!(optional.point(), Some(Point::new(1, 2)));
+    assert_eq!(optional.set_color(Color::Green), None);
+    assert_eq!(optional.set_color(None), Some(Color::Green));
+    assert_eq!(optional.color(), None);
 }
