@@ -71,13 +71,13 @@ number above `u64::MAX` as a float, so the full fix waits for a JSON encoding wi
 Compiling replaces the target folder with the generated files.
 (`proto-packet-compile/src/compile.rs`)
 
-- Any existing target folder is deleted. Only a target containing the source is refused, so a typo
+- Any existing target folder is emptied. Only a target containing the source is refused, so a typo
   like `compile rust schemas src` instead of `src/generated` silently deletes a handwritten `src/`.
   (ex: refuse a non-empty target unless every file starts with the generated header, or use a marker
   file)
-- Replacing the target isn't atomic: the old folder is deleted first, then the files are written one
-  at a time. A write error partway through leaves a partial target, & the old output is gone. (ex:
-  write to a temporary sibling folder, then rename it into place)
+- Replacing the target isn't atomic: the old files are deleted first, then the new ones are written
+  one at a time. A write error partway through leaves a partial target, & the old output is gone.
+  (ex: write to a temporary sibling folder, then rename it into place)
 
 ### Schema Extension
 
