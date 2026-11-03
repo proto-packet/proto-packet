@@ -45,6 +45,11 @@ async fn post(router: Router, path: &str, body: &str) -> (StatusCode, String) {
         .header("content-type", "application/json")
         .body(Body::from(body.to_string()))
         .unwrap();
+    send(router, request).await
+}
+
+/// Sends the `request` to the `router`. Returns the response status & body.
+async fn send(router: Router, request: Request<Body>) -> (StatusCode, String) {
     let response = router.oneshot(request).await.unwrap();
     let status: StatusCode = response.status();
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -116,4 +121,27 @@ async fn keyword_calls() {
 
     let result = post(router, "/names.keywords.KeywordService/self", "1").await;
     assert_eq!(result, (StatusCode::OK, "3".to_string()));
+}
+
+#[tokio::test]
+async fn invalid_bodies() {
+    let bad_request = (
+        StatusCode::BAD_REQUEST,
+        r#"{"reason":"BadRequest"}"#.to_string(),
+    );
+    let result = post(greeter(), "/services.calls.Greeter/greet", "{").await;
+    assert_eq!(result, bad_request);
+    let result = post(greeter(), "/services.calls.Greeter/greet", r#"{"name":1}"#).await;
+    assert_eq!(result, bad_request);
+
+    let request: Request<Body> = Request::post("/services.calls.Greeter/greet")
+        .body(Body::from("{}"))
+        .unwrap();
+    assert_eq!(
+        send(greeter(), request).await,
+        (
+            StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            r#"{"reason":"UnsupportedMediaType"}"#.to_string()
+        )
+    );
 }
