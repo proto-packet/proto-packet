@@ -22,10 +22,7 @@ impl Greeter for TestGreeter {
     }
 
     async fn color(&self, request: u32) -> Result<Color, ServiceError> {
-        u16::try_from(request)
-            .ok()
-            .and_then(Color::from_tag_number)
-            .ok_or(ServiceErrorReason::NotFound.into())
+        Color::from_tag_number_optional(request).ok_or(ServiceErrorReason::NotFound.into())
     }
 }
 

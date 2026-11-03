@@ -1,6 +1,7 @@
 mod common;
 
 use common::assert_json;
+use proto_packet::io::TagNumber;
 use proto_packet_test::enums::cases::{EdgeTags, SingleCase, UnorderedTags};
 use proto_packet_test::enums::empty::EmptyEnum;
 
@@ -14,24 +15,36 @@ fn tag_numbers() {
     assert_eq!(UnorderedTags::Two.tag_number(), 2);
 }
 
+/// Gets the tag number with the `value`.
+fn tag(value: u16) -> TagNumber {
+    TagNumber::new(value).unwrap()
+}
+
 #[test]
 fn from_tag_numbers() {
-    assert_eq!(EdgeTags::from_tag_number(1), Some(EdgeTags::Min));
-    assert_eq!(EdgeTags::from_tag_number(8191), Some(EdgeTags::Max));
-    assert_eq!(EdgeTags::from_tag_number(0), None);
-    assert_eq!(EdgeTags::from_tag_number(8192), None);
+    assert_eq!(EdgeTags::from_tag_number(tag(1)), EdgeTags::Min);
+    assert_eq!(EdgeTags::from_tag_number(tag(8191)), EdgeTags::Max);
     assert!(matches!(
-        EdgeTags::from_tag_number(2),
+        EdgeTags::from_tag_number(tag(2)),
+        EdgeTags::Unrecognized(_)
+    ));
+    assert_eq!(UnorderedTags::from_tag_number(tag(3)), UnorderedTags::Three);
+    assert!(matches!(
+        EmptyEnum::from_tag_number(tag(1)),
+        EmptyEnum::Unrecognized(_)
+    ));
+}
+
+#[test]
+fn from_tag_numbers_optional() {
+    assert_eq!(EdgeTags::from_tag_number_optional(1), Some(EdgeTags::Min));
+    assert!(matches!(
+        EdgeTags::from_tag_number_optional(2),
         Some(EdgeTags::Unrecognized(_))
     ));
-    assert_eq!(
-        UnorderedTags::from_tag_number(3),
-        Some(UnorderedTags::Three)
-    );
-    assert!(matches!(
-        EmptyEnum::from_tag_number(1),
-        Some(EmptyEnum::Unrecognized(_))
-    ));
+    for tag_number in [0, 8192, 65536, u32::MAX] {
+        assert_eq!(EdgeTags::from_tag_number_optional(tag_number), None);
+    }
 }
 
 #[test]
@@ -53,7 +66,7 @@ fn json() {
 
 /// Gets the unrecognized case of `UnorderedTags` with the `tag_number`.
 fn unrecognized(tag_number: u16) -> UnorderedTags {
-    let case: UnorderedTags = UnorderedTags::from_tag_number(tag_number).unwrap();
+    let case: UnorderedTags = UnorderedTags::from_tag_number(tag(tag_number));
     assert!(matches!(case, UnorderedTags::Unrecognized(_)));
     case
 }
@@ -89,7 +102,7 @@ fn unrecognized_ordered_by_tag_number() {
 #[test]
 fn unrecognized_json() {
     assert_json(&unrecognized(4), "4");
-    assert_json(&EmptyEnum::from_tag_number(1).unwrap(), "1");
+    assert_json(&EmptyEnum::from_tag_number(tag(1)), "1");
 }
 
 #[test]

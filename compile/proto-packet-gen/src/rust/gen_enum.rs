@@ -82,38 +82,56 @@ fn gen_dec(enumeration: &Enum) -> RustEnum {
 ///
 /// `Some` & `None` are bare, since generated types are never values, so they cannot shadow them.
 fn gen_construction(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
-    let signature: Signature = Signature::from("from_tag_number")
-        .with_param(Var::from(("tag_number", "u16")))
-        .with_result(format!("{}<Self>", prelude.path(PreludeName::Option)));
-    let mut from_tag_number: MatchStatement = MatchStatement::from("tag_number");
+    let mut cases: MatchStatement = MatchStatement::from("tag_number.value()");
     for case in enumeration.cases() {
-        from_tag_number.add_match_case(
+        cases.add_match_case(
             MatchCase::from(case.tag_number().to_string())
-                .with_literal(format!("Some(Self::{})", ident(&case.case_name()))),
+                .with_literal(format!("Self::{}", ident(&case.case_name()))),
         );
     }
-    let from: Function = Function::from(signature)
-        .with_comment(
-            " Gets the case with the `tag_number`. (unrecognized if the enum doesn't know it)",
-        )
+    let signature: Signature = Signature::from("from_tag_number")
+        .with_param(Var::from(("tag_number", "proto_packet::io::TagNumber")))
+        .with_result("Self");
+    let mut from: Function = Function::from(signature)
+        .with_comment(" Gets the case with the `tag_number`.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_const(true);
+    if enumeration.cases().is_empty() {
+        from.add_literal(
+            "Self::Unrecognized(unrecognized::UnrecognizedTagNumber(tag_number.value()))",
+        );
+    } else {
+        from.add_statement(cases.with_match_case(
+            MatchCase::from("tag_number").with_literal(
+                "Self::Unrecognized(unrecognized::UnrecognizedTagNumber(tag_number))",
+            ),
+        ));
+    }
+
+    let signature: Signature = Signature::from("from_tag_number_optional")
+        .with_param(Var::from(("tag_number", "u32")))
+        .with_result(format!("{}<Self>", prelude.path(PreludeName::Option)));
+    let optional: MatchStatement =
+        MatchStatement::from("proto_packet::io::TagNumber::from_u32(tag_number)")
+            .with_match_case(
+                MatchCase::from("Some(tag_number)")
+                    .with_literal("Some(Self::from_tag_number(tag_number))"),
+            )
+            .with_match_case(MatchCase::from("None").with_literal("None"));
+    let from_optional: Function = Function::from(signature)
+        .with_comment(" Gets the case with the `tag_number`.")
         .with_comment("")
         .with_comment(" Returns `None` if the `tag_number` is invalid.")
         .with_attribute("must_use")
         .with_access(Access::Public)
         .with_const(true)
-        .with_statement(
-            from_tag_number
-                .with_match_case(
-                    MatchCase::from("_ if proto_packet::io::TagNumber::is_valid(tag_number)")
-                    .with_literal(
-                        "Some(Self::Unrecognized(unrecognized::UnrecognizedTagNumber(tag_number)))",
-                    ),
-                )
-                .with_match_case(MatchCase::from("_").with_literal("None")),
-        );
+        .with_statement(optional);
+
     ImplBlock::from(ident(&enumeration.type_name()))
         .with_comment(" Construction")
         .with_function(from)
+        .with_function(from_optional)
 }
 
 /// Generates the `Ord` impl of the `enumeration`, ordering its cases by tag number instead of
@@ -225,7 +243,7 @@ fn gen_deserialize(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
         format!("|name| match name {{ {}, _ => None }}", cases.join(", "))
     };
     let deserialize: Function = Function::from(signature).with_literal(format!(
-        "proto_packet::types::deserialize_enum(deserializer, \"{}\", {}, Self::from_tag_number)",
+        "proto_packet::types::deserialize_enum(deserializer, \"{}\", {}, Self::from_tag_number_optional)",
         enumeration.type_name(),
         from_name
     ));

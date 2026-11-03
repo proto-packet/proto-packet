@@ -18,17 +18,23 @@ mod unrecognized {
 impl SingleCase {
     //! Construction
 
-    /// Gets the case with the `tag_number`. (unrecognized if the enum doesn't know it)
+    /// Gets the case with the `tag_number`.
+    #[must_use]
+    pub const fn from_tag_number(tag_number: proto_packet::io::TagNumber) -> Self {
+        match tag_number.value() {
+            1 => Self::Only,
+            tag_number => Self::Unrecognized(unrecognized::UnrecognizedTagNumber(tag_number)),
+        }
+    }
+
+    /// Gets the case with the `tag_number`.
     ///
     /// Returns `None` if the `tag_number` is invalid.
     #[must_use]
-    pub const fn from_tag_number(tag_number: u16) -> Option<Self> {
-        match tag_number {
-            1 => Some(Self::Only),
-            _ if proto_packet::io::TagNumber::is_valid(tag_number) => Some(Self::Unrecognized(
-                unrecognized::UnrecognizedTagNumber(tag_number),
-            )),
-            _ => None,
+    pub const fn from_tag_number_optional(tag_number: u32) -> Option<Self> {
+        match proto_packet::io::TagNumber::from_u32(tag_number) {
+            Some(tag_number) => Some(Self::from_tag_number(tag_number)),
+            None => None,
         }
     }
 }
@@ -82,7 +88,7 @@ impl<'de> proto_packet::serde::Deserialize<'de> for SingleCase {
                 "Only" => Some(Self::Only),
                 _ => None,
             },
-            Self::from_tag_number,
+            Self::from_tag_number_optional,
         )
     }
 }

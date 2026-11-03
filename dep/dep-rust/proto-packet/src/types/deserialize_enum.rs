@@ -5,12 +5,12 @@ use std::fmt::Formatter;
 /// Deserializes a generated enum from a case name or a tag number.
 ///
 /// The `from_name` function gets the case with a name, & the `from_tag_number` function gets the
-/// case with a tag number, which is unrecognized if the enum doesn't know it.
+/// case with a tag number.
 pub fn deserialize_enum<'de, D, E>(
     deserializer: D,
     type_name: &'static str,
     from_name: fn(&str) -> Option<E>,
-    from_tag_number: fn(u16) -> Option<E>,
+    from_tag_number: fn(u32) -> Option<E>,
 ) -> Result<E, D::Error>
 where
     D: Deserializer<'de>,
@@ -26,7 +26,7 @@ where
 struct EnumVisitor<E> {
     type_name: &'static str,
     from_name: fn(&str) -> Option<E>,
-    from_tag_number: fn(u16) -> Option<E>,
+    from_tag_number: fn(u32) -> Option<E>,
 }
 
 impl<E> Visitor<'_> for EnumVisitor<E> {
@@ -47,7 +47,7 @@ impl<E> Visitor<'_> for EnumVisitor<E> {
     where
         R: Error,
     {
-        u16::try_from(tag_number)
+        u32::try_from(tag_number)
             .ok()
             .and_then(self.from_tag_number)
             .ok_or_else(|| R::invalid_value(Unexpected::Unsigned(tag_number), &self))
