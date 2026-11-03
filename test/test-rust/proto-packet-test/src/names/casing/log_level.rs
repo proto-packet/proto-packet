@@ -4,6 +4,9 @@
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[allow(non_camel_case_types)]
 pub enum Log_Level {
+    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    Unrecognized(unrecognized::UnrecognizedTagNumber),
+
     /// An upper case case.
     INFO,
 
@@ -11,15 +14,26 @@ pub enum Log_Level {
     Very_Verbose,
 }
 
+mod unrecognized {
+    /// The tag number of an unrecognized case. (from a newer schema)
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+    pub struct UnrecognizedTagNumber(pub(super) u16);
+}
+
 impl Log_Level {
     //! Construction
 
-    /// Gets the optional case with the `tag_number`.
+    /// Gets the case with the `tag_number`. (unrecognized if the enum doesn't know it)
+    ///
+    /// Returns `None` if the `tag_number` is invalid.
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> Option<Self> {
         match tag_number {
             1 => Some(Self::INFO),
             2 => Some(Self::Very_Verbose),
+            _ if proto_packet::io::TagNumber::is_valid(tag_number) => Some(Self::Unrecognized(
+                unrecognized::UnrecognizedTagNumber(tag_number),
+            )),
             _ => None,
         }
     }
@@ -43,6 +57,7 @@ impl proto_packet::serde::Serialize for Log_Level {
         S: proto_packet::serde::Serializer,
     {
         match self {
+            Self::Unrecognized(unrecognized) => serializer.serialize_u16(unrecognized.0),
             Self::INFO => serializer.serialize_str("INFO"),
             Self::Very_Verbose => serializer.serialize_str("Very_Verbose"),
         }
@@ -74,6 +89,7 @@ impl Log_Level {
     #[must_use]
     pub const fn tag_number(self) -> u16 {
         match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
             Self::INFO => 1,
             Self::Very_Verbose => 2,
         }

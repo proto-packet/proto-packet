@@ -3,18 +3,32 @@
 /// An enum with one case.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum SingleCase {
+    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    Unrecognized(unrecognized::UnrecognizedTagNumber),
+
     /// The only case.
     Only,
+}
+
+mod unrecognized {
+    /// The tag number of an unrecognized case. (from a newer schema)
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+    pub struct UnrecognizedTagNumber(pub(super) u16);
 }
 
 impl SingleCase {
     //! Construction
 
-    /// Gets the optional case with the `tag_number`.
+    /// Gets the case with the `tag_number`. (unrecognized if the enum doesn't know it)
+    ///
+    /// Returns `None` if the `tag_number` is invalid.
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> Option<Self> {
         match tag_number {
             1 => Some(Self::Only),
+            _ if proto_packet::io::TagNumber::is_valid(tag_number) => Some(Self::Unrecognized(
+                unrecognized::UnrecognizedTagNumber(tag_number),
+            )),
             _ => None,
         }
     }
@@ -38,6 +52,7 @@ impl proto_packet::serde::Serialize for SingleCase {
         S: proto_packet::serde::Serializer,
     {
         match self {
+            Self::Unrecognized(unrecognized) => serializer.serialize_u16(unrecognized.0),
             Self::Only => serializer.serialize_str("Only"),
         }
     }
@@ -67,6 +82,7 @@ impl SingleCase {
     #[must_use]
     pub const fn tag_number(self) -> u16 {
         match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
             Self::Only => 1,
         }
     }

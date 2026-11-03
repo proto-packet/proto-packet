@@ -3,9 +3,9 @@ use crate::rust::docs::add_docs;
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use code_gen::rust::{
-    Access, Enum as RustEnum, EnumCase, Function, ImplBlock, MatchCase, MatchStatement, Receiver,
-    Signature, Var, WithAccess, WithAttributes, WithComments, WithFnGenerics, WithFunctions,
-    WithGenerics, WithReceiver, WithResult, WithVarParams,
+    Access, Enum as RustEnum, EnumCase, EnumFields, Function, ImplBlock, MatchCase, MatchStatement,
+    Receiver, Signature, Var, WithAccess, WithAttributes, WithComments, WithFnGenerics,
+    WithFunctions, WithGenerics, WithReceiver, WithResult, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet::io::WithTagNumber;
@@ -13,13 +13,15 @@ use proto_packet_tree::{Enum, WithCaseName, WithComments as _, WithTypeName};
 
 /// Generates the Rust code of the `enumeration`.
 ///
+/// Each enum has an `Unrecognized` case for the tag numbers of newer schemas. Its tag number is in
+/// a private module, so only `from_tag_number` can create it.
+///
 /// The serde impls are written by hand, since they go through `from_tag_number`. A case is its
-/// schema name, even when renamed. (ex: `Self_` is `Self`)
+/// schema name, even when renamed, & an unrecognized case is its tag number. (ex: `Self_` is `Self`)
 pub fn gen_enum(enumeration: &Enum) -> String {
     let prelude: Prelude = Prelude::new(&ident(&enumeration.type_name()));
+    let dec: Block = Block::default().with_statement(gen_dec(enumeration));
     let block: Block = Block::default()
-        .with_statement(gen_dec(enumeration))
-        .with_statement(EmptyLine::default())
         .with_statement(gen_construction(prelude, enumeration))
         .with_statement(EmptyLine::default())
         .with_statement(gen_ord(prelude, enumeration))
@@ -31,8 +33,22 @@ pub fn gen_enum(enumeration: &Enum) -> String {
         .with_statement(gen_deserialize(prelude, enumeration))
         .with_statement(EmptyLine::default())
         .with_statement(gen_properties(enumeration));
-    block.to_code()
+    format!(
+        "{}\n{}\n{}",
+        dec.to_code(),
+        UNRECOGNIZED_MOD,
+        block.to_code()
+    )
 }
+
+/// The private module with the tag number of an unrecognized case.
+const UNRECOGNIZED_MOD: &str = "\
+mod unrecognized {
+    /// The tag number of an unrecognized case. (from a newer schema)
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+    pub struct UnrecognizedTagNumber(pub(super) u16);
+}
+";
 
 /// Generates the declaration of the `enumeration`.
 fn gen_dec(enumeration: &Enum) -> RustEnum {
@@ -48,6 +64,13 @@ fn gen_dec(enumeration: &Enum) -> RustEnum {
         result.add_attribute("allow(non_camel_case_types)");
     }
     result.set_access(Access::Public);
+    let unrecognized: EnumFields =
+        EnumFields::Unnamed(vec!["unrecognized::UnrecognizedTagNumber".into()]);
+    result.add_case(
+        EnumCase::from("Unrecognized")
+            .with_comment(" An unrecognized case, from a newer schema. (from `from_tag_number`)")
+            .with_fields(unrecognized),
+    );
     for case in enumeration.cases() {
         let mut rust_case: EnumCase = EnumCase::from(ident(&case.case_name()));
         add_docs(&mut rust_case, case.comments());
@@ -60,33 +83,35 @@ fn gen_dec(enumeration: &Enum) -> RustEnum {
 ///
 /// `Some` & `None` are bare, since generated types are never values, so they cannot shadow them.
 fn gen_construction(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
-    let param: &str = if enumeration.cases().is_empty() {
-        "_tag_number"
-    } else {
-        "tag_number"
-    };
     let signature: Signature = Signature::from("from_tag_number")
-        .with_param(Var::from((param, "u16")))
+        .with_param(Var::from(("tag_number", "u16")))
         .with_result(format!("{}<Self>", prelude.path(PreludeName::Option)));
-    let mut from: Function = Function::from(signature)
-        .with_comment(" Gets the optional case with the `tag_number`.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_const(true);
-    if enumeration.cases().is_empty() {
-        from.add_literal("None");
-    } else {
-        let mut from_tag_number: MatchStatement = MatchStatement::from("tag_number");
-        for case in enumeration.cases() {
-            from_tag_number.add_match_case(
-                MatchCase::from(case.tag_number().to_string())
-                    .with_literal(format!("Some(Self::{})", ident(&case.case_name()))),
-            );
-        }
-        from.add_statement(
-            from_tag_number.with_match_case(MatchCase::from("_").with_literal("None")),
+    let mut from_tag_number: MatchStatement = MatchStatement::from("tag_number");
+    for case in enumeration.cases() {
+        from_tag_number.add_match_case(
+            MatchCase::from(case.tag_number().to_string())
+                .with_literal(format!("Some(Self::{})", ident(&case.case_name()))),
         );
     }
+    let from: Function = Function::from(signature)
+        .with_comment(
+            " Gets the case with the `tag_number`. (unrecognized if the enum doesn't know it)",
+        )
+        .with_comment("")
+        .with_comment(" Returns `None` if the `tag_number` is invalid.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_const(true)
+        .with_statement(
+            from_tag_number
+                .with_match_case(
+                    MatchCase::from("_ if proto_packet::io::TagNumber::is_valid(tag_number)")
+                    .with_literal(
+                        "Some(Self::Unrecognized(unrecognized::UnrecognizedTagNumber(tag_number)))",
+                    ),
+                )
+                .with_match_case(MatchCase::from("_").with_literal("None")),
+        );
     ImplBlock::from(ident(&enumeration.type_name()))
         .with_comment(" Construction")
         .with_function(from)
@@ -121,38 +146,32 @@ fn gen_partial_ord(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
         .with_function(partial_cmp)
 }
 
-/// Generates the `Serialize` impl of the `enumeration`, writing each case as its schema name.
+/// Generates the `Serialize` impl of the `enumeration`, writing each case as its schema name, & an
+/// unrecognized case as its tag number.
 fn gen_serialize(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
-    let param: &str = if enumeration.cases().is_empty() {
-        "_serializer"
-    } else {
-        "serializer"
-    };
     let signature: Signature = Signature::from("serialize")
         .with_generic(Var::from(("S", "proto_packet::serde::Serializer")))
         .with_receiver(Receiver::Borrowed)
-        .with_param(Var::from((param, "S")))
+        .with_param(Var::from(("serializer", "S")))
         .with_result(format!(
             "{}<S::Ok, S::Error>",
             prelude.path(PreludeName::Result)
         ));
-    let mut serialize: Function = Function::from(signature);
-    if enumeration.cases().is_empty() {
-        serialize.add_literal("match *self {}");
-    } else {
-        let mut cases: MatchStatement = MatchStatement::from("self");
-        for case in enumeration.cases() {
-            cases.add_match_case(
-                MatchCase::from(format!("Self::{}", ident(&case.case_name()))).with_literal(
-                    format!("serializer.serialize_str(\"{}\")", case.case_name()),
-                ),
-            );
-        }
-        serialize.add_statement(cases);
+    let mut cases: MatchStatement = MatchStatement::from("self").with_match_case(
+        MatchCase::from("Self::Unrecognized(unrecognized)")
+            .with_literal("serializer.serialize_u16(unrecognized.0)"),
+    );
+    for case in enumeration.cases() {
+        cases.add_match_case(
+            MatchCase::from(format!("Self::{}", ident(&case.case_name()))).with_literal(format!(
+                "serializer.serialize_str(\"{}\")",
+                case.case_name()
+            )),
+        );
     }
     ImplBlock::from(ident(&enumeration.type_name()))
         .with_for_trait("proto_packet::serde::Serialize")
-        .with_function(serialize)
+        .with_function(Function::from(signature).with_statement(cases))
 }
 
 /// Generates the `Deserialize` impl of the `enumeration`, reading each case from its schema name or
@@ -194,7 +213,9 @@ fn gen_deserialize(prelude: Prelude, enumeration: &Enum) -> ImplBlock {
 
 /// Generates the impl block with the tag numbers of the cases of the `enumeration`.
 fn gen_properties(enumeration: &Enum) -> ImplBlock {
-    let mut to_tag_number: MatchStatement = MatchStatement::from("self");
+    let mut to_tag_number: MatchStatement = MatchStatement::from("self").with_match_case(
+        MatchCase::from("Self::Unrecognized(unrecognized)").with_literal("unrecognized.0"),
+    );
     for case in enumeration.cases() {
         to_tag_number.add_match_case(
             MatchCase::from(format!("Self::{}", ident(&case.case_name())))

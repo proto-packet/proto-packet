@@ -19,12 +19,19 @@ fn from_tag_numbers() {
     assert_eq!(EdgeTags::from_tag_number(1), Some(EdgeTags::Min));
     assert_eq!(EdgeTags::from_tag_number(8191), Some(EdgeTags::Max));
     assert_eq!(EdgeTags::from_tag_number(0), None);
-    assert_eq!(EdgeTags::from_tag_number(2), None);
+    assert_eq!(EdgeTags::from_tag_number(8192), None);
+    assert!(matches!(
+        EdgeTags::from_tag_number(2),
+        Some(EdgeTags::Unrecognized(_))
+    ));
     assert_eq!(
         UnorderedTags::from_tag_number(3),
         Some(UnorderedTags::Three)
     );
-    assert_eq!(EmptyEnum::from_tag_number(1), None);
+    assert!(matches!(
+        EmptyEnum::from_tag_number(1),
+        Some(EmptyEnum::Unrecognized(_))
+    ));
 }
 
 #[test]

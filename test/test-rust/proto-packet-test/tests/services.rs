@@ -82,6 +82,9 @@ async fn calls() {
 
     let result = post(greeter(), "/services.calls.Greeter/color", "2").await;
     assert_eq!(result, (StatusCode::OK, r#""Green""#.to_string()));
+
+    let result = post(greeter(), "/services.calls.Greeter/color", "4").await;
+    assert_eq!(result, (StatusCode::OK, "4".to_string()));
 }
 
 #[tokio::test]
@@ -95,7 +98,7 @@ async fn errors() {
         )
     );
 
-    let result = post(greeter(), "/services.calls.Greeter/color", "4").await;
+    let result = post(greeter(), "/services.calls.Greeter/color", "0").await;
     assert_eq!(
         result,
         (

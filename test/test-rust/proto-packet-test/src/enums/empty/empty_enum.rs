@@ -2,15 +2,31 @@
 
 /// An enum without cases.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-pub enum EmptyEnum {}
+pub enum EmptyEnum {
+    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    Unrecognized(unrecognized::UnrecognizedTagNumber),
+}
+
+mod unrecognized {
+    /// The tag number of an unrecognized case. (from a newer schema)
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+    pub struct UnrecognizedTagNumber(pub(super) u16);
+}
 
 impl EmptyEnum {
     //! Construction
 
-    /// Gets the optional case with the `tag_number`.
+    /// Gets the case with the `tag_number`. (unrecognized if the enum doesn't know it)
+    ///
+    /// Returns `None` if the `tag_number` is invalid.
     #[must_use]
-    pub const fn from_tag_number(_tag_number: u16) -> Option<Self> {
-        None
+    pub const fn from_tag_number(tag_number: u16) -> Option<Self> {
+        match tag_number {
+            _ if proto_packet::io::TagNumber::is_valid(tag_number) => Some(Self::Unrecognized(
+                unrecognized::UnrecognizedTagNumber(tag_number),
+            )),
+            _ => None,
+        }
     }
 }
 
@@ -27,11 +43,13 @@ impl PartialOrd for EmptyEnum {
 }
 
 impl proto_packet::serde::Serialize for EmptyEnum {
-    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: proto_packet::serde::Serializer,
     {
-        match *self {}
+        match self {
+            Self::Unrecognized(unrecognized) => serializer.serialize_u16(unrecognized.0),
+        }
     }
 }
 
@@ -55,6 +73,8 @@ impl EmptyEnum {
     /// Gets the tag number.
     #[must_use]
     pub const fn tag_number(self) -> u16 {
-        match self {}
+        match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
+        }
     }
 }

@@ -3,6 +3,9 @@
 /// A color.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum Color {
+    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    Unrecognized(unrecognized::UnrecognizedTagNumber),
+
     /// Red.
     Red,
 
@@ -13,16 +16,27 @@ pub enum Color {
     Blue,
 }
 
+mod unrecognized {
+    /// The tag number of an unrecognized case. (from a newer schema)
+    #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+    pub struct UnrecognizedTagNumber(pub(super) u16);
+}
+
 impl Color {
     //! Construction
 
-    /// Gets the optional case with the `tag_number`.
+    /// Gets the case with the `tag_number`. (unrecognized if the enum doesn't know it)
+    ///
+    /// Returns `None` if the `tag_number` is invalid.
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> Option<Self> {
         match tag_number {
             1 => Some(Self::Red),
             2 => Some(Self::Green),
             3 => Some(Self::Blue),
+            _ if proto_packet::io::TagNumber::is_valid(tag_number) => Some(Self::Unrecognized(
+                unrecognized::UnrecognizedTagNumber(tag_number),
+            )),
             _ => None,
         }
     }
@@ -46,6 +60,7 @@ impl proto_packet::serde::Serialize for Color {
         S: proto_packet::serde::Serializer,
     {
         match self {
+            Self::Unrecognized(unrecognized) => serializer.serialize_u16(unrecognized.0),
             Self::Red => serializer.serialize_str("Red"),
             Self::Green => serializer.serialize_str("Green"),
             Self::Blue => serializer.serialize_str("Blue"),
@@ -79,6 +94,7 @@ impl Color {
     #[must_use]
     pub const fn tag_number(self) -> u16 {
         match self {
+            Self::Unrecognized(unrecognized) => unrecognized.0,
             Self::Red => 1,
             Self::Green => 2,
             Self::Blue => 3,
