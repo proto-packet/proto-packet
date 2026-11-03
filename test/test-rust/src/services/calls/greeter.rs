@@ -40,11 +40,15 @@ where
             "/services.calls.Greeter/greet",
             proto_packet::axum::routing::post({
                 let service = service.clone();
-                move |proto_packet::axum::Json(request): proto_packet::axum::Json<
-                    crate::services::calls::GreetRequest,
+                move |request: Result<
+                    proto_packet::axum::Json<crate::services::calls::GreetRequest>,
+                    proto_packet::axum::extract::rejection::JsonRejection,
                 >| {
                     let service = service.clone();
-                    async move { service.greet(request).await.map(proto_packet::axum::Json) }
+                    async move {
+                        let proto_packet::axum::Json(request) = request?;
+                        service.greet(request).await.map(proto_packet::axum::Json)
+                    }
                 }
             }),
         )
@@ -52,11 +56,15 @@ where
             "/services.calls.Greeter/step",
             proto_packet::axum::routing::post({
                 let service = service.clone();
-                move |proto_packet::axum::Json(request): proto_packet::axum::Json<
-                    crate::types::Point,
+                move |request: Result<
+                    proto_packet::axum::Json<crate::types::Point>,
+                    proto_packet::axum::extract::rejection::JsonRejection,
                 >| {
                     let service = service.clone();
-                    async move { service.step(request).await.map(proto_packet::axum::Json) }
+                    async move {
+                        let proto_packet::axum::Json(request) = request?;
+                        service.step(request).await.map(proto_packet::axum::Json)
+                    }
                 }
             }),
         )
@@ -64,9 +72,15 @@ where
             "/services.calls.Greeter/color",
             proto_packet::axum::routing::post({
                 let service = service.clone();
-                move |proto_packet::axum::Json(request): proto_packet::axum::Json<u32>| {
+                move |request: Result<
+                    proto_packet::axum::Json<u32>,
+                    proto_packet::axum::extract::rejection::JsonRejection,
+                >| {
                     let service = service.clone();
-                    async move { service.color(request).await.map(proto_packet::axum::Json) }
+                    async move {
+                        let proto_packet::axum::Json(request) = request?;
+                        service.color(request).await.map(proto_packet::axum::Json)
+                    }
                 }
             }),
         )

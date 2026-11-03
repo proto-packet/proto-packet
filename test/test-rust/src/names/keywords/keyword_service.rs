@@ -25,9 +25,15 @@ where
             "/names.keywords.KeywordService/type",
             proto_packet::axum::routing::post({
                 let service = service.clone();
-                move |proto_packet::axum::Json(request): proto_packet::axum::Json<u32>| {
+                move |request: Result<
+                    proto_packet::axum::Json<u32>,
+                    proto_packet::axum::extract::rejection::JsonRejection,
+                >| {
                     let service = service.clone();
-                    async move { service.r#type(request).await.map(proto_packet::axum::Json) }
+                    async move {
+                        let proto_packet::axum::Json(request) = request?;
+                        service.r#type(request).await.map(proto_packet::axum::Json)
+                    }
                 }
             }),
         )
@@ -35,9 +41,15 @@ where
             "/names.keywords.KeywordService/self",
             proto_packet::axum::routing::post({
                 let service = service.clone();
-                move |proto_packet::axum::Json(request): proto_packet::axum::Json<u32>| {
+                move |request: Result<
+                    proto_packet::axum::Json<u32>,
+                    proto_packet::axum::extract::rejection::JsonRejection,
+                >| {
                     let service = service.clone();
-                    async move { service.self_(request).await.map(proto_packet::axum::Json) }
+                    async move {
+                        let proto_packet::axum::Json(request) = request?;
+                        service.self_(request).await.map(proto_packet::axum::Json)
+                    }
                 }
             }),
         )

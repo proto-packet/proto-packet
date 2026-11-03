@@ -70,7 +70,8 @@ fn gen_signature(typing: Typing<'_>, call: &ServiceCall) -> Signature {
 
 /// Generates the function that creates the axum router of the `service`.
 ///
-/// Each call is routed as a JSON `POST` to `/{mod_path}.{Service}/{call}`.
+/// Each call is routed as a JSON `POST` to `/{mod_path}.{Service}/{call}`. A request body that
+/// isn't valid JSON for the call is a service error.
 fn gen_router(typing: Typing<'_>, mod_path: ModPathRef<'_>, service: &Service) -> Function {
     let service_type: String = ident(&service.type_name());
     let param: &str = if service.calls().is_empty() {
@@ -98,12 +99,17 @@ fn gen_router(typing: Typing<'_>, mod_path: ModPathRef<'_>, service: &Service) -
         function.add_literal(format!(
             ".route(\"{}\", proto_packet::axum::routing::post({{ \
                 let service = service.clone(); \
-                move |proto_packet::axum::Json(request): proto_packet::axum::Json<{}>| {{ \
+                move |request: {}<proto_packet::axum::Json<{}>, \
+                    proto_packet::axum::extract::rejection::JsonRejection>| {{ \
                     let service = service.clone(); \
-                    async move {{ service.{}(request).await.map(proto_packet::axum::Json) }} \
+                    async move {{ \
+                        let proto_packet::axum::Json(request) = request?; \
+                        service.{}(request).await.map(proto_packet::axum::Json) \
+                    }} \
                 }} \
             }}))",
             path,
+            typing.prelude(PreludeName::Result),
             typing.rust_type(call.request()),
             ident(&call.call_name())
         ));

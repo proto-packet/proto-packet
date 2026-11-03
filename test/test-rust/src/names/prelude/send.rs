@@ -21,9 +21,15 @@ where
         "/names.prelude.Send/call",
         proto_packet::axum::routing::post({
             let service = service.clone();
-            move |proto_packet::axum::Json(request): proto_packet::axum::Json<u32>| {
+            move |request: std::result::Result<
+                proto_packet::axum::Json<u32>,
+                proto_packet::axum::extract::rejection::JsonRejection,
+            >| {
                 let service = service.clone();
-                async move { service.call(request).await.map(proto_packet::axum::Json) }
+                async move {
+                    let proto_packet::axum::Json(request) = request?;
+                    service.call(request).await.map(proto_packet::axum::Json)
+                }
             }
         }),
     )
