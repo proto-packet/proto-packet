@@ -1,0 +1,29 @@
+// An enum with one case.
+enum SingleCase {
+
+    // The only case.
+    Only = 1;
+}
+
+// An enum with the tag numbers at the edges of the valid range.
+enum EdgeTags {
+
+    // The minimum tag number.
+    Min = 1;
+
+    // The maximum tag number.
+    Max = 8191;
+}
+
+// An enum with the tag numbers out of declaration order. (ordered by tag number)
+enum UnorderedTags {
+
+    // The third tag number.
+    Three = 3;
+
+    // The first tag number.
+    One = 1;
+
+    // The second tag number.
+    Two = 2;
+}

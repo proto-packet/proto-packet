@@ -1,0 +1,2 @@
+// An enum without cases.
+enum EmptyEnum {}
