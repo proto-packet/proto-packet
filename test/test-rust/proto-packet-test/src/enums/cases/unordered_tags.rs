@@ -40,10 +40,10 @@ impl UnorderedTags {
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
         match tag_number {
-            3 => ::std::option::Option::Some(Self::Three),
-            1 => ::std::option::Option::Some(Self::One),
-            2 => ::std::option::Option::Some(Self::Two),
-            _ => ::std::option::Option::None,
+            3 => Some(Self::Three),
+            1 => Some(Self::One),
+            2 => Some(Self::Two),
+            _ => None,
         }
     }
 }
@@ -56,6 +56,6 @@ impl ::std::cmp::Ord for UnorderedTags {
 
 impl ::std::cmp::PartialOrd for UnorderedTags {
     fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
-        ::std::option::Option::Some(self.cmp(other))
+        Some(self.cmp(other))
     }
 }

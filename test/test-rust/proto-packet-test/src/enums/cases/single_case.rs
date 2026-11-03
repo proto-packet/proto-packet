@@ -32,8 +32,8 @@ impl SingleCase {
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
         match tag_number {
-            1 => ::std::option::Option::Some(Self::Only),
-            _ => ::std::option::Option::None,
+            1 => Some(Self::Only),
+            _ => None,
         }
     }
 }
@@ -46,6 +46,6 @@ impl ::std::cmp::Ord for SingleCase {
 
 impl ::std::cmp::PartialOrd for SingleCase {
     fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
-        ::std::option::Option::Some(self.cmp(other))
+        Some(self.cmp(other))
     }
 }

@@ -36,9 +36,9 @@ impl EdgeTags {
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
         match tag_number {
-            1 => ::std::option::Option::Some(Self::Min),
-            8191 => ::std::option::Option::Some(Self::Max),
-            _ => ::std::option::Option::None,
+            1 => Some(Self::Min),
+            8191 => Some(Self::Max),
+            _ => None,
         }
     }
 }
@@ -51,6 +51,6 @@ impl ::std::cmp::Ord for EdgeTags {
 
 impl ::std::cmp::PartialOrd for EdgeTags {
     fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
-        ::std::option::Option::Some(self.cmp(other))
+        Some(self.cmp(other))
     }
 }

@@ -40,10 +40,10 @@ impl Color {
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
         match tag_number {
-            1 => ::std::option::Option::Some(Self::Red),
-            2 => ::std::option::Option::Some(Self::Green),
-            3 => ::std::option::Option::Some(Self::Blue),
-            _ => ::std::option::Option::None,
+            1 => Some(Self::Red),
+            2 => Some(Self::Green),
+            3 => Some(Self::Blue),
+            _ => None,
         }
     }
 }
@@ -56,6 +56,6 @@ impl ::std::cmp::Ord for Color {
 
 impl ::std::cmp::PartialOrd for Color {
     fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
-        ::std::option::Option::Some(self.cmp(other))
+        Some(self.cmp(other))
     }
 }

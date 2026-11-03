@@ -26,7 +26,7 @@ impl EmptyEnum {
     /// Gets the optional case with the `tag_number`.
     #[must_use]
     pub const fn from_tag_number(_tag_number: u16) -> ::std::option::Option<Self> {
-        ::std::option::Option::None
+        None
     }
 }
 
@@ -38,6 +38,6 @@ impl ::std::cmp::Ord for EmptyEnum {
 
 impl ::std::cmp::PartialOrd for EmptyEnum {
     fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
-        ::std::option::Option::Some(self.cmp(other))
+        Some(self.cmp(other))
     }
 }

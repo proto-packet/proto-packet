@@ -33,8 +33,8 @@ impl KeywordEnum {
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
         match tag_number {
-            1 => ::std::option::Option::Some(Self::Self_),
-            _ => ::std::option::Option::None,
+            1 => Some(Self::Self_),
+            _ => None,
         }
     }
 }
@@ -47,6 +47,6 @@ impl ::std::cmp::Ord for KeywordEnum {
 
 impl ::std::cmp::PartialOrd for KeywordEnum {
     fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
-        ::std::option::Option::Some(self.cmp(other))
+        Some(self.cmp(other))
     }
 }

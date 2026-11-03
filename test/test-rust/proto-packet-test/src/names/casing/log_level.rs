@@ -37,9 +37,9 @@ impl Log_Level {
     #[must_use]
     pub const fn from_tag_number(tag_number: u16) -> ::std::option::Option<Self> {
         match tag_number {
-            1 => ::std::option::Option::Some(Self::INFO),
-            2 => ::std::option::Option::Some(Self::Very_Verbose),
-            _ => ::std::option::Option::None,
+            1 => Some(Self::INFO),
+            2 => Some(Self::Very_Verbose),
+            _ => None,
         }
     }
 }
@@ -52,6 +52,6 @@ impl ::std::cmp::Ord for Log_Level {
 
 impl ::std::cmp::PartialOrd for Log_Level {
     fn partial_cmp(&self, other: &Self) -> ::std::option::Option<::std::cmp::Ordering> {
-        ::std::option::Option::Some(self.cmp(other))
+        Some(self.cmp(other))
     }
 }

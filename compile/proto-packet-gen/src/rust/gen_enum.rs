@@ -51,6 +51,8 @@ fn gen_dec(enumeration: &Enum) -> RustEnum {
 }
 
 /// Generates the impl block converting the cases of the `enumeration` to & from tag numbers.
+///
+/// `Some` & `None` are bare, since generated types are never values, so they cannot shadow them.
 fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
     let mut to_tag_number: MatchStatement = MatchStatement::from("self");
     let mut from_tag_number: MatchStatement = MatchStatement::from("tag_number");
@@ -59,10 +61,8 @@ fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
         let tag_number: String = case.tag_number().to_string();
         to_tag_number
             .add_match_case(MatchCase::from(path.as_str()).with_literal(tag_number.as_str()));
-        from_tag_number.add_match_case(
-            MatchCase::from(tag_number)
-                .with_literal(format!("::std::option::Option::Some({})", path)),
-        );
+        from_tag_number
+            .add_match_case(MatchCase::from(tag_number).with_literal(format!("Some({})", path)));
     }
 
     let signature: Signature = Signature::from("tag_number")
@@ -89,11 +89,10 @@ fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
         .with_access(Access::Public)
         .with_const(true);
     if enumeration.cases().is_empty() {
-        from.add_literal("::std::option::Option::None");
+        from.add_literal("None");
     } else {
         from.add_statement(
-            from_tag_number
-                .with_match_case(MatchCase::from("_").with_literal("::std::option::Option::None")),
+            from_tag_number.with_match_case(MatchCase::from("_").with_literal("None")),
         );
     }
 
@@ -123,8 +122,7 @@ fn gen_partial_ord(enumeration: &Enum) -> ImplBlock {
         .with_receiver(Receiver::Borrowed)
         .with_param(Var::from(("other", "&Self")))
         .with_result("::std::option::Option<::std::cmp::Ordering>");
-    let partial_cmp: Function =
-        Function::from(signature).with_literal("::std::option::Option::Some(self.cmp(other))");
+    let partial_cmp: Function = Function::from(signature).with_literal("Some(self.cmp(other))");
     ImplBlock::from(ident(&enumeration.type_name()))
         .with_for_trait("::std::cmp::PartialOrd")
         .with_function(partial_cmp)
