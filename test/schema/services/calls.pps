@@ -1,0 +1,29 @@
+import types.Color;
+import types.Point;
+
+// A greeting request.
+message GreetRequest {
+
+    // The name to greet.
+    name: string = 1;
+}
+
+// A greeting response.
+message GreetResponse {
+
+    // The greeting.
+    greeting: string = 1;
+}
+
+// A greeter.
+service Greeter {
+
+    // Greets the name.
+    greet: GreetRequest returns GreetResponse;
+
+    // Moves the point by one in both coordinates. (a struct request & response)
+    step: Point returns Point;
+
+    // Gets the color with the tag number. (a primitive request & an enum response)
+    color: u32 returns Color;
+}

@@ -1,0 +1,2 @@
+// A service without calls.
+service EmptyService {}

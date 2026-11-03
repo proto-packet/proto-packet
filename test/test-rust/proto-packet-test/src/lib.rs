@@ -3,6 +3,7 @@ pub mod enums;
 pub mod messages;
 pub mod mods;
 pub mod names;
+pub mod services;
 pub mod structs;
 pub mod types;
 pub mod variants;
