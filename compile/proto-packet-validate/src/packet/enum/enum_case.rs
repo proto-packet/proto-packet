@@ -5,7 +5,7 @@ use proto_packet::io::TagNumber;
 use proto_packet_parse::EnumCaseTree;
 use proto_packet_tree::{CaseName, EnumCase};
 
-/// The case name reserved for the tag numbers of the cases from newer schemas.
+/// The name of the generated unrecognized case.
 const UNRECOGNIZED: &str = "Unrecognized";
 
 /// Validates the enum case `tree`.
