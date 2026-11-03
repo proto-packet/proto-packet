@@ -51,6 +51,15 @@ pub enum ParseErrorReason {
 
     /// Expected an integer tag number.
     ExpectedTagNumber,
+
+    /// An `optional` message field. (they always are)
+    OptionalMessageField,
+
+    /// An `optional` variant case.
+    OptionalVariantCase,
+
+    /// An `optional` after a `box`. (ex: `box optional Foo`)
+    OptionalAfterBox,
 }
 
 impl ParseErrorReason {
@@ -76,6 +85,11 @@ impl ParseErrorReason {
             Self::ExpectedSemicolon => "expected a `;` after this",
             Self::ExpectedEqual => "expected a `=`",
             Self::ExpectedTagNumber => "expected an integer tag number",
+            Self::OptionalMessageField => {
+                "message fields can't be `optional`, since they always are"
+            }
+            Self::OptionalVariantCase => "variant cases can't be `optional`",
+            Self::OptionalAfterBox => "`optional` must come before `box`",
         }
     }
 
@@ -99,6 +113,9 @@ impl ParseErrorReason {
             Self::ExpectedSemicolon => "P_EXPECTED_SEMICOLON",
             Self::ExpectedEqual => "P_EXPECTED_EQUAL",
             Self::ExpectedTagNumber => "P_EXPECTED_TAG_NUMBER",
+            Self::OptionalMessageField => "P_OPTIONAL_MESSAGE_FIELD",
+            Self::OptionalVariantCase => "P_OPTIONAL_VARIANT_CASE",
+            Self::OptionalAfterBox => "P_OPTIONAL_AFTER_BOX",
         }
     }
 }
