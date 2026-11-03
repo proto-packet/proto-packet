@@ -20,10 +20,21 @@ pub struct SchemaSource {
 
 /// Reads the schema files of the project in the `source` folder, sorted by path.
 ///
-/// A schema file's mod path is its path from the `source` folder without the extension.
+/// A schema file's mod path is its path from the `source` folder without the extension. A project
+/// without schema files is an error.
 pub fn read_schema_sources(source: &Path, config: &Config) -> Result<Vec<SchemaSource>, Report> {
     let mut paths: Vec<PathBuf> = Vec::default();
     find_schema_files(source, &config.schema_extension, &mut paths)?;
+    if paths.is_empty() {
+        let properties: Properties = Properties::default()
+            .with_property("path", source.display().to_string())
+            .with_property("extension", config.schema_extension.as_str());
+        return Err(Report::from(Code::error(
+            "C_NO_SCHEMA_FILES",
+            "the project has no schema files",
+        ))
+        .with_entry(properties));
+    }
     paths.sort();
     paths
         .into_iter()
