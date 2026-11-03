@@ -1,7 +1,8 @@
 use clap::{Parser, Subcommand};
-use clerr::Report;
+use clerr::{Code, Properties, Report};
 use proto_packet_compile::Language;
-use std::path::PathBuf;
+use proto_packet_parse::SchemaFileTree;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 /// The ProtoPacket compiler.
@@ -14,6 +15,12 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Parses a schema file & prints its syntax tree.
+    Parse {
+        /// The schema file.
+        file: PathBuf,
+    },
+
     /// Compiles the project in the source folder to code in the target folder.
     ///
     /// The target folder is replaced once the code is generated.
@@ -32,6 +39,7 @@ enum Command {
 
 fn main() -> ExitCode {
     let result: Result<(), Report> = match Cli::parse().command {
+        Command::Parse { file } => parse(&file),
         Command::Compile {
             language,
             source,
@@ -50,4 +58,31 @@ fn main() -> ExitCode {
 /// Parses the language `name`.
 fn parse_language(name: &str) -> Result<Language, String> {
     Language::from_name(name).ok_or_else(|| format!("unknown language `{}` (expected: rust)", name))
+}
+
+/// Parses the schema `file` & prints its syntax tree.
+fn parse(file: &Path) -> Result<(), Report> {
+    let source: String = read(file)?;
+    println!("{:#?}", parse_tree(file, &source)?);
+    Ok(())
+}
+
+/// Parses the `source` of the schema `file`.
+fn parse_tree(file: &Path, source: &str) -> Result<SchemaFileTree, Report> {
+    proto_packet_parse::parse(source)
+        .map_err(|error| error.report(&file.display().to_string(), source))
+}
+
+/// Reads the schema `file`.
+fn read(file: &Path) -> Result<String, Report> {
+    std::fs::read_to_string(file).map_err(|error| {
+        let properties: Properties = Properties::default()
+            .with_property("path", file.display().to_string())
+            .with_property("error", error.to_string());
+        Report::from(Code::error(
+            "CLI_READ_FILE",
+            "could not read the schema file",
+        ))
+        .with_entry(properties)
+    })
 }
