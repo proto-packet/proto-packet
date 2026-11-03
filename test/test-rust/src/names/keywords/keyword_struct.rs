@@ -44,6 +44,15 @@ impl KeywordStruct {
             self_,
         }
     }
+
+    /// Creates a new [KeywordStruct], converting the values.
+    pub fn new_from(
+        r#type: impl Into<u32>,
+        r#match: impl Into<String>,
+        self_: impl Into<u32>,
+    ) -> Self {
+        Self::new(r#type.into(), r#match.into(), self_.into())
+    }
 }
 
 impl KeywordStruct {

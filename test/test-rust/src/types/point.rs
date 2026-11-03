@@ -36,6 +36,11 @@ impl Point {
     pub const fn new(x: u32, y: u32) -> Self {
         Self { x, y }
     }
+
+    /// Creates a new [Point], converting the values.
+    pub fn new_from(x: impl Into<u32>, y: impl Into<u32>) -> Self {
+        Self::new(x.into(), y.into())
+    }
 }
 
 impl Point {

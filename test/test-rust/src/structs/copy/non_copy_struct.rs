@@ -31,6 +31,11 @@ impl NonCopyStruct {
     pub const fn new(person: crate::types::Person) -> Self {
         Self { person }
     }
+
+    /// Creates a new [NonCopyStruct], converting the values.
+    pub fn new_from(person: impl Into<crate::types::Person>) -> Self {
+        Self::new(person.into())
+    }
 }
 
 impl NonCopyStruct {

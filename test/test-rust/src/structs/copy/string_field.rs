@@ -31,6 +31,11 @@ impl StringField {
     pub const fn new(text: String) -> Self {
         Self { text }
     }
+
+    /// Creates a new [StringField], converting the values.
+    pub fn new_from(text: impl Into<String>) -> Self {
+        Self::new(text.into())
+    }
 }
 
 impl StringField {

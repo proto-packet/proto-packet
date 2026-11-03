@@ -54,6 +54,16 @@ impl CopyFields {
             color,
         }
     }
+
+    /// Creates a new [CopyFields], converting the values.
+    pub fn new_from(
+        count: impl Into<u32>,
+        id: impl Into<proto_packet::types::Uuid>,
+        point: impl Into<crate::types::Point>,
+        color: impl Into<crate::types::Color>,
+    ) -> Self {
+        Self::new(count.into(), id.into(), point.into(), color.into())
+    }
 }
 
 impl CopyFields {

@@ -43,6 +43,14 @@ impl Option {
             next: next.map(std::boxed::Box::new),
         }
     }
+
+    /// Creates a new [Option], converting the values.
+    pub fn new_from(
+        text: impl std::convert::Into<std::option::Option<std::string::String>>,
+        next: impl std::convert::Into<std::option::Option<crate::names::prelude::Option>>,
+    ) -> Self {
+        Self::new(text.into(), next.into())
+    }
 }
 
 impl Option {

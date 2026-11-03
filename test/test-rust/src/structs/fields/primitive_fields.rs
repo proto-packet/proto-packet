@@ -66,6 +66,25 @@ impl PrimitiveFields {
             unsigned128,
         }
     }
+
+    /// Creates a new [PrimitiveFields], converting the values.
+    pub fn new_from(
+        boolean: impl Into<bool>,
+        unsigned8: impl Into<u8>,
+        unsigned16: impl Into<u16>,
+        unsigned32: impl Into<u32>,
+        unsigned64: impl Into<u64>,
+        unsigned128: impl Into<u128>,
+    ) -> Self {
+        Self::new(
+            boolean.into(),
+            unsigned8.into(),
+            unsigned16.into(),
+            unsigned32.into(),
+            unsigned64.into(),
+            unsigned128.into(),
+        )
+    }
 }
 
 impl PrimitiveFields {

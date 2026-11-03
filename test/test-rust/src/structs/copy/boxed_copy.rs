@@ -33,6 +33,11 @@ impl BoxedCopy {
             point: Box::new(point),
         }
     }
+
+    /// Creates a new [BoxedCopy], converting the values.
+    pub fn new_from(point: impl Into<crate::types::Point>) -> Self {
+        Self::new(point.into())
+    }
 }
 
 impl BoxedCopy {

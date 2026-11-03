@@ -86,6 +86,30 @@ impl OptionalFields {
             shape,
         }
     }
+
+    /// Creates a new [OptionalFields], converting the values.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_from(
+        count: impl Into<Option<u32>>,
+        id: impl Into<Option<proto_packet::types::Uuid>>,
+        text: impl Into<Option<String>>,
+        point: impl Into<Option<crate::types::Point>>,
+        person: impl Into<Option<crate::types::Person>>,
+        label: impl Into<Option<crate::types::Label>>,
+        color: impl Into<Option<crate::types::Color>>,
+        shape: impl Into<Option<crate::types::Shape>>,
+    ) -> Self {
+        Self::new(
+            count.into(),
+            id.into(),
+            text.into(),
+            point.into(),
+            person.into(),
+            label.into(),
+            color.into(),
+            shape.into(),
+        )
+    }
 }
 
 impl OptionalFields {

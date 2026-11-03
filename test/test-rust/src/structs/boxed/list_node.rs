@@ -39,6 +39,14 @@ impl ListNode {
             next: next.map(Box::new),
         }
     }
+
+    /// Creates a new [ListNode], converting the values.
+    pub fn new_from(
+        value: impl Into<u32>,
+        next: impl Into<Option<crate::structs::boxed::ListNode>>,
+    ) -> Self {
+        Self::new(value.into(), next.into())
+    }
 }
 
 impl ListNode {

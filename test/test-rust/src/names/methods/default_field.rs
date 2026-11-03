@@ -32,6 +32,11 @@ impl DefaultField {
     pub const fn new(default: u32) -> Self {
         Self { default }
     }
+
+    /// Creates a new [DefaultField], converting the values.
+    pub fn new_from(default: impl Into<u32>) -> Self {
+        Self::new(default.into())
+    }
 }
 
 impl DefaultField {

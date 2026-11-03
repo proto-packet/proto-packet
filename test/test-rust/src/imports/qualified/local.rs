@@ -32,6 +32,11 @@ impl Local {
     pub const fn new(value: u32) -> Self {
         Self { value }
     }
+
+    /// Creates a new [Local], converting the values.
+    pub fn new_from(value: impl Into<u32>) -> Self {
+        Self::new(value.into())
+    }
 }
 
 impl Local {

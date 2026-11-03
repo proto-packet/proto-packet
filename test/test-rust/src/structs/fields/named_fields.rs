@@ -59,6 +59,23 @@ impl NamedFields {
             shape,
         }
     }
+
+    /// Creates a new [NamedFields], converting the values.
+    pub fn new_from(
+        point: impl Into<crate::types::Point>,
+        person: impl Into<crate::types::Person>,
+        label: impl Into<crate::types::Label>,
+        color: impl Into<crate::types::Color>,
+        shape: impl Into<crate::types::Shape>,
+    ) -> Self {
+        Self::new(
+            point.into(),
+            person.into(),
+            label.into(),
+            color.into(),
+            shape.into(),
+        )
+    }
 }
 
 impl NamedFields {

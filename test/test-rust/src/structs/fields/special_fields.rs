@@ -35,6 +35,11 @@ impl SpecialFields {
     pub const fn new(id: proto_packet::types::Uuid, text: String) -> Self {
         Self { id, text }
     }
+
+    /// Creates a new [SpecialFields], converting the values.
+    pub fn new_from(id: impl Into<proto_packet::types::Uuid>, text: impl Into<String>) -> Self {
+        Self::new(id.into(), text.into())
+    }
 }
 
 impl SpecialFields {
