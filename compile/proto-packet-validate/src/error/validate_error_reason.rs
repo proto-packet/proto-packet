@@ -43,7 +43,6 @@ impl ValidateErrorReason {
                 TreeError::DuplicateImportName { .. } => "V_DUPLICATE_IMPORT_NAME",
                 TreeError::DuplicateTypeDecName { .. } => "V_DUPLICATE_TYPE_NAME",
                 TreeError::ImportNameConflictsWithTypeDec { .. } => "V_IMPORT_NAME_CONFLICT",
-                TreeError::DuplicateModPath { .. } => "V_DUPLICATE_MOD_PATH",
             },
         }
     }

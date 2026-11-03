@@ -1,4 +1,4 @@
-use crate::{ModPath, QualifiedNameRef, SchemaFile, TreeError, TypeDec};
+use crate::{ModPath, ProjectError, QualifiedNameRef, SchemaFile, TypeDec};
 use std::collections::BTreeMap;
 
 /// A project.
@@ -31,9 +31,9 @@ impl Project {
         &mut self,
         mod_path: ModPath,
         schema_file: SchemaFile,
-    ) -> Result<(), TreeError> {
+    ) -> Result<(), ProjectError> {
         if self.schema_files.contains_key(&mod_path) {
-            return Err(TreeError::DuplicateModPath { mod_path });
+            return Err(ProjectError::DuplicateModPath { mod_path });
         }
 
         self.schema_files.insert(mod_path, schema_file);
@@ -45,7 +45,7 @@ impl Project {
         mut self,
         mod_path: ModPath,
         schema_file: SchemaFile,
-    ) -> Result<Self, TreeError> {
+    ) -> Result<Self, ProjectError> {
         self.add_schema_file(mod_path, schema_file)?;
         Ok(self)
     }
