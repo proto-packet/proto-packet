@@ -1,0 +1,6 @@
+// A struct in a schema file with a child folder of the same name.
+struct Parent {
+
+    // The value.
+    value: u32;
+}

@@ -1,0 +1,6 @@
+// A struct in a mod with the same name as its parent.
+struct Same {
+
+    // The value.
+    value: u32;
+}

@@ -1,0 +1,6 @@
+// A struct in a child mod.
+struct Child {
+
+    // The value.
+    value: u32;
+}
