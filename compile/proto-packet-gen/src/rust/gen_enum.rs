@@ -104,7 +104,7 @@ fn gen_tag_numbers(enumeration: &Enum) -> ImplBlock {
 }
 
 /// Generates the `Ord` impl of the `enumeration`, ordering its cases by tag number instead of
-/// declaration order. (see `FORMAT.md`)
+/// declaration order.
 fn gen_ord(enumeration: &Enum) -> ImplBlock {
     let signature: Signature = Signature::from("cmp")
         .with_receiver(Receiver::Borrowed)
