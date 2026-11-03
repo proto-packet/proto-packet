@@ -11,3 +11,6 @@ publish.workspace = true
 
 [dependencies]
 proto-packet = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

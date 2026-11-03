@@ -13,3 +13,5 @@ publish = false
 
 [workspace.dependencies]
 proto-packet = { path = "../../dep/dep-rust/proto-packet", features = ["service"] }
+
+serde_json = "1.0.154"
