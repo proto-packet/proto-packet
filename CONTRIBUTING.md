@@ -2,6 +2,11 @@
 
 This guide outlines how contributions should be made to the codebase.
 
+## Checks
+
+The `build.sh` script formats, lints & tests the runtime & the compiler, then runs the end-to-end
+tests with `test/build.sh`. It must pass before each commit.
+
 ## Commits
 
 Each commit is one small, focused change. Its message is a tag with one sentence. Example:
