@@ -1,0 +1,49 @@
+// A point. (a `Copy` struct)
+struct Point {
+
+    // The x coordinate.
+    x: u32;
+
+    // The y coordinate.
+    y: u32;
+}
+
+// A person. (a non-`Copy` struct)
+struct Person {
+
+    // The name.
+    name: string;
+
+    // The age.
+    age: u8;
+}
+
+// A label.
+message Label {
+
+    // The text.
+    text: string = 1;
+}
+
+// A color.
+enum Color {
+
+    // Red.
+    Red = 1;
+
+    // Green.
+    Green = 2;
+
+    // Blue.
+    Blue = 3;
+}
+
+// A shape.
+variant Shape {
+
+    // A circle with the radius.
+    Circle: u32 = 1;
+
+    // A square with the corner point.
+    Square: Point = 2;
+}
