@@ -1,3 +1,6 @@
-# Test Rust
+# proto-packet-test
 
-This workspace holds the tests of the generated ProtoPacket Rust code.
+This library tests the generated ProtoPacket Rust code.
+
+The `src/` folder is generated from the `test/schema` project by `test/build.sh`, & the `tests/`
+folder tests it.

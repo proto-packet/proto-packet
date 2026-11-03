@@ -8,7 +8,7 @@ RUST_DIR="$TEST_DIR/test-rust"
 
 # Compile Schema
 cargo run --quiet --manifest-path "$ROOT_DIR/compile/Cargo.toml" -p proto-packet-cli -- \
-    compile rust "$TEST_DIR/schema" "$RUST_DIR/proto-packet-test/src"
+    compile rust "$TEST_DIR/schema" "$RUST_DIR/src"
 
 # Rust: Format, Lint & Test
 cargo fmt --manifest-path "$RUST_DIR/Cargo.toml" --all
