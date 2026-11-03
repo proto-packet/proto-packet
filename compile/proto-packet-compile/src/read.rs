@@ -1,7 +1,8 @@
 use crate::Config;
 use crate::report::path_report;
 use clerr::{Code, Properties, Report};
-use proto_packet_tree::{ModName, ModPath};
+use proto_packet_parse::SchemaFileTree;
+use proto_packet_tree::{ModName, ModPath, Project, SchemaFile};
 use std::path::{Path, PathBuf};
 
 /// A schema file of a project, with its source.
@@ -99,4 +100,26 @@ fn mod_path(relative: &Path, extension: &str) -> Result<ModPath, Report> {
         ModName::validate(mod_name).map_err(|error| invalid(error.message()))?;
     }
     ModPath::new(mod_names.join(".")).map_err(|error| invalid(error.message()))
+}
+
+/// Parses & validates the schema `sources` into a project.
+pub fn validate_project(sources: &[SchemaSource]) -> Result<Project, Report> {
+    let mut project: Project = Project::default();
+    for source in sources {
+        let file_name: String = source.path.display().to_string();
+        let tree: SchemaFileTree = proto_packet_parse::parse(&source.source)
+            .map_err(|error| error.report(&file_name, &source.source))?;
+        let schema_file: SchemaFile =
+            proto_packet_validate::validate_schema_file(&tree, &source.source)
+                .map_err(|error| error.report(&file_name, &source.source))?;
+        project
+            .add_schema_file(source.mod_path.clone(), schema_file)
+            .map_err(|error| {
+                let properties: Properties =
+                    Properties::default().with_property("path", file_name.as_str());
+                Report::from(Code::error("C_DUPLICATE_MOD_PATH", error.to_string()))
+                    .with_entry(properties)
+            })?;
+    }
+    Ok(project)
 }
