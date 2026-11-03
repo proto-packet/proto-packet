@@ -26,3 +26,5 @@ The workspaces:
 - `[compile/{slice}]:` the compiler, if working on a specific slice.
 - `[dep]`: the runtime libraries, if working on the runtime libraries as a whole.
 - `[dep/{language}]`: the runtime libraries, if working on a specific language.
+- `[test]`: the end-to-end tests, if working on the tests as a whole.
+- `[test/{language}]`: the end-to-end tests, if working on a specific language.
