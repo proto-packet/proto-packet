@@ -12,8 +12,17 @@ pub struct SchemaFileTree {
 }
 
 /// Parses the schema file `source`.
+///
+/// An error at an unrecognized character is reported as that character. (ex: `é`)
 pub fn parse(source: &str) -> Result<SchemaFileTree, ParseError> {
-    parse_schema_file(&mut parser(source))
+    let mut p: Parser<'_, Kind> = parser(source);
+    parse_schema_file(&mut p).map_err(|error| {
+        if p.peek().kind() == Kind::Unrecognized {
+            ParseError::new(p.peek().span(), ParseErrorReason::UnrecognizedCharacter)
+        } else {
+            error
+        }
+    })
 }
 
 /// Parses a schema file to the end of the input.

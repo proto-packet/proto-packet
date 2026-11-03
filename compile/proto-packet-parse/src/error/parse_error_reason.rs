@@ -1,6 +1,9 @@
 /// The reason for a parse error.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum ParseErrorReason {
+    /// A character that isn't part of the schema language. (ex: `é` or `@`)
+    UnrecognizedCharacter,
+
     /// Expected a name. (ex: after a `.`)
     ExpectedName,
 
@@ -56,6 +59,7 @@ impl ParseErrorReason {
     /// Gets the message.
     pub const fn message(self) -> &'static str {
         match self {
+            Self::UnrecognizedCharacter => "unrecognized character",
             Self::ExpectedName => "expected a name",
             Self::ExpectedTypeTag => "expected a type",
             Self::ExpectedImport => "expected an import",
@@ -78,6 +82,7 @@ impl ParseErrorReason {
     /// Gets the error code.
     pub const fn code(self) -> &'static str {
         match self {
+            Self::UnrecognizedCharacter => "P_UNRECOGNIZED_CHARACTER",
             Self::ExpectedName => "P_EXPECTED_NAME",
             Self::ExpectedTypeTag => "P_EXPECTED_TYPE_TAG",
             Self::ExpectedImport => "P_EXPECTED_IMPORT",
