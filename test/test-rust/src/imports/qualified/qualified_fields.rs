@@ -60,23 +60,6 @@ impl QualifiedFields {
             local,
         }
     }
-
-    /// Creates a new [QualifiedFields], converting the values.
-    pub fn new_from(
-        point: impl Into<crate::types::Point>,
-        child: impl Into<crate::mods::parent::child::Child>,
-        raw: impl Into<crate::names::r#move::MoveStruct>,
-        non_raw: impl Into<crate::names::r#type::self_::SelfStruct>,
-        local: impl Into<crate::imports::qualified::Local>,
-    ) -> Self {
-        Self::new(
-            point.into(),
-            child.into(),
-            raw.into(),
-            non_raw.into(),
-            local.into(),
-        )
-    }
 }
 
 impl QualifiedFields {

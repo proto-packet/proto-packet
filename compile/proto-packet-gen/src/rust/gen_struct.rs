@@ -3,7 +3,7 @@ use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
-use crate::rust::prelude::{Prelude, PreludeName};
+use crate::rust::prelude::Prelude;
 use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, ImplBlock, Signature, Struct as RustStruct, Var, WithAccess, WithAttributes,
@@ -18,15 +18,12 @@ use proto_packet_tree::{
 /// The name of the constructor.
 const CONSTRUCTOR: &str = "new";
 
-/// The name of the constructor converting its values.
-const NEW_FROM: &str = "new_from";
-
 /// The most constructor parameters before clippy's `too_many_arguments` lint.
 const MAX_ARGUMENTS: usize = 7;
 
 /// Generates the Rust code of the `structure` in the schema file at the `mod_path`.
 ///
-/// No field can be named like a generated method. (ex: the constructors `new` & `new_from`)
+/// No field can be named like a generated method. (ex: the constructor `new`)
 pub fn gen_struct(
     project: &Project,
     mod_path: ModPathRef<'_>,
@@ -38,7 +35,7 @@ pub fn gen_struct(
     check_field_names(
         &format!("{}.{}", mod_path, structure.type_name()),
         &fields,
-        &[CONSTRUCTOR, NEW_FROM],
+        &[CONSTRUCTOR],
     )?;
 
     let mut block: Block = Block::default().with_statement(gen_dec(typing, structure, &fields));
@@ -145,34 +142,4 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
     ImplBlock::from(type_name)
         .with_comment(" Construction")
         .with_function(constructor)
-        .with_function(gen_new_from(typing, type_name, fields))
-}
-
-/// Generates the `new_from` constructor of the struct with the `fields`, which converts each value
-/// with `Into` & calls the constructor.
-fn gen_new_from(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) -> Function {
-    let into: &str = typing.prelude(PreludeName::Into);
-    let mut signature: Signature = Signature::from(NEW_FROM).with_result("Self");
-    for field in fields {
-        let param: String = format!("impl {}<{}>", into, field.value_type(typing));
-        signature.add_param(Var::from((ident(&field.name), param)));
-    }
-    let values: Vec<String> = fields
-        .iter()
-        .map(|field| format!("{}.into()", ident(&field.name)))
-        .collect();
-    let mut from: Function = Function::from(signature)
-        .with_comment(format!(
-            " Creates a new [{}], converting the values.",
-            type_name
-        ))
-        .with_access(Access::Public)
-        .with_literal(format!("Self::{}({})", CONSTRUCTOR, values.join(", ")));
-    if fields.len() > MAX_ARGUMENTS {
-        from.add_attribute("allow(clippy::too_many_arguments)");
-    }
-    if fields.iter().any(|field| field.is_non_snake_case()) {
-        from.add_attribute("allow(non_snake_case)");
-    }
-    from
 }

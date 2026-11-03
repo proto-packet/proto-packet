@@ -64,23 +64,6 @@ impl OptionalBoxedFields {
             shape: shape.map(Box::new),
         }
     }
-
-    /// Creates a new [OptionalBoxedFields], converting the values.
-    pub fn new_from(
-        point: impl Into<Option<crate::types::Point>>,
-        person: impl Into<Option<crate::types::Person>>,
-        label: impl Into<Option<crate::types::Label>>,
-        color: impl Into<Option<crate::types::Color>>,
-        shape: impl Into<Option<crate::types::Shape>>,
-    ) -> Self {
-        Self::new(
-            point.into(),
-            person.into(),
-            label.into(),
-            color.into(),
-            shape.into(),
-        )
-    }
 }
 
 impl OptionalBoxedFields {

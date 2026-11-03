@@ -32,11 +32,6 @@ impl NestedCopy {
     pub const fn new(fields: crate::structs::copy::CopyFields) -> Self {
         Self { fields }
     }
-
-    /// Creates a new [NestedCopy], converting the values.
-    pub fn new_from(fields: impl Into<crate::structs::copy::CopyFields>) -> Self {
-        Self::new(fields.into())
-    }
 }
 
 impl NestedCopy {

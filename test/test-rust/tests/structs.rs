@@ -2,7 +2,7 @@ mod common;
 
 use common::{ID, ID_JSON, assert_json};
 use proto_packet_test::structs::boxed::{BoxedFields, ListNode, OptionalBoxedFields};
-use proto_packet_test::structs::copy::{BoxedCopy, CopyFields, NestedCopy, OptionalCopy};
+use proto_packet_test::structs::copy::{CopyFields, NestedCopy, OptionalCopy};
 use proto_packet_test::structs::empty::EmptyStruct;
 use proto_packet_test::structs::fields::{NamedFields, PrimitiveFields, SpecialFields};
 use proto_packet_test::structs::optional::OptionalFields;
@@ -113,20 +113,4 @@ fn const_constructors() {
     const OPTIONAL: OptionalCopy = OptionalCopy::new(Some(1), None);
     assert_eq!(POINT.x(), 1);
     assert_eq!(OPTIONAL.count(), Some(1));
-}
-
-#[test]
-fn new_from_converts_the_values() {
-    assert_eq!(
-        SpecialFields::new_from(ID, "text"),
-        SpecialFields::new(ID, "text".to_string())
-    );
-    assert_eq!(
-        OptionalCopy::new_from(1, None),
-        OptionalCopy::new(Some(1), None)
-    );
-    assert_eq!(
-        BoxedCopy::new_from(Point::new(1, 2)).point(),
-        Point::new(1, 2)
-    );
 }

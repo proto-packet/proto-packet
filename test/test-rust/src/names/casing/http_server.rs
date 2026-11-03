@@ -34,12 +34,6 @@ impl HTTPServer {
     pub const fn new(maxConnections: u32) -> Self {
         Self { maxConnections }
     }
-
-    /// Creates a new [HTTPServer], converting the values.
-    #[allow(non_snake_case)]
-    pub fn new_from(maxConnections: impl Into<u32>) -> Self {
-        Self::new(maxConnections.into())
-    }
 }
 
 impl HTTPServer {

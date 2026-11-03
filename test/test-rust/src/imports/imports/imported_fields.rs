@@ -36,14 +36,6 @@ impl ImportedFields {
     pub const fn new(point: crate::types::Point, child: crate::mods::parent::child::Child) -> Self {
         Self { point, child }
     }
-
-    /// Creates a new [ImportedFields], converting the values.
-    pub fn new_from(
-        point: impl Into<crate::types::Point>,
-        child: impl Into<crate::mods::parent::child::Child>,
-    ) -> Self {
-        Self::new(point.into(), child.into())
-    }
 }
 
 impl ImportedFields {

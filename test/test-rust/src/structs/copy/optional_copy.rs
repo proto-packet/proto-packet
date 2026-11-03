@@ -38,14 +38,6 @@ impl OptionalCopy {
     pub const fn new(count: Option<u32>, point: Option<crate::types::Point>) -> Self {
         Self { count, point }
     }
-
-    /// Creates a new [OptionalCopy], converting the values.
-    pub fn new_from(
-        count: impl Into<Option<u32>>,
-        point: impl Into<Option<crate::types::Point>>,
-    ) -> Self {
-        Self::new(count.into(), point.into())
-    }
 }
 
 impl OptionalCopy {

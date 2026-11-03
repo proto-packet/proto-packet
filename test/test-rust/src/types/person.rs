@@ -35,11 +35,6 @@ impl Person {
     pub const fn new(name: String, age: u8) -> Self {
         Self { name, age }
     }
-
-    /// Creates a new [Person], converting the values.
-    pub fn new_from(name: impl Into<String>, age: impl Into<u8>) -> Self {
-        Self::new(name.into(), age.into())
-    }
 }
 
 impl Person {

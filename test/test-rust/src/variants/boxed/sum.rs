@@ -38,14 +38,6 @@ impl Sum {
             right: Box::new(right),
         }
     }
-
-    /// Creates a new [Sum], converting the values.
-    pub fn new_from(
-        left: impl Into<crate::variants::boxed::Expr>,
-        right: impl Into<crate::variants::boxed::Expr>,
-    ) -> Self {
-        Self::new(left.into(), right.into())
-    }
 }
 
 impl Sum {

@@ -32,11 +32,6 @@ impl Before {
     pub const fn new(after: crate::imports::local::After) -> Self {
         Self { after }
     }
-
-    /// Creates a new [Before], converting the values.
-    pub fn new_from(after: impl Into<crate::imports::local::After>) -> Self {
-        Self::new(after.into())
-    }
 }
 
 impl Before {
