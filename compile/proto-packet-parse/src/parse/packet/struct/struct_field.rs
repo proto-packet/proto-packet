@@ -1,4 +1,4 @@
-use crate::parse::expect::expect;
+use crate::parse::expect::{expect, expect_end};
 use crate::parse::var::parse_type_modifier;
 use crate::{Kind, ParseError, ParseErrorReason, TypeTagTree, parse_type_tag};
 use lex::lexer::Span;
@@ -22,7 +22,7 @@ pub fn parse_struct_field(p: &mut Parser<'_, Kind>) -> Result<StructFieldTree, P
     let is_optional: bool = parse_type_modifier(p, "optional");
     let is_boxed: bool = parse_type_modifier(p, "box");
     let type_tag: TypeTagTree = parse_type_tag(p)?;
-    expect(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
+    expect_end(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
     Ok(StructFieldTree {
         comments,
         field_name,

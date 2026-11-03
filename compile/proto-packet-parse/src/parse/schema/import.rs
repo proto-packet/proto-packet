@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_keyword};
+use crate::parse::expect::{expect_end, expect_keyword};
 use crate::{Kind, NameTree, ParseError, ParseErrorReason, parse_name};
 use lex::parser::Parser;
 
@@ -12,6 +12,6 @@ pub struct ImportTree {
 pub fn parse_import(p: &mut Parser<'_, Kind>) -> Result<ImportTree, ParseError> {
     expect_keyword(p, "import", ParseErrorReason::ExpectedImport)?;
     let name: NameTree = parse_name(p, ParseErrorReason::ExpectedName)?;
-    expect(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
+    expect_end(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
     Ok(ImportTree { name })
 }

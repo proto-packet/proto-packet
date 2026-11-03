@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_keyword};
+use crate::parse::expect::{expect, expect_end, expect_keyword};
 use crate::{Kind, ParseError, ParseErrorReason, VariantCaseTree, parse_variant_case};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -21,7 +21,7 @@ pub fn parse_variant(p: &mut Parser<'_, Kind>) -> Result<VariantTree, ParseError
     while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
         cases.push(parse_variant_case(p)?);
     }
-    expect(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
     Ok(VariantTree {
         comments,
         type_name,

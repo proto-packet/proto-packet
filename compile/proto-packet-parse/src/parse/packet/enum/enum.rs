@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_keyword};
+use crate::parse::expect::{expect, expect_end, expect_keyword};
 use crate::{EnumCaseTree, Kind, ParseError, ParseErrorReason, parse_enum_case};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -21,7 +21,7 @@ pub fn parse_enum(p: &mut Parser<'_, Kind>) -> Result<EnumTree, ParseError> {
     while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
         cases.push(parse_enum_case(p)?);
     }
-    expect(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
     Ok(EnumTree {
         comments,
         type_name,

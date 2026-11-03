@@ -37,13 +37,13 @@ pub enum ParseErrorReason {
     /// Expected a `{`.
     ExpectedOpenBrace,
 
-    /// Expected a `}`.
+    /// Expected a `}`. (reported at the token before it)
     ExpectedCloseBrace,
 
     /// Expected a `:`.
     ExpectedColon,
 
-    /// Expected a `;`.
+    /// Expected a `;`. (reported at the token before it)
     ExpectedSemicolon,
 
     /// Expected a `=`.
@@ -71,9 +71,9 @@ impl ParseErrorReason {
             Self::ExpectedCallName => "expected the call's name",
             Self::ExpectedReturns => "expected the `returns` keyword",
             Self::ExpectedOpenBrace => "expected a `{`",
-            Self::ExpectedCloseBrace => "expected a `}`",
+            Self::ExpectedCloseBrace => "expected a `}` after this",
             Self::ExpectedColon => "expected a `:`",
-            Self::ExpectedSemicolon => "expected a `;`",
+            Self::ExpectedSemicolon => "expected a `;` after this",
             Self::ExpectedEqual => "expected a `=`",
             Self::ExpectedTagNumber => "expected an integer tag number",
         }

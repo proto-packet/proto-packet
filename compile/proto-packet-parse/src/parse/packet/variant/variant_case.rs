@@ -1,4 +1,4 @@
-use crate::parse::expect::expect;
+use crate::parse::expect::{expect, expect_end};
 use crate::parse::var::parse_type_modifier;
 use crate::{Kind, ParseError, ParseErrorReason, TypeTagTree, parse_tag_number, parse_type_tag};
 use lex::lexer::Span;
@@ -22,7 +22,7 @@ pub fn parse_variant_case(p: &mut Parser<'_, Kind>) -> Result<VariantCaseTree, P
     let is_boxed: bool = parse_type_modifier(p, "box");
     let type_tag: TypeTagTree = parse_type_tag(p)?;
     let tag_number: Span = parse_tag_number(p)?;
-    expect(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
+    expect_end(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
     Ok(VariantCaseTree {
         comments,
         case_name,

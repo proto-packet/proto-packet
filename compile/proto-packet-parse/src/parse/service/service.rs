@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_keyword};
+use crate::parse::expect::{expect, expect_end, expect_keyword};
 use crate::{Kind, ParseError, ParseErrorReason, ServiceCallTree, parse_service_call};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -21,7 +21,7 @@ pub fn parse_service(p: &mut Parser<'_, Kind>) -> Result<ServiceTree, ParseError
     while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
         calls.push(parse_service_call(p)?);
     }
-    expect(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
     Ok(ServiceTree {
         comments,
         type_name,

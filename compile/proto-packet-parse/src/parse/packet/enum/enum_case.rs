@@ -1,4 +1,4 @@
-use crate::parse::expect::expect;
+use crate::parse::expect::{expect, expect_end};
 use crate::{Kind, ParseError, ParseErrorReason, parse_tag_number};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -16,7 +16,7 @@ pub fn parse_enum_case(p: &mut Parser<'_, Kind>) -> Result<EnumCaseTree, ParseEr
     let comments: Vec<Span> = p.leading_comments();
     let case_name: Span = expect(p, Kind::Ident, ParseErrorReason::ExpectedCaseName)?;
     let tag_number: Span = parse_tag_number(p)?;
-    expect(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
+    expect_end(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
     Ok(EnumCaseTree {
         comments,
         case_name,

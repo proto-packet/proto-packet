@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_keyword};
+use crate::parse::expect::{expect, expect_end, expect_keyword};
 use crate::{Kind, MessageFieldTree, ParseError, ParseErrorReason, parse_message_field};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -21,7 +21,7 @@ pub fn parse_message(p: &mut Parser<'_, Kind>) -> Result<MessageTree, ParseError
     while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
         fields.push(parse_message_field(p)?);
     }
-    expect(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
     Ok(MessageTree {
         comments,
         type_name,

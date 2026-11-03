@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_keyword};
+use crate::parse::expect::{expect, expect_end, expect_keyword};
 use crate::{Kind, ParseError, ParseErrorReason, StructFieldTree, parse_struct_field};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -21,7 +21,7 @@ pub fn parse_struct(p: &mut Parser<'_, Kind>) -> Result<StructTree, ParseError> 
     while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
         fields.push(parse_struct_field(p)?);
     }
-    expect(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
     Ok(StructTree {
         comments,
         type_name,

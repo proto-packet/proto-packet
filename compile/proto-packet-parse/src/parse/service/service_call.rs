@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_keyword};
+use crate::parse::expect::{expect, expect_end, expect_keyword};
 use crate::{Kind, ParseError, ParseErrorReason, TypeTagTree, parse_type_tag};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -20,7 +20,7 @@ pub fn parse_service_call(p: &mut Parser<'_, Kind>) -> Result<ServiceCallTree, P
     let request: TypeTagTree = parse_type_tag(p)?;
     expect_keyword(p, "returns", ParseErrorReason::ExpectedReturns)?;
     let response: TypeTagTree = parse_type_tag(p)?;
-    expect(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
+    expect_end(p, Kind::Semi, ParseErrorReason::ExpectedSemicolon)?;
     Ok(ServiceCallTree {
         comments,
         call_name,
