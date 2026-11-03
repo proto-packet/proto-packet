@@ -40,3 +40,12 @@ pub fn parse_name(
     }
     Ok(NameTree { idents })
 }
+
+/// Joins the identifier `spans` of the `source` with dots. (ex: `a.b.Foo`)
+pub fn join_idents(spans: &[Span], source: &str) -> String {
+    spans
+        .iter()
+        .map(|span| span.text(source))
+        .collect::<Vec<&str>>()
+        .join(".")
+}

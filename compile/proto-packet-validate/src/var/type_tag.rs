@@ -1,7 +1,7 @@
 use crate::naming::validate_name_text;
 use crate::{ValidateError, ValidateErrorReason};
 use lex::lexer::Span;
-use proto_packet_parse::{NameTree, TypeTagTree};
+use proto_packet_parse::{NameTree, TypeTagTree, join_idents};
 use proto_packet_tree::{PrimitiveType, QualifiedName, SpecialType, TypeTag};
 
 /// Validates the type tag `tree`.
@@ -13,12 +13,7 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
 
 /// Validates the type `name` as a primitive, special or named type.
 fn validate_named_type(name: &NameTree, source: &str) -> Result<TypeTag, ValidateError> {
-    let text: String = name
-        .idents
-        .iter()
-        .map(|ident| ident.text(source))
-        .collect::<Vec<&str>>()
-        .join(".");
+    let text: String = join_idents(&name.idents, source);
     if let Some(primitive) = PrimitiveType::from_name(&text) {
         Ok(primitive.into())
     } else if let Some(special) = SpecialType::from_name(&text) {

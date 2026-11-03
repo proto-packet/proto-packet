@@ -2,7 +2,7 @@ use crate::SchemaSource;
 use clerr::{Code, Report, Severity, TokenInfo};
 use lex::lexer::Span;
 use proto_packet_link::{LinkError, Location, Member};
-use proto_packet_parse::{SchemaFileTree, TypeDecTree, TypeTagTree};
+use proto_packet_parse::{SchemaFileTree, TypeDecTree, TypeTagTree, join_idents};
 use proto_packet_tree::{ModPathRef, Project, QualifiedName};
 
 /// Links the `project` of the schema `sources`.
@@ -89,7 +89,7 @@ impl Locate<'_> {
             Self::Import(name) => tree
                 .imports
                 .iter()
-                .find(|import| join(&import.name.idents, source) == *name)
+                .find(|import| join_idents(&import.name.idents, source) == *name)
                 .map(|import| import.name.span()),
         }
     }
@@ -143,13 +143,4 @@ fn name_span(tag: &TypeTagTree, type_name: &str, source: &str) -> Option<Span> {
             .is_some_and(|ident| ident.text(source) == type_name)
             .then(|| name.span()),
     }
-}
-
-/// Joins the identifier `spans` of the `source` with dots. (ex: `a.b.Foo`)
-fn join(spans: &[Span], source: &str) -> String {
-    spans
-        .iter()
-        .map(|span| span.text(source))
-        .collect::<Vec<&str>>()
-        .join(".")
 }
