@@ -26,7 +26,7 @@ impl PrimitiveType {
     //! Names
 
     /// The primitive types.
-    const ALL: [Self; 6] = [
+    pub const ALL: [Self; 6] = [
         Self::Boolean,
         Self::UnsignedInt8,
         Self::UnsignedInt16,

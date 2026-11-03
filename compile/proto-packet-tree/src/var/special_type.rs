@@ -14,7 +14,7 @@ impl SpecialType {
     //! Names
 
     /// The special types.
-    const ALL: [Self; 2] = [Self::Uuid, Self::String];
+    pub const ALL: [Self; 2] = [Self::Uuid, Self::String];
 
     /// Gets the name. (ex: `uuid`)
     pub const fn name(self) -> &'static str {
