@@ -1,4 +1,5 @@
 use crate::{Kind, NameTree, ParseError, ParseErrorReason, parse_name};
+use lex::lexer::Span;
 use lex::parser::Parser;
 
 /// A parsed type tag.
@@ -6,6 +7,17 @@ use lex::parser::Parser;
 pub enum TypeTagTree {
     /// A named type. (ex: `u8` or `a.b.Foo`)
     Name(NameTree),
+}
+
+impl TypeTagTree {
+    //! Properties
+
+    /// Gets the span.
+    pub fn span(&self) -> Span {
+        match self {
+            Self::Name(name) => name.span(),
+        }
+    }
 }
 
 /// Parses a type tag.
