@@ -38,15 +38,3 @@ impl<'a> ModPathRef<'a> {
             .map(|mod_name| ModNameRef::new(mod_name).expect("mod paths have valid mod names"))
     }
 }
-
-impl ModPath {
-    //! Mutations
-
-    /// Appends the `mod_name`.
-    #[must_use]
-    pub fn with_appended(mut self, mod_name: ModNameRef<'_>) -> Self {
-        self.value.push('.');
-        self.value.push_str(&mod_name);
-        self
-    }
-}
