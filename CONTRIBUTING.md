@@ -23,9 +23,10 @@ The tag denotes the section of the code base the commit is relevant to.
 
 The project:
 
-- `[cargo]`: the project, typically anything focused outside the workspaces.
+- `[cargo]`: the project, typically anything focused outside the `compile`, `dep` & `test`
+  folders.
 
-The workspaces:
+The folders:
 
 - `[compile]`: the compiler, if working on the compiler as a whole.
 - `[compile/{slice}]`: the compiler, if working on a specific slice.
