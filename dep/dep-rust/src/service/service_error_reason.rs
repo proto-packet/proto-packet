@@ -26,6 +26,9 @@ pub enum ServiceErrorReason {
     /// 409 Conflict.
     Conflict,
 
+    /// 415 Unsupported Media Type.
+    UnsupportedMediaType,
+
     /// 429 Too Many Requests.
     TooManyRequests,
 
@@ -58,6 +61,7 @@ impl ServiceErrorReason {
             Self::MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
             Self::RequestTimeout => StatusCode::REQUEST_TIMEOUT,
             Self::Conflict => StatusCode::CONFLICT,
+            Self::UnsupportedMediaType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
             Self::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
             Self::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
             Self::NotImplemented => StatusCode::NOT_IMPLEMENTED,
@@ -77,6 +81,7 @@ impl ServiceErrorReason {
             Self::MethodNotAllowed => "Method Not Allowed",
             Self::RequestTimeout => "Request Timeout",
             Self::Conflict => "Conflict",
+            Self::UnsupportedMediaType => "Unsupported Media Type",
             Self::TooManyRequests => "Too Many Requests",
             Self::InternalServerError => "Internal Server Error",
             Self::NotImplemented => "Not Implemented",
