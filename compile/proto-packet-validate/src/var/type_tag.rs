@@ -32,7 +32,7 @@ fn validate_named_type(name: &NameTree, source: &str) -> Result<TypeTag, Validat
     }
 }
 
-/// Validates that a boxed `type_tag` is a named type. (the `span` is of its field or case name)
+/// Validates that a boxed `type_tag` is a named type. (the `span` is of the type)
 pub(crate) fn validate_boxed(
     is_boxed: bool,
     type_tag: &TypeTag,

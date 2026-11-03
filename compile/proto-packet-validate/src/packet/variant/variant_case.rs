@@ -14,7 +14,7 @@ pub fn validate_variant_case(
     let case_name: CaseName = validate_name(tree.case_name, source)?;
     let type_tag: TypeTag = validate_type_tag(&tree.type_tag, source)?;
     let tag_number: TagNumber = validate_tag_number(tree.tag_number, source)?;
-    validate_boxed(tree.is_boxed, &type_tag, tree.case_name)?;
+    validate_boxed(tree.is_boxed, &type_tag, tree.type_tag.span())?;
     let mut case: VariantCase =
         VariantCase::new(case_name, type_tag, tag_number).with_boxed(tree.is_boxed);
     add_comments(&mut case, &tree.comments, source);

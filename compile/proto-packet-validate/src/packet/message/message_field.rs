@@ -14,7 +14,7 @@ pub fn validate_message_field(
     let field_name: FieldName = validate_name(tree.field_name, source)?;
     let type_tag: TypeTag = validate_type_tag(&tree.type_tag, source)?;
     let tag_number: TagNumber = validate_tag_number(tree.tag_number, source)?;
-    validate_boxed(tree.is_boxed, &type_tag, tree.field_name)?;
+    validate_boxed(tree.is_boxed, &type_tag, tree.type_tag.span())?;
     let mut field: MessageField =
         MessageField::new(field_name, type_tag, tag_number).with_boxed(tree.is_boxed);
     add_comments(&mut field, &tree.comments, source);

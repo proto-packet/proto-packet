@@ -12,7 +12,7 @@ pub fn validate_struct_field(
 ) -> Result<StructField, ValidateError> {
     let field_name: FieldName = validate_name(tree.field_name, source)?;
     let type_tag: TypeTag = validate_type_tag(&tree.type_tag, source)?;
-    validate_boxed(tree.is_boxed, &type_tag, tree.field_name)?;
+    validate_boxed(tree.is_boxed, &type_tag, tree.type_tag.span())?;
     let mut field: StructField = StructField::new(field_name, type_tag)
         .with_optional(tree.is_optional)
         .with_boxed(tree.is_boxed);
