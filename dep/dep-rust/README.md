@@ -1,3 +1,3 @@
-# Dep Rust
+# proto-packet
 
-This workspace holds the ProtoPacket Rust runtime libraries.
+This library provides the dependencies for generated ProtoPacket code.

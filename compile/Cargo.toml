@@ -20,7 +20,7 @@ license = "MIT"
 module_inception = "allow"
 
 [workspace.dependencies]
-proto-packet = { path = "../dep/dep-rust/proto-packet", default-features = false } # todo -- path dependency
+proto-packet = { path = "../dep/dep-rust", default-features = false } # todo -- path dependency
 proto-packet-compile = { path = "proto-packet-compile" } # todo -- path dependency
 proto-packet-gen = { path = "proto-packet-gen" } # todo -- path dependency
 proto-packet-link = { path = "proto-packet-link" } # todo -- path dependency
