@@ -1,0 +1,6 @@
+// An enum named like the module of its unrecognized case. (`mod unrecognized`)
+enum Unrecognized {
+
+    // The only case.
+    Only = 1;
+}

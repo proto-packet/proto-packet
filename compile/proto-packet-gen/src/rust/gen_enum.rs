@@ -1,6 +1,6 @@
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
-use crate::rust::naming::{ident, is_upper_camel_case};
+use crate::rust::naming::{ident, is_upper_camel_case, snake_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use code_gen::rust::{
     Access, Enum as RustEnum, EnumCase, EnumFields, Function, ImplBlock, MatchCase, MatchStatement,
@@ -33,9 +33,15 @@ pub fn gen_enum(enumeration: &Enum) -> String {
         .with_statement(gen_serialize(prelude, enumeration))
         .with_statement(EmptyLine::default())
         .with_statement(gen_deserialize(prelude, enumeration));
+    let inception: &str = if snake_case(&enumeration.type_name()) == "unrecognized" {
+        "#[allow(clippy::module_inception)]\n"
+    } else {
+        ""
+    };
     format!(
-        "{}\n{}\n{}",
+        "{}\n{}{}\n{}",
         dec.to_code(),
+        inception,
         UNRECOGNIZED_MOD,
         block.to_code()
     )
