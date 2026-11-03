@@ -34,6 +34,17 @@ impl TagNumber {
             None
         }
     }
+
+    /// Creates a new tag number from the `value`.
+    ///
+    /// Returns `None` if the `value` is invalid.
+    pub const fn from_u32(value: u32) -> Option<Self> {
+        if value <= Self::MAX as u32 {
+            Self::new(value as u16)
+        } else {
+            None
+        }
+    }
 }
 
 impl From<TagNumber> for u16 {
