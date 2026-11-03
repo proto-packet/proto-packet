@@ -55,6 +55,15 @@ Schema comments are copied into the rustdoc unchanged. An indented comment becom
 so a doctest that fails `cargo test` on the generated crate. (ex: `//     foo bar baz`) In the pps
 doc blocks of structs & messages, a comment with ```` ``` ```` closes the block early. (`docs.rs`)
 
+### Variant `u128` Cases
+
+A variant is `{"var": ..., "val": ...}` in JSON. When `val` comes before `var`, serde buffers it
+until the case is known, & the buffer has no `u128`, so a variant with a `u128` anywhere in its cases
+fails to read. (ex: `{"val":5,"var":"Value"}` fails with `u128 is not supported`) The generated code
+writes `var` first, so only reordered input fails. (ex: sorted keys) serde_json reports a buffered
+number above `u64::MAX` as a float, so the full fix waits for a JSON encoding without serde.
+(`gen_variant.rs`)
+
 ## Compile
 
 ### Target Folder
