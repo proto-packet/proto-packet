@@ -55,7 +55,9 @@ impl Typing<'_> {
                 Some(TypeDec::Enum(_)) => true,
                 Some(TypeDec::Struct(structure)) if !visiting.contains(name) => {
                     visiting.push(name.clone());
-                    self.is_copy_struct_visiting(structure, visiting)
+                    let is_copy: bool = self.is_copy_struct_visiting(structure, visiting);
+                    visiting.pop();
+                    is_copy
                 }
                 _ => false,
             },
@@ -116,4 +118,50 @@ impl Typing<'_> {
 /// Gets the optional type of the `rust_type`.
 pub(crate) fn option(rust_type: RustType) -> RustType {
     RustType::from("::std::option::Option").with_generic(rust_type)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::rust::typing::Typing;
+    use proto_packet_tree::{
+        FieldName, ModPath, PrimitiveType, Project, QualifiedName, SchemaFile, Struct, StructField,
+        TypeName,
+    };
+
+    /// Creates the struct with the `name` & `fields`.
+    fn structure(name: &str, fields: Vec<StructField>) -> Struct {
+        let mut result: Struct = Struct::from(TypeName::try_from(name).unwrap());
+        for field in fields {
+            result.add_field(field).unwrap();
+        }
+        result
+    }
+
+    /// Creates the field with the `name` of the named type `a.{type_name}`.
+    fn named(name: &str, type_name: &str) -> StructField {
+        let tag: QualifiedName =
+            QualifiedName::try_from(format!("a.{}", type_name).as_str()).unwrap();
+        StructField::new(FieldName::try_from(name).unwrap(), tag)
+    }
+
+    #[test]
+    fn is_copy_struct_with_repeated_struct_fields() {
+        let x: StructField = StructField::new(
+            FieldName::try_from("x").unwrap(),
+            PrimitiveType::UnsignedInt32,
+        );
+        let point: Struct = structure("Point", vec![x]);
+        let start: StructField = named("start", "Point");
+        let end: StructField = named("end", "Point").with_optional(true);
+        let line: Struct = structure("Line", vec![start, end]);
+        let schema_file: SchemaFile = SchemaFile::default()
+            .with_type_dec(point)
+            .unwrap()
+            .with_type_dec(line.clone())
+            .unwrap();
+        let project: Project = Project::default()
+            .with_schema_file(ModPath::try_from("a").unwrap(), schema_file)
+            .unwrap();
+        assert!(Typing::new(&project).is_copy_struct(&line));
+    }
 }
