@@ -1,0 +1,56 @@
+import types.Color;
+import types.Label;
+import types.Person;
+import types.Point;
+import types.Shape;
+
+// A struct with a field of each primitive type.
+struct PrimitiveFields {
+
+    // A boolean field.
+    boolean: bool;
+
+    // An 8-bit unsigned integer field.
+    unsigned8: u8;
+
+    // A 16-bit unsigned integer field.
+    unsigned16: u16;
+
+    // A 32-bit unsigned integer field.
+    unsigned32: u32;
+
+    // A 64-bit unsigned integer field.
+    unsigned64: u64;
+
+    // A 128-bit unsigned integer field.
+    unsigned128: u128;
+}
+
+// A struct with a field of each special type.
+struct SpecialFields {
+
+    // A UUID field.
+    id: uuid;
+
+    // A string field.
+    text: string;
+}
+
+// A struct with a field of each kind of named type.
+struct NamedFields {
+
+    // A `Copy` struct field.
+    point: Point;
+
+    // A non-`Copy` struct field.
+    person: Person;
+
+    // A message field.
+    label: Label;
+
+    // An enum field.
+    color: Color;
+
+    // A variant field.
+    shape: Shape;
+}

@@ -1,0 +1,2 @@
+// A struct without fields.
+struct EmptyStruct {}

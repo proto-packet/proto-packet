@@ -1,0 +1,57 @@
+import types.Color;
+import types.Person;
+import types.Point;
+
+// A struct of `Copy` fields. (derives `Copy`)
+struct CopyFields {
+
+    // A primitive field.
+    count: u32;
+
+    // A UUID field.
+    id: uuid;
+
+    // A `Copy` struct field.
+    point: Point;
+
+    // An enum field.
+    color: Color;
+}
+
+// A struct with a field of a `Copy` struct of `Copy` structs. (derives `Copy`)
+struct NestedCopy {
+
+    // The nested `Copy` struct.
+    fields: CopyFields;
+}
+
+// A struct of optional `Copy` fields. (derives `Copy`)
+struct OptionalCopy {
+
+    // An optional primitive field.
+    count: optional u32;
+
+    // An optional `Copy` struct field.
+    point: optional Point;
+}
+
+// A struct with a string field. (no `Copy`)
+struct StringField {
+
+    // The string field.
+    text: string;
+}
+
+// A struct with a non-`Copy` struct field. (no `Copy`)
+struct NonCopyStruct {
+
+    // The non-`Copy` struct field.
+    person: Person;
+}
+
+// A struct with a boxed `Copy` field. (no `Copy`)
+struct BoxedCopy {
+
+    // The boxed `Copy` field.
+    point: box Point;
+}

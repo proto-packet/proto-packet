@@ -1,0 +1,33 @@
+import types.Color;
+import types.Label;
+import types.Person;
+import types.Point;
+import types.Shape;
+
+// A struct with optional fields of each kind of type.
+struct OptionalFields {
+
+    // An optional primitive field.
+    count: optional u32;
+
+    // An optional UUID field.
+    id: optional uuid;
+
+    // An optional string field.
+    text: optional string;
+
+    // An optional `Copy` struct field.
+    point: optional Point;
+
+    // An optional non-`Copy` struct field.
+    person: optional Person;
+
+    // An optional message field.
+    label: optional Label;
+
+    // An optional enum field.
+    color: optional Color;
+
+    // An optional variant field.
+    shape: optional Shape;
+}
