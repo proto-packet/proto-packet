@@ -20,18 +20,18 @@ impl ServiceError {
     }
 }
 
+impl From<ServiceErrorReason> for ServiceError {
+    fn from(reason: ServiceErrorReason) -> Self {
+        Self::new(reason)
+    }
+}
+
 impl ServiceError {
     //! Properties
 
     /// Gets the reason.
     pub const fn reason(&self) -> ServiceErrorReason {
         self.reason
-    }
-}
-
-impl From<ServiceErrorReason> for ServiceError {
-    fn from(reason: ServiceErrorReason) -> Self {
-        Self::new(reason)
     }
 }
 
