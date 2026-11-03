@@ -3,7 +3,7 @@
 /// An enum with the tag numbers at the edges of the valid range.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum EdgeTags {
-    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    /// A tag number the enum doesn't know.
     Unrecognized(unrecognized::UnrecognizedTagNumber),
 
     /// The minimum tag number.
@@ -14,7 +14,6 @@ pub enum EdgeTags {
 }
 
 mod unrecognized {
-    /// The tag number of an unrecognized case. (from a newer schema)
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct UnrecognizedTagNumber(pub(super) u16);
 }

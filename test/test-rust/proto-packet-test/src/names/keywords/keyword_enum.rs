@@ -3,7 +3,7 @@
 /// An enum with a keyword case name.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum KeywordEnum {
-    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    /// A tag number the enum doesn't know.
     Unrecognized(unrecognized::UnrecognizedTagNumber),
 
     /// A non-raw keyword case. (`Self_`)
@@ -11,7 +11,6 @@ pub enum KeywordEnum {
 }
 
 mod unrecognized {
-    /// The tag number of an unrecognized case. (from a newer schema)
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct UnrecognizedTagNumber(pub(super) u16);
 }

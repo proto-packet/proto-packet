@@ -3,7 +3,7 @@
 /// An enum named like a prelude trait.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum Ord {
-    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    /// A tag number the enum doesn't know.
     Unrecognized(unrecognized::UnrecognizedTagNumber),
 
     /// The only case.
@@ -11,7 +11,6 @@ pub enum Ord {
 }
 
 mod unrecognized {
-    /// The tag number of an unrecognized case. (from a newer schema)
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct UnrecognizedTagNumber(pub(super) u16);
 }

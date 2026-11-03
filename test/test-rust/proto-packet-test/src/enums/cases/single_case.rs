@@ -3,7 +3,7 @@
 /// An enum with one case.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum SingleCase {
-    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    /// A tag number the enum doesn't know.
     Unrecognized(unrecognized::UnrecognizedTagNumber),
 
     /// The only case.
@@ -11,7 +11,6 @@ pub enum SingleCase {
 }
 
 mod unrecognized {
-    /// The tag number of an unrecognized case. (from a newer schema)
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct UnrecognizedTagNumber(pub(super) u16);
 }

@@ -3,7 +3,7 @@
 /// An enum with the tag numbers out of declaration order. (ordered by tag number)
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum UnorderedTags {
-    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    /// A tag number the enum doesn't know.
     Unrecognized(unrecognized::UnrecognizedTagNumber),
 
     /// The third tag number.
@@ -17,7 +17,6 @@ pub enum UnorderedTags {
 }
 
 mod unrecognized {
-    /// The tag number of an unrecognized case. (from a newer schema)
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct UnrecognizedTagNumber(pub(super) u16);
 }

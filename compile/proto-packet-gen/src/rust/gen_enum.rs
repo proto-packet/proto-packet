@@ -13,8 +13,8 @@ use proto_packet_tree::{Enum, WithCaseName, WithComments as _, WithTypeName};
 
 /// Generates the Rust code of the `enumeration`.
 ///
-/// Each enum has an `Unrecognized` case for the tag numbers of newer schemas. Its tag number is in
-/// a private module, so only `from_tag_number` can create it.
+/// Each enum has an `Unrecognized` case for the tag numbers it doesn't know. Its tag number is in a
+/// private module, so only `from_tag_number` can create it.
 ///
 /// The serde impls are written by hand, since they go through `from_tag_number`. A case is its
 /// schema name, even when renamed, & an unrecognized case is its tag number. (ex: `Self_` is `Self`)
@@ -44,7 +44,6 @@ pub fn gen_enum(enumeration: &Enum) -> String {
 /// The private module with the tag number of an unrecognized case.
 const UNRECOGNIZED_MOD: &str = "\
 mod unrecognized {
-    /// The tag number of an unrecognized case. (from a newer schema)
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct UnrecognizedTagNumber(pub(super) u16);
 }
@@ -68,7 +67,7 @@ fn gen_dec(enumeration: &Enum) -> RustEnum {
         EnumFields::Unnamed(vec!["unrecognized::UnrecognizedTagNumber".into()]);
     result.add_case(
         EnumCase::from("Unrecognized")
-            .with_comment(" An unrecognized case, from a newer schema. (from `from_tag_number`)")
+            .with_comment(" A tag number the enum doesn't know.")
             .with_fields(unrecognized),
     );
     for case in enumeration.cases() {

@@ -4,7 +4,7 @@
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[allow(non_camel_case_types)]
 pub enum Log_Level {
-    /// An unrecognized case, from a newer schema. (from `from_tag_number`)
+    /// A tag number the enum doesn't know.
     Unrecognized(unrecognized::UnrecognizedTagNumber),
 
     /// An upper case case.
@@ -15,7 +15,6 @@ pub enum Log_Level {
 }
 
 mod unrecognized {
-    /// The tag number of an unrecognized case. (from a newer schema)
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct UnrecognizedTagNumber(pub(super) u16);
 }
