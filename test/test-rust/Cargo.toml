@@ -10,3 +10,6 @@ repository = "https://github.com/proto-packet/proto-packet"
 edition = "2024"
 license = "MIT"
 publish = false
+
+[workspace.dependencies]
+proto-packet = { path = "../../dep/dep-rust/proto-packet", features = ["service"] }
