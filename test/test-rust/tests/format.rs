@@ -4,14 +4,17 @@ use common::ID;
 use proto_packet::io::{CapacityError, DecodeError};
 use proto_packet::types::Uuid;
 use proto_packet_test::format::edges::{
-    AbsentChild, FixedKinds, FixedKindsMut, FixedKindsRef, LoopByte, LoopLong, NineBits,
-    NineBitsMut, NineBitsRef, Strings, StringsMut,
+    AbsentChild, FixedKinds, FixedKindsMut, FixedKindsRef, FixedKindsView, LoopByte, LoopLong,
+    NineBits, NineBitsMut, NineBitsRef, Strings, StringsMut,
 };
 use proto_packet_test::format::examples::{
-    Color, Entry, Line, LineBuf, LineMut, LineRef, Mixed, MixedMut, MixedRef, Opt, OptMut, OptRef,
-    Pair, PairMut, PairRef, Person, PersonMut, PersonRef, Point, PointBuf, PointMut, PointRef,
+    Color, Entry, EntryView, Line, LineBuf, LineMut, LineRef, LineView, Mixed, MixedMut, MixedRef,
+    Opt, OptMut, OptRef, OptView, Pair, PairBuf, PairMut, PairRef, PairView, Person, PersonMut,
+    PersonRef, Point, PointBuf, PointMut, PointRef, PointView,
 };
-use proto_packet_test::structs::boxed::{ListNode, ListNodeRef};
+use proto_packet_test::structs::boxed::{
+    ListNode, ListNodeBuf, ListNodeMut, ListNodeRef, ListNodeView,
+};
 use proto_packet_test::structs::empty::{EmptyStruct, EmptyStructRef};
 
 /// Asserts the `value` of the `type` encodes to the `bytes`, & decodes back from them.
@@ -582,4 +585,116 @@ fn bufs_edit_in_place() {
         buf.decode(),
         Line::new(Point::new(1, 2), Point::new(3, 8), 9)
     );
+}
+
+/// Gets the sum of the coordinates of any form of a point.
+fn point_sum<P: PointView>(point: &P) -> u32 {
+    point.x() + point.y()
+}
+
+#[test]
+fn views_read_every_form() {
+    let point: Point = Point::new(1, 2);
+    let mut bytes: Vec<u8> = point.encode();
+    assert_eq!(point_sum(&point), 3);
+    assert_eq!(point_sum(&&point), 3);
+    assert_eq!(point_sum(&PointRef::new(&bytes).unwrap()), 3);
+    assert_eq!(point_sum(&PointBuf::from(&point)), 3);
+    assert_eq!(point_sum(&PointMut::new(&mut bytes).unwrap()), 3);
+}
+
+/// Gets the end of any form of a line, through its `Copy` nested struct.
+fn line_end_y<L: LineView>(line: &L) -> u32 {
+    line.end().y()
+}
+
+/// Gets the text of any form of a pair, through its non-`Copy` nested structs.
+fn pair_text<P: PairView>(pair: &P) -> String {
+    let first = pair.first();
+    let second = pair.second();
+    format!("{} {} {}", first.text(), second.text(), pair.note())
+}
+
+#[test]
+fn views_read_nested_structs() {
+    let line: Line = Line::new(Point::new(1, 2), Point::new(3, 4), 5);
+    let mut bytes: Vec<u8> = line.encode();
+    assert_eq!(line_end_y(&line), 4);
+    assert_eq!(line_end_y(&LineRef::new(&bytes).unwrap()), 4);
+    assert_eq!(line_end_y(&LineBuf::from(&line)), 4);
+    assert_eq!(line_end_y(&LineMut::new(&mut bytes).unwrap()), 4);
+
+    let mut bytes: Vec<u8> = pair_bytes();
+    assert_eq!(pair_text(&pair()), "hello hi ok");
+    assert_eq!(pair_text(&PairRef::new(&bytes).unwrap()), "hello hi ok");
+    assert_eq!(pair_text(&PairBuf::from(&pair())), "hello hi ok");
+    assert_eq!(pair_text(&PairMut::new(&mut bytes).unwrap()), "hello hi ok");
+}
+
+/// Gets the optional fields of any form of an `Opt`.
+fn opt_fields<O: OptView>(opt: &O) -> (Option<u32>, Option<bool>, Option<String>, Option<Color>) {
+    (opt.b(), opt.c(), opt.d().map(str::to_string), opt.e())
+}
+
+#[test]
+fn views_read_optional_fields() {
+    let value: Opt = Opt::new(
+        true,
+        Some(5),
+        Some(false),
+        Some("hi".to_string()),
+        Some(Color::Red),
+    );
+    let expected = (
+        Some(5),
+        Some(false),
+        Some("hi".to_string()),
+        Some(Color::Red),
+    );
+    let bytes: Vec<u8> = value.encode();
+    assert_eq!(opt_fields(&value), expected);
+    assert_eq!(opt_fields(&OptRef::new(&bytes).unwrap()), expected);
+
+    let absent: Opt = Opt::new(false, None, None, None, None);
+    let bytes: Vec<u8> = absent.encode();
+    assert_eq!(opt_fields(&absent), (None, None, None, None));
+    assert_eq!(
+        opt_fields(&OptRef::new(&bytes).unwrap()),
+        (None, None, None, None)
+    );
+}
+
+/// Gets the optional nested struct of any form of a `FixedKinds`.
+fn maybe_point_y<K: FixedKindsView>(kinds: &K) -> Option<u32> {
+    kinds.maybe_point().map(|point| point.y())
+}
+
+#[test]
+fn views_read_optional_nested_structs() {
+    let value: FixedKinds = FixedKinds::new(
+        ID,
+        Color::Red,
+        Point::new(1, 2),
+        Some(Point::new(3, 4)),
+        None,
+    );
+    let bytes: Vec<u8> = value.encode();
+    assert_eq!(maybe_point_y(&value), Some(4));
+    assert_eq!(maybe_point_y(&FixedKindsRef::new(&bytes).unwrap()), Some(4));
+}
+
+/// Gets the sum of the values of any form of a linked list.
+fn list_sum<N: ListNodeView>(node: &N) -> u32 {
+    node.value() + node.next().map_or(0, |next| list_sum(&next))
+}
+
+#[test]
+fn views_read_recursive_structs() {
+    let tail: ListNode = ListNode::new(3, None);
+    let list: ListNode = ListNode::new(1, Some(ListNode::new(2, Some(tail))));
+    let mut bytes: Vec<u8> = list.encode();
+    assert_eq!(list_sum(&list), 6);
+    assert_eq!(list_sum(&ListNodeRef::new(&bytes).unwrap()), 6);
+    assert_eq!(list_sum(&ListNodeBuf::from(&list)), 6);
+    assert_eq!(list_sum(&ListNodeMut::new(&mut bytes).unwrap()), 6);
 }
