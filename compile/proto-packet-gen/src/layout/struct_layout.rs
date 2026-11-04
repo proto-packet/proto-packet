@@ -1,11 +1,8 @@
 use crate::layout::{
     BitLayout, EntryLayout, FieldLayout, TypeLayout, UnitLayout, ValueLayout, alignment,
-    is_encodable,
 };
 use proto_packet::io::align_up;
-use proto_packet_tree::{
-    Project, QualifiedName, SpecialType, Struct, StructField, TypeDec, TypeTag, WithTypeTag,
-};
+use proto_packet_tree::{Project, SpecialType, Struct, StructField, TypeDec, TypeTag, WithTypeTag};
 use std::cmp::Reverse;
 
 /// The layout of a struct's encoding. (see `FORMAT.md`)
@@ -34,23 +31,13 @@ impl StructLayout {
     //! Construction
 
     /// Gets the layout of the `structure` of the linked `project`.
-    ///
-    /// Returns `None` if the `structure` contains a type with no encoding. (ex: a service)
-    pub fn new(project: &Project, structure: &Struct) -> Option<Self> {
-        let mut visited: Vec<QualifiedName> = Vec::default();
-        let is_encodable: bool = structure
-            .fields()
-            .iter()
-            .all(|field| is_encodable(project, field.type_tag(), &mut visited));
-        if !is_encodable {
-            return None;
-        }
-        let alignment: usize = alignment(project, structure)?;
+    pub fn new(project: &Project, structure: &Struct) -> Self {
+        let alignment: usize = alignment(project, structure);
         let fields: &[StructField] = structure.fields();
         let types: Vec<TypeLayout> = fields
             .iter()
             .map(|field| TypeLayout::new(project, field.type_tag()))
-            .collect::<Option<_>>()?;
+            .collect();
         let entries: Vec<EntryLayout> = entries(fields, &types);
 
         let mut units: Vec<UnitLayout> = Vec::default();
@@ -123,14 +110,14 @@ impl StructLayout {
             });
         }
 
-        Some(Self {
+        Self {
             alignment,
             fixed_size,
             table_offset,
             fields,
             units,
             entries,
-        })
+        }
     }
 }
 
@@ -143,8 +130,8 @@ impl StructLayout {
     }
 }
 
-/// Gets the entries of the `fields` with the `types`: the variable structs & messages by descending
-/// alignment, followed by the strings.
+/// Gets the entries of the `fields` with the `types`: the variable structs, messages & variants by
+/// descending alignment, followed by the strings.
 fn entries(fields: &[StructField], types: &[TypeLayout]) -> Vec<EntryLayout> {
     let mut variable: Vec<(usize, usize, bool)> = fields
         .iter()

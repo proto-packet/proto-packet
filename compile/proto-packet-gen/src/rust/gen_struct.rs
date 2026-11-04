@@ -56,8 +56,8 @@ const MAX_ARGUMENTS: usize = 7;
 
 /// Generates the Rust files of the `structure` in the schema file at the `mod_path`.
 ///
-/// No field can be named like a generated method. (ex: the constructor `new`) A struct with an
-/// encoding has a file for each of its generated types.
+/// No field can be named like a generated method. (ex: the constructor `new`) Each of the struct's
+/// generated types has a file.
 pub fn gen_struct(
     project: &Project,
     mod_path: ModPathRef<'_>,
@@ -66,10 +66,10 @@ pub fn gen_struct(
     let type_name: String = ident(&structure.type_name());
     let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
-    let layout: Option<StructLayout> = StructLayout::new(project, structure);
+    let layout: StructLayout = StructLayout::new(project, structure);
     let accessors: Vec<String> = fields
         .iter()
-        .filter(|field| layout.is_some() && is_struct(typing, **field))
+        .filter(|field| is_struct(typing, **field))
         .map(|field| field.accessor_name())
         .collect();
     let methods: Vec<&str> = METHODS
@@ -89,64 +89,59 @@ pub fn gen_struct(
     }
     for field in &fields {
         let mut field_impl: ImplBlock = field.gen_impl(typing, &type_name);
-        if layout.is_some() && is_struct(typing, *field) {
+        if is_struct(typing, *field) {
             field_impl.add_function(gen_accessor(typing, *field));
         }
         block.add_statement(EmptyLine::default());
         block.add_statement(field_impl);
     }
-    if let Some(layout) = &layout {
-        check_type_name(project, mod_path, &ref_name(&structure.type_name()))?;
-        check_type_name(project, mod_path, &buf_name(&structure.type_name()))?;
-        check_type_name(project, mod_path, &mut_name(&structure.type_name()))?;
-        check_type_name(project, mod_path, &view_name(&structure.type_name()))?;
-        check_type_name(project, mod_path, &view_mut_name(&structure.type_name()))?;
-        check_mut_names(
-            typing,
-            &format!("{}.{}", mod_path, structure.type_name()),
-            &fields,
-        )?;
-        block.add_statement(EmptyLine::default());
-        block.add_statement(gen_encoding(typing, &type_name, &fields, layout));
-        block.add_statement(EmptyLine::default());
-        block.add_statement(gen_decoding(
-            typing,
-            &type_name,
-            &ref_name(&structure.type_name()),
-            "struct",
-        ));
-    }
-    let mut files: Vec<TypeFile> = vec![TypeFile {
-        suffix: "",
-        code: block.to_code(),
-    }];
-    if let Some(layout) = &layout {
-        files.push(TypeFile {
+    let schema_name: String = structure.type_name().to_string();
+    let schema_name: &str = &schema_name;
+    check_type_name(project, mod_path, &ref_name(schema_name))?;
+    check_type_name(project, mod_path, &buf_name(schema_name))?;
+    check_type_name(project, mod_path, &mut_name(schema_name))?;
+    check_type_name(project, mod_path, &view_name(schema_name))?;
+    check_type_name(project, mod_path, &view_mut_name(schema_name))?;
+    check_mut_names(typing, &format!("{}.{}", mod_path, schema_name), &fields)?;
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_encoding(typing, &type_name, &fields, &layout));
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_decoding(
+        typing,
+        &type_name,
+        &ref_name(schema_name),
+        "struct",
+    ));
+    Ok(vec![
+        TypeFile {
+            suffix: "",
+            code: block.to_code(),
+        },
+        TypeFile {
             suffix: "_buf",
             code: gen_buf(
-                &structure.type_name(),
+                schema_name,
                 &type_name,
-                gen_buf_accessors(typing, &fields, layout, &buf_name(&structure.type_name())),
+                gen_buf_accessors(typing, &fields, &layout, &buf_name(schema_name)),
             ),
-        });
-        files.push(TypeFile {
+        },
+        TypeFile {
             suffix: "_mut",
-            code: gen_struct_mut(typing, structure, &fields, layout, &type_name),
-        });
-        files.push(TypeFile {
+            code: gen_struct_mut(typing, structure, &fields, &layout, &type_name),
+        },
+        TypeFile {
             suffix: "_ref",
-            code: gen_struct_ref(typing, structure, &fields, layout, &type_name),
-        });
-        files.push(TypeFile {
+            code: gen_struct_ref(typing, structure, &fields, &layout, &type_name),
+        },
+        TypeFile {
             suffix: "_view",
-            code: gen_view(typing, &structure.type_name(), &fields, &type_name),
-        });
-        files.push(TypeFile {
+            code: gen_view(typing, schema_name, &fields, &type_name),
+        },
+        TypeFile {
             suffix: "_view_mut",
-            code: gen_view_mut(typing, &structure.type_name(), &fields, &type_name, false),
-        });
-    }
-    Ok(files)
+            code: gen_view_mut(typing, schema_name, &fields, &type_name, false),
+        },
+    ])
 }
 
 /// Checks no type of the schema file at the `mod_path` has the `name` of a generated type.

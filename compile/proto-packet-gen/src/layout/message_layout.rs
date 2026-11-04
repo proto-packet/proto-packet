@@ -1,8 +1,6 @@
-use crate::layout::is_encodable;
+use crate::layout::primitive_size;
 use proto_packet::io::WithTagNumber;
-use proto_packet_tree::{
-    Message, PrimitiveType, Project, SpecialType, TypeDec, TypeTag, WithTypeTag,
-};
+use proto_packet_tree::{Message, Project, SpecialType, TypeDec, TypeTag, WithTypeTag};
 
 /// The layout of a message field.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -28,17 +26,7 @@ impl MessageLayout {
     //! Construction
 
     /// Gets the layout of the `message` of the linked `project`.
-    ///
-    /// Returns `None` if the `message` contains a type with no encoding. (ex: a service)
-    pub fn new(project: &Project, message: &Message) -> Option<Self> {
-        let mut visited: Vec<_> = Vec::default();
-        let is_encodable: bool = message
-            .fields()
-            .iter()
-            .all(|field| is_encodable(project, field.type_tag(), &mut visited));
-        if !is_encodable {
-            return None;
-        }
+    pub fn new(project: &Project, message: &Message) -> Self {
         let mut fields: Vec<MessageFieldLayout> = message
             .fields()
             .iter()
@@ -50,20 +38,14 @@ impl MessageLayout {
             })
             .collect();
         fields.sort_by_key(|field| field.tag);
-        Some(Self { fields })
+        Self { fields }
     }
 }
 
 /// Gets the size of a message value or variant value of the `tag`, if it's a fixed-size scalar.
 pub fn scalar_size(project: &Project, tag: &TypeTag) -> Option<usize> {
     match tag {
-        TypeTag::Primitive(primitive) => Some(match primitive {
-            PrimitiveType::Boolean | PrimitiveType::UnsignedInt8 => 1,
-            PrimitiveType::UnsignedInt16 => 2,
-            PrimitiveType::UnsignedInt32 => 4,
-            PrimitiveType::UnsignedInt64 => 8,
-            PrimitiveType::UnsignedInt128 => 16,
-        }),
+        TypeTag::Primitive(primitive) => Some(primitive_size(*primitive)),
         TypeTag::Special(SpecialType::Uuid) => Some(16),
         TypeTag::Special(SpecialType::String) => None,
         TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref()) {

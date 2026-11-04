@@ -1,7 +1,7 @@
 use crate::GenError;
 use crate::layout::MessageLayout;
 use crate::rust::TypeFile;
-use crate::rust::derives::{add_derives, add_serde_derives};
+use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_buf::{buf_name, gen_buf};
@@ -73,10 +73,10 @@ pub fn gen_message(
             is_boxed: field.is_boxed(),
         })
         .collect();
-    let layout: Option<MessageLayout> = MessageLayout::new(project, message);
+    let layout: MessageLayout = MessageLayout::new(project, message);
     let accessors: Vec<String> = fields
         .iter()
-        .filter(|field| layout.is_some() && is_struct(typing, **field))
+        .filter(|field| is_struct(typing, **field))
         .map(|field| field.accessor_name())
         .collect();
     let methods: Vec<&str> = METHODS
@@ -89,83 +89,75 @@ pub fn gen_message(
         &methods,
     )?;
 
-    let mut block: Block =
-        Block::default().with_statement(gen_dec(typing, message, &fields, layout.is_some()));
+    let mut block: Block = Block::default().with_statement(gen_dec(typing, message, &fields));
     for field in &fields {
         let mut field_impl: ImplBlock = field.gen_impl(typing, &type_name);
-        if layout.is_some() && is_struct(typing, *field) {
+        if is_struct(typing, *field) {
             field_impl.add_function(gen_accessor(typing, *field));
         }
         block.add_statement(EmptyLine::default());
         block.add_statement(field_impl);
     }
-    let mut files: Vec<TypeFile> = Vec::default();
-    if let Some(layout) = &layout {
-        let tagged: Vec<TaggedField> = layout
-            .fields
-            .iter()
-            .map(|field| TaggedField {
-                field: fields[field.index],
-                tag: field.tag,
-                size: field.size,
-            })
-            .collect();
-        block.add_statement(EmptyLine::default());
-        block.add_statement(gen_unknown_fields(typing, &type_name));
-        block.add_statement(EmptyLine::default());
-        block.add_statement(gen_message_encoding(typing, &type_name, &tagged));
-        block.add_statement(EmptyLine::default());
-        block.add_statement(gen_decoding(
-            typing,
-            &type_name,
-            &ref_name(&message.type_name()),
-            "message",
-        ));
-        block.add_statement(EmptyLine::default());
-        block.add_literal(gen_json(typing, &message.type_name(), &type_name, &fields));
-        check_type_name(project, mod_path, &ref_name(&message.type_name()))?;
-        check_type_name(project, mod_path, &buf_name(&message.type_name()))?;
-        check_type_name(project, mod_path, &mut_name(&message.type_name()))?;
-        check_type_name(project, mod_path, &view_name(&message.type_name()))?;
-        check_type_name(project, mod_path, &view_mut_name(&message.type_name()))?;
-        check_mut_names(
-            typing,
-            &format!("{}.{}", mod_path, message.type_name()),
-            &fields,
-        )?;
-        files.push(TypeFile {
-            suffix: "_buf",
-            code: gen_buf(
-                &message.type_name(),
-                &type_name,
-                gen_message_buf_accessors(typing, &tagged, &buf_name(&message.type_name())),
-            ),
-        });
-        files.push(TypeFile {
-            suffix: "_mut",
-            code: gen_message_mut(typing, &message.type_name(), &tagged, &type_name),
-        });
-        files.push(TypeFile {
-            suffix: "_ref",
-            code: gen_message_ref(typing, &message.type_name(), &tagged, &type_name),
-        });
-        files.push(TypeFile {
-            suffix: "_view",
-            code: gen_view(typing, &message.type_name(), &fields, &type_name),
-        });
-        files.push(TypeFile {
-            suffix: "_view_mut",
-            code: gen_view_mut(typing, &message.type_name(), &fields, &type_name, true),
-        });
-    }
-    files.insert(
-        0,
+    let tagged: Vec<TaggedField> = layout
+        .fields
+        .iter()
+        .map(|field| TaggedField {
+            field: fields[field.index],
+            tag: field.tag,
+            size: field.size,
+        })
+        .collect();
+    let schema_name: String = message.type_name().to_string();
+    let schema_name: &str = &schema_name;
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_unknown_fields(typing, &type_name));
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_message_encoding(typing, &type_name, &tagged));
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_decoding(
+        typing,
+        &type_name,
+        &ref_name(schema_name),
+        "message",
+    ));
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_json(typing, schema_name, &type_name, &fields));
+    check_type_name(project, mod_path, &ref_name(schema_name))?;
+    check_type_name(project, mod_path, &buf_name(schema_name))?;
+    check_type_name(project, mod_path, &mut_name(schema_name))?;
+    check_type_name(project, mod_path, &view_name(schema_name))?;
+    check_type_name(project, mod_path, &view_mut_name(schema_name))?;
+    check_mut_names(typing, &format!("{}.{}", mod_path, schema_name), &fields)?;
+    Ok(vec![
         TypeFile {
             suffix: "",
             code: block.to_code(),
         },
-    );
-    Ok(files)
+        TypeFile {
+            suffix: "_buf",
+            code: gen_buf(
+                schema_name,
+                &type_name,
+                gen_message_buf_accessors(typing, &tagged, &buf_name(schema_name)),
+            ),
+        },
+        TypeFile {
+            suffix: "_mut",
+            code: gen_message_mut(typing, schema_name, &tagged, &type_name),
+        },
+        TypeFile {
+            suffix: "_ref",
+            code: gen_message_ref(typing, schema_name, &tagged, &type_name),
+        },
+        TypeFile {
+            suffix: "_view",
+            code: gen_view(typing, schema_name, &fields, &type_name),
+        },
+        TypeFile {
+            suffix: "_view_mut",
+            code: gen_view_mut(typing, schema_name, &fields, &type_name, true),
+        },
+    ])
 }
 
 /// Generates the impl block with the unknown fields of the message with the `type_name`.
@@ -197,13 +189,8 @@ fn gen_unknown_fields(typing: Typing<'_>, type_name: &str) -> ImplBlock {
 
 /// Generates the declaration of the `message`.
 ///
-/// A message with an encoding keeps its unknown fields, so they survive decoding & encoding.
-fn gen_dec(
-    typing: Typing<'_>,
-    message: &Message,
-    fields: &[Field<'_>],
-    has_encoding: bool,
-) -> RustStruct {
+/// A message keeps its unknown fields, so they survive decoding & encoding.
+fn gen_dec(typing: Typing<'_>, message: &Message, fields: &[Field<'_>]) -> RustStruct {
     let mut result: RustStruct = RustStruct::from(ident(&message.type_name()));
     let lines: Vec<PpsLine> = message
         .fields()
@@ -227,9 +214,6 @@ fn gen_dec(
         &lines,
     );
     add_derives(&mut result, false, true, true);
-    if !has_encoding {
-        add_serde_derives(&mut result);
-    }
     if !is_upper_camel_case(&message.type_name()) {
         result.add_attribute("allow(non_camel_case_types)");
     }
@@ -238,17 +222,10 @@ fn gen_dec(
     }
     result.set_access(Access::Public);
     for field in fields {
-        result.add_field(if has_encoding {
-            field.gen_plain_dec(typing)
-        } else {
-            field.gen_dec(typing)
-        });
+        result.add_field(field.gen_plain_dec(typing));
     }
-    if has_encoding {
-        let unknown_type: String =
-            format!("{}<{}>", typing.prelude(PreludeName::Vec), UNKNOWN_FIELD);
-        result.add_field(StructField::from((UNKNOWN_FIELDS, unknown_type.as_str())));
-    }
+    let unknown_type: String = format!("{}<{}>", typing.prelude(PreludeName::Vec), UNKNOWN_FIELD);
+    result.add_field(StructField::from((UNKNOWN_FIELDS, unknown_type.as_str())));
     result
 }
 

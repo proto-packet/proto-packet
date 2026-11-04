@@ -20,39 +20,44 @@ impl TypeLayout {
     //! Construction
 
     /// Gets the layout of the `tag` of the linked `project`.
-    ///
-    /// Returns `None` if the `tag` has no encoding. (ex: a service)
-    pub fn new(project: &Project, tag: &TypeTag) -> Option<Self> {
+    pub fn new(project: &Project, tag: &TypeTag) -> Self {
         let fixed = |size: usize| Self::Fixed {
             size,
             alignment: size.min(8),
         };
         match tag {
-            TypeTag::Primitive(PrimitiveType::Boolean) => Some(Self::Bit),
-            TypeTag::Primitive(primitive) => Some(fixed(primitive_size(*primitive))),
-            TypeTag::Special(SpecialType::Uuid) => Some(fixed(16)),
-            TypeTag::Special(SpecialType::String) => Some(Self::Variable { alignment: 1 }),
-            TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref())? {
-                TypeDec::Enum(_) => Some(fixed(2)),
-                TypeDec::Message(_) | TypeDec::Variant(_) => Some(Self::Variable { alignment: 1 }),
+            TypeTag::Primitive(PrimitiveType::Boolean) => Self::Bit,
+            TypeTag::Primitive(primitive) => fixed(primitive_size(*primitive)),
+            TypeTag::Special(SpecialType::Uuid) => fixed(16),
+            TypeTag::Special(SpecialType::String) => Self::Variable { alignment: 1 },
+            TypeTag::Named(name) => match linked_type(project, name) {
+                TypeDec::Enum(_) => fixed(2),
+                TypeDec::Message(_) | TypeDec::Variant(_) => Self::Variable { alignment: 1 },
                 TypeDec::Struct(structure) if is_fixed(project, structure) => {
-                    let layout: StructLayout = StructLayout::new(project, structure)?;
-                    Some(Self::Fixed {
+                    let layout: StructLayout = StructLayout::new(project, structure);
+                    Self::Fixed {
                         size: layout.fixed_size,
                         alignment: layout.alignment,
-                    })
+                    }
                 }
-                TypeDec::Struct(structure) => Some(Self::Variable {
-                    alignment: alignment(project, structure)?,
-                }),
-                _ => None,
+                TypeDec::Struct(structure) => Self::Variable {
+                    alignment: alignment(project, structure),
+                },
+                TypeDec::Service(_) => unreachable!("the linker rejects services as types"),
             },
         }
     }
 }
 
-/// Gets the size of the non-`bool` `primitive`.
-const fn primitive_size(primitive: PrimitiveType) -> usize {
+/// Gets the declaration of the type with the `name` in the linked `project`.
+fn linked_type<'a>(project: &'a Project, name: &QualifiedName) -> &'a TypeDec {
+    project
+        .type_dec_with_name(name.to_ref())
+        .expect("a linked type is declared")
+}
+
+/// Gets the size of the `primitive`, in bytes. (a `bool` in a struct is a bit instead)
+pub(crate) const fn primitive_size(primitive: PrimitiveType) -> usize {
     match primitive {
         PrimitiveType::Boolean | PrimitiveType::UnsignedInt8 => 1,
         PrimitiveType::UnsignedInt16 => 2,
@@ -86,9 +91,9 @@ fn is_fixed_tag(project: &Project, tag: &TypeTag, visiting: &mut Vec<QualifiedNa
     match tag {
         TypeTag::Primitive(_) | TypeTag::Special(SpecialType::Uuid) => true,
         TypeTag::Special(SpecialType::String) => false,
-        TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref()) {
-            Some(TypeDec::Enum(_)) => true,
-            Some(TypeDec::Struct(structure)) if !visiting.contains(name) => {
+        TypeTag::Named(name) => match linked_type(project, name) {
+            TypeDec::Enum(_) => true,
+            TypeDec::Struct(structure) if !visiting.contains(name) => {
                 visiting.push(name.clone());
                 let is_fixed: bool = is_fixed_visiting(project, structure, visiting);
                 visiting.pop();
@@ -99,44 +104,10 @@ fn is_fixed_tag(project: &Project, tag: &TypeTag, visiting: &mut Vec<QualifiedNa
     }
 }
 
-/// Checks if the `tag` can be encoded, without revisiting the `visited` types.
-///
-/// A type can't be encoded if it contains a type with no encoding. (ex: a service)
-pub(crate) fn is_encodable(
-    project: &Project,
-    tag: &TypeTag,
-    visited: &mut Vec<QualifiedName>,
-) -> bool {
-    let TypeTag::Named(name) = tag else {
-        return true;
-    };
-    if visited.contains(name) {
-        return true;
-    }
-    visited.push(name.clone());
-    match project.type_dec_with_name(name.to_ref()) {
-        Some(TypeDec::Enum(_)) => true,
-        Some(TypeDec::Struct(structure)) => structure
-            .fields()
-            .iter()
-            .all(|field| is_encodable(project, field.type_tag(), visited)),
-        Some(TypeDec::Message(message)) => message
-            .fields()
-            .iter()
-            .all(|field| is_encodable(project, field.type_tag(), visited)),
-        Some(TypeDec::Variant(variant)) => variant
-            .cases()
-            .iter()
-            .all(|case| is_encodable(project, case.type_tag(), visited)),
-        _ => false,
-    }
-}
-
 /// Gets the alignment of the `structure`: the largest of it & every struct it contains.
 ///
 /// A message or variant has alignment 1, whatever it contains, so its fields & cases can change.
-/// Returns `None` if the `structure` contains a type with no encoding. (ex: a service)
-pub(crate) fn alignment(project: &Project, structure: &Struct) -> Option<usize> {
+pub(crate) fn alignment(project: &Project, structure: &Struct) -> usize {
     let mut structs: Vec<&Struct> = vec![structure];
     let mut visited: Vec<&QualifiedName> = Vec::default();
     let mut result: usize = 1;
@@ -147,25 +118,21 @@ pub(crate) fn alignment(project: &Project, structure: &Struct) -> Option<usize> 
                 result = result.max(4);
             }
             match tag {
-                TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref())? {
+                TypeTag::Named(name) => match linked_type(project, name) {
                     TypeDec::Enum(_) => result = result.max(2),
-                    TypeDec::Message(_) | TypeDec::Variant(_) => {}
-                    TypeDec::Struct(child) => {
-                        if !visited.contains(&name) {
-                            visited.push(name);
-                            structs.push(child);
-                        }
+                    TypeDec::Struct(child) if !visited.contains(&name) => {
+                        visited.push(name);
+                        structs.push(child);
                     }
-                    _ => return None,
+                    _ => {}
                 },
                 _ => {
-                    if let Some(TypeLayout::Fixed { alignment, .. }) = TypeLayout::new(project, tag)
-                    {
+                    if let TypeLayout::Fixed { alignment, .. } = TypeLayout::new(project, tag) {
                         result = result.max(alignment);
                     }
                 }
             }
         }
     }
-    Some(result)
+    result
 }
