@@ -62,20 +62,16 @@ rustdoc reads them as Markdown. (`docs.rs`)
 
 ### Variant `u128` Cases
 
-A variant is `{"var": ..., "val": ...}` in JSON. When `val` comes before `var`, serde buffers it
-until the case is known, & the buffer has no `u128`, so a variant with a `u128` anywhere in its
-cases fails to read. (ex: `{"val":5,"var":"Value"}` fails with `u128 is not supported`) The
-generated code writes `var` first, so only reordered input fails. (ex: sorted keys) serde_json
-reports a buffered number above `u64::MAX` as a float, so the full fix waits for a JSON encoding
-without serde. (`gen_variant.rs`)
+A variant is `{"var": ..., "val": ...}` in JSON. When `val` comes before `var`, the value is buffered
+until the case is known, & serde_json reports a number above `u64::MAX` as a float, so a larger
+`u128` value fails to read. (ex: sorted keys) The generated code writes `var` first, so only
+reordered input fails. The full fix waits for a JSON encoding without serde.
+(`proto-packet/src/types/variant_json.rs`)
 
-### Recursive Types
+### Message Unknown Fields In JSON
 
-A `Ref` type validates its nested values by recursion, so a struct or message that contains itself
-recurses once for each level in its bytes. Nothing limits the depth, so crafted bytes overflow the
-stack & abort the process. (ex: 200,000 levels of `ListNode`, 2.4 MB, overflow an 8 MB stack)
-Decoding & dropping the decoded value recurse the same way. (ex: a depth limit with a `DecodeError`)
-(`gen_struct_ref.rs` & `gen_message_ref.rs`)
+A message's unknown fields survive encoding, but are dropped by JSON, unlike a variant's unknown
+case, which is base-64 text. (`gen_message.rs`)
 
 ## Compile
 
