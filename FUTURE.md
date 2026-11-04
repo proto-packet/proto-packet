@@ -83,8 +83,9 @@ stack) Decoding & dropping the decoded value recurse the same way. (ex: a depth 
 Compiling replaces the target folder with the generated files.
 (`proto-packet-compile/src/compile.rs`)
 
-- Any existing target folder is emptied. Only a target containing the source is refused, so a typo
-  like `compile rust schemas src` instead of `src/generated` silently deletes a handwritten `src/`.
+- Any existing target folder is emptied. Only a target containing the source or a schema file is
+  refused, so a typo like `compile rust schemas src` instead of `src/generated` silently deletes a
+  handwritten `src/`.
   (ex: refuse a non-empty target unless every file starts with the generated header, or use a marker
   file)
 - Replacing the target isn't atomic: the old files are deleted first, then the new ones are written

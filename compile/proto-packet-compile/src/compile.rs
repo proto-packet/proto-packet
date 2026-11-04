@@ -33,11 +33,13 @@ impl Language {
 /// Compiles the project in the `source` folder to `language` code in the `target` folder.
 ///
 /// The code is generated in memory first. Only if that succeeds are the contents of the `target`
-/// folder deleted & the generated files written to it.
+/// folder deleted & the generated files written to it. A `target` folder inside the `source` folder
+/// is fine, as long as it has no schema files.
 pub fn compile(language: Language, source: &Path, target: &Path) -> Result<(), Report> {
     check_target(source, target)?;
     let config: Config = Config::read(source)?;
     let sources: Vec<SchemaSource> = read_schema_sources(source, &config)?;
+    check_schema_files(&sources, target)?;
     let project: Project = validate_project(&sources)?;
     let project: Project = link(&project, &sources)?;
     let files: Vec<GeneratedFile> = match language {
@@ -63,6 +65,28 @@ fn check_target(source: &Path, target: &Path) -> Result<(), Report> {
             "the target folder would delete the source folder",
         ))
         .with_entry(properties));
+    }
+    Ok(())
+}
+
+/// Checks the `target` folder holds none of the schema `sources`, since it is about to be emptied.
+fn check_schema_files(sources: &[SchemaSource], target: &Path) -> Result<(), Report> {
+    let Ok(canonical_target) = std::fs::canonicalize(target) else {
+        return Ok(());
+    };
+    for source in sources {
+        if let Ok(path) = std::fs::canonicalize(&source.path)
+            && path.starts_with(&canonical_target)
+        {
+            let properties: Properties = Properties::default()
+                .with_property("schema", path.display().to_string())
+                .with_property("target", canonical_target.display().to_string());
+            return Err(Report::from(Code::error(
+                "C_TARGET_CONTAINS_SCHEMA",
+                "the target folder would delete a schema file",
+            ))
+            .with_entry(properties));
+        }
     }
     Ok(())
 }
