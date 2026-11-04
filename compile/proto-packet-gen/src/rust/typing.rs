@@ -74,18 +74,22 @@ impl Typing<'_> {
         self.is_copy_struct_visiting(structure, &mut Vec::default())
     }
 
-    /// Checks if the `tag` is a `Copy` type, without revisiting the `visiting` structs.
-    fn is_copy_visiting(self, tag: &TypeTag, visiting: &mut Vec<QualifiedName>) -> bool {
+    /// Checks if the `tag` is a `Copy` type, without rechecking the `visited` structs.
+    ///
+    /// A struct seen again was `Copy`, since the first field that isn't ends the whole check. No
+    /// loop is reached, since a loop has a `box`, which isn't `Copy`.
+    fn is_copy_visiting(self, tag: &TypeTag, visited: &mut Vec<QualifiedName>) -> bool {
         match tag {
             TypeTag::Primitive(_) => true,
             TypeTag::Special(special) => *special == SpecialType::Uuid,
             TypeTag::Named(name) => match self.project.type_dec_with_name(name.to_ref()) {
                 Some(TypeDec::Enum(_)) => true,
-                Some(TypeDec::Struct(structure)) if !visiting.contains(name) => {
-                    visiting.push(name.clone());
-                    let is_copy: bool = self.is_copy_struct_visiting(structure, visiting);
-                    visiting.pop();
-                    is_copy
+                Some(TypeDec::Struct(structure)) => {
+                    if visited.contains(name) {
+                        return true;
+                    }
+                    visited.push(name.clone());
+                    self.is_copy_struct_visiting(structure, visited)
                 }
                 _ => false,
             },
@@ -93,15 +97,11 @@ impl Typing<'_> {
     }
 
     /// Checks if all the fields of the `structure` are `Copy` types.
-    fn is_copy_struct_visiting(
-        self,
-        structure: &Struct,
-        visiting: &mut Vec<QualifiedName>,
-    ) -> bool {
+    fn is_copy_struct_visiting(self, structure: &Struct, visited: &mut Vec<QualifiedName>) -> bool {
         structure
             .fields()
             .iter()
-            .all(|field| !field.is_boxed() && self.is_copy_visiting(field.type_tag(), visiting))
+            .all(|field| !field.is_boxed() && self.is_copy_visiting(field.type_tag(), visited))
     }
 }
 
