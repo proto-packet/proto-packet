@@ -32,10 +32,7 @@ fn from_tag_numbers() {
         EdgeTags::Unrecognized(_)
     ));
     assert_eq!(UnorderedTags::from_tag_number(tag(3)), UnorderedTags::Three);
-    assert!(matches!(
-        EmptyEnum::from_tag_number(tag(1)),
-        EmptyEnum::Unrecognized(_)
-    ));
+    assert_eq!(EmptyEnum::from_tag_number(tag(1)).tag_number(), 1);
 }
 
 #[test]
@@ -100,6 +97,15 @@ fn unrecognized_ordered_by_tag_number() {
             unrecognized(4)
         ]
     );
+
+    let mut cases: Vec<EdgeTags> = vec![
+        EdgeTags::Max,
+        EdgeTags::from_tag_number(tag(2)),
+        EdgeTags::Min,
+    ];
+    cases.sort();
+    let tags: Vec<u16> = cases.iter().map(|case| case.tag_number()).collect();
+    assert_eq!(tags, [1, 2, 8191]);
 }
 
 #[test]
