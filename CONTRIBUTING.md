@@ -4,8 +4,8 @@ This guide outlines how contributions should be made to the codebase.
 
 ## Checks
 
-The `build.sh` script formats, lints & tests the runtime & the compiler, then runs the end-to-end
-tests with `test/build.sh`. It must pass before each commit.
+The `build.sh` script formats & lints the runtime & the compiler, then runs the end-to-end tests
+with `test/build.sh`, which are what tests them. It must pass before each commit.
 
 ## Commits
 

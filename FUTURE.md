@@ -38,8 +38,7 @@ Some schema names generate Rust that doesn't compile, or that hides other items.
 - A field named like a prelude trait method (ex: `clone`, `eq`, `cmp`, `into`, `max`) gets a getter
   that hides the trait method, since inherent methods win. (ex: `a.clone()` returns the field, &
   `a.eq(&b)` stops compiling) A non-`Copy` field named `deref` or `borrow` fails clippy's
-  `should_implement_trait`. Only the constructor & the setters & builders are reserved.
-  (`fields.rs`)
+  `should_implement_trait`. Only the names of generated methods are reserved. (`fields.rs`)
 - The errors for a conflict with a child mod name the Rust folder, not the schema mod path: empty at
   the root, & `self_` instead of `self`. (`generate.rs`)
 
@@ -66,7 +65,7 @@ A variant is `{"var": ..., "val": ...}` in JSON. When `val` comes before `var`, 
 until the case is known, & serde_json reports a number above `u64::MAX` as a float, so a larger
 `u128` value fails to read. (ex: sorted keys) The generated code writes `var` first, so only
 reordered input fails. The full fix waits for a JSON encoding without serde.
-(`proto-packet/src/types/variant_json.rs`)
+(`dep/dep-rust/src/types/variant_json.rs` & `buffered.rs`)
 
 ### Recursive Types
 
