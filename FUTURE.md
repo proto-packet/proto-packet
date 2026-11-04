@@ -68,11 +68,6 @@ until the case is known, & serde_json reports a number above `u64::MAX` as a flo
 reordered input fails. The full fix waits for a JSON encoding without serde.
 (`proto-packet/src/types/variant_json.rs`)
 
-### Message Unknown Fields In JSON
-
-A message's unknown fields survive encoding, but are dropped by JSON, unlike a variant's unknown
-case, which is base-64 text. (`gen_message.rs`)
-
 ### Recursive Types
 
 A `Ref` type validates its nested values by recursion, so a struct, message or variant that contains
