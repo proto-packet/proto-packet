@@ -1,7 +1,7 @@
 # Format
 
-This document specifies the ProtoPacket binary format. Only structs are specified so far, & only
-structs without message or variant fields can be encoded.
+This document specifies the ProtoPacket binary format. Structs & messages are specified so far. A
+type that contains a variant can't be encoded yet.
 
 The format is built to be fast: a field is read in place, from an offset known at compile time.
 
@@ -10,7 +10,8 @@ The format is built to be fast: a field is read in place, from an offset known a
 - Everything is little-endian.
 - A value never stores its own extent. Its extent comes from its container, & the extent of the
   root value is its buffer.
-- Alignment is relative to the start of the root value, & is at most 8.
+- Alignment is relative to the start of the root value, & is at most 8. Nothing inside a message
+  is aligned.
 - Readers never depend on alignment. They read values at any address.
 - Writers zero all padding & unused bits, & readers ignore them.
 - Slack is unused bytes at the end of an extent. It is legal, writers zero it, & readers ignore it.
@@ -27,6 +28,7 @@ The format is built to be fast: a field is read in place, from an offset known a
 | fixed struct    | its size | its own   | Its fixed block. (see [Structs](#structs))               |
 | `string`        | variable | 1         | The UTF-8 bytes, without a terminator.                   |
 | variable struct | variable | its own   | Its fixed block & tail. (see [Structs](#structs))        |
+| message         | variable | 1         | Its index & values. (see [Messages](#messages))          |
 
 A `box` doesn't affect the encoding, so a boxed field is encoded like the type it boxes.
 
@@ -69,10 +71,11 @@ is padded to the alignment of its first tail entry.
 
 ### Tail
 
-The tail holds the variable-size fields as entries: the variable structs by descending alignment,
-followed by the strings. The fields of an alignment are in declaration order, & so are the strings.
+The tail holds the variable-size fields as entries: the variable structs & messages by descending
+alignment, followed by the strings. The fields of an alignment are in declaration order, & so are
+the strings.
 
-A growing string therefore never moves a variable struct.
+A growing string therefore never moves a variable struct or a message.
 
 The end table has a `u32` end offset for each entry, in tail order, from the start of the tail. The
 `i`th entry is `tail[end[i-1]..end[i]]`, where `end[-1]` is 0. A tail is at most `u32::MAX` bytes.
@@ -188,4 +191,66 @@ offset  4: end = 2
 offset  8: e = 0
 offset 10: bits = 0b0001_0101
 offset 11: tail: "hi"
+```
+
+## Messages
+
+A message can change: fields can be added & removed, but a field's tag number & type never change.
+Only the present fields are encoded, so an absent field has no cost.
+
+```text
+[count: u16][tags: u16 x count][ends: u32 x count][values]
+```
+
+- The tags are strictly increasing, so a reader finds a field by binary search.
+- The `i`th value is `values[end[i-1]..end[i]]`, where `end[-1]` is 0. `values` is at most `u32::MAX`
+  bytes.
+- Nothing is padded or aligned. A message has alignment 1, so adding a field never changes the
+  layout of a struct that contains it.
+
+### Fields
+
+A field is encoded like its type, without a bit group: a `bool` is a byte, 1 for true & 0 for false.
+Readers treat any non-zero byte as true. A field's extent can be longer than its value, & readers
+ignore the rest.
+
+An extent never depends on the field's type, so a reader can skip a field it doesn't know. Unknown
+fields are kept when a message is decoded & written back when it's encoded.
+
+### Validation
+
+Readers reject a message when:
+
+- Its extent is shorter than its index.
+- Its tags aren't strictly increasing, or one isn't a valid tag number.
+- Its end table decreases, or its last end offset is past the end of its values.
+- A known field is shorter than its type, or isn't valid for its type.
+
+Unknown fields aren't validated.
+
+### Examples
+
+```text
+message Item { text: string = 1; id: u32 = 5; }
+
+[count][tags: 1, 5][ends: 2, 6]["hi"][id: u32]
+
+Item("hi", 7) is 20 bytes, alignment 1
+
+offset  0: count = 2
+offset  2: tags = 1, 5
+offset  6: ends = 2, 6
+offset 14: "hi"
+offset 16: id = 7
+```
+
+```text
+message Item { text: string = 1; id: u32 = 5; }
+
+Item(None, 7) is 12 bytes. The text isn't listed.
+
+offset 0: count = 1
+offset 2: tags = 5
+offset 4: ends = 4
+offset 8: id = 7
 ```
