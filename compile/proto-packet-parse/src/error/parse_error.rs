@@ -39,12 +39,23 @@ impl ParseError {
 
     /// Creates the command-line report for the error in the `source` of the `file_name` file.
     pub fn report(self, file_name: &str, source: &str) -> Report {
-        let message: &'static str = self.reason.message();
-        let range: Range<usize> = self.span.offset() as usize..self.span.end() as usize;
-        let info: TokenInfo =
-            TokenInfo::from_source(Severity::Error, file_name, source, range, message);
-        Report::from(Code::error(self.reason.code(), message)).with_entry(info)
+        span_report(
+            self.reason.code(),
+            self.reason.message(),
+            self.span,
+            file_name,
+            source,
+        )
     }
+}
+
+/// Creates the command-line report for the error at the `span` of the `source` of the `file_name`
+/// file.
+pub fn span_report(code: &str, message: &str, span: Span, file_name: &str, source: &str) -> Report {
+    let range: Range<usize> = span.offset() as usize..span.end() as usize;
+    let info: TokenInfo =
+        TokenInfo::from_source(Severity::Error, file_name, source, range, message);
+    Report::from(Code::error(code, message)).with_entry(info)
 }
 
 impl Display for ParseError {

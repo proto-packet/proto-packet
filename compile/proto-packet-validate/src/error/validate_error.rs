@@ -1,8 +1,8 @@
 use crate::ValidateErrorReason;
-use clerr::{Code, Report, Severity, TokenInfo};
+use clerr::Report;
 use lex::lexer::Span;
+use proto_packet_parse::span_report;
 use std::fmt::{Display, Formatter};
-use std::ops::Range;
 
 /// A validation error.
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
@@ -40,10 +40,7 @@ impl ValidateError {
     /// Creates the command-line report for the error in the `source` of the `file_name` file.
     pub fn report(&self, file_name: &str, source: &str) -> Report {
         let message: String = self.reason.to_string();
-        let range: Range<usize> = self.span.offset() as usize..self.span.end() as usize;
-        let info: TokenInfo =
-            TokenInfo::from_source(Severity::Error, file_name, source, range, &message);
-        Report::from(Code::error(self.reason.code(), message.as_str())).with_entry(info)
+        span_report(self.reason.code(), &message, self.span, file_name, source)
     }
 }
 

@@ -1,8 +1,8 @@
 use crate::SchemaSource;
-use clerr::{Code, Report, Severity, TokenInfo};
+use clerr::{Code, Report};
 use lex::lexer::Span;
 use proto_packet_link::{LinkError, Location, Member};
-use proto_packet_parse::{SchemaFileTree, TypeDecTree, TypeTagTree, join_idents};
+use proto_packet_parse::{SchemaFileTree, TypeDecTree, TypeTagTree, join_idents, span_report};
 use proto_packet_tree::{ModPathRef, Project, QualifiedName};
 
 /// Links the `project` of the schema `sources`.
@@ -15,7 +15,7 @@ pub fn link(project: &Project, sources: &[SchemaSource]) -> Result<Project, Repo
 /// Creates the report for the link `error`, located by reparsing its schema file in the `sources`.
 fn link_report(error: &LinkError, sources: &[SchemaSource]) -> Report {
     let message: String = error.to_string();
-    let code: Code = Code::error(code(error), message.as_str());
+    let unlocated: Code = Code::error(code(error), message.as_str());
     let (mod_path, locate): (ModPathRef<'_>, Locate) = match error {
         LinkError::UnresolvedType { location, name }
         | LinkError::ServiceAsType { location, name } => {
@@ -24,7 +24,7 @@ fn link_report(error: &LinkError, sources: &[SchemaSource]) -> Report {
         LinkError::UnboxedLoop { location, names }
         | LinkError::RequiredLoop { location, names } => {
             let Some(name) = names.last() else {
-                return Report::from(code);
+                return Report::from(unlocated);
             };
             (location.mod_path.to_ref(), Locate::TypeTag(location, name))
         }
@@ -34,25 +34,20 @@ fn link_report(error: &LinkError, sources: &[SchemaSource]) -> Report {
         }
     };
     let Some(source) = sources.iter().find(|source| source.mod_path == mod_path) else {
-        return Report::from(code);
+        return Report::from(unlocated);
     };
     let Ok(tree) = proto_packet_parse::parse(&source.source) else {
-        return Report::from(code);
+        return Report::from(unlocated);
     };
     match locate.span(&tree, &source.source) {
-        Some(span) => {
-            let file_name: String = source.path.display().to_string();
-            let range = span.offset() as usize..span.end() as usize;
-            let info: TokenInfo = TokenInfo::from_source(
-                Severity::Error,
-                &file_name,
-                &source.source,
-                range,
-                &message,
-            );
-            Report::from(code).with_entry(info)
-        }
-        None => Report::from(code),
+        Some(span) => span_report(
+            code(error),
+            &message,
+            span,
+            &source.path.display().to_string(),
+            &source.source,
+        ),
+        None => Report::from(unlocated),
     }
 }
 
