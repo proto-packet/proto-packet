@@ -47,9 +47,15 @@ impl SchemaLinker<'_> {
         Ok(linked)
     }
 
-    /// Links the `import` by checking it is declared in the project.
+    /// Links the `import` by checking it is a data type declared in the project.
+    ///
+    /// A service can't be imported, since it can't be used as a type.
     pub fn link_import(self, import: &Import) -> Result<Import, LinkError> {
         match self.project.type_dec_with_name(import.name().to_ref()) {
+            Some(TypeDec::Service(_)) => Err(LinkError::ImportedService {
+                mod_path: self.mod_path.into_owned(),
+                name: import.name().clone(),
+            }),
             Some(_) => Ok(import.clone()),
             None => Err(LinkError::UnresolvedImport {
                 mod_path: self.mod_path.into_owned(),

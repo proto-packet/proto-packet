@@ -23,6 +23,12 @@ pub enum LinkError {
         name: QualifiedName,
     },
 
+    /// An import of a service, which can't be used as a type.
+    ImportedService {
+        mod_path: ModPath,
+        name: QualifiedName,
+    },
+
     /// A loop of types without a `box`, closed at the location. (ex: `[a.A, a.B, a.A]`)
     UnboxedLoop {
         location: Location,
@@ -52,6 +58,9 @@ impl Display for LinkError {
             }
             Self::UnresolvedImport { mod_path, name } => {
                 write!(f, "unresolved import `{}` in `{}`", name, mod_path)
+            }
+            Self::ImportedService { mod_path, name } => {
+                write!(f, "the service `{}` is imported in `{}`", name, mod_path)
             }
             Self::UnboxedLoop { location, names } => {
                 let names: Vec<String> = names.iter().map(|name| format!("`{}`", name)).collect();

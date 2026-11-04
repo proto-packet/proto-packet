@@ -28,7 +28,8 @@ fn link_report(error: &LinkError, sources: &[SchemaSource]) -> Report {
             };
             (location.mod_path.to_ref(), Locate::TypeTag(location, name))
         }
-        LinkError::UnresolvedImport { mod_path, name } => {
+        LinkError::UnresolvedImport { mod_path, name }
+        | LinkError::ImportedService { mod_path, name } => {
             (mod_path.to_ref(), Locate::Import(name.value()))
         }
     };
@@ -61,6 +62,7 @@ fn code(error: &LinkError) -> &'static str {
         LinkError::UnresolvedType { .. } => "L_UNRESOLVED_TYPE",
         LinkError::ServiceAsType { .. } => "L_SERVICE_AS_TYPE",
         LinkError::UnresolvedImport { .. } => "L_UNRESOLVED_IMPORT",
+        LinkError::ImportedService { .. } => "L_IMPORTED_SERVICE",
         LinkError::UnboxedLoop { .. } => "L_UNBOXED_LOOP",
         LinkError::RequiredLoop { .. } => "L_REQUIRED_LOOP",
     }
