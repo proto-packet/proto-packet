@@ -2,7 +2,7 @@ use crate::layout::{
     BitLayout, EntryLayout, FieldLayout, LayoutCache, TypeLayout, UnitLayout, ValueLayout,
 };
 use proto_packet::io::align_up;
-use proto_packet_tree::{Project, SpecialType, Struct, StructField, TypeTag, WithTypeTag};
+use proto_packet_tree::{Project, Struct, StructField, WithTypeTag};
 use std::cmp::Reverse;
 
 /// The layout of a struct's encoding. (see `FORMAT.md`)
@@ -143,7 +143,9 @@ fn entries(fields: &[StructField], types: &[TypeLayout]) -> Vec<EntryLayout> {
         .zip(types)
         .enumerate()
         .filter_map(|(index, (field, layout))| match layout {
-            TypeLayout::Variable { alignment } => Some((index, *alignment, is_string(field))),
+            TypeLayout::Variable { alignment } => {
+                Some((index, *alignment, field.type_tag().is_string()))
+            }
             _ => None,
         })
         .collect();
@@ -155,9 +157,4 @@ fn entries(fields: &[StructField], types: &[TypeLayout]) -> Vec<EntryLayout> {
             padded_alignment: variable.get(index + 1).map_or(1, |next| next.1),
         })
         .collect()
-}
-
-/// Checks if the `field` is a string.
-fn is_string(field: &StructField) -> bool {
-    *field.type_tag() == TypeTag::Special(SpecialType::String)
 }

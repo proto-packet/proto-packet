@@ -287,7 +287,7 @@ fn gen_decoding(
 
 /// Generates the expression of the owned `value` of the `case`.
 fn gen_decoded_value(typing: Typing<'_>, case: Case<'_>) -> String {
-    let value: &str = if case.is_string() {
+    let value: &str = if case.tag.is_string() {
         "value.to_string()"
     } else if case.is_nested(typing) {
         "value.decode()"

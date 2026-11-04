@@ -11,7 +11,6 @@ use code_gen::rust::{
     WithTraitFunctions,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::{SpecialType, TypeTag};
 
 /// A form of a struct that can be edited.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -163,15 +162,10 @@ where
     result
 }
 
-/// Checks if the `field` is a string.
-fn is_string(field: Field<'_>) -> bool {
-    *field.tag == TypeTag::Special(SpecialType::String)
-}
-
 /// Generates the signature of the method of the `field`.
 fn gen_signature(typing: Typing<'_>, field: Field<'_>, all_fallible: bool) -> Signature {
     if !is_struct(typing, field) {
-        return gen_setter_signature(field, all_fallible || is_string(field));
+        return gen_setter_signature(field, all_fallible || field.tag.is_string());
     }
     let child: String = format!("impl {}", generated_path(field.tag, "ViewMut"));
     let result: String = if field.is_optional {
@@ -197,7 +191,7 @@ fn gen_body(typing: Typing<'_>, field: Field<'_>, form: Form, all_fallible: bool
         return vec![format!("{}.{}()", receiver, field.accessor_name())];
     }
     let setter: String = field.setter_name();
-    let is_string: bool = is_string(field);
+    let is_string: bool = field.tag.is_string();
     match form {
         Form::Reference => vec![format!("(**self).{}(value)", setter)],
         Form::Mut => vec![format!("self.{}(value)", setter)],

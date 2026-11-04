@@ -14,6 +14,15 @@ pub enum TypeTag {
     Named(QualifiedName),
 }
 
+impl TypeTag {
+    //! Kinds
+
+    /// Checks if the type is a string.
+    pub fn is_string(&self) -> bool {
+        matches!(self, Self::Special(SpecialType::String))
+    }
+}
+
 impl From<PrimitiveType> for TypeTag {
     fn from(primitive: PrimitiveType) -> Self {
         Self::Primitive(primitive)

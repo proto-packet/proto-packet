@@ -11,7 +11,7 @@ use code_gen::rust::{
     WithComments, WithFunctions, WithReceiver, WithResult,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::{PrimitiveType, SpecialType, TypeTag};
+use proto_packet_tree::{PrimitiveType, TypeTag};
 
 /// Generates the `Mut` type of the message with the `schema_name` & the Rust `type_name`.
 ///
@@ -126,7 +126,7 @@ fn gen_setter(typing: Typing<'_>, tagged: TaggedField<'_>) -> Function {
             IO, tagged.tag, value
         )
     };
-    if *field.tag == TypeTag::Special(SpecialType::String) {
+    if field.tag.is_string() {
         return function.with_literal(replace("value.map(str::as_bytes)"));
     }
     let size: usize = tagged.size.expect("a scalar has a size");

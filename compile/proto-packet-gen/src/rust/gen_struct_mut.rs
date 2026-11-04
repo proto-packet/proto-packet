@@ -175,7 +175,7 @@ fn gen_fields(
     for (field, field_layout) in fields.iter().zip(&layout.fields) {
         let mut function: Function = if is_struct(typing, *field) {
             gen_child(*field, *field_layout, layout, "self.bytes", "self.bytes")
-        } else if *field.tag == TypeTag::Special(SpecialType::String) {
+        } else if field.tag.is_string() {
             gen_string_setter(*field, *field_layout, layout)
         } else {
             gen_setter(typing, *field, *field_layout)
@@ -249,7 +249,7 @@ pub(crate) fn setter_type(field: Field<'_>) -> String {
 /// A fallible setter returns a `Result`. An optional string has a named lifetime, since
 /// `impl Trait` can't elide it.
 pub(crate) fn gen_setter_signature(field: Field<'_>, is_fallible: bool) -> Signature {
-    let is_string: bool = *field.tag == TypeTag::Special(SpecialType::String);
+    let is_string: bool = field.tag.is_string();
     let (name, param): (String, String) = if field.is_optional && is_string {
         (
             format!("{}<'v>", field.setter_name()),

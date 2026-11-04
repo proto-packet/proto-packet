@@ -8,7 +8,7 @@ use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, Signature, Var, WithAccess, WithAttributes,
     WithComments, WithFunctions, WithReceiver, WithResult, WithVarParams,
 };
-use proto_packet_tree::{PrimitiveType, SpecialType, TypeTag};
+use proto_packet_tree::{PrimitiveType, TypeTag};
 
 /// A message field with its tag number.
 #[derive(Copy, Clone, Debug)]
@@ -57,7 +57,7 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
                 name, size
             ),
             None => {
-                let len: &str = if is_string(tagged.field) {
+                let len: &str = if tagged.field.tag.is_string() {
                     "len"
                 } else {
                     "encoded_len"
@@ -146,9 +146,4 @@ pub(crate) fn gen_value_write(typing: Typing<'_>, tag: &TypeTag, out: &str) -> S
         ),
         TypeTag::Named(_) => format!("value.encode_to({});", out),
     }
-}
-
-/// Checks if the `field` is a string.
-fn is_string(field: Field<'_>) -> bool {
-    *field.tag == TypeTag::Special(SpecialType::String)
 }

@@ -24,7 +24,7 @@ use code_gen::rust::{
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet::io::WithTagNumber;
 use proto_packet_tree::{
-    CaseNameRef, ModPathRef, Project, SpecialType, TypeTag, Variant, VariantCase, WithCaseName,
+    CaseNameRef, ModPathRef, Project, TypeTag, Variant, VariantCase, WithCaseName,
     WithComments as _, WithTypeName, WithTypeTag,
 };
 use std::collections::BTreeSet;
@@ -80,11 +80,6 @@ impl Case<'_> {
     /// Checks if the case's value is a nested struct, message or variant.
     pub(crate) fn is_nested(self, typing: Typing<'_>) -> bool {
         matches!(self.tag, TypeTag::Named(_)) && !typing.is_enum(self.tag)
-    }
-
-    /// Checks if the case's value is a string.
-    pub(crate) fn is_string(self) -> bool {
-        *self.tag == TypeTag::Special(SpecialType::String)
     }
 }
 
@@ -333,7 +328,7 @@ fn gen_cases(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> ImplBlo
 /// Generates the getter of the `case`. (boxes are hidden)
 fn gen_getter(typing: Typing<'_>, case: Case<'_>) -> Function {
     let value_type: RustType = typing.rust_type(case.tag);
-    let (result, value): (String, String) = if case.is_string() {
+    let (result, value): (String, String) = if case.tag.is_string() {
         ("&str".to_string(), "value.as_str()".to_string())
     } else if case.is_nested(typing) {
         let value: &str = if case.is_boxed { "&**value" } else { "value" };
@@ -408,7 +403,7 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
     for case in cases {
         arms.push(match case.size {
             Some(size) => format!("Self::{}(_) => {},", case.ident(), 2 + size),
-            None if case.is_string() => {
+            None if case.tag.is_string() => {
                 format!("Self::{}(value) => 2 + value.len(),", case.ident())
             }
             None => format!("Self::{}(value) => 2 + value.encoded_len(),", case.ident()),

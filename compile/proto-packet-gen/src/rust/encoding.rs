@@ -43,7 +43,7 @@ fn gen_encoded_len(fields: &[Field<'_>], layout: &StructLayout) -> Function {
     for entry in &layout.entries {
         let field: Field<'_> = fields[entry.field];
         function.add_literal(gen_entry(field, |value: &str| {
-            if is_string(field) {
+            if field.tag.is_string() {
                 format!("tail += {}.len();", value)
             } else {
                 format!("tail += {}.encoded_len();", value)
@@ -94,7 +94,7 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout
         for (index, entry) in layout.entries.iter().enumerate() {
             let field: Field<'_> = fields[entry.field];
             statements.push(gen_entry(field, |value: &str| {
-                if is_string(field) {
+                if field.tag.is_string() {
                     format!("out.extend_from_slice({}.as_bytes());", value)
                 } else {
                     format!("{}.encode_to(out);", value)
@@ -204,11 +204,6 @@ where
     } else {
         statement(&name)
     }
-}
-
-/// Checks if the `field` is a string.
-fn is_string(field: Field<'_>) -> bool {
-    *field.tag == TypeTag::Special(SpecialType::String)
 }
 
 /// Generates the statement appending the byte of the bit group at the `offset`.

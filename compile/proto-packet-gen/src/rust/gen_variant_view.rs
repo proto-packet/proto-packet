@@ -279,7 +279,7 @@ fn gen_body(typing: Typing<'_>, case: Case<'_>, form: Form, type_name: &str) -> 
         Form::Mut => vec![format!("self.{}(value)", setter)],
         Form::Buf => vec![format!("self.as_mut().{}(value)", setter)],
         Form::Native => {
-            let value: &str = if case.is_string() {
+            let value: &str = if case.tag.is_string() {
                 "value.to_string()"
             } else {
                 "value"
