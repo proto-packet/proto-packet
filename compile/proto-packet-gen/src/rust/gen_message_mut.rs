@@ -1,11 +1,12 @@
 use crate::rust::encoding::IO;
 use crate::rust::gen_struct_mut::{
     gen_mut_construction, gen_mut_dec, gen_mut_properties, gen_setter_signature, is_struct,
-    mut_name, setter_type,
+    mut_name,
 };
 use crate::rust::gen_struct_ref::{generated_path, ref_name};
 use crate::rust::message_encoding::TaggedField;
 use crate::rust::typing::Typing;
+use crate::rust::values::setter_value_type;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, WithAccess, WithAttributes,
     WithComments, WithFunctions, WithReceiver, WithResult,
@@ -118,7 +119,7 @@ fn gen_setter(typing: Typing<'_>, tagged: TaggedField<'_>) -> Function {
         .with_access(Access::Public)
         .with_semi(format!(
             "let value: Option<{}> = value.into()",
-            setter_type(field)
+            setter_value_type(field.tag)
         ));
     let replace = |value: &str| -> String {
         format!(

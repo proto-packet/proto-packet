@@ -3,8 +3,9 @@ use crate::layout::{FieldLayout, StructLayout, ValueLayout};
 use crate::rust::encoding::IO;
 use crate::rust::fields::Field;
 use crate::rust::gen_struct_ref::{generated_path, read_bit, read_entry, ref_name};
-use crate::rust::naming::{is_upper_camel_case, type_path};
+use crate::rust::naming::is_upper_camel_case;
 use crate::rust::typing::Typing;
+use crate::rust::values::setter_value_type;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, Struct as RustStruct, StructField,
     Var, WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithGenerics,
@@ -234,16 +235,6 @@ pub(crate) fn gen_child(
         .with_literal(value)
 }
 
-/// Gets the type of a value of the scalar or string `field`.
-pub(crate) fn setter_type(field: Field<'_>) -> String {
-    match field.tag {
-        TypeTag::Primitive(primitive) => primitive.name().to_string(),
-        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
-        TypeTag::Special(SpecialType::String) => "&str".to_string(),
-        TypeTag::Named(name) => type_path(name.to_ref()),
-    }
-}
-
 /// Generates the signature of the setter of the scalar or string `field`.
 ///
 /// A fallible setter returns a `Result`. An optional string has a named lifetime, since
@@ -258,10 +249,10 @@ pub(crate) fn gen_setter_signature(field: Field<'_>, is_fallible: bool) -> Signa
     } else if field.is_optional {
         (
             field.setter_name(),
-            format!("impl Into<Option<{}>>", setter_type(field)),
+            format!("impl Into<Option<{}>>", setter_value_type(field.tag)),
         )
     } else {
-        (field.setter_name(), setter_type(field))
+        (field.setter_name(), setter_value_type(field.tag))
     };
     let signature: Signature = Signature::from(name)
         .with_receiver(Receiver::BorrowedMut)
@@ -322,7 +313,7 @@ fn gen_setter(typing: Typing<'_>, field: Field<'_>, field_layout: FieldLayout) -
     if field.is_optional {
         function.add_semi(format!(
             "let value: Option<{}> = value.into()",
-            setter_type(field)
+            setter_value_type(field.tag)
         ));
     }
     function.add_literal(gen_write(typing, field, field_layout));

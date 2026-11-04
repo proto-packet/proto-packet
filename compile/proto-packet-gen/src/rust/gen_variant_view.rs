@@ -5,15 +5,15 @@ use crate::rust::gen_variant::Case;
 use crate::rust::gen_variant_mut::gen_setter_signature;
 use crate::rust::gen_view::view_name;
 use crate::rust::gen_view_mut::view_mut_name;
-use crate::rust::naming::{is_upper_camel_case, type_path};
+use crate::rust::naming::is_upper_camel_case;
 use crate::rust::typing::Typing;
+use crate::rust::values::view_value_type;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, SignatureDec, Trait, WithAccess,
     WithAttributes, WithComments, WithFunctions, WithGenerics, WithReceiver, WithResult,
     WithTraitFunctions,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::{SpecialType, TypeTag};
 
 /// Generates the `View` trait of the variant with the `schema_name` & the Rust `type_name`.
 ///
@@ -124,13 +124,7 @@ fn tag_number_signature() -> Signature {
 
 /// Generates the signature of the getter of the `case`.
 fn gen_getter_signature(typing: Typing<'_>, case: Case<'_>) -> Signature {
-    let value_type: String = match case.tag {
-        TypeTag::Primitive(primitive) => primitive.name().to_string(),
-        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
-        TypeTag::Special(SpecialType::String) => "&str".to_string(),
-        TypeTag::Named(name) if typing.is_enum(case.tag) => type_path(name.to_ref()),
-        TypeTag::Named(_) => format!("impl {}", generated_path(case.tag, "View")),
-    };
+    let value_type: String = view_value_type(typing, case.tag);
     Signature::from(case.getter_name())
         .with_receiver(Receiver::Borrowed)
         .with_result(format!("Option<{}>", value_type))

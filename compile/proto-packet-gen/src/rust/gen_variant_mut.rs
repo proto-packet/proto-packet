@@ -5,8 +5,8 @@ use crate::rust::gen_struct_mut::{
 };
 use crate::rust::gen_struct_ref::{generated_path, ref_name};
 use crate::rust::gen_variant::Case;
-use crate::rust::naming::type_path;
 use crate::rust::typing::Typing;
+use crate::rust::values::setter_value_type;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, Var, WithAccess, WithAttributes,
     WithComments, WithFunctions, WithReceiver, WithResult, WithVarParams,
@@ -91,21 +91,11 @@ pub(crate) fn gen_variant_buf_accessors(
     Some(result)
 }
 
-/// Gets the type of a value of the scalar or string `case`.
-fn value_type(case: Case<'_>) -> String {
-    match case.tag {
-        TypeTag::Primitive(primitive) => primitive.name().to_string(),
-        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
-        TypeTag::Special(SpecialType::String) => "&str".to_string(),
-        TypeTag::Named(name) => type_path(name.to_ref()),
-    }
-}
-
 /// Generates the signature of the setter of the scalar or string `case`.
 pub(crate) fn gen_setter_signature(case: Case<'_>) -> Signature {
     Signature::from(case.setter_name())
         .with_receiver(Receiver::BorrowedMut)
-        .with_param(Var::from(("value", value_type(case).as_str())))
+        .with_param(Var::from(("value", setter_value_type(case.tag).as_str())))
         .with_result(format!("Result<(), {}::CapacityError>", IO))
 }
 

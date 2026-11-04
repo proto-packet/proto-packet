@@ -1,10 +1,11 @@
 use crate::rust::encoding::IO;
 use crate::rust::gen_buf::buf_name;
-use crate::rust::gen_message_ref::{gen_read, gen_value_check, value_type};
+use crate::rust::gen_message_ref::{gen_read, gen_value_check};
 use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, ref_name};
 use crate::rust::gen_variant::Case;
 use crate::rust::naming::is_upper_camel_case;
 use crate::rust::typing::Typing;
+use crate::rust::values::ref_value_type;
 use code_gen::rust::{
     Access, Enum as RustEnum, EnumCase, EnumFields, Function, ImplBlock, Receiver, RustType,
     Signature, Var, WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions,
@@ -52,7 +53,7 @@ pub(crate) fn gen_variant_case(
             ])),
     );
     for case in cases {
-        let fields: EnumFields = EnumFields::Unnamed(vec![value_type(typing, case.tag).into()]);
+        let fields: EnumFields = EnumFields::Unnamed(vec![ref_value_type(typing, case.tag).into()]);
         result.add_case(
             EnumCase::from(case.ident())
                 .with_comment(format!(" The case: `{}`.", case.name))
@@ -213,7 +214,7 @@ fn gen_cases(
     for case in cases {
         let signature: Signature = Signature::from(case.getter_name())
             .with_receiver(Receiver::Borrowed)
-            .with_result(format!("Option<{}>", value_type(typing, case.tag)));
+            .with_result(format!("Option<{}>", ref_value_type(typing, case.tag)));
         result.add_function(
             Function::from(signature)
                 .with_comment(format!(" Gets the value of the case: `{}`.", case.name))

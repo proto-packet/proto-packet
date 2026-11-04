@@ -4,6 +4,7 @@ use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, generated_pat
 use crate::rust::message_encoding::TaggedField;
 use crate::rust::naming::{ident, type_path};
 use crate::rust::typing::Typing;
+use crate::rust::values::ref_value_type;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, Var, WithAccess, WithAttributes,
     WithComments, WithFunctions, WithGenerics, WithReceiver, WithResult, WithUnsafeFlag,
@@ -121,7 +122,7 @@ fn gen_getter(typing: Typing<'_>, tagged: TaggedField<'_>) -> Function {
     let field = tagged.field;
     let signature: Signature = Signature::from(ident(&field.name))
         .with_receiver(Receiver::Borrowed)
-        .with_result(format!("Option<{}>", value_type(typing, field.tag)));
+        .with_result(format!("Option<{}>", ref_value_type(typing, field.tag)));
     let mut function: Function = Function::from(signature)
         .with_comment(format!(" Gets the field: `{}`.", field.name))
         .with_attribute("must_use")
@@ -135,17 +136,6 @@ fn gen_getter(typing: Typing<'_>, tagged: TaggedField<'_>) -> Function {
         function.add_attribute("allow(non_snake_case)");
     }
     function
-}
-
-/// Gets the type of a value of the `tag`, read from a `Ref` type.
-pub(crate) fn value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
-    match tag {
-        TypeTag::Primitive(primitive) => primitive.name().to_string(),
-        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
-        TypeTag::Special(SpecialType::String) => "&'a str".to_string(),
-        TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
-        TypeTag::Named(_) => format!("{}<'a>", generated_path(tag, "Ref")),
-    }
 }
 
 /// Generates the expression reading the `value` bytes of a field of the `tag`.

@@ -1,16 +1,16 @@
 use crate::rust::fields::Field;
 use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_struct_mut::mut_name;
-use crate::rust::gen_struct_ref::{generated_path, ref_name};
-use crate::rust::naming::{ident, is_upper_camel_case, type_path};
+use crate::rust::gen_struct_ref::ref_name;
+use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::typing::Typing;
+use crate::rust::values::view_value_type;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, SignatureDec, Trait, WithAccess,
     WithAttributes, WithComments, WithFunctions, WithGenerics, WithReceiver, WithResult,
     WithTraitFunctions,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::{SpecialType, TypeTag};
 
 /// Gets the name of the `View` trait of the struct with the schema `type_name`.
 ///
@@ -134,13 +134,7 @@ where
 
 /// Generates the signature of the getter of the `field`.
 fn gen_signature(typing: Typing<'_>, field: Field<'_>) -> Signature {
-    let value_type: String = match field.tag {
-        TypeTag::Primitive(primitive) => primitive.name().to_string(),
-        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
-        TypeTag::Special(SpecialType::String) => "&str".to_string(),
-        TypeTag::Named(name) if typing.is_enum(field.tag) => type_path(name.to_ref()),
-        TypeTag::Named(_) => format!("impl {}", generated_path(field.tag, "View")),
-    };
+    let value_type: String = view_value_type(typing, field.tag);
     let result: String = if field.is_optional {
         format!("Option<{}>", value_type)
     } else {

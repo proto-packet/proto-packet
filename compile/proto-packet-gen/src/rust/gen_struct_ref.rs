@@ -4,6 +4,7 @@ use crate::rust::fields::Field;
 use crate::rust::gen_buf::buf_name;
 use crate::rust::naming::{ident, is_upper_camel_case, type_path};
 use crate::rust::typing::Typing;
+use crate::rust::values::ref_value_type;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, Struct as RustStruct, StructField,
     Var, WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithGenerics,
@@ -17,13 +18,6 @@ use proto_packet_tree::{SpecialType, Struct, TypeTag, WithTypeName};
 /// (ex: `FooRef` for `Foo`, & `SelfRef` for `Self`, whose own name is `Self_`)
 pub(crate) fn ref_name(type_name: &str) -> String {
     format!("{}Ref", type_name)
-}
-
-/// Gets the path of the `Ref` type of the struct of the named `tag`.
-///
-/// (ex: `crate::a::FooRef` for `a.Foo`)
-fn ref_path(tag: &TypeTag) -> String {
-    generated_path(tag, "Ref")
 }
 
 /// Gets the path of the generated type with the `suffix`, of the struct of the named `tag`.
@@ -170,7 +164,7 @@ fn gen_check(
         }
         (ValueLayout::Fixed { offset, size }, TypeTag::Named(_)) => format!(
             "{}::new(unsafe {{ {} }})?;",
-            ref_path(field.tag),
+            generated_path(field.tag, "Ref"),
             read_fixed(offset, size, "bytes")
         ),
         (ValueLayout::Entry { index }, TypeTag::Special(SpecialType::String)) => format!(
@@ -180,7 +174,7 @@ fn gen_check(
         ),
         (ValueLayout::Entry { index }, _) => format!(
             "{}::new(unsafe {{ {} }})?;",
-            ref_path(field.tag),
+            generated_path(field.tag, "Ref"),
             read_entry("read_entry_unchecked", layout, index, "bytes")
         ),
         _ => return None,
@@ -231,7 +225,7 @@ fn gen_getter(
     field_layout: FieldLayout,
     layout: &StructLayout,
 ) -> Function {
-    let value_type: String = value_type(typing, field.tag);
+    let value_type: String = ref_value_type(typing, field.tag);
     let result: String = if field.is_optional {
         format!("Option<{}>", value_type)
     } else {
@@ -249,17 +243,6 @@ fn gen_getter(
         function.add_attribute("allow(non_snake_case)");
     }
     function
-}
-
-/// Gets the type of a value of the `tag`, read from a `Ref` type.
-fn value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
-    match tag {
-        TypeTag::Primitive(primitive) => primitive.name().to_string(),
-        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
-        TypeTag::Special(SpecialType::String) => "&'a str".to_string(),
-        TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
-        TypeTag::Named(_) => format!("{}<'a>", ref_path(tag)),
-    }
 }
 
 /// Generates the expression reading the `field` of `self.bytes`.
@@ -304,7 +287,7 @@ fn gen_read(
         }
         (ValueLayout::Fixed { offset, size }, _) => format!(
             "unsafe {{ {}::new_unchecked({}) }}",
-            ref_path(field.tag),
+            generated_path(field.tag, "Ref"),
             read_fixed(offset, size, BYTES)
         ),
         (ValueLayout::Entry { index }, TypeTag::Special(SpecialType::String)) => format!(
@@ -313,7 +296,7 @@ fn gen_read(
         ),
         (ValueLayout::Entry { index }, _) => format!(
             "unsafe {{ {}::new_unchecked({}) }}",
-            ref_path(field.tag),
+            generated_path(field.tag, "Ref"),
             read_entry("read_entry_unchecked", layout, index, BYTES)
         ),
     };
