@@ -40,13 +40,14 @@ pub(crate) fn view_mut_name(type_name: &str) -> String {
 ///
 /// It has a setter for each scalar & string field, & an accessor for each nested struct or message,
 /// so generic code can edit any editable form of the type. A string can fail, since the `Mut` type
-/// can run out of room. The trait is also implemented for mutable references, since the type's own
-/// accessors return one.
+/// can run out of room, & so can any field of a message, for the same reason, if `all_fallible`. The
+/// trait is also implemented for mutable references, since the type's own accessors return one.
 pub(crate) fn gen_view_mut(
     typing: Typing<'_>,
     schema_name: &str,
     fields: &[Field<'_>],
     type_name: &str,
+    all_fallible: bool,
 ) -> String {
     let name: String = view_mut_name(schema_name);
     let mut_type: RustType = RustType::from(format!("super::{}", mut_name(schema_name)))
@@ -54,11 +55,25 @@ pub(crate) fn gen_view_mut(
     let buf_type: String = format!("super::{}", buf_name(schema_name));
     let generic: String = format!("V: {}", name);
     Block::default()
-        .with_statement(gen_trait(typing, schema_name, fields, &name, type_name))
+        .with_statement(gen_trait(
+            typing,
+            schema_name,
+            fields,
+            &name,
+            type_name,
+            all_fallible,
+        ))
         .with_statement(EmptyLine::default())
         .with_statement(
-            gen_impl(typing, fields, &name, "&mut V", Form::Reference)
-                .with_generic(generic.as_str()),
+            gen_impl(
+                typing,
+                fields,
+                &name,
+                "&mut V",
+                Form::Reference,
+                all_fallible,
+            )
+            .with_generic(generic.as_str()),
         )
         .with_statement(EmptyLine::default())
         .with_statement(gen_impl(
@@ -67,9 +82,17 @@ pub(crate) fn gen_view_mut(
             &name,
             format!("super::{}", type_name).as_str(),
             Form::Native,
+            all_fallible,
         ))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_impl(typing, fields, &name, mut_type, Form::Mut))
+        .with_statement(gen_impl(
+            typing,
+            fields,
+            &name,
+            mut_type,
+            Form::Mut,
+            all_fallible,
+        ))
         .with_statement(EmptyLine::default())
         .with_statement(gen_impl(
             typing,
@@ -77,6 +100,7 @@ pub(crate) fn gen_view_mut(
             &name,
             buf_type.as_str(),
             Form::Buf,
+            all_fallible,
         ))
         .to_code()
 }
@@ -88,6 +112,7 @@ fn gen_trait(
     fields: &[Field<'_>],
     name: &str,
     type_name: &str,
+    all_fallible: bool,
 ) -> Trait {
     let mut result: Trait = Trait::from(name)
         .with_comment(format!(
@@ -109,7 +134,7 @@ fn gen_trait(
             format!(" Sets the field: `{}`.", field.name)
         };
         let signature_dec: SignatureDec =
-            SignatureDec::from(gen_signature(typing, *field)).with_comment(comment);
+            SignatureDec::from(gen_signature(typing, *field, all_fallible)).with_comment(comment);
         result.add_signature_dec(signature_dec);
     }
     result
@@ -122,14 +147,15 @@ fn gen_impl<T>(
     name: &str,
     target: T,
     form: Form,
+    all_fallible: bool,
 ) -> ImplBlock
 where
     T: Into<RustType>,
 {
     let mut result: ImplBlock = ImplBlock::from(target).with_for_trait(name);
     for field in fields {
-        let mut function: Function = Function::from(gen_signature(typing, *field));
-        for statement in gen_body(typing, *field, form) {
+        let mut function: Function = Function::from(gen_signature(typing, *field, all_fallible));
+        for statement in gen_body(typing, *field, form, all_fallible) {
             function.add_literal(statement);
         }
         result.add_function(function);
@@ -143,9 +169,9 @@ fn is_string(field: Field<'_>) -> bool {
 }
 
 /// Generates the signature of the method of the `field`.
-fn gen_signature(typing: Typing<'_>, field: Field<'_>) -> Signature {
+fn gen_signature(typing: Typing<'_>, field: Field<'_>, all_fallible: bool) -> Signature {
     if !is_struct(typing, field) {
-        return gen_setter_signature(field, is_string(field));
+        return gen_setter_signature(field, all_fallible || is_string(field));
     }
     let child: String = format!("impl {}", generated_path(field.tag, "ViewMut"));
     let result: String = if field.is_optional {
@@ -161,7 +187,7 @@ fn gen_signature(typing: Typing<'_>, field: Field<'_>) -> Signature {
 /// Generates the statements of the method of the `field` for the `form`.
 ///
 /// The struct's own setters return the previous value, & take an owned string.
-fn gen_body(typing: Typing<'_>, field: Field<'_>, form: Form) -> Vec<String> {
+fn gen_body(typing: Typing<'_>, field: Field<'_>, form: Form, all_fallible: bool) -> Vec<String> {
     if is_struct(typing, field) {
         let receiver: &str = if form == Form::Reference {
             "(**self)"
@@ -176,6 +202,9 @@ fn gen_body(typing: Typing<'_>, field: Field<'_>, form: Form) -> Vec<String> {
         Form::Reference => vec![format!("(**self).{}(value)", setter)],
         Form::Mut => vec![format!("self.{}(value)", setter)],
         Form::Buf => vec![format!("self.as_mut().{}(value)", setter)],
+        Form::Native if !is_string && all_fallible => {
+            vec![format!("self.{}(value);", setter), "Ok(())".to_string()]
+        }
         Form::Native if !is_string => vec![format!("self.{}(value);", setter)],
         Form::Native if field.is_optional => vec![
             "let value: Option<&str> = value.into();".to_string(),

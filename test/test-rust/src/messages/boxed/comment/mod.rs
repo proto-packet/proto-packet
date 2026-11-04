@@ -4,9 +4,13 @@ pub use comment::*;
 pub use comment_buf::*;
 pub use comment_mut::*;
 pub use comment_ref::*;
+pub use comment_view::*;
+pub use comment_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod comment;
 mod comment_buf;
 mod comment_mut;
 mod comment_ref;
+mod comment_view;
+mod comment_view_mut;

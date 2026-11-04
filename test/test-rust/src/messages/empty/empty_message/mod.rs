@@ -4,9 +4,13 @@ pub use empty_message::*;
 pub use empty_message_buf::*;
 pub use empty_message_mut::*;
 pub use empty_message_ref::*;
+pub use empty_message_view::*;
+pub use empty_message_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod empty_message;
 mod empty_message_buf;
 mod empty_message_mut;
 mod empty_message_ref;
+mod empty_message_view;
+mod empty_message_view_mut;

@@ -4,9 +4,13 @@ pub use keyword_message::*;
 pub use keyword_message_buf::*;
 pub use keyword_message_mut::*;
 pub use keyword_message_ref::*;
+pub use keyword_message_view::*;
+pub use keyword_message_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod keyword_message;
 mod keyword_message_buf;
 mod keyword_message_mut;
 mod keyword_message_ref;
+mod keyword_message_view;
+mod keyword_message_view_mut;

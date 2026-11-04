@@ -89,6 +89,12 @@ impl Comment {
         self.set_reply(reply);
         self
     }
+
+    /// Gets the mutable field: `reply`.
+    #[must_use]
+    pub fn reply_mut(&mut self) -> Option<&mut crate::messages::boxed::Comment> {
+        self.reply.as_deref_mut()
+    }
 }
 
 impl Comment {

@@ -7,9 +7,11 @@ use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_message_mut::{gen_message_buf_accessors, gen_message_mut};
 use crate::rust::gen_message_ref::gen_message_ref;
-use crate::rust::gen_struct::{check_type_name, gen_decoding};
-use crate::rust::gen_struct_mut::{check_mut_names, mut_name};
+use crate::rust::gen_struct::{check_type_name, gen_accessor, gen_decoding};
+use crate::rust::gen_struct_mut::{check_mut_names, is_struct, mut_name};
 use crate::rust::gen_struct_ref::ref_name;
+use crate::rust::gen_view::{gen_view, view_name};
+use crate::rust::gen_view_mut::{gen_view_mut, view_mut_name};
 use crate::rust::message_encoding::{TaggedField, gen_message_encoding};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
@@ -71,18 +73,31 @@ pub fn gen_message(
             is_boxed: field.is_boxed(),
         })
         .collect();
+    let layout: Option<MessageLayout> = MessageLayout::new(project, message);
+    let accessors: Vec<String> = fields
+        .iter()
+        .filter(|field| layout.is_some() && is_struct(typing, **field))
+        .map(|field| field.accessor_name())
+        .collect();
+    let methods: Vec<&str> = METHODS
+        .into_iter()
+        .chain(accessors.iter().map(String::as_str))
+        .collect();
     check_field_names(
         &format!("{}.{}", mod_path, message.type_name()),
         &fields,
-        &METHODS,
+        &methods,
     )?;
-    let layout: Option<MessageLayout> = MessageLayout::new(project, message);
 
     let mut block: Block =
         Block::default().with_statement(gen_dec(typing, message, &fields, layout.is_some()));
     for field in &fields {
+        let mut field_impl: ImplBlock = field.gen_impl(typing, &type_name);
+        if layout.is_some() && is_struct(typing, *field) {
+            field_impl.add_function(gen_accessor(typing, *field));
+        }
         block.add_statement(EmptyLine::default());
-        block.add_statement(field.gen_impl(typing, &type_name));
+        block.add_statement(field_impl);
     }
     let mut files: Vec<TypeFile> = Vec::default();
     if let Some(layout) = &layout {
@@ -109,6 +124,8 @@ pub fn gen_message(
         check_type_name(project, mod_path, &ref_name(&message.type_name()))?;
         check_type_name(project, mod_path, &buf_name(&message.type_name()))?;
         check_type_name(project, mod_path, &mut_name(&message.type_name()))?;
+        check_type_name(project, mod_path, &view_name(&message.type_name()))?;
+        check_type_name(project, mod_path, &view_mut_name(&message.type_name()))?;
         check_mut_names(
             typing,
             &format!("{}.{}", mod_path, message.type_name()),
@@ -129,6 +146,14 @@ pub fn gen_message(
         files.push(TypeFile {
             suffix: "_ref",
             code: gen_message_ref(typing, &message.type_name(), &tagged, &type_name),
+        });
+        files.push(TypeFile {
+            suffix: "_view",
+            code: gen_view(typing, &message.type_name(), &fields, &type_name),
+        });
+        files.push(TypeFile {
+            suffix: "_view_mut",
+            code: gen_view_mut(typing, &message.type_name(), &fields, &type_name, true),
         });
     }
     files.insert(

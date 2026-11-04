@@ -4,9 +4,13 @@ pub use greet_request::*;
 pub use greet_request_buf::*;
 pub use greet_request_mut::*;
 pub use greet_request_ref::*;
+pub use greet_request_view::*;
+pub use greet_request_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod greet_request;
 mod greet_request_buf;
 mod greet_request_mut;
 mod greet_request_ref;
+mod greet_request_view;
+mod greet_request_view_mut;

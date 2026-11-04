@@ -4,9 +4,13 @@ pub use label::*;
 pub use label_buf::*;
 pub use label_mut::*;
 pub use label_ref::*;
+pub use label_view::*;
+pub use label_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod label;
 mod label_buf;
 mod label_mut;
 mod label_ref;
+mod label_view;
+mod label_view_mut;

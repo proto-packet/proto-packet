@@ -143,7 +143,7 @@ pub fn gen_struct(
         });
         files.push(TypeFile {
             suffix: "_view_mut",
-            code: gen_view_mut(typing, &structure.type_name(), &fields, &type_name),
+            code: gen_view_mut(typing, &structure.type_name(), &fields, &type_name, false),
         });
     }
     Ok(files)
@@ -267,7 +267,7 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
 }
 
 /// Generates the mutable accessor of the nested struct `field`. (boxes are hidden)
-fn gen_accessor(typing: Typing<'_>, field: Field<'_>) -> Function {
+pub(crate) fn gen_accessor(typing: Typing<'_>, field: Field<'_>) -> Function {
     let name: String = ident(&field.name);
     let reference: String = format!("&mut {}", typing.rust_type(field.tag));
     let (result, expr): (String, String) = if !field.is_optional {

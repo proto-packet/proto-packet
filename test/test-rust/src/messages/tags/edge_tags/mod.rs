@@ -4,9 +4,13 @@ pub use edge_tags::*;
 pub use edge_tags_buf::*;
 pub use edge_tags_mut::*;
 pub use edge_tags_ref::*;
+pub use edge_tags_view::*;
+pub use edge_tags_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod edge_tags;
 mod edge_tags_buf;
 mod edge_tags_mut;
 mod edge_tags_ref;
+mod edge_tags_view;
+mod edge_tags_view_mut;
