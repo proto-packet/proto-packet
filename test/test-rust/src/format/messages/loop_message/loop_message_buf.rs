@@ -71,7 +71,7 @@ impl LoopMessageBuf {
     #[must_use]
     pub fn next_mut(&mut self) -> Option<crate::format::messages::LoopStructMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 2) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 2) }?;
         Some(unsafe { crate::format::messages::LoopStructMut::new_unchecked(value) })
     }
 }

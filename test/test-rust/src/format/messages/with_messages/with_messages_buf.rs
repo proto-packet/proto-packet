@@ -72,7 +72,7 @@ impl WithMessagesBuf {
     pub fn item_mut(&mut self) -> crate::format::messages::ItemMut<'_> {
         unsafe {
             crate::format::messages::ItemMut::new_unchecked(
-                proto_packet::io::read_entry_mut_unchecked(&mut self.bytes, 8, 0, 21),
+                proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 8, 0, 21),
             )
         }
     }
@@ -80,10 +80,10 @@ impl WithMessagesBuf {
     /// Gets the mut of the field: `maybe`.
     #[must_use]
     pub fn maybe_mut(&mut self) -> Option<crate::format::messages::ItemMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(&self.bytes, 20, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 20, 0) } {
             Some(unsafe {
                 crate::format::messages::ItemMut::new_unchecked(
-                    proto_packet::io::read_entry_mut_unchecked(&mut self.bytes, 8, 1, 21),
+                    proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 8, 1, 21),
                 )
             })
         } else {

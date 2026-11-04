@@ -70,9 +70,11 @@ impl OptionalCopyBuf {
     /// Gets the mut of the field: `point`.
     #[must_use]
     pub fn point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(&self.bytes, 12, 1) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 12, 1) } {
             Some(unsafe {
-                crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(4..12))
+                crate::types::PointMut::new_unchecked(
+                    self.bytes.as_mut_slice().get_unchecked_mut(4..12),
+                )
             })
         } else {
             None

@@ -71,7 +71,9 @@ impl NestedCopyBuf {
     #[must_use]
     pub fn fields_mut(&mut self) -> crate::structs::copy::CopyFieldsMut<'_> {
         unsafe {
-            crate::structs::copy::CopyFieldsMut::new_unchecked(self.bytes.get_unchecked_mut(0..32))
+            crate::structs::copy::CopyFieldsMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(0..32),
+            )
         }
     }
 }

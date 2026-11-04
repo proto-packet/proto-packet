@@ -70,11 +70,13 @@ impl BoxBuf {
     /// Gets the mut of the case: `Inner`.
     #[must_use]
     pub fn as_inner_mut(&mut self) -> Option<crate::names::prelude::BoxMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 1 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 1 {
             return None;
         }
         Some(unsafe {
-            crate::names::prelude::BoxMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
+            crate::names::prelude::BoxMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(2..),
+            )
         })
     }
 }

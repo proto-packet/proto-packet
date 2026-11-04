@@ -71,7 +71,7 @@ impl WithCasesBuf {
     #[must_use]
     pub fn shape_mut(&mut self) -> Option<crate::format::variants::ShapeMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 1) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 1) }?;
         Some(unsafe { crate::format::variants::ShapeMut::new_unchecked(value) })
     }
 
@@ -79,7 +79,7 @@ impl WithCasesBuf {
     #[must_use]
     pub fn older_mut(&mut self) -> Option<crate::format::variants::OlderCasesMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 2) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 2) }?;
         Some(unsafe { crate::format::variants::OlderCasesMut::new_unchecked(value) })
     }
 }

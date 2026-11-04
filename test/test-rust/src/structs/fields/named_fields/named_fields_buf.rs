@@ -70,7 +70,9 @@ impl NamedFieldsBuf {
     /// Gets the mut of the field: `point`.
     #[must_use]
     pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
-        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(0..8)) }
+        unsafe {
+            crate::types::PointMut::new_unchecked(self.bytes.as_mut_slice().get_unchecked_mut(0..8))
+        }
     }
 
     /// Gets the mut of the field: `person`.
@@ -78,7 +80,7 @@ impl NamedFieldsBuf {
     pub fn person_mut(&mut self) -> crate::types::PersonMut<'_> {
         unsafe {
             crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                &mut self.bytes,
+                self.bytes.as_mut_slice(),
                 8,
                 0,
                 24,
@@ -91,7 +93,7 @@ impl NamedFieldsBuf {
     pub fn label_mut(&mut self) -> crate::types::LabelMut<'_> {
         unsafe {
             crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                &mut self.bytes,
+                self.bytes.as_mut_slice(),
                 8,
                 1,
                 24,
@@ -104,7 +106,7 @@ impl NamedFieldsBuf {
     pub fn shape_mut(&mut self) -> crate::types::ShapeMut<'_> {
         unsafe {
             crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                &mut self.bytes,
+                self.bytes.as_mut_slice(),
                 8,
                 2,
                 24,

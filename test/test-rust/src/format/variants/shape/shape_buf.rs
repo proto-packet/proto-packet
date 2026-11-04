@@ -70,11 +70,13 @@ impl ShapeBuf {
     /// Gets the mut of the case: `Square`.
     #[must_use]
     pub fn as_square_mut(&mut self) -> Option<crate::format::examples::PointMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 2 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 2 {
             return None;
         }
         Some(unsafe {
-            crate::format::examples::PointMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
+            crate::format::examples::PointMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(2..),
+            )
         })
     }
 }

@@ -71,7 +71,7 @@ impl AllKindsBuf {
     #[must_use]
     pub fn point_mut(&mut self) -> Option<crate::format::examples::PointMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 7) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 7) }?;
         Some(unsafe { crate::format::examples::PointMut::new_unchecked(value) })
     }
 
@@ -79,7 +79,7 @@ impl AllKindsBuf {
     #[must_use]
     pub fn entry_mut(&mut self) -> Option<crate::format::examples::EntryMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 8) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 8) }?;
         Some(unsafe { crate::format::examples::EntryMut::new_unchecked(value) })
     }
 
@@ -87,7 +87,7 @@ impl AllKindsBuf {
     #[must_use]
     pub fn item_mut(&mut self) -> Option<crate::format::messages::ItemMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 9) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 9) }?;
         Some(unsafe { crate::format::messages::ItemMut::new_unchecked(value) })
     }
 }

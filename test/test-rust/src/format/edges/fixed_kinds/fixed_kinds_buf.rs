@@ -71,17 +71,19 @@ impl FixedKindsBuf {
     #[must_use]
     pub fn point_mut(&mut self) -> crate::format::examples::PointMut<'_> {
         unsafe {
-            crate::format::examples::PointMut::new_unchecked(self.bytes.get_unchecked_mut(16..24))
+            crate::format::examples::PointMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(16..24),
+            )
         }
     }
 
     /// Gets the mut of the field: `maybe_point`.
     #[must_use]
     pub fn maybe_point_mut(&mut self) -> Option<crate::format::examples::PointMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(&self.bytes, 36, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 36, 0) } {
             Some(unsafe {
                 crate::format::examples::PointMut::new_unchecked(
-                    self.bytes.get_unchecked_mut(24..32),
+                    self.bytes.as_mut_slice().get_unchecked_mut(24..32),
                 )
             })
         } else {

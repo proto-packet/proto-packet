@@ -71,7 +71,9 @@ impl BeforeBuf {
     #[must_use]
     pub fn after_mut(&mut self) -> crate::imports::local::AfterMut<'_> {
         unsafe {
-            crate::imports::local::AfterMut::new_unchecked(self.bytes.get_unchecked_mut(0..4))
+            crate::imports::local::AfterMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(0..4),
+            )
         }
     }
 }

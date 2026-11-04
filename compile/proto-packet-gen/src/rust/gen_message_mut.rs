@@ -98,7 +98,7 @@ pub(crate) fn gen_message_buf_accessors(
     let mut result: ImplBlock = ImplBlock::from(name).with_comment(" Fields");
     for tagged in fields {
         if is_struct(typing, tagged.field) {
-            let mut function: Function = gen_message_child(*tagged, "&mut self.bytes");
+            let mut function: Function = gen_message_child(*tagged, "self.bytes.as_mut_slice()");
             if tagged.field.is_non_snake_case() {
                 function.add_attribute("allow(non_snake_case)");
             }

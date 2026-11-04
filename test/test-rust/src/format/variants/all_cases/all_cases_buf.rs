@@ -70,44 +70,52 @@ impl AllCasesBuf {
     /// Gets the mut of the case: `Point`.
     #[must_use]
     pub fn as_point_mut(&mut self) -> Option<crate::format::examples::PointMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 7 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 7 {
             return None;
         }
         Some(unsafe {
-            crate::format::examples::PointMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
+            crate::format::examples::PointMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(2..),
+            )
         })
     }
 
     /// Gets the mut of the case: `Entry`.
     #[must_use]
     pub fn as_entry_mut(&mut self) -> Option<crate::format::examples::EntryMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 8 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 8 {
             return None;
         }
         Some(unsafe {
-            crate::format::examples::EntryMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
+            crate::format::examples::EntryMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(2..),
+            )
         })
     }
 
     /// Gets the mut of the case: `Item`.
     #[must_use]
     pub fn as_item_mut(&mut self) -> Option<crate::format::messages::ItemMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 9 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 9 {
             return None;
         }
         Some(unsafe {
-            crate::format::messages::ItemMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
+            crate::format::messages::ItemMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(2..),
+            )
         })
     }
 
     /// Gets the mut of the case: `Shape`.
     #[must_use]
     pub fn as_shape_mut(&mut self) -> Option<crate::format::variants::ShapeMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 10 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 10 {
             return None;
         }
         Some(unsafe {
-            crate::format::variants::ShapeMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
+            crate::format::variants::ShapeMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(2..),
+            )
         })
     }
 }

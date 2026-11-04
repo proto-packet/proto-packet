@@ -182,7 +182,8 @@ pub(crate) fn gen_child(
     let child_bytes: String = match field_layout.value {
         ValueLayout::Fixed { offset, size } => {
             format!(
-                "self.bytes.get_unchecked_mut({}..{})",
+                "{}.get_unchecked_mut({}..{})",
+                bytes_mut,
                 offset,
                 offset + size
             )
@@ -367,8 +368,8 @@ pub(crate) fn gen_buf_accessors(
                 *field,
                 *field_layout,
                 layout,
-                "&self.bytes",
-                "&mut self.bytes",
+                "self.bytes.as_slice()",
+                "self.bytes.as_mut_slice()",
             );
             if field.is_non_snake_case() {
                 function.add_attribute("allow(non_snake_case)");

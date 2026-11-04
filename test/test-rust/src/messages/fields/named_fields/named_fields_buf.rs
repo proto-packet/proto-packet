@@ -71,7 +71,7 @@ impl NamedFieldsBuf {
     #[must_use]
     pub fn point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 1) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 1) }?;
         Some(unsafe { crate::types::PointMut::new_unchecked(value) })
     }
 
@@ -79,7 +79,7 @@ impl NamedFieldsBuf {
     #[must_use]
     pub fn person_mut(&mut self) -> Option<crate::types::PersonMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 2) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 2) }?;
         Some(unsafe { crate::types::PersonMut::new_unchecked(value) })
     }
 
@@ -87,7 +87,7 @@ impl NamedFieldsBuf {
     #[must_use]
     pub fn label_mut(&mut self) -> Option<crate::types::LabelMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 3) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 3) }?;
         Some(unsafe { crate::types::LabelMut::new_unchecked(value) })
     }
 
@@ -95,7 +95,7 @@ impl NamedFieldsBuf {
     #[must_use]
     pub fn shape_mut(&mut self) -> Option<crate::types::ShapeMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 5) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 5) }?;
         Some(unsafe { crate::types::ShapeMut::new_unchecked(value) })
     }
 }

@@ -71,7 +71,7 @@ impl NewerBuf {
     #[must_use]
     pub fn entry_mut(&mut self) -> Option<crate::format::examples::EntryMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 5) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 5) }?;
         Some(unsafe { crate::format::examples::EntryMut::new_unchecked(value) })
     }
 }

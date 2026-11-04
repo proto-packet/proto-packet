@@ -70,10 +70,10 @@ impl AbsentChildBuf {
     /// Gets the mut of the field: `first`.
     #[must_use]
     pub fn first_mut(&mut self) -> Option<crate::format::examples::EntryMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(&self.bytes, 12, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 12, 0) } {
             Some(unsafe {
                 crate::format::examples::EntryMut::new_unchecked(
-                    proto_packet::io::read_entry_mut_unchecked(&mut self.bytes, 0, 0, 16),
+                    proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 0, 0, 16),
                 )
             })
         } else {
@@ -86,7 +86,7 @@ impl AbsentChildBuf {
     pub fn second_mut(&mut self) -> crate::format::examples::EntryMut<'_> {
         unsafe {
             crate::format::examples::EntryMut::new_unchecked(
-                proto_packet::io::read_entry_mut_unchecked(&mut self.bytes, 0, 1, 16),
+                proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 0, 1, 16),
             )
         }
     }

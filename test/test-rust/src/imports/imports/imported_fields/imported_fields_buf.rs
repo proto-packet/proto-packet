@@ -70,14 +70,18 @@ impl ImportedFieldsBuf {
     /// Gets the mut of the field: `point`.
     #[must_use]
     pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
-        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(0..8)) }
+        unsafe {
+            crate::types::PointMut::new_unchecked(self.bytes.as_mut_slice().get_unchecked_mut(0..8))
+        }
     }
 
     /// Gets the mut of the field: `child`.
     #[must_use]
     pub fn child_mut(&mut self) -> crate::mods::parent::child::ChildMut<'_> {
         unsafe {
-            crate::mods::parent::child::ChildMut::new_unchecked(self.bytes.get_unchecked_mut(8..12))
+            crate::mods::parent::child::ChildMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(8..12),
+            )
         }
     }
 }

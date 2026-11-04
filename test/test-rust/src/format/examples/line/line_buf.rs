@@ -71,7 +71,9 @@ impl LineBuf {
     #[must_use]
     pub fn start_mut(&mut self) -> crate::format::examples::PointMut<'_> {
         unsafe {
-            crate::format::examples::PointMut::new_unchecked(self.bytes.get_unchecked_mut(0..8))
+            crate::format::examples::PointMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(0..8),
+            )
         }
     }
 
@@ -79,7 +81,9 @@ impl LineBuf {
     #[must_use]
     pub fn end_mut(&mut self) -> crate::format::examples::PointMut<'_> {
         unsafe {
-            crate::format::examples::PointMut::new_unchecked(self.bytes.get_unchecked_mut(8..16))
+            crate::format::examples::PointMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(8..16),
+            )
         }
     }
 }

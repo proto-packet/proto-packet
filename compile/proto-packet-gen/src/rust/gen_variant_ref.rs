@@ -105,16 +105,6 @@ fn gen_construction(typing: Typing<'_>, cases: &[Case<'_>], ref_type: &RustType)
         ))
         .with_semi(format!("{}::check_tag_number(tag_number)?", IO));
     if !cases.is_empty() {
-        let arms: Vec<String> = cases
-            .iter()
-            .map(|case| {
-                format!(
-                    "{} => {{ {} }}",
-                    case.number,
-                    gen_value_check(typing, case.tag, case.size)
-                )
-            })
-            .collect();
         new.add_semi("let value: &'a [u8] = unsafe { bytes.get_unchecked(2..) }");
         new.add_literal(if let [case] = cases {
             format!(
@@ -123,6 +113,16 @@ fn gen_construction(typing: Typing<'_>, cases: &[Case<'_>], ref_type: &RustType)
                 gen_value_check(typing, case.tag, case.size)
             )
         } else {
+            let arms: Vec<String> = cases
+                .iter()
+                .map(|case| {
+                    format!(
+                        "{} => {{ {} }}",
+                        case.number,
+                        gen_value_check(typing, case.tag, case.size)
+                    )
+                })
+                .collect();
             format!("match tag_number {{ {} _ => {{}} }}", arms.join(" "))
         });
     }

@@ -70,14 +70,18 @@ impl QualifiedFieldsBuf {
     /// Gets the mut of the field: `point`.
     #[must_use]
     pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
-        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(0..8)) }
+        unsafe {
+            crate::types::PointMut::new_unchecked(self.bytes.as_mut_slice().get_unchecked_mut(0..8))
+        }
     }
 
     /// Gets the mut of the field: `child`.
     #[must_use]
     pub fn child_mut(&mut self) -> crate::mods::parent::child::ChildMut<'_> {
         unsafe {
-            crate::mods::parent::child::ChildMut::new_unchecked(self.bytes.get_unchecked_mut(8..12))
+            crate::mods::parent::child::ChildMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(8..12),
+            )
         }
     }
 
@@ -85,7 +89,9 @@ impl QualifiedFieldsBuf {
     #[must_use]
     pub fn raw_mut(&mut self) -> crate::names::r#move::MoveStructMut<'_> {
         unsafe {
-            crate::names::r#move::MoveStructMut::new_unchecked(self.bytes.get_unchecked_mut(12..16))
+            crate::names::r#move::MoveStructMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(12..16),
+            )
         }
     }
 
@@ -94,7 +100,7 @@ impl QualifiedFieldsBuf {
     pub fn non_raw_mut(&mut self) -> crate::names::r#type::self_::SelfStructMut<'_> {
         unsafe {
             crate::names::r#type::self_::SelfStructMut::new_unchecked(
-                self.bytes.get_unchecked_mut(16..20),
+                self.bytes.as_mut_slice().get_unchecked_mut(16..20),
             )
         }
     }
@@ -103,7 +109,9 @@ impl QualifiedFieldsBuf {
     #[must_use]
     pub fn local_mut(&mut self) -> crate::imports::qualified::LocalMut<'_> {
         unsafe {
-            crate::imports::qualified::LocalMut::new_unchecked(self.bytes.get_unchecked_mut(20..24))
+            crate::imports::qualified::LocalMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(20..24),
+            )
         }
     }
 }

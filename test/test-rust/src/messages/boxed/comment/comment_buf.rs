@@ -71,7 +71,7 @@ impl CommentBuf {
     #[must_use]
     pub fn reply_mut(&mut self) -> Option<crate::messages::boxed::CommentMut<'_>> {
         let value: &mut [u8] =
-            unsafe { proto_packet::io::find_field_mut_unchecked(&mut self.bytes, 2) }?;
+            unsafe { proto_packet::io::find_field_mut_unchecked(self.bytes.as_mut_slice(), 2) }?;
         Some(unsafe { crate::messages::boxed::CommentMut::new_unchecked(value) })
     }
 }

@@ -70,37 +70,45 @@ impl ValueBuf {
     /// Gets the mut of the case: `Point`.
     #[must_use]
     pub fn as_point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 5 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 5 {
             return None;
         }
-        Some(unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(2..)) })
+        Some(unsafe {
+            crate::types::PointMut::new_unchecked(self.bytes.as_mut_slice().get_unchecked_mut(2..))
+        })
     }
 
     /// Gets the mut of the case: `Person`.
     #[must_use]
     pub fn as_person_mut(&mut self) -> Option<crate::types::PersonMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 6 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 6 {
             return None;
         }
-        Some(unsafe { crate::types::PersonMut::new_unchecked(self.bytes.get_unchecked_mut(2..)) })
+        Some(unsafe {
+            crate::types::PersonMut::new_unchecked(self.bytes.as_mut_slice().get_unchecked_mut(2..))
+        })
     }
 
     /// Gets the mut of the case: `Label`.
     #[must_use]
     pub fn as_label_mut(&mut self) -> Option<crate::types::LabelMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 7 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 7 {
             return None;
         }
-        Some(unsafe { crate::types::LabelMut::new_unchecked(self.bytes.get_unchecked_mut(2..)) })
+        Some(unsafe {
+            crate::types::LabelMut::new_unchecked(self.bytes.as_mut_slice().get_unchecked_mut(2..))
+        })
     }
 
     /// Gets the mut of the case: `Shape`.
     #[must_use]
     pub fn as_shape_mut(&mut self) -> Option<crate::types::ShapeMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 9 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 9 {
             return None;
         }
-        Some(unsafe { crate::types::ShapeMut::new_unchecked(self.bytes.get_unchecked_mut(2..)) })
+        Some(unsafe {
+            crate::types::ShapeMut::new_unchecked(self.bytes.as_mut_slice().get_unchecked_mut(2..))
+        })
     }
 }
 

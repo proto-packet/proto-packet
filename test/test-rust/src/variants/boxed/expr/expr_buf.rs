@@ -70,22 +70,26 @@ impl ExprBuf {
     /// Gets the mut of the case: `Negate`.
     #[must_use]
     pub fn as_negate_mut(&mut self) -> Option<crate::variants::boxed::ExprMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 2 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 2 {
             return None;
         }
         Some(unsafe {
-            crate::variants::boxed::ExprMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
+            crate::variants::boxed::ExprMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(2..),
+            )
         })
     }
 
     /// Gets the mut of the case: `Add`.
     #[must_use]
     pub fn as_add_mut(&mut self) -> Option<crate::variants::boxed::SumMut<'_>> {
-        if unsafe { proto_packet::io::read_u16_unchecked(&self.bytes, 0) } != 3 {
+        if unsafe { proto_packet::io::read_u16_unchecked(self.bytes.as_slice(), 0) } != 3 {
             return None;
         }
         Some(unsafe {
-            crate::variants::boxed::SumMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
+            crate::variants::boxed::SumMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(2..),
+            )
         })
     }
 }

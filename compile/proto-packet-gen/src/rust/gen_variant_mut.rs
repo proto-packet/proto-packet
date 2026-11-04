@@ -37,7 +37,7 @@ pub(crate) fn gen_variant_mut(
         let mut fields: ImplBlock = ImplBlock::from(any_lifetime).with_comment(" Cases");
         for case in cases {
             fields.add_function(if case.is_nested(typing) {
-                gen_child(*case, "self.bytes")
+                gen_child(*case, "self.bytes", "self.bytes")
             } else {
                 gen_setter(typing, *case)
             });
@@ -50,8 +50,8 @@ pub(crate) fn gen_variant_mut(
 
 /// Generates the accessor of the nested `case`, to edit it in place.
 ///
-/// The `bytes` expression is the type's bytes, as a shared slice.
-fn gen_child(case: Case<'_>, bytes: &str) -> Function {
+/// The `bytes` & `bytes_mut` expressions are the type's bytes, as a shared & a mutable slice.
+fn gen_child(case: Case<'_>, bytes: &str, bytes_mut: &str) -> Function {
     let child: String = generated_path(case.tag, "Mut");
     let signature: Signature = Signature::from(case.accessor_name())
         .with_receiver(Receiver::BorrowedMut)
@@ -65,8 +65,8 @@ fn gen_child(case: Case<'_>, bytes: &str) -> Function {
             IO, bytes, case.number
         ))
         .with_literal(format!(
-            "Some(unsafe {{ {}::new_unchecked(self.bytes.get_unchecked_mut(2..)) }})",
-            child
+            "Some(unsafe {{ {}::new_unchecked({}.get_unchecked_mut(2..)) }})",
+            child, bytes_mut
         ))
 }
 
@@ -85,7 +85,11 @@ pub(crate) fn gen_variant_buf_accessors(
     let mut result: ImplBlock = ImplBlock::from(name).with_comment(" Cases");
     for case in cases {
         if case.is_nested(typing) {
-            result.add_function(gen_child(*case, "&self.bytes"));
+            result.add_function(gen_child(
+                *case,
+                "self.bytes.as_slice()",
+                "self.bytes.as_mut_slice()",
+            ));
         }
     }
     Some(result)
