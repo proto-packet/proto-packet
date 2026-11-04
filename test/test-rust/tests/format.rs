@@ -217,6 +217,14 @@ fn pair_example() {
 }
 
 #[test]
+fn encodings_append() {
+    let mut out: Vec<u8> = vec![0xAA];
+    pair().encode_to(&mut out);
+    assert_eq!(out[0], 0xAA);
+    assert_eq!(out[1..], pair_bytes());
+}
+
+#[test]
 fn variable_children_are_aligned() {
     let bytes: Vec<u8> = pair_bytes();
     let pair: PairRef = PairRef::new(&bytes).unwrap();
