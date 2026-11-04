@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 /// An error decoding an encoded value.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum DecodeError {
-    /// The bytes are shorter than the value's fixed block.
+    /// The bytes are shorter than the value needs.
     TooShort { expected: usize, actual: usize },
 
     /// An end table decreases, or goes past the end of its tail.
@@ -15,7 +15,7 @@ pub enum DecodeError {
     /// A string is not valid UTF-8.
     InvalidUtf8,
 
-    /// An enum value is not a valid tag number.
+    /// An enum value or a variant's tag is not a valid tag number.
     InvalidTagNumber { value: u16 },
 }
 
