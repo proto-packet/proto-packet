@@ -2,6 +2,7 @@ use crate::GenError;
 use crate::layout::{FieldLayout, StructLayout, ValueLayout};
 use crate::rust::encoding::IO;
 use crate::rust::fields::Field;
+use crate::rust::gen_forms::{gen_new, gen_new_unchecked};
 use crate::rust::gen_struct_ref::{generated_path, read_bit, read_entry, ref_name};
 use crate::rust::naming::is_upper_camel_case;
 use crate::rust::typing::Typing;
@@ -9,7 +10,7 @@ use crate::rust::values::setter_value_type;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, Struct as RustStruct, StructField,
     Var, WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithGenerics,
-    WithReceiver, WithResult, WithStructFields, WithUnsafeFlag, WithVarParams,
+    WithReceiver, WithResult, WithStructFields, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet_tree::{SpecialType, Struct, TypeTag, WithTypeName};
@@ -103,37 +104,15 @@ pub(crate) fn gen_mut_dec(schema_name: &str, name: &str, type_name: &str) -> Rus
 
 /// Generates the impl block constructing the `Mut` type with the `name`.
 pub(crate) fn gen_mut_construction(name: &str, ref_name: &str) -> ImplBlock {
-    let signature: Signature = Signature::from("new")
-        .with_param(Var::from(("bytes", "&'a mut [u8]")))
-        .with_result(format!("Result<Self, {}::DecodeError>", IO));
-    let new: Function = Function::from(signature)
-        .with_comment(" Creates a new mut of the `bytes`.")
-        .with_comment("")
-        .with_comment(" # Errors")
-        .with_comment(" Returns an error if the `bytes` are not a valid encoding.")
-        .with_access(Access::Public)
+    let new: Function = gen_new("mut", "&'a mut [u8]")
         .with_semi(format!("super::{}::new(bytes)?", ref_name))
         .with_literal("Ok(Self { bytes })");
-
-    let signature: Signature = Signature::from("new_unchecked")
-        .with_unsafe(true)
-        .with_param(Var::from(("bytes", "&'a mut [u8]")))
-        .with_result("Self");
-    let new_unchecked: Function = Function::from(signature)
-        .with_comment(" Creates a new mut of the `bytes`, without validating them.")
-        .with_comment("")
-        .with_comment(" # Safety")
-        .with_comment(" The `bytes` must be a valid encoding.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_const(true)
-        .with_literal("Self { bytes }");
 
     ImplBlock::from(RustType::from(name).with_generic(RustType::from("'a")))
         .with_generic("'a")
         .with_comment(" Construction")
         .with_function(new)
-        .with_function(new_unchecked)
+        .with_function(gen_new_unchecked("mut", "&'a mut [u8]"))
 }
 
 /// Generates the impl block with the properties of the `mut_type`.

@@ -3,8 +3,10 @@ use crate::layout::MessageLayout;
 use crate::rust::TypeFile;
 use crate::rust::derives::add_derives;
 use crate::rust::docs::{PpsLine, add_pps_docs};
+use crate::rust::encoding::IO;
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_buf::{buf_name, gen_buf};
+use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
 use crate::rust::gen_message_mut::{gen_message_buf_accessors, gen_message_mut};
 use crate::rust::gen_message_ref::gen_message_ref;
 use crate::rust::gen_struct::{check_type_name, gen_accessor, gen_decoding};
@@ -239,8 +241,6 @@ fn gen_json(
     type_name: &str,
     fields: &[Field<'_>],
 ) -> String {
-    const TYPES: &str = "proto_packet::types";
-    const SERDE: &str = "proto_packet::serde";
     let result: &str = typing.prelude(PreludeName::Result);
 
     let mut serialize: Vec<String> = Vec::default();
@@ -273,28 +273,17 @@ fn gen_json(
         )
     };
 
-    format!(
-        "impl {serde}::Serialize for {type_name} {{
-    fn serialize<S>(&self, serializer: S) -> {result}<S::Ok, S::Error>
-    where
-        S: {serde}::Serializer,
-    {{
-        let mut map: S::SerializeMap = {serde}::Serializer::serialize_map(serializer, None)?;
-        {serialize}
+    let serialize: String = format!(
+        "let mut map: S::SerializeMap = {serde}::Serializer::serialize_map(serializer, None)?;
+        {fields}
         {types}::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
-        {serde}::ser::SerializeMap::end(map)
-    }}
-}}
-
-impl<'de> {serde}::Deserialize<'de> for {type_name} {{
-    fn deserialize<D>(deserializer: D) -> {result}<Self, D::Error>
-    where
-        D: {serde}::Deserializer<'de>,
-    {{
-        {types}::deserialize_message(deserializer)
-    }}
-}}
-
+        {serde}::ser::SerializeMap::end(map)",
+        serde = SERDE,
+        types = TYPES,
+        fields = serialize.join(" "),
+    );
+    format!(
+        "{serde_impls}
 impl {types}::JsonMessage for {type_name} {{
     const TYPE_NAME: &'static str = \"{schema_name}\";
 
@@ -305,7 +294,7 @@ impl {types}::JsonMessage for {type_name} {{
         {read_body}
     }}
 
-    fn from_encoded(bytes: &[u8]) -> {result}<Self, proto_packet::io::DecodeError> {{
+    fn from_encoded(bytes: &[u8]) -> {result}<Self, {io}::DecodeError> {{
         Self::decode(bytes)
     }}
 
@@ -316,12 +305,13 @@ impl {types}::JsonMessage for {type_name} {{
     }}
 }}
 ",
+        serde_impls = gen_serde_impls(result, type_name, &serialize, "deserialize_message"),
         serde = SERDE,
         types = TYPES,
+        io = IO,
         type_name = type_name,
         schema_name = schema_name,
         result = result,
-        serialize = serialize.join(" "),
         name_param = name_param,
         map_param = map_param,
         read_body = read_body,

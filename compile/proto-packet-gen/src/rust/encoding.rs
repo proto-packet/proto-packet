@@ -23,7 +23,7 @@ pub(crate) fn gen_encoding(
     ImplBlock::from(type_name)
         .with_comment(" Encoding")
         .with_function(gen_encoded_len(fields, layout))
-        .with_function(gen_encode(typing))
+        .with_function(gen_encode(typing, "struct"))
         .with_function(gen_encode_to(typing, fields, layout))
 }
 
@@ -59,14 +59,14 @@ fn gen_encoded_len(fields: &[Field<'_>], layout: &StructLayout) -> Function {
     function.with_literal(format!("{} + tail", layout.fixed_size))
 }
 
-/// Generates the function encoding the struct.
-fn gen_encode(typing: Typing<'_>) -> Function {
+/// Generates the function encoding the `kind` of type. (ex: a `struct`)
+pub(crate) fn gen_encode(typing: Typing<'_>, kind: &str) -> Function {
     let bytes: String = bytes_type(typing);
     let signature: Signature = Signature::from("encode")
         .with_receiver(Receiver::Borrowed)
         .with_result(bytes.as_str());
     Function::from(signature)
-        .with_comment(" Encodes the struct.")
+        .with_comment(format!(" Encodes the {}.", kind))
         .with_attribute("must_use")
         .with_access(Access::Public)
         .with_semi(format!(

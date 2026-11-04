@@ -3,7 +3,9 @@ use crate::layout::scalar_size;
 use crate::rust::TypeFile;
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
+use crate::rust::encoding::{IO, gen_encode};
 use crate::rust::gen_buf::{buf_name, gen_buf};
+use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
 use crate::rust::gen_struct::{check_type_name, gen_decoding};
 use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
@@ -418,21 +420,6 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
         .with_access(Access::Public)
         .with_literal(format!("match self {{ {} }}", arms.join(" ")));
 
-    let signature: Signature = Signature::from("encode")
-        .with_receiver(Receiver::Borrowed)
-        .with_result(bytes.as_str());
-    let encode: Function = Function::from(signature)
-        .with_comment(" Encodes the variant.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_semi(format!(
-            "let mut result: {} = {}::with_capacity(self.encoded_len())",
-            bytes,
-            typing.prelude(PreludeName::Vec)
-        ))
-        .with_semi("self.encode_to(&mut result)")
-        .with_literal("result");
-
     let mut arms: Vec<String> = vec![
         "Self::Unrecognized(case) => { \
             out.extend_from_slice(&case.tag_number.to_le_bytes()); \
@@ -459,7 +446,7 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
     ImplBlock::from(type_name)
         .with_comment(" Encoding")
         .with_function(encoded_len)
-        .with_function(encode)
+        .with_function(gen_encode(typing, "variant"))
         .with_function(encode_to)
 }
 
@@ -468,8 +455,6 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
 /// A case is its schema name & value. (ex: `Self_` is `Self`) An unrecognized case is its tag number
 /// & its encoded value as base-64 text, which a reader that knows the case decodes as that case.
 fn gen_json(typing: Typing<'_>, schema_name: &str, type_name: &str, cases: &[Case<'_>]) -> String {
-    const TYPES: &str = "proto_packet::types";
-    const SERDE: &str = "proto_packet::serde";
     let result: &str = typing.prelude(PreludeName::Result);
 
     let mut serialize: Vec<String> = vec![format!(
@@ -508,25 +493,9 @@ fn gen_json(typing: Typing<'_>, schema_name: &str, type_name: &str, cases: &[Cas
         ("value", format!("match name {{ {} }}", from_case.join(" ")))
     };
 
+    let serialize: String = format!("match self {{ {} }}", serialize.join(" "));
     format!(
-        "impl {serde}::Serialize for {type_name} {{
-    fn serialize<S>(&self, serializer: S) -> {result}<S::Ok, S::Error>
-    where
-        S: {serde}::Serializer,
-    {{
-        match self {{ {serialize} }}
-    }}
-}}
-
-impl<'de> {serde}::Deserialize<'de> for {type_name} {{
-    fn deserialize<D>(deserializer: D) -> {result}<Self, D::Error>
-    where
-        D: {serde}::Deserializer<'de>,
-    {{
-        {types}::deserialize_variant(deserializer)
-    }}
-}}
-
+        "{serde_impls}
 impl {types}::JsonVariant for {type_name} {{
     const TYPE_NAME: &'static str = \"{schema_name}\";
 
@@ -537,17 +506,18 @@ impl {types}::JsonVariant for {type_name} {{
         {from_case}
     }}
 
-    fn from_encoded(bytes: &[u8]) -> {result}<Self, proto_packet::io::DecodeError> {{
+    fn from_encoded(bytes: &[u8]) -> {result}<Self, {io}::DecodeError> {{
         Self::decode(bytes)
     }}
 }}
 ",
+        serde_impls = gen_serde_impls(result, type_name, &serialize, "deserialize_variant"),
         serde = SERDE,
         types = TYPES,
+        io = IO,
         type_name = type_name,
         schema_name = schema_name,
         result = result,
-        serialize = serialize.join(" "),
         value = value,
         from_case = from_case,
     )

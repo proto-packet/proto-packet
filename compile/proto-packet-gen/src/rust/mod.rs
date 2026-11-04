@@ -13,6 +13,8 @@ mod encoding;
 mod fields;
 mod gen_buf;
 mod gen_enum;
+mod gen_forms;
+mod gen_json;
 mod gen_message;
 mod gen_message_mut;
 mod gen_message_ref;

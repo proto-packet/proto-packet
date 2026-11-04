@@ -1,14 +1,14 @@
 use crate::rust::encoding::IO;
 use crate::rust::gen_buf::buf_name;
+use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
 use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, generated_path, ref_name};
 use crate::rust::message_encoding::TaggedField;
 use crate::rust::naming::{ident, type_path};
 use crate::rust::typing::Typing;
 use crate::rust::values::ref_value_type;
 use code_gen::rust::{
-    Access, Function, ImplBlock, Receiver, RustType, Signature, Var, WithAccess, WithAttributes,
-    WithComments, WithFunctions, WithGenerics, WithReceiver, WithResult, WithUnsafeFlag,
-    WithVarParams,
+    Access, Function, ImplBlock, Receiver, RustType, Signature, WithAccess, WithAttributes,
+    WithComments, WithFunctions, WithGenerics, WithReceiver, WithResult,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet_tree::{PrimitiveType, SpecialType, TypeTag};
@@ -52,16 +52,8 @@ fn gen_construction(
     fields: &[TaggedField<'_>],
     ref_type: &RustType,
 ) -> ImplBlock {
-    let signature: Signature = Signature::from("new")
-        .with_param(Var::from(("bytes", "&'a [u8]")))
-        .with_result(format!("Result<Self, {}::DecodeError>", IO));
-    let mut new: Function = Function::from(signature)
-        .with_comment(" Creates a new ref of the `bytes`.")
-        .with_comment("")
-        .with_comment(" # Errors")
-        .with_comment(" Returns an error if the `bytes` are not a valid encoding.")
-        .with_access(Access::Public)
-        .with_semi(format!("{}::check_message(bytes)?", IO));
+    let mut new: Function =
+        gen_new("ref", "&'a [u8]").with_semi(format!("{}::check_message(bytes)?", IO));
     for tagged in fields {
         new.add_literal(format!(
             "if let Some(value) = unsafe {{ {}::find_field_unchecked(bytes, {}) }} {{ {} }}",
@@ -72,25 +64,11 @@ fn gen_construction(
     }
     let new: Function = new.with_literal("Ok(Self { bytes })");
 
-    let signature: Signature = Signature::from("new_unchecked")
-        .with_unsafe(true)
-        .with_param(Var::from(("bytes", "&'a [u8]")))
-        .with_result("Self");
-    let new_unchecked: Function = Function::from(signature)
-        .with_comment(" Creates a new ref of the `bytes`, without validating them.")
-        .with_comment("")
-        .with_comment(" # Safety")
-        .with_comment(" The `bytes` must be a valid encoding.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_const(true)
-        .with_literal("Self { bytes }");
-
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
         .with_comment(" Construction")
         .with_function(new)
-        .with_function(new_unchecked)
+        .with_function(gen_new_unchecked("ref", "&'a [u8]"))
 }
 
 /// Generates the statements validating the `value` bytes of the `tag` with the scalar `size`.
@@ -203,23 +181,11 @@ fn gen_decoding(
         .with_access(Access::Public)
         .with_literal(decoded);
 
-    let signature: Signature = Signature::from("to_buf")
-        .with_receiver(Receiver::Borrowed)
-        .with_result(format!("super::{}", buf_name));
-    let to_buf: Function = Function::from(signature)
-        .with_comment(" Copies the bytes into an owned buf.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_literal(format!(
-            "unsafe {{ super::{}::new_unchecked(self.bytes.to_vec()) }}",
-            buf_name
-        ));
-
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
         .with_comment(" Decoding")
         .with_function(decode)
-        .with_function(to_buf)
+        .with_function(gen_to_buf(buf_name))
 }
 
 /// Generates the expression of the owned value of the `tagged` field.

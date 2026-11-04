@@ -1,11 +1,11 @@
-use crate::rust::encoding::IO;
+use crate::rust::gen_forms::{gen_new, gen_new_unchecked};
 use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::naming::is_upper_camel_case;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, Signature, Struct as RustStruct, StructField, Var,
     WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithReceiver, WithResult,
-    WithStructFields, WithUnsafeFlag, WithVarParams,
+    WithStructFields, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 
@@ -64,36 +64,14 @@ fn gen_dec(schema_name: &str, name: &str, type_name: &str) -> RustStruct {
 
 /// Generates the impl block constructing the `Buf` type with the `name`.
 fn gen_construction(name: &str, ref_name: &str) -> ImplBlock {
-    let signature: Signature = Signature::from("new")
-        .with_param(Var::from(("bytes", BYTES)))
-        .with_result(format!("Result<Self, {}::DecodeError>", IO));
-    let new: Function = Function::from(signature)
-        .with_comment(" Creates a new buf of the `bytes`.")
-        .with_comment("")
-        .with_comment(" # Errors")
-        .with_comment(" Returns an error if the `bytes` are not a valid encoding.")
-        .with_access(Access::Public)
+    let new: Function = gen_new("buf", BYTES)
         .with_semi(format!("super::{}::new(&bytes)?", ref_name))
         .with_literal("Ok(Self { bytes })");
-
-    let signature: Signature = Signature::from("new_unchecked")
-        .with_unsafe(true)
-        .with_param(Var::from(("bytes", BYTES)))
-        .with_result("Self");
-    let new_unchecked: Function = Function::from(signature)
-        .with_comment(" Creates a new buf of the `bytes`, without validating them.")
-        .with_comment("")
-        .with_comment(" # Safety")
-        .with_comment(" The `bytes` must be a valid encoding.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_const(true)
-        .with_literal("Self { bytes }");
 
     ImplBlock::from(name)
         .with_comment(" Construction")
         .with_function(new)
-        .with_function(new_unchecked)
+        .with_function(gen_new_unchecked("buf", BYTES))
 }
 
 /// Generates the `From` impl encoding the struct with the `type_name`.

@@ -1,5 +1,6 @@
 use crate::rust::encoding::IO;
 use crate::rust::gen_buf::buf_name;
+use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
 use crate::rust::gen_message_ref::{gen_read, gen_value_check};
 use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, ref_name};
 use crate::rust::gen_variant::Case;
@@ -8,8 +9,8 @@ use crate::rust::typing::Typing;
 use crate::rust::values::ref_value_type;
 use code_gen::rust::{
     Access, Enum as RustEnum, EnumCase, EnumFields, Function, ImplBlock, Receiver, RustType,
-    Signature, Var, WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions,
-    WithGenerics, WithReceiver, WithResult, WithUnsafeFlag, WithVarParams,
+    Signature, WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithGenerics,
+    WithReceiver, WithResult,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 
@@ -96,15 +97,7 @@ pub(crate) fn gen_variant_ref(
 
 /// Generates the impl block constructing the `ref_type`.
 fn gen_construction(typing: Typing<'_>, cases: &[Case<'_>], ref_type: &RustType) -> ImplBlock {
-    let signature: Signature = Signature::from("new")
-        .with_param(Var::from(("bytes", "&'a [u8]")))
-        .with_result(format!("Result<Self, {}::DecodeError>", IO));
-    let mut new: Function = Function::from(signature)
-        .with_comment(" Creates a new ref of the `bytes`.")
-        .with_comment("")
-        .with_comment(" # Errors")
-        .with_comment(" Returns an error if the `bytes` are not a valid encoding.")
-        .with_access(Access::Public)
+    let mut new: Function = gen_new("ref", "&'a [u8]")
         .with_semi(format!("{}::check_len(bytes, 2)?", IO))
         .with_semi(format!(
             "let tag_number: u16 = unsafe {{ {}::read_u16_unchecked(bytes, 0) }}",
@@ -135,25 +128,11 @@ fn gen_construction(typing: Typing<'_>, cases: &[Case<'_>], ref_type: &RustType)
     }
     let new: Function = new.with_literal("Ok(Self { bytes })");
 
-    let signature: Signature = Signature::from("new_unchecked")
-        .with_unsafe(true)
-        .with_param(Var::from(("bytes", "&'a [u8]")))
-        .with_result("Self");
-    let new_unchecked: Function = Function::from(signature)
-        .with_comment(" Creates a new ref of the `bytes`, without validating them.")
-        .with_comment("")
-        .with_comment(" # Safety")
-        .with_comment(" The `bytes` must be a valid encoding.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_const(true)
-        .with_literal("Self { bytes }");
-
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
         .with_comment(" Construction")
         .with_function(new)
-        .with_function(new_unchecked)
+        .with_function(gen_new_unchecked("ref", "&'a [u8]"))
 }
 
 /// Generates the impl block with the tag number, the case & the getter of each of the `cases`.
@@ -267,23 +246,12 @@ fn gen_decoding(
         .with_literal(format!("match self.case() {{ {} }}", arms.join(" ")));
 
     let buf: String = buf_name(schema_name);
-    let signature: Signature = Signature::from("to_buf")
-        .with_receiver(Receiver::Borrowed)
-        .with_result(format!("super::{}", buf));
-    let to_buf: Function = Function::from(signature)
-        .with_comment(" Copies the bytes into an owned buf.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_literal(format!(
-            "unsafe {{ super::{}::new_unchecked(self.bytes.to_vec()) }}",
-            buf
-        ));
 
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
         .with_comment(" Decoding")
         .with_function(decode)
-        .with_function(to_buf)
+        .with_function(gen_to_buf(&buf))
 }
 
 /// Generates the expression of the owned `value` of the `case`.

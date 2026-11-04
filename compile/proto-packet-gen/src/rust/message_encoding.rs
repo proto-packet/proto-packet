@@ -1,4 +1,4 @@
-use crate::rust::encoding::IO;
+use crate::rust::encoding::{IO, gen_encode};
 use crate::rust::fields::Field;
 use crate::rust::naming::ident;
 use crate::rust::prelude::PreludeName;
@@ -27,7 +27,7 @@ pub(crate) fn gen_message_encoding(
     ImplBlock::from(type_name)
         .with_comment(" Encoding")
         .with_function(gen_encoded_len(fields))
-        .with_function(gen_encode(typing))
+        .with_function(gen_encode(typing, "message"))
         .with_function(gen_encode_to(typing, fields))
 }
 
@@ -70,25 +70,6 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
         });
     }
     function.with_literal("2 + 6 * count + values")
-}
-
-/// Generates the function encoding the message.
-fn gen_encode(typing: Typing<'_>) -> Function {
-    let bytes: String = format!("{}<u8>", typing.prelude(PreludeName::Vec));
-    let signature: Signature = Signature::from("encode")
-        .with_receiver(Receiver::Borrowed)
-        .with_result(bytes.as_str());
-    Function::from(signature)
-        .with_comment(" Encodes the message.")
-        .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_semi(format!(
-            "let mut result: {} = {}::with_capacity(self.encoded_len())",
-            bytes,
-            typing.prelude(PreludeName::Vec)
-        ))
-        .with_semi("self.encode_to(&mut result)")
-        .with_literal("result")
 }
 
 /// Generates the function appending the encoding to the `out` bytes.
