@@ -1,6 +1,6 @@
 use crate::linker::schema_linker::{SchemaLinker, copy_comments};
 use crate::{LinkError, Location, Member};
-use proto_packet_tree::{Struct, StructField, TypeTag, WithFieldName, WithTypeName, WithTypeTag};
+use proto_packet_tree::{Struct, TypeTag, WithFieldName, WithTypeName, WithTypeTag};
 
 impl SchemaLinker<'_> {
     //! Structs
@@ -13,12 +13,8 @@ impl SchemaLinker<'_> {
             let member: Member = Member::Field(field.field_name().into_owned());
             let location: Location = self.location(structure.type_name(), member);
             let type_tag: TypeTag = self.resolver.link_type_tag(field.type_tag(), &location)?;
-            let mut linked_field: StructField = StructField::new(field.field_name(), type_tag)
-                .with_optional(field.is_optional())
-                .with_boxed(field.is_boxed());
-            copy_comments(field, &mut linked_field);
             linked
-                .add_field(linked_field)
+                .add_field(field.clone().with_type_tag(type_tag))
                 .expect("linking keeps the field names unique");
         }
         Ok(linked)

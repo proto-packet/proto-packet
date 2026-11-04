@@ -41,6 +41,12 @@ impl ServiceCall {
     pub fn response(&self) -> &TypeTag {
         &self.response
     }
+
+    /// Sets the request & response types.
+    pub fn set_types(&mut self, request: TypeTag, response: TypeTag) {
+        self.request = request;
+        self.response = response;
+    }
 }
 
 impl_with_comments!(ServiceCall);

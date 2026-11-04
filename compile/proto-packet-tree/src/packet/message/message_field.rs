@@ -64,6 +64,10 @@ impl WithTypeTag for MessageField {
     fn type_tag(&self) -> &TypeTag {
         &self.type_tag
     }
+
+    fn set_type_tag(&mut self, type_tag: TypeTag) {
+        self.type_tag = type_tag;
+    }
 }
 
 impl WithTagNumber for MessageField {

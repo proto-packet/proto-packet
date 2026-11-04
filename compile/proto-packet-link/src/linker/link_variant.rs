@@ -1,7 +1,6 @@
 use crate::linker::schema_linker::{SchemaLinker, copy_comments};
 use crate::{LinkError, Location, Member};
-use proto_packet::io::WithTagNumber;
-use proto_packet_tree::{TypeTag, Variant, VariantCase, WithCaseName, WithTypeName, WithTypeTag};
+use proto_packet_tree::{TypeTag, Variant, WithCaseName, WithTypeName, WithTypeTag};
 
 impl SchemaLinker<'_> {
     //! Variants
@@ -14,12 +13,8 @@ impl SchemaLinker<'_> {
             let member: Member = Member::Case(case.case_name().into_owned());
             let location: Location = self.location(variant.type_name(), member);
             let type_tag: TypeTag = self.resolver.link_type_tag(case.type_tag(), &location)?;
-            let mut linked_case: VariantCase =
-                VariantCase::new(case.case_name(), type_tag, case.tag_number())
-                    .with_boxed(case.is_boxed());
-            copy_comments(case, &mut linked_case);
             linked
-                .add_case(linked_case)
+                .add_case(case.clone().with_type_tag(type_tag))
                 .expect("linking keeps the case names & tag numbers unique");
         }
         Ok(linked)

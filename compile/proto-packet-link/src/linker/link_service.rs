@@ -24,9 +24,8 @@ impl SchemaLinker<'_> {
                     Member::Response(call.call_name().into_owned()),
                 ),
             )?;
-            let mut linked_call: ServiceCall =
-                ServiceCall::new(call.call_name(), request, response);
-            copy_comments(call, &mut linked_call);
+            let mut linked_call: ServiceCall = call.clone();
+            linked_call.set_types(request, response);
             linked
                 .add_call(linked_call)
                 .expect("linking keeps the call names unique");
