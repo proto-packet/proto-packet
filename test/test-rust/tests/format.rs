@@ -1,13 +1,15 @@
 mod common;
 
 use common::ID;
-use proto_packet::io::DecodeError;
+use proto_packet::io::{CapacityError, DecodeError};
+use proto_packet::types::Uuid;
 use proto_packet_test::format::edges::{
-    AbsentChild, FixedKinds, FixedKindsRef, LoopByte, LoopLong, NineBits, NineBitsRef,
+    AbsentChild, FixedKinds, FixedKindsMut, FixedKindsRef, LoopByte, LoopLong, NineBits,
+    NineBitsMut, NineBitsRef, Strings, StringsMut,
 };
 use proto_packet_test::format::examples::{
-    Color, Entry, Line, LineBuf, LineRef, Mixed, MixedRef, Opt, OptRef, Pair, PairRef, Person,
-    PersonRef, Point, PointBuf, PointRef,
+    Color, Entry, Line, LineBuf, LineMut, LineRef, Mixed, MixedMut, MixedRef, Opt, OptMut, OptRef,
+    Pair, PairMut, PairRef, Person, PersonMut, PersonRef, Point, PointBuf, PointMut, PointRef,
 };
 use proto_packet_test::structs::boxed::{ListNode, ListNodeRef};
 use proto_packet_test::structs::empty::{EmptyStruct, EmptyStructRef};
@@ -355,4 +357,229 @@ fn absent_fields_are_not_validated() {
     let bytes: [u8; 13] = [0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0b0000_0001, 0xFF, 0xFF];
     let value: Opt = Opt::new(true, None, None, None, None);
     assert_eq!(Opt::decode(&bytes), Ok(value));
+}
+
+#[test]
+fn mut_sets_integers_in_place() {
+    let mut bytes: Vec<u8> = Mixed::new(1, 2, 3, true).encode();
+    let mut mixed: MixedMut = MixedMut::new(&mut bytes).unwrap();
+    mixed.set_b(9);
+    mixed.set_c(8);
+    assert_eq!(mixed.as_ref().b(), 9);
+    assert_eq!(Mixed::decode(&bytes), Ok(Mixed::new(1, 9, 8, true)));
+}
+
+#[test]
+fn mut_sets_bits_without_touching_the_others() {
+    let mut bytes: Vec<u8> =
+        NineBits::new(true, false, true, false, false, false, false, true, true).encode();
+    let mut bits: NineBitsMut = NineBitsMut::new(&mut bytes).unwrap();
+    bits.set_b(true);
+    bits.set_a(false);
+    bits.set_i(false);
+    assert_eq!(bytes, [0b1000_0110, 0]);
+}
+
+#[test]
+fn mut_sets_optional_fields() {
+    let mut bytes: Vec<u8> = Opt::new(false, None, None, None, None).encode();
+    let mut opt: OptMut = OptMut::new(&mut bytes).unwrap();
+    opt.set_b(5);
+    opt.set_c(true);
+    opt.set_e(Color::Red);
+    opt.set_a(true);
+    assert_eq!(
+        Opt::decode(&bytes),
+        Ok(Opt::new(true, Some(5), Some(true), None, Some(Color::Red)))
+    );
+
+    let mut opt: OptMut = OptMut::new(&mut bytes).unwrap();
+    opt.set_b(None);
+    opt.set_c(None);
+    opt.set_e(None);
+    assert_eq!(bytes, Opt::new(true, None, None, None, None).encode());
+}
+
+#[test]
+fn mut_sets_uuids_and_enums() {
+    let mut bytes: Vec<u8> =
+        FixedKinds::new(Uuid::nil(), Color::Red, Point::new(1, 2), None, None).encode();
+    let mut kinds: FixedKindsMut = FixedKindsMut::new(&mut bytes).unwrap();
+    kinds.set_id(ID);
+    kinds.set_maybe_color(Color::Red);
+    let decoded: FixedKinds = FixedKinds::decode(&bytes).unwrap();
+    assert_eq!(decoded.id(), ID);
+    assert_eq!(decoded.maybe_color(), Some(Color::Red));
+}
+
+#[test]
+fn mut_edits_nested_structs_in_place() {
+    let mut bytes: Vec<u8> = Line::new(Point::new(1, 2), Point::new(3, 4), 5).encode();
+    let mut line: LineMut = LineMut::new(&mut bytes).unwrap();
+    line.start_mut().set_y(9);
+    line.end_mut().set_x(8);
+    assert_eq!(
+        Line::decode(&bytes),
+        Ok(Line::new(Point::new(1, 9), Point::new(8, 4), 5))
+    );
+}
+
+#[test]
+fn mut_only_reaches_present_optional_structs() {
+    let present: FixedKinds = FixedKinds::new(
+        ID,
+        Color::Red,
+        Point::new(1, 2),
+        Some(Point::new(3, 4)),
+        None,
+    );
+    let mut bytes: Vec<u8> = present.encode();
+    let mut kinds: FixedKindsMut = FixedKindsMut::new(&mut bytes).unwrap();
+    kinds.maybe_point_mut().unwrap().set_y(9);
+    assert_eq!(kinds.as_ref().maybe_point().unwrap().y(), 9);
+
+    let mut bytes: Vec<u8> = FixedKinds::new(ID, Color::Red, Point::new(1, 2), None, None).encode();
+    let mut kinds: FixedKindsMut = FixedKindsMut::new(&mut bytes).unwrap();
+    assert!(kinds.maybe_point_mut().is_none());
+}
+
+#[test]
+fn mut_shrinks_strings_and_zeroes_the_freed_bytes() {
+    let mut bytes: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
+    let mut person: PersonMut = PersonMut::new(&mut bytes).unwrap();
+    person.set_name("Al").unwrap();
+    assert_eq!(bytes, [2, 0, 0, 0, 36, b'A', b'l', 0]);
+    assert_eq!(
+        Person::decode(&bytes),
+        Ok(Person::new("Al".to_string(), 36))
+    );
+}
+
+#[test]
+fn mut_grows_strings_into_slack() {
+    let mut bytes: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
+    bytes.extend_from_slice(&[0; 3]);
+    let mut person: PersonMut = PersonMut::new(&mut bytes).unwrap();
+    person.set_name("Grace!").unwrap();
+    assert_eq!(person.as_ref().name(), "Grace!");
+}
+
+#[test]
+fn mut_rejects_strings_that_do_not_fit() {
+    let original: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
+    let mut bytes: Vec<u8> = original.clone();
+    let mut person: PersonMut = PersonMut::new(&mut bytes).unwrap();
+    assert_eq!(
+        person.set_name("Grace"),
+        Err(CapacityError {
+            required: 5,
+            capacity: 3,
+        })
+    );
+    assert_eq!(bytes, original);
+}
+
+/// Gets the test struct with strings after a variable struct.
+fn strings() -> Strings {
+    Strings::new(
+        7,
+        "first".to_string(),
+        Entry::new(1, "text".to_string()),
+        Some("second".to_string()),
+        "third".to_string(),
+    )
+}
+
+#[test]
+fn mut_moves_the_later_strings() {
+    let mut bytes: Vec<u8> = strings().encode();
+    let mut value: StringsMut = StringsMut::new(&mut bytes).unwrap();
+    value.set_first("1st").unwrap();
+    assert_eq!(value.as_ref().second(), Some("second"));
+    assert_eq!(value.as_ref().third(), "third");
+    value.set_first("first").unwrap();
+    assert_eq!(bytes, strings().encode());
+}
+
+#[test]
+fn mut_never_moves_nested_structs() {
+    let mut bytes: Vec<u8> = strings().encode();
+    let mut value: StringsMut = StringsMut::new(&mut bytes).unwrap();
+    let entry: usize = value.as_ref().entry().as_bytes().as_ptr() as usize;
+    value.set_third("3").unwrap();
+    value.set_first("").unwrap();
+    assert_eq!(value.as_ref().entry().as_bytes().as_ptr() as usize, entry);
+    assert_eq!(value.as_ref().entry().text(), "text");
+}
+
+#[test]
+fn mut_sets_optional_strings() {
+    let mut bytes: Vec<u8> = strings().encode();
+    let mut value: StringsMut = StringsMut::new(&mut bytes).unwrap();
+    value.set_second(None).unwrap();
+    assert_eq!(value.as_ref().second(), None);
+    assert_eq!(value.as_ref().third(), "third");
+    value.set_second("2nd").unwrap();
+    assert_eq!(value.as_ref().second(), Some("2nd"));
+    value.set_second("").unwrap();
+    assert_eq!(value.as_ref().second(), Some(""));
+}
+
+#[test]
+fn mut_failed_optional_strings_stay_absent() {
+    let mut bytes: Vec<u8> = Opt::new(false, None, None, None, None).encode();
+    let original: Vec<u8> = bytes.clone();
+    let mut opt: OptMut = OptMut::new(&mut bytes).unwrap();
+    assert!(opt.set_d("hi").is_err());
+    assert_eq!(bytes, original);
+}
+
+#[test]
+fn children_grow_into_their_padding() {
+    let mut bytes: Vec<u8> = pair_bytes();
+    let mut pair: PairMut = PairMut::new(&mut bytes).unwrap();
+    assert_eq!(
+        pair.first_mut().set_text("hello, world!"),
+        Err(CapacityError {
+            required: 13,
+            capacity: 12,
+        })
+    );
+    pair.first_mut().set_text("hello, world").unwrap();
+    assert_eq!(pair.as_ref().first().text(), "hello, world");
+    assert_eq!(pair.as_ref().second().text(), "hi");
+    assert_eq!(pair.as_ref().note(), "ok");
+    PairRef::new(pair.as_bytes()).unwrap();
+}
+
+#[test]
+fn children_keep_their_extent_when_they_shrink() {
+    let mut bytes: Vec<u8> = pair_bytes();
+    let mut pair: PairMut = PairMut::new(&mut bytes).unwrap();
+    pair.first_mut().set_text("").unwrap();
+    assert_eq!(pair.as_ref().second().id(), 2);
+    assert_eq!(bytes.len(), 56);
+    assert_eq!(bytes[..4], [24, 0, 0, 0]);
+    let decoded: Pair = Pair::decode(&bytes).unwrap();
+    assert_eq!(decoded.first().text(), "");
+}
+
+#[test]
+fn mut_validates() {
+    let mut bytes: [u8; 7] = [0; 7];
+    assert!(matches!(
+        PointMut::new(&mut bytes),
+        Err(DecodeError::TooShort { .. })
+    ));
+}
+
+#[test]
+fn bufs_edit_in_place() {
+    let mut buf: LineBuf = LineBuf::from(&Line::new(Point::new(1, 2), Point::new(3, 4), 5));
+    buf.as_mut().set_width(9);
+    buf.as_mut().end_mut().set_y(8);
+    assert_eq!(
+        buf.decode(),
+        Line::new(Point::new(1, 2), Point::new(3, 8), 9)
+    );
 }
