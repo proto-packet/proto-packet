@@ -1,7 +1,7 @@
 use crate::GenError;
 use crate::layout::scalar_size;
 use crate::rust::TypeFile;
-use crate::rust::derives::{add_derives, add_serde_derives};
+use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
 use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_struct::{check_type_name, gen_decoding};
@@ -13,7 +13,7 @@ use crate::rust::gen_variant_view::{gen_variant_view, gen_variant_view_mut};
 use crate::rust::gen_view::view_name;
 use crate::rust::gen_view_mut::view_mut_name;
 use crate::rust::message_encoding::gen_value_write;
-use crate::rust::naming::{ident, is_renamed, is_upper_camel_case, snake_case};
+use crate::rust::naming::{ident, is_upper_camel_case, snake_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
@@ -148,6 +148,8 @@ pub fn gen_variant(
         &ref_name(schema_name),
         "variant",
     ));
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_json(typing, schema_name, &type_name, &cases));
     for name in [
         ref_name(schema_name),
         buf_name(schema_name),
@@ -236,8 +238,6 @@ fn gen_dec(typing: Typing<'_>, variant: &Variant, type_name: &str) -> RustEnum {
     let mut result: RustEnum = RustEnum::from(type_name);
     add_docs(&mut result, variant.comments());
     add_derives(&mut result, false, true, false);
-    add_serde_derives(&mut result);
-    result.add_attribute("serde(tag = \"var\", content = \"val\")");
     let is_camel_case: bool = is_upper_camel_case(&variant.type_name())
         && variant
             .cases()
@@ -247,13 +247,13 @@ fn gen_dec(typing: Typing<'_>, variant: &Variant, type_name: &str) -> RustEnum {
         result.add_attribute("allow(non_camel_case_types)");
     }
     result.set_access(Access::Public);
-    let mut unrecognized: EnumCase = EnumCase::from("Unrecognized")
-        .with_comment(" A case the variant doesn't know.")
-        .with_fields(EnumFields::Unnamed(vec![
-            "unrecognized::UnrecognizedCase".into(),
-        ]));
-    unrecognized.add_attribute("serde(skip)");
-    result.add_case(unrecognized);
+    result.add_case(
+        EnumCase::from("Unrecognized")
+            .with_comment(" A case the variant doesn't know.")
+            .with_fields(EnumFields::Unnamed(vec![
+                "unrecognized::UnrecognizedCase".into(),
+            ])),
+    );
     for case in variant.cases() {
         let mut case_type: RustType = typing.rust_type(case.type_tag());
         if case.is_boxed() {
@@ -262,9 +262,6 @@ fn gen_dec(typing: Typing<'_>, variant: &Variant, type_name: &str) -> RustEnum {
         let fields: EnumFields = EnumFields::Unnamed(vec![case_type]);
         let mut rust_case: EnumCase = EnumCase::from(ident(&case.case_name())).with_fields(fields);
         add_docs(&mut rust_case, case.comments());
-        if is_renamed(&case.case_name()) {
-            rust_case.add_attribute(format!("serde(rename = \"{}\")", case.case_name()));
-        }
         result.add_case(rust_case);
     }
     result
@@ -469,4 +466,94 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
         .with_function(encoded_len)
         .with_function(encode)
         .with_function(encode_to)
+}
+
+/// Generates the serde impls of the variant with the `schema_name`.
+///
+/// A case is its schema name & value. (ex: `Self_` is `Self`) An unrecognized case is its tag number
+/// & its encoded value as base-64 text, which a reader that knows the case decodes as that case.
+fn gen_json(typing: Typing<'_>, schema_name: &str, type_name: &str, cases: &[Case<'_>]) -> String {
+    const TYPES: &str = "proto_packet::types";
+    const SERDE: &str = "proto_packet::serde";
+    let result: &str = typing.prelude(PreludeName::Result);
+
+    let mut serialize: Vec<String> = vec![format!(
+        "Self::Unrecognized(case) => {}::serialize_unknown_case(serializer, \"{}\", case.tag_number, &case.bytes),",
+        TYPES, schema_name
+    )];
+    let mut from_case: Vec<String> = Vec::default();
+    for case in cases {
+        serialize.push(format!(
+            "Self::{}(value) => {}::serialize_case(serializer, \"{}\", \"{}\", value),",
+            case.ident(),
+            TYPES,
+            schema_name,
+            case.name
+        ));
+        from_case.push(format!(
+            "\"{}\" => Ok(Self::{}({}::Deserialize::deserialize(value)?)),",
+            case.name,
+            case.ident(),
+            SERDE
+        ));
+    }
+    let names: Vec<String> = cases
+        .iter()
+        .map(|case| format!("\"{}\"", case.name))
+        .collect();
+    let unknown: String = format!(
+        "Err({}::de::Error::unknown_variant(name, &[{}]))",
+        SERDE,
+        names.join(", ")
+    );
+    let (value, from_case): (&str, String) = if cases.is_empty() {
+        ("_value", unknown)
+    } else {
+        from_case.push(format!("_ => {},", unknown));
+        ("value", format!("match name {{ {} }}", from_case.join(" ")))
+    };
+
+    format!(
+        "impl {serde}::Serialize for {type_name} {{
+    fn serialize<S>(&self, serializer: S) -> {result}<S::Ok, S::Error>
+    where
+        S: {serde}::Serializer,
+    {{
+        match self {{ {serialize} }}
+    }}
+}}
+
+impl<'de> {serde}::Deserialize<'de> for {type_name} {{
+    fn deserialize<D>(deserializer: D) -> {result}<Self, D::Error>
+    where
+        D: {serde}::Deserializer<'de>,
+    {{
+        {types}::deserialize_variant(deserializer)
+    }}
+}}
+
+impl {types}::JsonVariant for {type_name} {{
+    const TYPE_NAME: &'static str = \"{schema_name}\";
+
+    fn from_case<'de, D>(name: &str, {value}: D) -> {result}<Self, D::Error>
+    where
+        D: {serde}::Deserializer<'de>,
+    {{
+        {from_case}
+    }}
+
+    fn from_encoded(bytes: &[u8]) -> {result}<Self, proto_packet::io::DecodeError> {{
+        Self::decode(bytes)
+    }}
+}}
+",
+        serde = SERDE,
+        types = TYPES,
+        type_name = type_name,
+        schema_name = schema_name,
+        result = result,
+        serialize = serialize.join(" "),
+        value = value,
+        from_case = from_case,
+    )
 }
