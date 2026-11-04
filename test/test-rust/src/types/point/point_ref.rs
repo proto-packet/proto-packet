@@ -62,4 +62,10 @@ impl<'a> PointRef<'a> {
     pub fn decode(&self) -> super::Point {
         super::Point::new(self.x(), self.y())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::PointBuf {
+        unsafe { super::PointBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

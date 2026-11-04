@@ -73,4 +73,10 @@ impl<'a> OptionalCopyRef<'a> {
     pub fn decode(&self) -> super::OptionalCopy {
         super::OptionalCopy::new(self.count(), self.point().map(|value| value.decode()))
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::OptionalCopyBuf {
+        unsafe { super::OptionalCopyBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

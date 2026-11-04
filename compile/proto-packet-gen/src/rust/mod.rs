@@ -15,6 +15,7 @@ mod gen_enum;
 mod gen_message;
 mod gen_service;
 mod gen_struct;
+mod gen_struct_buf;
 mod gen_struct_ref;
 mod gen_variant;
 mod generate;

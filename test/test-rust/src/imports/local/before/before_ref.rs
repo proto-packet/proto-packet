@@ -57,4 +57,10 @@ impl<'a> BeforeRef<'a> {
     pub fn decode(&self) -> super::Before {
         super::Before::new(self.after().decode())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::BeforeBuf {
+        unsafe { super::BeforeBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

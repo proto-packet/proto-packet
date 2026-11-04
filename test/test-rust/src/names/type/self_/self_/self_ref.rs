@@ -56,4 +56,10 @@ impl<'a> SelfRef<'a> {
     pub fn decode(&self) -> super::Self_ {
         super::Self_::new(self.value())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::SelfBuf {
+        unsafe { super::SelfBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

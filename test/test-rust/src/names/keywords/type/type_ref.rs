@@ -56,4 +56,10 @@ impl<'a> TypeRef<'a> {
     pub fn decode(&self) -> super::Type {
         super::Type::new(self.value())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::TypeBuf {
+        unsafe { super::TypeBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

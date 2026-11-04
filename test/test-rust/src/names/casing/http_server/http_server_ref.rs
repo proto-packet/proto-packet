@@ -57,4 +57,10 @@ impl<'a> HTTPServerRef<'a> {
     pub fn decode(&self) -> super::HTTPServer {
         super::HTTPServer::new(self.maxConnections())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::HTTPServerBuf {
+        unsafe { super::HTTPServerBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

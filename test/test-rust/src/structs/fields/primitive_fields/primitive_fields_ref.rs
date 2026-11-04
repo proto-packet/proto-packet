@@ -93,4 +93,10 @@ impl<'a> PrimitiveFieldsRef<'a> {
             self.unsigned128(),
         )
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::PrimitiveFieldsBuf {
+        unsafe { super::PrimitiveFieldsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

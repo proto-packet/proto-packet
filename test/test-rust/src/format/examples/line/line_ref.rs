@@ -70,4 +70,10 @@ impl<'a> LineRef<'a> {
     pub fn decode(&self) -> super::Line {
         super::Line::new(self.start().decode(), self.end().decode(), self.width())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::LineBuf {
+        unsafe { super::LineBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

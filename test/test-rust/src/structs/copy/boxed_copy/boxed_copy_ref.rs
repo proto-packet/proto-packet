@@ -57,4 +57,10 @@ impl<'a> BoxedCopyRef<'a> {
     pub fn decode(&self) -> super::BoxedCopy {
         super::BoxedCopy::new(self.point().decode())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::BoxedCopyBuf {
+        unsafe { super::BoxedCopyBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

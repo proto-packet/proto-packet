@@ -101,4 +101,10 @@ impl<'a> QualifiedFieldsRef<'a> {
             self.local().decode(),
         )
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::QualifiedFieldsBuf {
+        unsafe { super::QualifiedFieldsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

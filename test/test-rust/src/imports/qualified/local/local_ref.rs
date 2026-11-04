@@ -56,4 +56,10 @@ impl<'a> LocalRef<'a> {
     pub fn decode(&self) -> super::Local {
         super::Local::new(self.value())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::LocalBuf {
+        unsafe { super::LocalBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

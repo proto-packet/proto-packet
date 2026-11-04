@@ -4,6 +4,7 @@ use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::{IO, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
+use crate::rust::gen_struct_buf::{buf_name, gen_struct_buf};
 use crate::rust::gen_struct_ref::{gen_struct_ref, ref_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::Prelude;
@@ -22,7 +23,7 @@ use proto_packet_tree::{
 const CONSTRUCTOR: &str = "new";
 
 /// The names of the generated methods of a struct & its `Ref` type.
-const METHODS: [&str; 8] = [
+const METHODS: [&str; 9] = [
     CONSTRUCTOR,
     "encoded_len",
     "encode",
@@ -31,6 +32,7 @@ const METHODS: [&str; 8] = [
     "decode_unchecked",
     "new_unchecked",
     "as_bytes",
+    "to_buf",
 ];
 
 /// A generated file of a struct.
@@ -77,6 +79,7 @@ pub fn gen_struct(
         StructLayout::new(project, structure).filter(StructLayout::is_fixed);
     if let Some(layout) = &layout {
         check_type_name(project, mod_path, &ref_name(&structure.type_name()))?;
+        check_type_name(project, mod_path, &buf_name(&structure.type_name()))?;
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_encoding(typing, &type_name, &fields, layout));
         block.add_statement(EmptyLine::default());
@@ -87,6 +90,10 @@ pub fn gen_struct(
         code: block.to_code(),
     }];
     if let Some(layout) = &layout {
+        files.push(StructFile {
+            suffix: "_buf",
+            code: gen_struct_buf(structure, &type_name),
+        });
         files.push(StructFile {
             suffix: "_ref",
             code: gen_struct_ref(typing, structure, &fields, layout, &type_name),

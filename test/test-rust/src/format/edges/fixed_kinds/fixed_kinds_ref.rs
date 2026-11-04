@@ -112,4 +112,10 @@ impl<'a> FixedKindsRef<'a> {
             self.maybe_color(),
         )
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::FixedKindsBuf {
+        unsafe { super::FixedKindsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

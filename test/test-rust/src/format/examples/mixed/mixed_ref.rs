@@ -74,4 +74,10 @@ impl<'a> MixedRef<'a> {
     pub fn decode(&self) -> super::Mixed {
         super::Mixed::new(self.a(), self.b(), self.c(), self.d())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::MixedBuf {
+        unsafe { super::MixedBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

@@ -56,4 +56,10 @@ impl<'a> MoveStructRef<'a> {
     pub fn decode(&self) -> super::MoveStruct {
         super::MoveStruct::new(self.value())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::MoveStructBuf {
+        unsafe { super::MoveStructBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

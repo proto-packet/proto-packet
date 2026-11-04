@@ -59,4 +59,10 @@ impl<'a> NestedCopyRef<'a> {
     pub fn decode(&self) -> super::NestedCopy {
         super::NestedCopy::new(self.fields().decode())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::NestedCopyBuf {
+        unsafe { super::NestedCopyBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

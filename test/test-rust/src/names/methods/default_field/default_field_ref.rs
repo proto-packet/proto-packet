@@ -56,4 +56,10 @@ impl<'a> DefaultFieldRef<'a> {
     pub fn decode(&self) -> super::DefaultField {
         super::DefaultField::new(self.default())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::DefaultFieldBuf {
+        unsafe { super::DefaultFieldBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

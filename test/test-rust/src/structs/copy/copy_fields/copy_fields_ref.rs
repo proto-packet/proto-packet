@@ -84,4 +84,10 @@ impl<'a> CopyFieldsRef<'a> {
     pub fn decode(&self) -> super::CopyFields {
         super::CopyFields::new(self.count(), self.id(), self.point().decode(), self.color())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::CopyFieldsBuf {
+        unsafe { super::CopyFieldsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

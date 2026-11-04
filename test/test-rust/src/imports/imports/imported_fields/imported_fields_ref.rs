@@ -66,4 +66,10 @@ impl<'a> ImportedFieldsRef<'a> {
     pub fn decode(&self) -> super::ImportedFields {
         super::ImportedFields::new(self.point().decode(), self.child().decode())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::ImportedFieldsBuf {
+        unsafe { super::ImportedFieldsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

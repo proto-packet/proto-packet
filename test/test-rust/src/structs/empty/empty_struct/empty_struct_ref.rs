@@ -46,4 +46,10 @@ impl<'a> EmptyStructRef<'a> {
     pub fn decode(&self) -> super::EmptyStruct {
         super::EmptyStruct {}
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::EmptyStructBuf {
+        unsafe { super::EmptyStructBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

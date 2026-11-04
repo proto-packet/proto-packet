@@ -56,4 +56,10 @@ impl<'a> SelfStructRef<'a> {
     pub fn decode(&self) -> super::SelfStruct {
         super::SelfStruct::new(self.value())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::SelfStructBuf {
+        unsafe { super::SelfStructBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

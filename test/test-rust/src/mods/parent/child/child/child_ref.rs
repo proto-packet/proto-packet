@@ -56,4 +56,10 @@ impl<'a> ChildRef<'a> {
     pub fn decode(&self) -> super::Child {
         super::Child::new(self.value())
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::ChildBuf {
+        unsafe { super::ChildBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

@@ -114,4 +114,10 @@ impl<'a> NineBitsRef<'a> {
             self.i(),
         )
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::NineBitsBuf {
+        unsafe { super::NineBitsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }
