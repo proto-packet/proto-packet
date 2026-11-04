@@ -21,7 +21,8 @@ pub(crate) fn mut_name(type_name: &str) -> String {
     format!("{}Mut", type_name)
 }
 
-/// Checks no two methods of the `Mut` type of the struct with the `type_name` have the same name.
+/// Checks no two methods of the `Mut` type of the type with the `type_name` have the same name, &
+/// no accessor is named like the `Buf` type's `as_mut`.
 ///
 /// (ex: the setter of the field `y_mut` & the accessor of the field `set_y` are both `set_y_mut`)
 pub(crate) fn check_mut_names(
@@ -29,7 +30,7 @@ pub(crate) fn check_mut_names(
     type_name: &str,
     fields: &[Field<'_>],
 ) -> Result<(), GenError> {
-    let mut names: BTreeSet<String> = BTreeSet::default();
+    let mut names: BTreeSet<String> = BTreeSet::from(["as_mut".to_string()]);
     for field in fields {
         if !names.insert(method_name(typing, *field)) {
             return Err(GenError::FieldNameConflict {
