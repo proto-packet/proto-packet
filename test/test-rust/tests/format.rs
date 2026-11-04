@@ -4,16 +4,17 @@ use common::ID;
 use proto_packet::io::{CapacityError, DecodeError};
 use proto_packet::types::Uuid;
 use proto_packet_test::format::edges::{
-    AbsentChild, FixedKinds, FixedKindsMut, FixedKindsRef, FixedKindsView, LoopByte, LoopLong,
-    NineBits, NineBitsMut, NineBitsRef, Strings, StringsMut,
+    AbsentChild, FixedKinds, FixedKindsBuf, FixedKindsMut, FixedKindsRef, FixedKindsView,
+    FixedKindsViewMut, LoopByte, LoopLong, NineBits, NineBitsMut, NineBitsRef, Strings, StringsMut,
 };
 use proto_packet_test::format::examples::{
-    Color, Entry, EntryView, Line, LineBuf, LineMut, LineRef, LineView, Mixed, MixedMut, MixedRef,
-    Opt, OptMut, OptRef, OptView, Pair, PairBuf, PairMut, PairRef, PairView, Person, PersonMut,
-    PersonRef, Point, PointBuf, PointMut, PointRef, PointView,
+    Color, Entry, EntryView, EntryViewMut, Line, LineBuf, LineMut, LineRef, LineView, LineViewMut,
+    Mixed, MixedMut, MixedRef, Opt, OptBuf, OptMut, OptRef, OptView, OptViewMut, Pair, PairBuf,
+    PairMut, PairRef, PairView, PairViewMut, Person, PersonBuf, PersonMut, PersonRef,
+    PersonViewMut, Point, PointBuf, PointMut, PointRef, PointView, PointViewMut,
 };
 use proto_packet_test::structs::boxed::{
-    ListNode, ListNodeBuf, ListNodeMut, ListNodeRef, ListNodeView,
+    ListNode, ListNodeBuf, ListNodeMut, ListNodeRef, ListNodeView, ListNodeViewMut,
 };
 use proto_packet_test::structs::empty::{EmptyStruct, EmptyStructRef};
 
@@ -697,4 +698,212 @@ fn views_read_recursive_structs() {
     assert_eq!(list_sum(&ListNodeRef::new(&bytes).unwrap()), 6);
     assert_eq!(list_sum(&ListNodeBuf::from(&list)), 6);
     assert_eq!(list_sum(&ListNodeMut::new(&mut bytes).unwrap()), 6);
+}
+
+/// Adds 10 to the `x` of any editable form of a point.
+fn shift<P: PointViewMut>(point: &mut P) {
+    point.set_x(point.x() + 10);
+}
+
+#[test]
+fn view_muts_edit_every_form() {
+    let mut point: Point = Point::new(1, 2);
+    shift(&mut point);
+    assert_eq!(point, Point::new(11, 2));
+    shift(&mut &mut point);
+    assert_eq!(point, Point::new(21, 2));
+
+    let mut buf: PointBuf = PointBuf::from(&Point::new(1, 2));
+    shift(&mut buf);
+    assert_eq!(buf.decode(), Point::new(11, 2));
+
+    let mut bytes: Vec<u8> = Point::new(1, 2).encode();
+    shift(&mut PointMut::new(&mut bytes).unwrap());
+    assert_eq!(Point::decode(&bytes), Ok(Point::new(11, 2)));
+}
+
+/// Renames any editable form of a person.
+fn rename<P: PersonViewMut>(person: &mut P, name: &str) -> Result<(), CapacityError> {
+    person.set_name(name)
+}
+
+#[test]
+fn view_muts_set_strings() {
+    let mut person: Person = Person::new("Ada".to_string(), 36);
+    rename(&mut person, "Grace Hopper").unwrap();
+    assert_eq!(person.name(), "Grace Hopper");
+
+    let mut buf: PersonBuf = PersonBuf::from(&Person::new("Ada".to_string(), 36));
+    rename(&mut buf, "Al").unwrap();
+    assert_eq!(buf.decode(), Person::new("Al".to_string(), 36));
+    assert_eq!(
+        rename(&mut buf, "Grace"),
+        Err(CapacityError {
+            required: 5,
+            capacity: 3,
+        })
+    );
+
+    let mut bytes: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
+    let mut edit: PersonMut = PersonMut::new(&mut bytes).unwrap();
+    assert!(rename(&mut edit, "Grace").is_err());
+    rename(&mut edit, "Bo").unwrap();
+    assert_eq!(edit.as_ref().name(), "Bo");
+}
+
+/// Edits any editable form of a line, through its `Copy` nested struct.
+fn raise_line<L: LineViewMut>(line: &mut L) {
+    line.start_mut().set_y(9);
+    line.set_width(1);
+}
+
+/// Edits any editable form of a pair, through its non-`Copy` nested structs.
+fn retag<P: PairViewMut>(pair: &mut P) -> Result<(), CapacityError> {
+    pair.first_mut().set_text("hey")?;
+    pair.second_mut().set_id(8);
+    pair.set_note("no")
+}
+
+#[test]
+fn view_muts_edit_nested_structs() {
+    let line: Line = Line::new(Point::new(1, 2), Point::new(3, 4), 5);
+    let expected: Line = Line::new(Point::new(1, 9), Point::new(3, 4), 1);
+
+    let mut value: Line = line;
+    raise_line(&mut value);
+    assert_eq!(value, expected);
+
+    let mut buf: LineBuf = LineBuf::from(&line);
+    raise_line(&mut buf);
+    assert_eq!(buf.decode(), expected);
+
+    let mut bytes: Vec<u8> = line.encode();
+    raise_line(&mut LineMut::new(&mut bytes).unwrap());
+    assert_eq!(Line::decode(&bytes), Ok(expected));
+
+    let expected: Pair = Pair::new(
+        Entry::new(1, "hey".to_string()),
+        Entry::new(8, "hi".to_string()),
+        "no".to_string(),
+    );
+
+    let mut value: Pair = pair();
+    retag(&mut value).unwrap();
+    assert_eq!(value, expected);
+
+    let mut buf: PairBuf = PairBuf::from(&pair());
+    retag(&mut buf).unwrap();
+    assert_eq!(buf.decode(), expected);
+
+    let mut bytes: Vec<u8> = pair_bytes();
+    retag(&mut PairMut::new(&mut bytes).unwrap()).unwrap();
+    assert_eq!(Pair::decode(&bytes), Ok(expected));
+}
+
+/// Sets the optional fields of any editable form of an `Opt`.
+fn fill_opt<O: OptViewMut>(opt: &mut O) -> Result<(), CapacityError> {
+    opt.set_b(5);
+    opt.set_c(true);
+    opt.set_d("hi")?;
+    opt.set_e(Color::Red);
+    Ok(())
+}
+
+/// Clears the optional fields of any editable form of an `Opt`.
+fn clear_opt<O: OptViewMut>(opt: &mut O) -> Result<(), CapacityError> {
+    opt.set_b(None);
+    opt.set_c(None);
+    opt.set_d(None)?;
+    opt.set_e(None);
+    Ok(())
+}
+
+#[test]
+fn view_muts_set_optional_fields() {
+    let filled: Opt = Opt::new(
+        false,
+        Some(5),
+        Some(true),
+        Some("hi".to_string()),
+        Some(Color::Red),
+    );
+    let absent: Opt = Opt::new(false, None, None, None, None);
+
+    let mut value: Opt = absent.clone();
+    fill_opt(&mut value).unwrap();
+    assert_eq!(value, filled);
+    clear_opt(&mut value).unwrap();
+    assert_eq!(value, absent);
+
+    let mut bytes: Vec<u8> = filled.encode();
+    let mut edit: OptMut = OptMut::new(&mut bytes).unwrap();
+    clear_opt(&mut edit).unwrap();
+    fill_opt(&mut edit).unwrap();
+    assert_eq!(bytes, filled.encode());
+
+    let mut buf: OptBuf = OptBuf::from(&absent);
+    assert!(fill_opt(&mut buf).is_err());
+}
+
+/// Edits the optional nested struct of any editable form of a `FixedKinds`, if it's present.
+fn nudge<K: FixedKindsViewMut>(kinds: &mut K) -> bool {
+    match kinds.maybe_point_mut() {
+        Some(mut point) => {
+            point.set_x(7);
+            true
+        }
+        None => false,
+    }
+}
+
+#[test]
+fn view_muts_reach_present_optional_structs() {
+    let some: FixedKinds = FixedKinds::new(
+        ID,
+        Color::Red,
+        Point::new(1, 2),
+        Some(Point::new(3, 4)),
+        None,
+    );
+    let none: FixedKinds = FixedKinds::new(ID, Color::Red, Point::new(1, 2), None, None);
+
+    let mut value: FixedKinds = some.clone();
+    assert!(nudge(&mut value));
+    assert_eq!(value.maybe_point(), Some(Point::new(7, 4)));
+    assert!(!nudge(&mut none.clone()));
+
+    let mut buf: FixedKindsBuf = FixedKindsBuf::from(&some);
+    assert!(nudge(&mut buf));
+    assert_eq!(buf.as_ref().maybe_point().unwrap().x(), 7);
+
+    let mut bytes: Vec<u8> = none.encode();
+    assert!(!nudge(&mut FixedKindsMut::new(&mut bytes).unwrap()));
+}
+
+/// Adds 1 to each value of any editable form of a linked list.
+fn increment<N: ListNodeViewMut>(node: &mut N) {
+    node.set_value(node.value() + 1);
+    if let Some(mut next) = node.next_mut() {
+        increment(&mut next);
+    }
+}
+
+#[test]
+fn view_muts_edit_recursive_structs() {
+    let list = |base: u32| {
+        let tail: ListNode = ListNode::new(base + 2, None);
+        ListNode::new(base, Some(ListNode::new(base + 1, Some(tail))))
+    };
+
+    let mut value: ListNode = list(1);
+    increment(&mut value);
+    assert_eq!(value, list(2));
+
+    let mut buf: ListNodeBuf = ListNodeBuf::from(&list(1));
+    increment(&mut buf);
+    assert_eq!(buf.decode(), list(2));
+
+    let mut bytes: Vec<u8> = list(1).encode();
+    increment(&mut ListNodeMut::new(&mut bytes).unwrap());
+    assert_eq!(ListNode::decode(&bytes), Ok(list(2)));
 }
