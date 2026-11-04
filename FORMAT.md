@@ -212,7 +212,7 @@ Only the present fields are encoded, so an absent field has no cost.
 
 A field is encoded like its type, without a bit group: a `bool` is a byte, 1 for true & 0 for false.
 Readers treat any non-zero byte as true. A field's extent can be longer than its value, & readers
-ignore the rest.
+ignore the rest, except for a `string`, which is its whole extent.
 
 An extent never depends on the field's type, so a reader can skip a field it doesn't know. Unknown
 fields are kept when a message is decoded & written back when it's encoded.
