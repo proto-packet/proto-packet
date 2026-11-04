@@ -1,7 +1,6 @@
 # Format
 
-This document specifies the ProtoPacket binary format. Structs & messages are specified so far. A
-type that contains a variant can't be encoded yet.
+This document specifies the ProtoPacket binary format.
 
 The format is built to be fast: a field is read in place, from an offset known at compile time.
 
@@ -29,6 +28,7 @@ The format is built to be fast: a field is read in place, from an offset known a
 | `string`        | variable | 1         | The UTF-8 bytes, without a terminator.                   |
 | variable struct | variable | its own   | Its fixed block & tail. (see [Structs](#structs))        |
 | message         | variable | 1         | Its index & values. (see [Messages](#messages))          |
+| variant         | variable | 1         | Its tag & value. (see [Variants](#variants))             |
 
 A `box` doesn't affect the encoding, so a boxed field is encoded like the type it boxes.
 
@@ -71,11 +71,11 @@ is padded to the alignment of its first tail entry.
 
 ### Tail
 
-The tail holds the variable-size fields as entries: the variable structs & messages by descending
-alignment, followed by the strings. The fields of an alignment are in declaration order, & so are
-the strings.
+The tail holds the variable-size fields as entries: the variable structs, messages & variants by
+descending alignment, followed by the strings. The fields of an alignment are in declaration order,
+& so are the strings.
 
-A growing string therefore never moves a variable struct or a message.
+A growing string therefore never moves any other entry.
 
 The end table has a `u32` end offset for each entry, in tail order, from the start of the tail. The
 `i`th entry is `tail[end[i-1]..end[i]]`, where `end[-1]` is 0. A tail is at most `u32::MAX` bytes.
@@ -253,4 +253,50 @@ offset 0: count = 1
 offset 2: tags = 5
 offset 4: ends = 4
 offset 8: id = 7
+```
+
+## Variants
+
+A variant holds one of its cases. Cases can be added & removed, but a case's tag number & type never
+change.
+
+```text
+[tag: u16][value]
+```
+
+- The value is encoded like a message field, & is the rest of the extent.
+- A variant is always variable-size & has alignment 1, whatever its cases are, so adding a case
+  never changes the layout of a struct that contains it.
+
+A variant has no length of its own, so a `string` case can't have slack: extra bytes would be part
+of the string. Any other case ignores the rest of its extent.
+
+A case the reader doesn't know is kept with its tag & its bytes, & written back when it's encoded.
+
+### Validation
+
+Readers reject a variant when:
+
+- Its extent is shorter than its tag.
+- Its tag isn't a valid tag number.
+- Its known case is shorter than its type, or isn't valid for its type.
+
+Unknown cases aren't validated.
+
+### Examples
+
+```text
+struct Point { x: u32; y: u32; }
+variant Shape { Circle: u32 = 1; Square: Point = 2; }
+
+Circle(5) is 6 bytes, alignment 1
+
+offset 0: tag = 1
+offset 2: value = 5
+
+Square(Point(1, 2)) is 10 bytes, alignment 1
+
+offset 0: tag = 2
+offset 2: x = 1
+offset 6: y = 2
 ```
