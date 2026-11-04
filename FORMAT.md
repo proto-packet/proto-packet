@@ -1,6 +1,6 @@
 # Format
 
-This document specifies the ProtoPacket binary format.
+This document specifies the ProtoPacket binary format, & the JSON form of the same values.
 
 The format is built to be fast: a field is read in place, from an offset known at compile time.
 
@@ -14,6 +14,7 @@ The format is built to be fast: a field is read in place, from an offset known a
 - Readers never depend on alignment. They read values at any address.
 - Writers zero all padding & unused bits, & readers ignore them.
 - Slack is unused bytes at the end of an extent. It is legal, writers zero it, & readers ignore it.
+  A `string` in a message or variant has no slack, since it is its whole extent.
 - A canonical encoding has only the padding this document specifies, & no slack.
 
 ## Types
@@ -75,7 +76,7 @@ The tail holds the variable-size fields as entries: the variable structs, messag
 descending alignment, followed by the strings. The fields of an alignment are in declaration order,
 & so are the strings.
 
-A growing string therefore never moves any other entry.
+A growing string therefore moves only the strings after it.
 
 The end table has a `u32` end offset for each entry, in tail order, from the start of the tail. The
 `i`th entry is `tail[end[i-1]..end[i]]`, where `end[-1]` is 0. A tail is at most `u32::MAX` bytes.
@@ -110,7 +111,7 @@ Readers reject a struct when:
 - Its end table decreases, or its last end offset is past the end of its tail.
 - A present `string` is not valid UTF-8.
 - A present enum isn't a valid tag number.
-- A present nested struct is invalid.
+- A present nested struct, message or variant is invalid.
 
 ### Examples
 
@@ -300,3 +301,51 @@ offset 0: tag = 2
 offset 2: x = 1
 offset 6: y = 2
 ```
+
+## JSON
+
+| Type            | JSON                                                          |
+|-----------------|---------------------------------------------------------------|
+| `bool`          | A boolean.                                                    |
+| `u8` to `u128`  | A number.                                                     |
+| `uuid`          | A string, in its string form.                                 |
+| `string`        | A string.                                                     |
+| enum            | A case name, or a tag number if the writer doesn't know it.   |
+| struct, message | An object of the fields, by name. Absent fields aren't listed. |
+| variant         | `{"var": <case name>, "val": <value>}`                        |
+
+A renamed field or case keeps its schema name. Keys can be in any order, & other keys are ignored.
+
+### Unknown Fields & Cases
+
+A value that came from the binary format can hold fields & cases the writer doesn't know. They keep
+their tag numbers, with their encoded values as base-64 text:
+
+```text
+message:  {"text": "hi", "7": "CQ=="}
+variant:  {"var": 3, "val": "AQAAAAIAAAA="}
+```
+
+A key of only digits is a tag number, since a field name starts with a letter. A tag number can't
+have leading zeros.
+
+A reader that knows the tag number decodes the value as that field or case, with the validation of
+the binary format. A reader that doesn't keeps it, so it round-trips.
+
+### Different Schema Versions
+
+JSON keeps only what has a tag number. A name doesn't, so a reader can't keep one it doesn't know:
+
+- A field name the reader doesn't know is dropped.
+- A case name the reader doesn't know is an error, in a variant or an enum.
+
+Use the binary format to pass values through a reader with an older schema.
+
+### Validation
+
+Readers reject JSON when:
+
+- A field, tag number, `var` or `val` is repeated.
+- A field is given by name & by tag number.
+- A key is an invalid tag number.
+- A tag-numbered value isn't valid base-64, or isn't valid for a field or case the reader knows.
