@@ -1,0 +1,86 @@
+import format.examples.Color;
+import format.examples.Entry;
+import format.examples.Point;
+
+// A struct with a bit group of 2 bytes.
+struct NineBits {
+
+    // Bit 0.
+    a: bool;
+
+    // Bit 1.
+    b: bool;
+
+    // Bit 2.
+    c: bool;
+
+    // Bit 3.
+    d: bool;
+
+    // Bit 4.
+    e: bool;
+
+    // Bit 5.
+    f: bool;
+
+    // Bit 6.
+    g: bool;
+
+    // Bit 7.
+    h: bool;
+
+    // Bit 8.
+    i: bool;
+}
+
+// A fixed struct of the other fixed-size types, with optional fields.
+struct FixedKinds {
+
+    // A UUID.
+    id: uuid;
+
+    // An enum.
+    color: Color;
+
+    // A boxed fixed struct.
+    point: box Point;
+
+    // An optional fixed struct, with a presence bit.
+    maybe_point: optional Point;
+
+    // An optional boxed enum.
+    maybe_color: optional box Color;
+}
+
+// A struct with an optional variable struct before other entries.
+struct AbsentChild {
+
+    // An optional variable struct.
+    first: optional Entry;
+
+    // A variable struct, of alignment 8.
+    second: Entry;
+
+    // A string.
+    text: string;
+}
+
+// A struct in a type loop, whose alignment comes from the other struct.
+struct LoopByte {
+
+    // An alignment 1 field.
+    value: u8;
+
+    // The other struct of the loop.
+    next: optional box LoopLong;
+}
+
+// A struct in a type loop, with the largest alignment of the loop.
+struct LoopLong {
+
+    // An alignment 8 field.
+    value: u64;
+
+    // The other struct of the loop.
+    next: optional box LoopByte;
+}

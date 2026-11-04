@@ -1,0 +1,97 @@
+// The `Point` example of `FORMAT.md`.
+struct Point {
+
+    // The x coordinate.
+    x: u32;
+
+    // The y coordinate.
+    y: u32;
+}
+
+// The `Mixed` example of `FORMAT.md`.
+struct Mixed {
+
+    // An alignment 1 field.
+    a: u8;
+
+    // An alignment 8 field.
+    b: u64;
+
+    // An alignment 2 field.
+    c: u16;
+
+    // A bit.
+    d: bool;
+}
+
+// The `Line` example of `FORMAT.md`.
+struct Line {
+
+    // The start.
+    start: Point;
+
+    // The end.
+    end: Point;
+
+    // The width.
+    width: u8;
+}
+
+// The `Person` example of `FORMAT.md`.
+struct Person {
+
+    // The name.
+    name: string;
+
+    // The age.
+    age: u8;
+}
+
+// The `Entry` example of `FORMAT.md`.
+struct Entry {
+
+    // The ID.
+    id: u64;
+
+    // The text.
+    text: string;
+}
+
+// The `Pair` example of `FORMAT.md`.
+struct Pair {
+
+    // The first entry.
+    first: Entry;
+
+    // The second entry.
+    second: Entry;
+
+    // The note.
+    note: string;
+}
+
+// The `Color` example of `FORMAT.md`.
+enum Color {
+
+    // Red.
+    Red = 1;
+}
+
+// The `Opt` example of `FORMAT.md`.
+struct Opt {
+
+    // A bit.
+    a: bool;
+
+    // An optional field with a presence bit.
+    b: optional u32;
+
+    // An optional bit.
+    c: optional bool;
+
+    // An optional variable-size field.
+    d: optional string;
+
+    // An optional enum.
+    e: optional Color;
+}
