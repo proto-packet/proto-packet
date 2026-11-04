@@ -35,6 +35,14 @@ impl TagNumber {
         }
     }
 
+    /// Creates a new tag number from the `value`, without validating it.
+    ///
+    /// # Safety
+    /// The `value` must be valid.
+    pub const unsafe fn new_unchecked(value: u16) -> Self {
+        Self { value }
+    }
+
     /// Creates a new tag number from the `value`.
     ///
     /// Returns `None` if the `value` is invalid.
