@@ -9,6 +9,9 @@ pub enum DecodeError {
     /// An end table decreases, or goes past the end of its tail.
     InvalidEndTable,
 
+    /// A message's tags aren't strictly increasing, or one isn't a valid tag number.
+    InvalidTags,
+
     /// A string is not valid UTF-8.
     InvalidUtf8,
 
@@ -23,6 +26,7 @@ impl Display for DecodeError {
                 write!(f, "expected at least {} bytes, got {}", expected, actual)
             }
             Self::InvalidEndTable => f.write_str("invalid end table"),
+            Self::InvalidTags => f.write_str("invalid tags"),
             Self::InvalidUtf8 => f.write_str("invalid UTF-8"),
             Self::InvalidTagNumber { value } => write!(f, "invalid tag number: {}", value),
         }
