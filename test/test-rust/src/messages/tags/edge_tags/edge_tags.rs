@@ -197,16 +197,10 @@ impl proto_packet::types::JsonMessage for EdgeTags {
     {
         match name {
             "min" => {
-                if self.min.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("min"));
-                }
                 self.min = map.next_value()?;
                 Ok(true)
             }
             "max" => {
-                if self.max.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("max"));
-                }
                 self.max = map.next_value()?;
                 Ok(true)
             }

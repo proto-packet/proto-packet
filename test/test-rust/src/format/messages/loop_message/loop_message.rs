@@ -203,16 +203,10 @@ impl proto_packet::types::JsonMessage for LoopMessage {
     {
         match name {
             "value" => {
-                if self.value.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("value"));
-                }
                 self.value = map.next_value()?;
                 Ok(true)
             }
             "next" => {
-                if self.next.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("next"));
-                }
                 self.next = map.next_value()?;
                 Ok(true)
             }

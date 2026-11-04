@@ -339,37 +339,22 @@ impl proto_packet::types::JsonMessage for Newer {
     {
         match name {
             "id" => {
-                if self.id.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("id"));
-                }
                 self.id = map.next_value()?;
                 Ok(true)
             }
             "name" => {
-                if self.name.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("name"));
-                }
                 self.name = map.next_value()?;
                 Ok(true)
             }
             "nickname" => {
-                if self.nickname.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("nickname"));
-                }
                 self.nickname = map.next_value()?;
                 Ok(true)
             }
             "age" => {
-                if self.age.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("age"));
-                }
                 self.age = map.next_value()?;
                 Ok(true)
             }
             "entry" => {
-                if self.entry.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("entry"));
-                }
                 self.entry = map.next_value()?;
                 Ok(true)
             }

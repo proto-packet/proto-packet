@@ -584,74 +584,42 @@ impl proto_packet::types::JsonMessage for AllKinds {
     {
         match name {
             "flag" => {
-                if self.flag.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("flag"));
-                }
                 self.flag = map.next_value()?;
                 Ok(true)
             }
             "byte" => {
-                if self.byte.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("byte"));
-                }
                 self.byte = map.next_value()?;
                 Ok(true)
             }
             "large" => {
-                if self.large.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("large"));
-                }
                 self.large = map.next_value()?;
                 Ok(true)
             }
             "id" => {
-                if self.id.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("id"));
-                }
                 self.id = map.next_value()?;
                 Ok(true)
             }
             "color" => {
-                if self.color.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("color"));
-                }
                 self.color = map.next_value()?;
                 Ok(true)
             }
             "text" => {
-                if self.text.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("text"));
-                }
                 self.text = map.next_value()?;
                 Ok(true)
             }
             "point" => {
-                if self.point.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("point"));
-                }
                 self.point = map.next_value()?;
                 Ok(true)
             }
             "entry" => {
-                if self.entry.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("entry"));
-                }
                 self.entry = map.next_value()?;
                 Ok(true)
             }
             "item" => {
-                if self.item.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("item"));
-                }
                 self.item = map.next_value()?;
                 Ok(true)
             }
             "boxed_color" => {
-                if self.boxed_color.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field(
-                        "boxed_color",
-                    ));
-                }
                 self.boxed_color = map.next_value()?;
                 Ok(true)
             }

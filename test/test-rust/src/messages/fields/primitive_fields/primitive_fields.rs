@@ -382,52 +382,26 @@ impl proto_packet::types::JsonMessage for PrimitiveFields {
     {
         match name {
             "boolean" => {
-                if self.boolean.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("boolean"));
-                }
                 self.boolean = map.next_value()?;
                 Ok(true)
             }
             "unsigned8" => {
-                if self.unsigned8.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("unsigned8"));
-                }
                 self.unsigned8 = map.next_value()?;
                 Ok(true)
             }
             "unsigned16" => {
-                if self.unsigned16.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field(
-                        "unsigned16",
-                    ));
-                }
                 self.unsigned16 = map.next_value()?;
                 Ok(true)
             }
             "unsigned32" => {
-                if self.unsigned32.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field(
-                        "unsigned32",
-                    ));
-                }
                 self.unsigned32 = map.next_value()?;
                 Ok(true)
             }
             "unsigned64" => {
-                if self.unsigned64.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field(
-                        "unsigned64",
-                    ));
-                }
                 self.unsigned64 = map.next_value()?;
                 Ok(true)
             }
             "unsigned128" => {
-                if self.unsigned128.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field(
-                        "unsigned128",
-                    ));
-                }
                 self.unsigned128 = map.next_value()?;
                 Ok(true)
             }

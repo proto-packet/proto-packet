@@ -243,23 +243,14 @@ impl proto_packet::types::JsonMessage for UnorderedTags {
     {
         match name {
             "three" => {
-                if self.three.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("three"));
-                }
                 self.three = map.next_value()?;
                 Ok(true)
             }
             "one" => {
-                if self.one.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("one"));
-                }
                 self.one = map.next_value()?;
                 Ok(true)
             }
             "two" => {
-                if self.two.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("two"));
-                }
                 self.two = map.next_value()?;
                 Ok(true)
             }

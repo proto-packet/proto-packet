@@ -276,10 +276,8 @@ fn gen_json(
             name, SERDE, field.name
         ));
         read_field.push(format!(
-            "\"{key}\" => {{ if self.{name}.is_some() {{ return Err({serde}::de::Error::duplicate_field(\"{key}\")); }} self.{name} = map.next_value()?; Ok(true) }}",
-            key = field.name,
-            name = name,
-            serde = SERDE
+            "\"{}\" => {{ self.{} = map.next_value()?; Ok(true) }}",
+            field.name, name
         ));
         merge.push(format!(
             "if other.{name}.is_some() {{ if self.{name}.is_some() {{ return Err(\"{key}\"); }} self.{name} = other.{name}; }}",

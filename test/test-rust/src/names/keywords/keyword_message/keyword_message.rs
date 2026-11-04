@@ -197,16 +197,10 @@ impl proto_packet::types::JsonMessage for KeywordMessage {
     {
         match name {
             "type" => {
-                if self.r#type.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("type"));
-                }
                 self.r#type = map.next_value()?;
                 Ok(true)
             }
             "self" => {
-                if self.self_.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("self"));
-                }
                 self.self_ = map.next_value()?;
                 Ok(true)
             }

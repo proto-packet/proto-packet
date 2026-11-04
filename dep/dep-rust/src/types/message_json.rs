@@ -3,6 +3,7 @@ use crate::types::base_64::{append_base_64, encode_base_64};
 use serde::Deserializer;
 use serde::de::{Error as _, IgnoredAny, MapAccess, Visitor};
 use serde::ser::{Error as _, SerializeMap};
+use std::collections::BTreeSet;
 use std::fmt::Formatter;
 use std::marker::PhantomData;
 
@@ -67,6 +68,7 @@ where
     key.parse::<u32>()
         .ok()
         .and_then(TagNumber::from_u32)
+        .filter(|tag| tag.to_string() == key)
         .map(|tag| Some(tag.value()))
         .ok_or_else(|| E::custom("invalid tag number"))
 }
@@ -79,6 +81,10 @@ where
     fields.sort_by_key(|(tag, _)| *tag);
     if fields.windows(2).any(|pair| pair[0].0 == pair[1].0) {
         return Err(E::custom("duplicate tag number"));
+    }
+    let len: usize = fields.iter().map(|(_, value)| value.len()).sum();
+    if len > u32::MAX as usize {
+        return Err(E::custom("the fields are too long"));
     }
     let mut bytes: Vec<u8> = Vec::default();
     let mut writer: MessageWriter = MessageWriter::new(&mut bytes, fields.len(), &[]);
@@ -111,13 +117,18 @@ where
     {
         let mut result: M = M::default();
         let mut encoded: Vec<(u16, Vec<u8>)> = Vec::default();
+        let mut names: BTreeSet<String> = BTreeSet::default();
         while let Some(key) = map.next_key::<String>()? {
             if let Some(tag) = tag_of(&key)? {
                 let text: String = map.next_value()?;
                 let mut value: Vec<u8> = Vec::default();
                 append_base_64(&text, &mut value).map_err(A::Error::custom)?;
                 encoded.push((tag, value));
-            } else if !result.read_field(&key, &mut map)? {
+            } else if names.contains(&key) {
+                return Err(A::Error::custom(format!("duplicate field `{}`", key)));
+            } else if result.read_field(&key, &mut map)? {
+                names.insert(key);
+            } else {
                 map.next_value::<IgnoredAny>()?;
             }
         }

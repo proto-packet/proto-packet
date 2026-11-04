@@ -359,37 +359,22 @@ impl proto_packet::types::JsonMessage for NamedFields {
     {
         match name {
             "point" => {
-                if self.point.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("point"));
-                }
                 self.point = map.next_value()?;
                 Ok(true)
             }
             "person" => {
-                if self.person.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("person"));
-                }
                 self.person = map.next_value()?;
                 Ok(true)
             }
             "label" => {
-                if self.label.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("label"));
-                }
                 self.label = map.next_value()?;
                 Ok(true)
             }
             "color" => {
-                if self.color.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("color"));
-                }
                 self.color = map.next_value()?;
                 Ok(true)
             }
             "shape" => {
-                if self.shape.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("shape"));
-                }
                 self.shape = map.next_value()?;
                 Ok(true)
             }

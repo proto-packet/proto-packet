@@ -197,16 +197,10 @@ impl proto_packet::types::JsonMessage for SpecialFields {
     {
         match name {
             "id" => {
-                if self.id.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("id"));
-                }
                 self.id = map.next_value()?;
                 Ok(true)
             }
             "text" => {
-                if self.text.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("text"));
-                }
                 self.text = map.next_value()?;
                 Ok(true)
             }

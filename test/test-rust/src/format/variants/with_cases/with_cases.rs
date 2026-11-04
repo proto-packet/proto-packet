@@ -255,23 +255,14 @@ impl proto_packet::types::JsonMessage for WithCases {
     {
         match name {
             "shape" => {
-                if self.shape.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("shape"));
-                }
                 self.shape = map.next_value()?;
                 Ok(true)
             }
             "older" => {
-                if self.older.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("older"));
-                }
                 self.older = map.next_value()?;
                 Ok(true)
             }
             "id" => {
-                if self.id.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("id"));
-                }
                 self.id = map.next_value()?;
                 Ok(true)
             }

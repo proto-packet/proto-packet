@@ -153,9 +153,6 @@ impl proto_packet::types::JsonMessage for GreetResponse {
     {
         match name {
             "greeting" => {
-                if self.greeting.is_some() {
-                    return Err(proto_packet::serde::de::Error::duplicate_field("greeting"));
-                }
                 self.greeting = map.next_value()?;
                 Ok(true)
             }
