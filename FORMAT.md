@@ -68,7 +68,7 @@ The fields of an alignment are in declaration order. A fixed-size field's size i
 alignment, so nothing is padded before the final padding.
 
 A fixed struct is padded to a multiple of its alignment, which is then its size. A variable struct
-is padded to the alignment of its first tail entry.
+is padded to the alignment of its first tail entry. A fixed block is at most `u32::MAX` bytes.
 
 ### Tail
 
