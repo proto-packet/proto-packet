@@ -46,6 +46,15 @@ impl Box {
             Self::Text(_) => 2,
         }
     }
+
+    /// Gets the encoded value of an unrecognized case.
+    #[must_use]
+    pub fn unknown_bytes(&self) -> std::option::Option<&[u8]> {
+        match self {
+            Self::Unrecognized(case) => Some(case.bytes.as_slice()),
+            _ => None,
+        }
+    }
 }
 
 impl Box {

@@ -139,7 +139,7 @@ fn gen_setter(typing: Typing<'_>, tagged: TaggedField<'_>) -> Function {
 }
 
 /// Generates the expression of the bytes of a scalar `value` of the `tag`.
-fn gen_bytes(typing: Typing<'_>, tag: &TypeTag) -> &'static str {
+pub(crate) fn gen_bytes(typing: Typing<'_>, tag: &TypeTag) -> &'static str {
     match tag {
         TypeTag::Primitive(PrimitiveType::Boolean) => "[u8::from(value)]",
         TypeTag::Primitive(_) => "value.to_le_bytes()",

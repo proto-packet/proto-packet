@@ -33,6 +33,16 @@ mod unrecognized {
 }
 
 impl KeywordVariant {
+    //! Construction
+
+    /// Creates an unrecognized case.
+    #[must_use]
+    pub(super) fn from_unknown(tag_number: u16, bytes: Vec<u8>) -> Self {
+        Self::Unrecognized(unrecognized::UnrecognizedCase { tag_number, bytes })
+    }
+}
+
+impl KeywordVariant {
     //! Properties
 
     /// Gets the tag number of the case.
@@ -41,6 +51,15 @@ impl KeywordVariant {
         match self {
             Self::Unrecognized(case) => case.tag_number,
             Self::Self_(_) => 1,
+        }
+    }
+
+    /// Gets the encoded value of an unrecognized case.
+    #[must_use]
+    pub fn unknown_bytes(&self) -> Option<&[u8]> {
+        match self {
+            Self::Unrecognized(case) => Some(case.bytes.as_slice()),
+            _ => None,
         }
     }
 }
@@ -90,5 +109,26 @@ impl KeywordVariant {
                 out.extend_from_slice(&value.to_le_bytes());
             }
         }
+    }
+}
+
+impl KeywordVariant {
+    //! Decoding
+
+    /// Decodes the variant from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::KeywordVariantRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the variant from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::KeywordVariantRef::new_unchecked(bytes) }.decode()
     }
 }

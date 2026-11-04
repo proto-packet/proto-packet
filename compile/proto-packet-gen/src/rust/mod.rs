@@ -21,6 +21,8 @@ mod gen_struct;
 mod gen_struct_mut;
 mod gen_struct_ref;
 mod gen_variant;
+mod gen_variant_mut;
+mod gen_variant_ref;
 mod gen_view;
 mod gen_view_mut;
 mod generate;

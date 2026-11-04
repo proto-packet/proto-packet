@@ -66,7 +66,7 @@ fn gen_construction(
             "if let Some(value) = unsafe {{ {}::find_field_unchecked(bytes, {}) }} {{ {} }}",
             IO,
             tagged.tag,
-            gen_check(typing, *tagged)
+            gen_value_check(typing, tagged.field.tag, tagged.size)
         ));
     }
     let new: Function = new.with_literal("Ok(Self { bytes })");
@@ -92,10 +92,9 @@ fn gen_construction(
         .with_function(new_unchecked)
 }
 
-/// Generates the statements validating the `value` of the `tagged` field.
-fn gen_check(typing: Typing<'_>, tagged: TaggedField<'_>) -> String {
-    let tag: &TypeTag = tagged.field.tag;
-    match (tag, tagged.size) {
+/// Generates the statements validating the `value` bytes of the `tag` with the scalar `size`.
+pub(crate) fn gen_value_check(typing: Typing<'_>, tag: &TypeTag, size: Option<usize>) -> String {
+    match (tag, size) {
         (TypeTag::Special(SpecialType::String), _) => format!("{}::check_utf8(value)?;", IO),
         (TypeTag::Named(_), Some(size)) if typing.is_enum(tag) => format!(
             "{}::check_len(value, {})?; {}::check_tag_number(unsafe {{ {}::read_u16_unchecked(value, 0) }})?;",
@@ -139,7 +138,7 @@ fn gen_getter(typing: Typing<'_>, tagged: TaggedField<'_>) -> Function {
 }
 
 /// Gets the type of a value of the `tag`, read from a `Ref` type.
-fn value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
+pub(crate) fn value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
     match tag {
         TypeTag::Primitive(primitive) => primitive.name().to_string(),
         TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
@@ -150,7 +149,7 @@ fn value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
 }
 
 /// Generates the expression reading the `value` bytes of a field of the `tag`.
-fn gen_read(typing: Typing<'_>, tag: &TypeTag) -> String {
+pub(crate) fn gen_read(typing: Typing<'_>, tag: &TypeTag) -> String {
     match tag {
         TypeTag::Primitive(PrimitiveType::Boolean) => {
             format!("unsafe {{ {}::read_u8_unchecked(value, 0) }} != 0", IO)

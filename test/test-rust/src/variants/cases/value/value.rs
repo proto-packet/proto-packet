@@ -74,6 +74,15 @@ impl Value {
             Self::Shape(_) => 9,
         }
     }
+
+    /// Gets the encoded value of an unrecognized case.
+    #[must_use]
+    pub fn unknown_bytes(&self) -> Option<&[u8]> {
+        match self {
+            Self::Unrecognized(case) => Some(case.bytes.as_slice()),
+            _ => None,
+        }
+    }
 }
 
 impl Value {

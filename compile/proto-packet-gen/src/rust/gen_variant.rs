@@ -3,6 +3,12 @@ use crate::layout::{is_encodable, scalar_size};
 use crate::rust::TypeFile;
 use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::add_docs;
+use crate::rust::gen_buf::{buf_name, gen_buf};
+use crate::rust::gen_struct::{check_type_name, gen_decoding};
+use crate::rust::gen_struct_mut::mut_name;
+use crate::rust::gen_struct_ref::ref_name;
+use crate::rust::gen_variant_mut::{gen_variant_buf_accessors, gen_variant_mut};
+use crate::rust::gen_variant_ref::{case_name, gen_variant_case, gen_variant_ref};
 use crate::rust::message_encoding::gen_value_write;
 use crate::rust::naming::{ident, is_renamed, is_upper_camel_case, snake_case};
 use crate::rust::prelude::{Prelude, PreludeName};
@@ -118,31 +124,77 @@ pub fn gen_variant(
     } else {
         ""
     };
-    let mut block: Block = Block::default()
-        .with_statement(gen_properties(&type_name, &cases))
-        .with_statement(EmptyLine::default())
-        .with_statement(gen_cases(typing, &type_name, &cases));
+    let has_encoding: bool = cases
+        .iter()
+        .all(|case| is_encodable(project, case.tag, &mut Vec::default()));
+    let mut block: Block = Block::default();
+    if has_encoding {
+        block.add_statement(gen_construction(typing, &type_name));
+        block.add_statement(EmptyLine::default());
+    }
+    block.add_statement(gen_properties(typing, &type_name, &cases));
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_cases(typing, &type_name, &cases));
     if cases.iter().any(|case| case.is_nested(typing)) {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_accessors(typing, &type_name, &cases));
     }
-    let has_encoding: bool = cases
-        .iter()
-        .all(|case| is_encodable(project, case.tag, &mut Vec::default()));
+    let schema_name: String = variant.type_name().to_string();
+    let schema_name: &str = &schema_name;
+    let mut files: Vec<TypeFile> = Vec::default();
     if has_encoding {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_encoding(typing, &type_name, &cases));
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_decoding(
+            typing,
+            &type_name,
+            &ref_name(schema_name),
+            "variant",
+        ));
+        for name in [
+            ref_name(schema_name),
+            buf_name(schema_name),
+            mut_name(schema_name),
+            case_name(schema_name),
+        ] {
+            check_type_name(project, mod_path, &name)?;
+        }
+        files.push(TypeFile {
+            suffix: "_buf",
+            code: gen_buf(
+                schema_name,
+                &type_name,
+                gen_variant_buf_accessors(typing, &cases, &buf_name(schema_name)),
+            ),
+        });
+        files.push(TypeFile {
+            suffix: "_case",
+            code: gen_variant_case(typing, schema_name, &cases, &type_name),
+        });
+        files.push(TypeFile {
+            suffix: "_mut",
+            code: gen_variant_mut(typing, schema_name, &cases, &type_name),
+        });
+        files.push(TypeFile {
+            suffix: "_ref",
+            code: gen_variant_ref(typing, schema_name, &cases, &type_name),
+        });
     }
-    Ok(vec![TypeFile {
-        suffix: "",
-        code: format!(
-            "{}\n{}{}\n{}",
-            gen_dec(typing, variant, &type_name).to_code(),
-            inception,
-            UNRECOGNIZED_MOD,
-            block.to_code()
-        ),
-    }])
+    files.insert(
+        0,
+        TypeFile {
+            suffix: "",
+            code: format!(
+                "{}\n{}{}\n{}",
+                gen_dec(typing, variant, &type_name).to_code(),
+                inception,
+                UNRECOGNIZED_MOD,
+                block.to_code()
+            ),
+        },
+    );
+    Ok(files)
 }
 
 /// Checks no two generated methods of the variant with the `type_name` have the same name.
@@ -215,8 +267,41 @@ fn gen_dec(typing: Typing<'_>, variant: &Variant, type_name: &str) -> RustEnum {
     result
 }
 
+/// Generates the impl block creating an unrecognized case of the variant with the `type_name`.
+///
+/// Only the variant's own folder can use it, to decode the case.
+fn gen_construction(typing: Typing<'_>, type_name: &str) -> ImplBlock {
+    let signature: Signature = Signature::from("from_unknown")
+        .with_param(Var::from(("tag_number", "u16")))
+        .with_param(Var::from((
+            "bytes",
+            format!("{}<u8>", typing.prelude(PreludeName::Vec)).as_str(),
+        )))
+        .with_result("Self");
+    let from_unknown: Function = Function::from(signature)
+        .with_comment(" Creates an unrecognized case.")
+        .with_attribute("must_use")
+        .with_access(Access::PublicInSuper)
+        .with_literal("Self::Unrecognized(unrecognized::UnrecognizedCase { tag_number, bytes })");
+    ImplBlock::from(type_name)
+        .with_comment(" Construction")
+        .with_function(from_unknown)
+}
+
 /// Generates the impl block with the properties of the variant with the `type_name`.
-fn gen_properties(type_name: &str, cases: &[Case<'_>]) -> ImplBlock {
+fn gen_properties(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> ImplBlock {
+    let signature: Signature = Signature::from("unknown_bytes")
+        .with_receiver(Receiver::Borrowed)
+        .with_result(format!("{}<&[u8]>", typing.prelude(PreludeName::Option)));
+    let unknown_bytes: Function = Function::from(signature)
+        .with_comment(" Gets the encoded value of an unrecognized case.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_literal(format!(
+            "match self {{ Self::Unrecognized(case) => Some(case.bytes.as_slice()), {} }}",
+            if cases.is_empty() { "" } else { "_ => None," }
+        ));
+
     let mut arms: Vec<String> = vec!["Self::Unrecognized(case) => case.tag_number,".to_string()];
     for case in cases {
         arms.push(format!("Self::{}(_) => {},", case.ident(), case.number));
@@ -233,6 +318,7 @@ fn gen_properties(type_name: &str, cases: &[Case<'_>]) -> ImplBlock {
     ImplBlock::from(type_name)
         .with_comment(" Properties")
         .with_function(tag_number)
+        .with_function(unknown_bytes)
 }
 
 /// Generates the impl block with the getter of each of the `cases`.
