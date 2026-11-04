@@ -220,16 +220,22 @@ where
         let mut buffered: Option<Buffered> = None;
         let mut result: Option<V> = None;
         while let Some(key) = map.next_key()? {
-            match (key, &selector) {
-                (Key::Var, _) => selector = Some(map.next_value()?),
-                (Key::Val, Some(selector)) => {
-                    result = Some(map.next_value_seed(CaseSeed {
-                        selector,
-                        variant: PhantomData,
-                    })?);
+            match key {
+                Key::Var if selector.is_some() => return Err(A::Error::duplicate_field(VAR)),
+                Key::Var => selector = Some(map.next_value()?),
+                Key::Val if result.is_some() || buffered.is_some() => {
+                    return Err(A::Error::duplicate_field(VAL));
                 }
-                (Key::Val, None) => buffered = Some(map.next_value()?),
-                (Key::Other, _) => {
+                Key::Val => match &selector {
+                    Some(selector) => {
+                        result = Some(map.next_value_seed(CaseSeed {
+                            selector,
+                            variant: PhantomData,
+                        })?);
+                    }
+                    None => buffered = Some(map.next_value()?),
+                },
+                Key::Other => {
                     map.next_value::<IgnoredAny>()?;
                 }
             }
