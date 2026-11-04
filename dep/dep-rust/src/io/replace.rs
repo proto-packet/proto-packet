@@ -1,7 +1,7 @@
 use crate::io::CapacityError;
 
 /// Reads the end offset at the `offset`.
-fn read_end(bytes: &[u8], offset: usize) -> usize {
+pub(crate) fn read_end(bytes: &[u8], offset: usize) -> usize {
     let end: &[u8; 4] = bytes[offset..].first_chunk().expect("end out of bounds");
     u32::from_le_bytes(*end) as usize
 }

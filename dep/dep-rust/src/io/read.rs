@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 /// Defines the little-endian read of an integer type.
 macro_rules! read {
     ($read:ident, $type:ty) => {
@@ -36,19 +38,34 @@ pub unsafe fn read_bit_unchecked(bytes: &[u8], offset: usize, bit: u8) -> bool {
     unsafe { *bytes.get_unchecked(offset) & (1 << bit) != 0 }
 }
 
-/// Reads the tail entry at the `index`, of the end table at the `table`, for the tail at the `tail`.
+/// Gets the range of the entry at the `index`, of the end table at the `table`, for the entries at
+/// the `tail`.
 ///
 /// # Safety
-/// The end table must be valid & within the `bytes`, & the `tail` must be within the `bytes`.
-#[must_use]
-pub unsafe fn read_entry_unchecked(bytes: &[u8], table: usize, index: usize, tail: usize) -> &[u8] {
+/// The end table must be valid & within the `bytes`.
+pub(crate) unsafe fn entry_range_unchecked(
+    bytes: &[u8],
+    table: usize,
+    index: usize,
+    tail: usize,
+) -> Range<usize> {
     let start: usize = if index == 0 {
         0
     } else {
         unsafe { read_u32_unchecked(bytes, table + (index - 1) * 4) as usize }
     };
     let end: usize = unsafe { read_u32_unchecked(bytes, table + index * 4) as usize };
-    unsafe { bytes.get_unchecked(tail + start..tail + end) }
+    tail + start..tail + end
+}
+
+/// Reads the tail entry at the `index`, of the end table at the `table`, for the tail at the `tail`.
+///
+/// # Safety
+/// The end table must be valid & within the `bytes`, & the `tail` must be within the `bytes`.
+#[must_use]
+pub unsafe fn read_entry_unchecked(bytes: &[u8], table: usize, index: usize, tail: usize) -> &[u8] {
+    let range: Range<usize> = unsafe { entry_range_unchecked(bytes, table, index, tail) };
+    unsafe { bytes.get_unchecked(range) }
 }
 
 /// Reads the tail entry at the `index` mutably, of the end table at the `table`, for the tail at the
@@ -63,13 +80,8 @@ pub unsafe fn read_entry_mut_unchecked(
     index: usize,
     tail: usize,
 ) -> &mut [u8] {
-    let start: usize = if index == 0 {
-        0
-    } else {
-        unsafe { read_u32_unchecked(bytes, table + (index - 1) * 4) as usize }
-    };
-    let end: usize = unsafe { read_u32_unchecked(bytes, table + index * 4) as usize };
-    unsafe { bytes.get_unchecked_mut(tail + start..tail + end) }
+    let range: Range<usize> = unsafe { entry_range_unchecked(bytes, table, index, tail) };
+    unsafe { bytes.get_unchecked_mut(range) }
 }
 
 /// Reads the string entry at the `index`, of the end table at the `table`, for the tail at the

@@ -1,15 +1,11 @@
 use crate::io::CapacityError;
+use crate::io::message_read::search_tags;
+use crate::io::replace::read_end;
 
 /// Reads the `u16` at the `offset`.
 fn read_u16(bytes: &[u8], offset: usize) -> u16 {
     let value: &[u8; 2] = bytes[offset..].first_chunk().expect("u16 out of bounds");
     u16::from_le_bytes(*value)
-}
-
-/// Reads the `u32` at the `offset`.
-fn read_u32(bytes: &[u8], offset: usize) -> usize {
-    let value: &[u8; 4] = bytes[offset..].first_chunk().expect("u32 out of bounds");
-    u32::from_le_bytes(*value) as usize
 }
 
 /// Writes the `u32` to the `offset`.
@@ -34,11 +30,11 @@ pub fn replace_field(
     value: Option<&[u8]>,
 ) -> Result<(), CapacityError> {
     let count: usize = read_u16(bytes, 0) as usize;
-    let mut index: usize = 0;
-    while index < count && read_u16(bytes, 2 + 2 * index) < tag {
-        index += 1;
-    }
-    let is_present: bool = index < count && read_u16(bytes, 2 + 2 * index) == tag;
+    let tag_at = |index: usize| read_u16(bytes, 2 + 2 * index);
+    let (index, is_present): (usize, bool) = match search_tags(count, tag, tag_at) {
+        Ok(index) => (index, true),
+        Err(index) => (index, false),
+    };
     if !is_present && value.is_none() {
         return Ok(());
     }
@@ -47,16 +43,16 @@ pub fn replace_field(
     let old_values: usize = 2 + 6 * count;
     let start: usize = match index {
         0 => 0,
-        _ => read_u32(bytes, old_ends + (index - 1) * 4),
+        _ => read_end(bytes, old_ends + (index - 1) * 4),
     };
     let end: usize = if is_present {
-        read_u32(bytes, old_ends + index * 4)
+        read_end(bytes, old_ends + index * 4)
     } else {
         start
     };
     let last: usize = match count {
         0 => 0,
-        _ => read_u32(bytes, old_ends + (count - 1) * 4),
+        _ => read_end(bytes, old_ends + (count - 1) * 4),
     };
 
     let new_count: usize = match (is_present, value.is_some()) {
@@ -123,7 +119,7 @@ pub fn replace_field(
         write_u32(bytes, new_ends + index * 4, new_end);
     }
     for item in first_moved..new_count {
-        let moved: usize = read_u32(bytes, new_ends + item * 4) - end + new_end;
+        let moved: usize = read_end(bytes, new_ends + item * 4) - end + new_end;
         write_u32(bytes, new_ends + item * 4, moved);
     }
     if required < old_used {
