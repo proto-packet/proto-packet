@@ -152,7 +152,7 @@ impl Option {
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
-    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+    pub fn decode(bytes: &[u8]) -> std::result::Result<Self, proto_packet::io::DecodeError> {
         Ok(super::OptionRef::new(bytes)?.decode())
     }
 

@@ -7,7 +7,7 @@ use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_struct_buf::{buf_name, gen_struct_buf};
 use crate::rust::gen_struct_ref::{gen_struct_ref, ref_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
-use crate::rust::prelude::Prelude;
+use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, ImplBlock, Signature, Struct as RustStruct, Var, WithAccess, WithAttributes,
@@ -82,7 +82,11 @@ pub fn gen_struct(
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_encoding(typing, &type_name, &fields, layout));
         block.add_statement(EmptyLine::default());
-        block.add_statement(gen_decoding(&type_name, &ref_name(&structure.type_name())));
+        block.add_statement(gen_decoding(
+            typing,
+            &type_name,
+            &ref_name(&structure.type_name()),
+        ));
     }
     let mut files: Vec<StructFile> = vec![StructFile {
         suffix: "",
@@ -219,10 +223,14 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
 }
 
 /// Generates the impl block decoding the struct with the `type_name` through its `ref_name` type.
-fn gen_decoding(type_name: &str, ref_name: &str) -> ImplBlock {
+fn gen_decoding(typing: Typing<'_>, type_name: &str, ref_name: &str) -> ImplBlock {
     let signature: Signature = Signature::from("decode")
         .with_param(Var::from(("bytes", "&[u8]")))
-        .with_result(format!("Result<Self, {}::DecodeError>", IO));
+        .with_result(format!(
+            "{}<Self, {}::DecodeError>",
+            typing.prelude(PreludeName::Result),
+            IO
+        ));
     let decode: Function = Function::from(signature)
         .with_comment(" Decodes the struct from the `bytes`.")
         .with_comment("")

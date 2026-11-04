@@ -3,11 +3,15 @@
 pub use r#box::*;
 pub use option::*;
 pub use ord::*;
+pub use result::*;
 pub use send::*;
 pub use string::*;
+pub use vec::*;
 
 mod r#box;
 mod option;
 mod ord;
+mod result;
 mod send;
 mod string;
+mod vec;
