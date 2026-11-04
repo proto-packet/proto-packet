@@ -77,4 +77,10 @@ impl<'a> SpecialFieldsRef<'a> {
                 proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2])
             })
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::SpecialFieldsBuf {
+        unsafe { super::SpecialFieldsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

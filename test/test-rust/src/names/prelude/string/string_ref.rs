@@ -64,4 +64,10 @@ impl<'a> StringRef<'a> {
                 proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1])
             })
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::StringBuf {
+        unsafe { super::StringBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

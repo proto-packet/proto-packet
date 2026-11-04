@@ -86,4 +86,10 @@ impl<'a> UnorderedTagsRef<'a> {
                 proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2, 3])
             })
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::UnorderedTagsBuf {
+        unsafe { super::UnorderedTagsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

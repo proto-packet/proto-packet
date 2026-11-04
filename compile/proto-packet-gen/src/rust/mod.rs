@@ -14,6 +14,7 @@ mod fields;
 mod gen_buf;
 mod gen_enum;
 mod gen_message;
+mod gen_message_mut;
 mod gen_message_ref;
 mod gen_service;
 mod gen_struct;

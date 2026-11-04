@@ -137,10 +137,15 @@ where
     result
 }
 
+/// Checks if the `field` is a string.
+fn is_string(field: Field<'_>) -> bool {
+    *field.tag == TypeTag::Special(SpecialType::String)
+}
+
 /// Generates the signature of the method of the `field`.
 fn gen_signature(typing: Typing<'_>, field: Field<'_>) -> Signature {
     if !is_struct(typing, field) {
-        return gen_setter_signature(field);
+        return gen_setter_signature(field, is_string(field));
     }
     let child: String = format!("impl {}", generated_path(field.tag, "ViewMut"));
     let result: String = if field.is_optional {
@@ -166,7 +171,7 @@ fn gen_body(typing: Typing<'_>, field: Field<'_>, form: Form) -> Vec<String> {
         return vec![format!("{}.{}()", receiver, field.accessor_name())];
     }
     let setter: String = field.setter_name();
-    let is_string: bool = *field.tag == TypeTag::Special(SpecialType::String);
+    let is_string: bool = is_string(field);
     match form {
         Form::Reference => vec![format!("(**self).{}(value)", setter)],
         Form::Mut => vec![format!("self.{}(value)", setter)],

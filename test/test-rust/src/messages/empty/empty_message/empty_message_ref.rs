@@ -48,4 +48,10 @@ impl<'a> EmptyMessageRef<'a> {
             proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[])
         })
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::EmptyMessageBuf {
+        unsafe { super::EmptyMessageBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

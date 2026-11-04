@@ -64,4 +64,10 @@ impl<'a> GreetRequestRef<'a> {
                 proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1])
             })
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::GreetRequestBuf {
+        unsafe { super::GreetRequestBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

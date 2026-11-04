@@ -75,4 +75,10 @@ impl<'a> EdgeTagsRef<'a> {
                 proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 8191])
             })
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::EdgeTagsBuf {
+        unsafe { super::EdgeTagsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

@@ -1,4 +1,5 @@
 use crate::rust::encoding::IO;
+use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, generated_path, ref_name};
 use crate::rust::message_encoding::TaggedField;
 use crate::rust::naming::{ident, type_path};
@@ -34,7 +35,13 @@ pub(crate) fn gen_message_ref(
         block.add_statement(gen_fields(typing, fields, &ref_type));
     }
     block.add_statement(EmptyLine::default());
-    block.add_statement(gen_decoding(typing, fields, &ref_type, type_name));
+    block.add_statement(gen_decoding(
+        typing,
+        fields,
+        &ref_type,
+        type_name,
+        &buf_name(schema_name),
+    ));
     block.to_code()
 }
 
@@ -179,6 +186,7 @@ fn gen_decoding(
     fields: &[TaggedField<'_>],
     ref_type: &RustType,
     type_name: &str,
+    buf_name: &str,
 ) -> ImplBlock {
     let signature: Signature = Signature::from("decode")
         .with_receiver(Receiver::Borrowed)
@@ -206,10 +214,23 @@ fn gen_decoding(
         .with_access(Access::Public)
         .with_literal(decoded);
 
+    let signature: Signature = Signature::from("to_buf")
+        .with_receiver(Receiver::Borrowed)
+        .with_result(format!("super::{}", buf_name));
+    let to_buf: Function = Function::from(signature)
+        .with_comment(" Copies the bytes into an owned buf.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_literal(format!(
+            "unsafe {{ super::{}::new_unchecked(self.bytes.to_vec()) }}",
+            buf_name
+        ));
+
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
         .with_comment(" Decoding")
         .with_function(decode)
+        .with_function(to_buf)
 }
 
 /// Generates the expression of the owned value of the `tagged` field.

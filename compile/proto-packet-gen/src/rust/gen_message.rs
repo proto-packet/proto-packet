@@ -4,8 +4,11 @@ use crate::rust::TypeFile;
 use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::fields::{Field, check_field_names};
+use crate::rust::gen_buf::{buf_name, gen_buf};
+use crate::rust::gen_message_mut::{gen_message_buf_accessors, gen_message_mut};
 use crate::rust::gen_message_ref::gen_message_ref;
 use crate::rust::gen_struct::{check_type_name, gen_decoding};
+use crate::rust::gen_struct_mut::{check_mut_names, mut_name};
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::message_encoding::{TaggedField, gen_message_encoding};
 use crate::rust::naming::{ident, is_upper_camel_case};
@@ -32,7 +35,7 @@ const UNKNOWN_FIELDS: &str = "unknown_fields";
 const UNKNOWN_FIELD: &str = "proto_packet::io::UnknownField";
 
 /// The names of the generated methods of a message & its `Ref` type.
-const METHODS: [&str; 11] = [
+const METHODS: [&str; 12] = [
     CONSTRUCTOR,
     UNKNOWN_FIELDS,
     "with_unknown_fields",
@@ -44,6 +47,7 @@ const METHODS: [&str; 11] = [
     "new",
     "new_unchecked",
     "as_bytes",
+    "to_buf",
 ];
 
 /// Generates the Rust code of the `message` in the schema file at the `mod_path`.
@@ -103,6 +107,25 @@ pub fn gen_message(
             "message",
         ));
         check_type_name(project, mod_path, &ref_name(&message.type_name()))?;
+        check_type_name(project, mod_path, &buf_name(&message.type_name()))?;
+        check_type_name(project, mod_path, &mut_name(&message.type_name()))?;
+        check_mut_names(
+            typing,
+            &format!("{}.{}", mod_path, message.type_name()),
+            &fields,
+        )?;
+        files.push(TypeFile {
+            suffix: "_buf",
+            code: gen_buf(
+                &message.type_name(),
+                &type_name,
+                gen_message_buf_accessors(typing, &tagged, &buf_name(&message.type_name())),
+            ),
+        });
+        files.push(TypeFile {
+            suffix: "_mut",
+            code: gen_message_mut(typing, &message.type_name(), &tagged, &type_name),
+        });
         files.push(TypeFile {
             suffix: "_ref",
             code: gen_message_ref(typing, &message.type_name(), &tagged, &type_name),

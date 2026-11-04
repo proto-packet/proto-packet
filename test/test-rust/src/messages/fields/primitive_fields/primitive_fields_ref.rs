@@ -119,4 +119,10 @@ impl<'a> PrimitiveFieldsRef<'a> {
                 proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2, 3, 4, 5, 6])
             })
     }
+
+    /// Copies the bytes into an owned buf.
+    #[must_use]
+    pub fn to_buf(&self) -> super::PrimitiveFieldsBuf {
+        unsafe { super::PrimitiveFieldsBuf::new_unchecked(self.bytes.to_vec()) }
+    }
 }

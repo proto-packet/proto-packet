@@ -70,11 +70,11 @@ pub(crate) fn gen_struct_mut(
     let ref_name: String = ref_name(&structure.type_name());
     let any_lifetime: RustType = RustType::from(name.as_str()).with_generic(RustType::from("'_"));
     let mut block: Block = Block::default()
-        .with_statement(gen_dec(structure, &name, type_name))
+        .with_statement(gen_mut_dec(&structure.type_name(), &name, type_name))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_construction(&name, &ref_name))
+        .with_statement(gen_mut_construction(&name, &ref_name))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_properties(&any_lifetime, &ref_name));
+        .with_statement(gen_mut_properties(&any_lifetime, &ref_name));
     if !fields.is_empty() {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_fields(typing, fields, layout, &any_lifetime));
@@ -83,7 +83,7 @@ pub(crate) fn gen_struct_mut(
 }
 
 /// Generates the declaration of the `Mut` type with the `name`.
-fn gen_dec(structure: &Struct, name: &str, type_name: &str) -> RustStruct {
+pub(crate) fn gen_mut_dec(schema_name: &str, name: &str, type_name: &str) -> RustStruct {
     let mut result: RustStruct = RustStruct::from(name)
         .with_comment(format!(
             " A mutable view of an encoded [{}](super::{}).",
@@ -92,7 +92,7 @@ fn gen_dec(structure: &Struct, name: &str, type_name: &str) -> RustStruct {
         .with_generic("'a")
         .with_field(StructField::from(("bytes", "&'a mut [u8]")));
     result.add_derive("Debug");
-    if !is_upper_camel_case(&structure.type_name()) {
+    if !is_upper_camel_case(schema_name) {
         result.add_attribute("allow(non_camel_case_types)");
     }
     result.set_access(Access::Public);
@@ -100,7 +100,7 @@ fn gen_dec(structure: &Struct, name: &str, type_name: &str) -> RustStruct {
 }
 
 /// Generates the impl block constructing the `Mut` type with the `name`.
-fn gen_construction(name: &str, ref_name: &str) -> ImplBlock {
+pub(crate) fn gen_mut_construction(name: &str, ref_name: &str) -> ImplBlock {
     let signature: Signature = Signature::from("new")
         .with_param(Var::from(("bytes", "&'a mut [u8]")))
         .with_result(format!("Result<Self, {}::DecodeError>", IO));
@@ -135,7 +135,7 @@ fn gen_construction(name: &str, ref_name: &str) -> ImplBlock {
 }
 
 /// Generates the impl block with the properties of the `mut_type`.
-fn gen_properties(mut_type: &RustType, ref_name: &str) -> ImplBlock {
+pub(crate) fn gen_mut_properties(mut_type: &RustType, ref_name: &str) -> ImplBlock {
     let signature: Signature = Signature::from("as_ref")
         .with_receiver(Receiver::Borrowed)
         .with_result(format!("super::{}<'_>", ref_name));
@@ -234,7 +234,7 @@ pub(crate) fn gen_child(
 }
 
 /// Gets the type of a value of the scalar or string `field`.
-fn setter_type(field: Field<'_>) -> String {
+pub(crate) fn setter_type(field: Field<'_>) -> String {
     match field.tag {
         TypeTag::Primitive(primitive) => primitive.name().to_string(),
         TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
@@ -245,8 +245,9 @@ fn setter_type(field: Field<'_>) -> String {
 
 /// Generates the signature of the setter of the scalar or string `field`.
 ///
-/// An optional string has a named lifetime, since `impl Trait` can't elide it.
-pub(crate) fn gen_setter_signature(field: Field<'_>) -> Signature {
+/// A fallible setter returns a `Result`. An optional string has a named lifetime, since
+/// `impl Trait` can't elide it.
+pub(crate) fn gen_setter_signature(field: Field<'_>, is_fallible: bool) -> Signature {
     let is_string: bool = *field.tag == TypeTag::Special(SpecialType::String);
     let (name, param): (String, String) = if field.is_optional && is_string {
         (
@@ -264,7 +265,7 @@ pub(crate) fn gen_setter_signature(field: Field<'_>) -> Signature {
     let signature: Signature = Signature::from(name)
         .with_receiver(Receiver::BorrowedMut)
         .with_param(Var::from(("value", param.as_str())));
-    if is_string {
+    if is_fallible {
         signature.with_result(format!("Result<(), {}::CapacityError>", IO))
     } else {
         signature
@@ -283,7 +284,7 @@ fn gen_string_setter(
     let ValueLayout::Entry { index } = field_layout.value else {
         unreachable!("a string is an entry")
     };
-    let mut function: Function = Function::from(gen_setter_signature(field))
+    let mut function: Function = Function::from(gen_setter_signature(field, true))
         .with_comment(format!(" Sets the field: `{}`.", field.name))
         .with_comment("")
         .with_comment(" # Errors")
@@ -314,7 +315,7 @@ fn gen_string_setter(
 
 /// Generates the setter of the scalar `field`.
 fn gen_setter(typing: Typing<'_>, field: Field<'_>, field_layout: FieldLayout) -> Function {
-    let mut function: Function = Function::from(gen_setter_signature(field))
+    let mut function: Function = Function::from(gen_setter_signature(field, false))
         .with_comment(format!(" Sets the field: `{}`.", field.name))
         .with_access(Access::Public);
     if field.is_optional {
