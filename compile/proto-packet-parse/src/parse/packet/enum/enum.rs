@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_end, expect_keyword};
+use crate::parse::expect::{expect, expect_keyword, parse_members};
 use crate::{EnumCaseTree, Kind, ParseError, ParseErrorReason, parse_enum_case};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -16,12 +16,7 @@ pub fn parse_enum(p: &mut Parser<'_, Kind>) -> Result<EnumTree, ParseError> {
     let comments: Vec<Span> = p.leading_comments();
     expect_keyword(p, "enum", ParseErrorReason::ExpectedTypeDeclaration)?;
     let type_name: Span = expect(p, Kind::Ident, ParseErrorReason::ExpectedTypeName)?;
-    expect(p, Kind::LBrace, ParseErrorReason::ExpectedOpenBrace)?;
-    let mut cases: Vec<EnumCaseTree> = Vec::default();
-    while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
-        cases.push(parse_enum_case(p)?);
-    }
-    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    let cases: Vec<EnumCaseTree> = parse_members(p, parse_enum_case)?;
     Ok(EnumTree {
         comments,
         type_name,

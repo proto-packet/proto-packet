@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_end, expect_keyword};
+use crate::parse::expect::{expect, expect_keyword, parse_members};
 use crate::{Kind, ParseError, ParseErrorReason, StructFieldTree, parse_struct_field};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -16,12 +16,7 @@ pub fn parse_struct(p: &mut Parser<'_, Kind>) -> Result<StructTree, ParseError> 
     let comments: Vec<Span> = p.leading_comments();
     expect_keyword(p, "struct", ParseErrorReason::ExpectedTypeDeclaration)?;
     let type_name: Span = expect(p, Kind::Ident, ParseErrorReason::ExpectedTypeName)?;
-    expect(p, Kind::LBrace, ParseErrorReason::ExpectedOpenBrace)?;
-    let mut fields: Vec<StructFieldTree> = Vec::default();
-    while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
-        fields.push(parse_struct_field(p)?);
-    }
-    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    let fields: Vec<StructFieldTree> = parse_members(p, parse_struct_field)?;
     Ok(StructTree {
         comments,
         type_name,

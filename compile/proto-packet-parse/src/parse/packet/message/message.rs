@@ -1,4 +1,4 @@
-use crate::parse::expect::{expect, expect_end, expect_keyword};
+use crate::parse::expect::{expect, expect_keyword, parse_members};
 use crate::{Kind, MessageFieldTree, ParseError, ParseErrorReason, parse_message_field};
 use lex::lexer::Span;
 use lex::parser::Parser;
@@ -16,12 +16,7 @@ pub fn parse_message(p: &mut Parser<'_, Kind>) -> Result<MessageTree, ParseError
     let comments: Vec<Span> = p.leading_comments();
     expect_keyword(p, "message", ParseErrorReason::ExpectedTypeDeclaration)?;
     let type_name: Span = expect(p, Kind::Ident, ParseErrorReason::ExpectedTypeName)?;
-    expect(p, Kind::LBrace, ParseErrorReason::ExpectedOpenBrace)?;
-    let mut fields: Vec<MessageFieldTree> = Vec::default();
-    while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
-        fields.push(parse_message_field(p)?);
-    }
-    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    let fields: Vec<MessageFieldTree> = parse_members(p, parse_message_field)?;
     Ok(MessageTree {
         comments,
         type_name,

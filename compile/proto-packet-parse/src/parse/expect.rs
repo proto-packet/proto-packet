@@ -13,9 +13,9 @@ fn previous_span(p: &Parser<'_, Kind>) -> Option<Span> {
 
 /// Gets the span to report an error at the `span`.
 ///
-/// Only the end of the file has an empty span, so it's reported at the last token before it.
+/// The end of the file has nothing to point at, so it's reported at the last token before it.
 fn error_span(p: &Parser<'_, Kind>, span: Span) -> Span {
-    if span.offset() == span.end() {
+    if p.check(Kind::EndOfFile) {
         previous_span(p).unwrap_or(span)
     } else {
         span
@@ -43,6 +43,20 @@ pub(crate) fn expect_end(
     p.expect(kind)
         .map(|token| token.span())
         .map_err(|error| ParseError::new(previous_span(p).unwrap_or(error.span()), reason))
+}
+
+/// Parses the members of a type between braces, with the `parse_member` function.
+pub(crate) fn parse_members<T>(
+    p: &mut Parser<'_, Kind>,
+    parse_member: fn(&mut Parser<'_, Kind>) -> Result<T, ParseError>,
+) -> Result<Vec<T>, ParseError> {
+    expect(p, Kind::LBrace, ParseErrorReason::ExpectedOpenBrace)?;
+    let mut members: Vec<T> = Vec::default();
+    while !p.check(Kind::RBrace) && !p.check(Kind::EndOfFile) {
+        members.push(parse_member(p)?);
+    }
+    expect_end(p, Kind::RBrace, ParseErrorReason::ExpectedCloseBrace)?;
+    Ok(members)
 }
 
 /// Expects the contextual `keyword`, or fails with the `reason`.
