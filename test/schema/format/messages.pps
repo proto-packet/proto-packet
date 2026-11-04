@@ -1,0 +1,112 @@
+import format.examples.Color;
+import format.examples.Entry;
+import format.examples.Point;
+
+// The `Item` example of `FORMAT.md`.
+message Item {
+
+    // The text.
+    text: string = 1;
+
+    // The ID.
+    id: u32 = 5;
+}
+
+// A message with a field of each kind.
+message AllKinds {
+
+    // A bit, as a byte.
+    flag: bool = 1;
+
+    // A small integer.
+    byte: u8 = 2;
+
+    // A large integer.
+    large: u128 = 3;
+
+    // A UUID.
+    id: uuid = 4;
+
+    // An enum.
+    color: Color = 5;
+
+    // A string.
+    text: string = 6;
+
+    // A fixed struct.
+    point: Point = 7;
+
+    // A variable struct.
+    entry: Entry = 8;
+
+    // A message.
+    item: Item = 9;
+
+    // A boxed enum.
+    boxed_color: box Color = 10;
+}
+
+// An older version of a message.
+message Older {
+
+    // The name.
+    name: string = 2;
+
+    // The age.
+    age: u32 = 4;
+}
+
+// A newer version of a message, with fields around the older version's.
+message Newer {
+
+    // A new field before the older fields.
+    id: u64 = 1;
+
+    // The name.
+    name: string = 2;
+
+    // A new field between the older fields.
+    nickname: string = 3;
+
+    // The age.
+    age: u32 = 4;
+
+    // A new field after the older fields.
+    entry: Entry = 5;
+}
+
+// A struct with messages between its other fields.
+struct WithMessages {
+
+    // A string, after the messages in the tail.
+    before: string;
+
+    // A message.
+    item: Item;
+
+    // A fixed-size field.
+    number: u64;
+
+    // An optional message.
+    maybe: optional Item;
+}
+
+// A message and a struct in a loop.
+message LoopMessage {
+
+    // The value.
+    value: u32 = 1;
+
+    // The struct of the loop.
+    next: box LoopStruct = 2;
+}
+
+// A struct and a message in a loop.
+struct LoopStruct {
+
+    // The value.
+    value: u64;
+
+    // The message of the loop.
+    next: optional box LoopMessage;
+}

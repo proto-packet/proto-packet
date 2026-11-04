@@ -21,7 +21,7 @@ impl TypeLayout {
 
     /// Gets the layout of the `tag` of the linked `project`.
     ///
-    /// Returns `None` if the `tag` has no encoding yet. (ex: a message)
+    /// Returns `None` if the `tag` has no encoding yet. (ex: a variant)
     pub fn new(project: &Project, tag: &TypeTag) -> Option<Self> {
         let fixed = |size: usize| Self::Fixed {
             size,
@@ -34,6 +34,7 @@ impl TypeLayout {
             TypeTag::Special(SpecialType::String) => Some(Self::Variable { alignment: 1 }),
             TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref())? {
                 TypeDec::Enum(_) => Some(fixed(2)),
+                TypeDec::Message(_) => Some(Self::Variable { alignment: 1 }),
                 TypeDec::Struct(structure) if is_fixed(project, structure) => {
                     let layout: StructLayout = StructLayout::new(project, structure)?;
                     Some(Self::Fixed {
@@ -129,7 +130,8 @@ pub(crate) fn is_encodable(
 
 /// Gets the alignment of the `structure`: the largest of it & every struct it contains.
 ///
-/// Returns `None` if the `structure` contains a type with no encoding yet. (ex: a message)
+/// A message has alignment 1, whatever it contains, so its fields can change. Returns `None` if the
+/// `structure` contains a type with no encoding yet. (ex: a variant)
 pub(crate) fn alignment(project: &Project, structure: &Struct) -> Option<usize> {
     let mut structs: Vec<&Struct> = vec![structure];
     let mut visited: Vec<&QualifiedName> = Vec::default();
@@ -143,6 +145,7 @@ pub(crate) fn alignment(project: &Project, structure: &Struct) -> Option<usize> 
             match tag {
                 TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref())? {
                     TypeDec::Enum(_) => result = result.max(2),
+                    TypeDec::Message(_) => {}
                     TypeDec::Struct(child) => {
                         if !visited.contains(&name) {
                             visited.push(name);
