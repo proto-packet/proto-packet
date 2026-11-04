@@ -1,7 +1,6 @@
 use crate::io::{DecodeError, TagNumber};
+use crate::types::base_64::{append_base_64, encode_base_64};
 use crate::types::buffered::{Buffered, BufferedDeserializer};
-use enc::base_64::{Base64Decoder, Base64Encoder, Base64Validator};
-use enc::{Decoder, StringEncoder, Validator};
 use serde::de::{DeserializeSeed, Error as _, IgnoredAny, MapAccess, Visitor};
 use serde::ser::{Error as _, SerializeStruct};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -57,9 +56,7 @@ pub fn serialize_unknown_case<S>(
 where
     S: Serializer,
 {
-    let value: String = Base64Encoder::default()
-        .encode_as_string(bytes)
-        .map_err(S::Error::custom)?;
+    let value: String = encode_base_64(bytes).map_err(S::Error::custom)?;
     let mut result: S::SerializeStruct = serializer.serialize_struct(type_name, 2)?;
     result.serialize_field(VAR, &tag_number)?;
     result.serialize_field(VAL, &value)?;
@@ -192,16 +189,8 @@ where
             Selector::Name(name) => V::from_case(name, deserializer),
             Selector::Tag(tag) => {
                 let text: String = String::deserialize(deserializer)?;
-                let is_valid: bool = Base64Validator::default()
-                    .is_valid(text.as_bytes())
-                    .map_err(D::Error::custom)?;
-                if !is_valid {
-                    return Err(D::Error::custom("invalid base-64"));
-                }
                 let mut bytes: Vec<u8> = tag.to_le_bytes().to_vec();
-                Base64Decoder::default()
-                    .append_to_vec(text.as_bytes(), &mut bytes)
-                    .map_err(D::Error::custom)?;
+                append_base_64(&text, &mut bytes).map_err(D::Error::custom)?;
                 V::from_encoded(&bytes).map_err(D::Error::custom)
             }
         }
