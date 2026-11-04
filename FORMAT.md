@@ -13,7 +13,7 @@ The format is built to be fast: a field is read in place, from an offset known a
 - Alignment is relative to the start of the root value, & is at most 8.
 - Readers never depend on alignment. They read values at any address.
 - Writers zero all padding & unused bits, & readers ignore them.
-- Slack is unused bytes at the end of an extent. It is legal, & readers ignore it.
+- Slack is unused bytes at the end of an extent. It is legal, writers zero it, & readers ignore it.
 - A canonical encoding has only the padding this document specifies, & no slack.
 
 ## Types
