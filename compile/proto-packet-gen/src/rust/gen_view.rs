@@ -1,5 +1,5 @@
 use crate::rust::fields::Field;
-use crate::rust::gen_struct_buf::buf_name;
+use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::{generated_path, ref_name};
 use crate::rust::naming::{ident, is_upper_camel_case, type_path};
@@ -10,7 +10,7 @@ use code_gen::rust::{
     WithTraitFunctions,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::{SpecialType, Struct, TypeTag, WithTypeName};
+use proto_packet_tree::{SpecialType, TypeTag};
 
 /// Gets the name of the `View` trait of the struct with the schema `type_name`.
 ///
@@ -19,26 +19,27 @@ pub(crate) fn view_name(type_name: &str) -> String {
     format!("{}View", type_name)
 }
 
-/// Generates the `View` trait of the `structure` with the Rust `type_name`.
+/// Generates the `View` trait of the type with the `schema_name` & the Rust `type_name`.
 ///
-/// It has a getter for each field, so generic code can read any form of the struct. A nested struct
-/// is an `impl` of its own `View` trait, since each form has its own type for it. The trait is also
-/// implemented for references, since the struct's own getters & accessors can return one.
-pub(crate) fn gen_struct_view(
+/// It has a getter for each field, so generic code can read any form of the type. A nested struct
+/// or message is an `impl` of its own `View` trait, since each form has its own type for it. The
+/// trait is also implemented for references, since the type's own getters & accessors can return
+/// one.
+pub(crate) fn gen_view(
     typing: Typing<'_>,
-    structure: &Struct,
+    schema_name: &str,
     fields: &[Field<'_>],
     type_name: &str,
 ) -> String {
-    let name: String = view_name(&structure.type_name());
-    let ref_type: RustType = RustType::from(format!("super::{}", ref_name(&structure.type_name())))
+    let name: String = view_name(schema_name);
+    let ref_type: RustType = RustType::from(format!("super::{}", ref_name(schema_name)))
         .with_generic(RustType::from("'_"));
-    let mut_type: RustType = RustType::from(format!("super::{}", mut_name(&structure.type_name())))
+    let mut_type: RustType = RustType::from(format!("super::{}", mut_name(schema_name)))
         .with_generic(RustType::from("'_"));
-    let buf_type: String = format!("super::{}", buf_name(&structure.type_name()));
+    let buf_type: String = format!("super::{}", buf_name(schema_name));
     let generic: String = format!("V: {}", name);
     Block::default()
-        .with_statement(gen_trait(typing, structure, fields, &name, type_name))
+        .with_statement(gen_trait(typing, schema_name, fields, &name, type_name))
         .with_statement(EmptyLine::default())
         .with_statement(
             gen_impl(typing, fields, &name, "&V", |getter| {
@@ -83,7 +84,7 @@ pub(crate) fn gen_struct_view(
 /// Generates the `View` trait with the `name`.
 fn gen_trait(
     typing: Typing<'_>,
-    structure: &Struct,
+    schema_name: &str,
     fields: &[Field<'_>],
     name: &str,
     type_name: &str,
@@ -92,7 +93,7 @@ fn gen_trait(
         " The fields of any form of [{}](super::{}).",
         type_name, type_name
     ));
-    if !is_upper_camel_case(&structure.type_name()) {
+    if !is_upper_camel_case(schema_name) {
         result.add_attribute("allow(non_camel_case_types)");
     }
     if fields.iter().any(|field| field.is_non_snake_case()) {

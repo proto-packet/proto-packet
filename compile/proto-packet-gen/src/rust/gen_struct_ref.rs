@@ -1,7 +1,7 @@
 use crate::layout::{BitLayout, FieldLayout, StructLayout, ValueLayout};
 use crate::rust::encoding::IO;
 use crate::rust::fields::Field;
-use crate::rust::gen_struct_buf::buf_name;
+use crate::rust::gen_buf::buf_name;
 use crate::rust::naming::{ident, is_upper_camel_case, type_path};
 use crate::rust::typing::Typing;
 use code_gen::rust::{

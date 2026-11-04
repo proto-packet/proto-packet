@@ -4,11 +4,13 @@ use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::{IO, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
-use crate::rust::gen_struct_buf::{buf_name, gen_struct_buf};
-use crate::rust::gen_struct_mut::{check_mut_names, gen_struct_mut, is_struct, mut_name};
+use crate::rust::gen_buf::{buf_name, gen_buf};
+use crate::rust::gen_struct_mut::{
+    check_mut_names, gen_buf_accessors, gen_struct_mut, is_struct, mut_name,
+};
 use crate::rust::gen_struct_ref::{gen_struct_ref, ref_name};
-use crate::rust::gen_struct_view::{gen_struct_view, view_name};
-use crate::rust::gen_struct_view_mut::{gen_struct_view_mut, view_mut_name};
+use crate::rust::gen_view::{gen_view, view_name};
+use crate::rust::gen_view_mut::{gen_view_mut, view_mut_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::typing::Typing;
@@ -120,7 +122,11 @@ pub fn gen_struct(
     if let Some(layout) = &layout {
         files.push(TypeFile {
             suffix: "_buf",
-            code: gen_struct_buf(typing, structure, &fields, layout, &type_name),
+            code: gen_buf(
+                &structure.type_name(),
+                &type_name,
+                gen_buf_accessors(typing, &fields, layout, &buf_name(&structure.type_name())),
+            ),
         });
         files.push(TypeFile {
             suffix: "_mut",
@@ -132,11 +138,11 @@ pub fn gen_struct(
         });
         files.push(TypeFile {
             suffix: "_view",
-            code: gen_struct_view(typing, structure, &fields, &type_name),
+            code: gen_view(typing, &structure.type_name(), &fields, &type_name),
         });
         files.push(TypeFile {
             suffix: "_view_mut",
-            code: gen_struct_view_mut(typing, structure, &fields, &type_name),
+            code: gen_view_mut(typing, &structure.type_name(), &fields, &type_name),
         });
     }
     Ok(files)

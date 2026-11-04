@@ -1,17 +1,13 @@
-use crate::layout::StructLayout;
 use crate::rust::encoding::IO;
-use crate::rust::fields::Field;
-use crate::rust::gen_struct_mut::{gen_child, is_struct, mut_name};
+use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::naming::is_upper_camel_case;
-use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, Signature, Struct as RustStruct, StructField, Var,
     WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithReceiver, WithResult,
     WithStructFields, WithUnsafeFlag, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::{Struct, WithTypeName};
 
 /// The type of a `Buf` type's bytes.
 const BYTES: &str = "Vec<u8>";
@@ -23,31 +19,25 @@ pub(crate) fn buf_name(type_name: &str) -> String {
     format!("{}Buf", type_name)
 }
 
-/// Generates the `Buf` type of the `structure` with the Rust `type_name`.
+/// Generates the `Buf` type of the type with the `schema_name` & the Rust `type_name`.
 ///
-/// It owns the valid encoding of the struct, & reads its fields through its `Ref` type. Its file
+/// It owns the valid encoding of the type, & reads its fields through its `Ref` type. Its file
 /// imports nothing & declares only the `Buf` type, so the prelude names are never shadowed.
-pub(crate) fn gen_struct_buf(
-    typing: Typing<'_>,
-    structure: &Struct,
-    fields: &[Field<'_>],
-    layout: &StructLayout,
-    type_name: &str,
-) -> String {
-    let name: String = buf_name(&structure.type_name());
-    let ref_name: String = ref_name(&structure.type_name());
-    let mut_name: String = mut_name(&structure.type_name());
+pub(crate) fn gen_buf(schema_name: &str, type_name: &str, accessors: Option<ImplBlock>) -> String {
+    let name: String = buf_name(schema_name);
+    let ref_name: String = ref_name(schema_name);
+    let mut_name: String = mut_name(schema_name);
     let mut block: Block = Block::default()
-        .with_statement(gen_dec(structure, &name, type_name))
+        .with_statement(gen_dec(schema_name, &name, type_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_construction(&name, &ref_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_from(&name, type_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_properties(&name, &ref_name, &mut_name));
-    if fields.iter().any(|field| is_struct(typing, *field)) {
+    if let Some(accessors) = accessors {
         block.add_statement(EmptyLine::default());
-        block.add_statement(gen_fields(typing, fields, layout, &name));
+        block.add_statement(accessors);
     }
     block.add_statement(EmptyLine::default());
     block.add_statement(gen_decoding(&name, type_name));
@@ -55,7 +45,7 @@ pub(crate) fn gen_struct_buf(
 }
 
 /// Generates the declaration of the `Buf` type with the `name`.
-fn gen_dec(structure: &Struct, name: &str, type_name: &str) -> RustStruct {
+fn gen_dec(schema_name: &str, name: &str, type_name: &str) -> RustStruct {
     let mut result: RustStruct = RustStruct::from(name)
         .with_comment(format!(
             " An owned encoded [{}](super::{}).",
@@ -65,7 +55,7 @@ fn gen_dec(structure: &Struct, name: &str, type_name: &str) -> RustStruct {
     for derive in ["Clone", "Debug"] {
         result.add_derive(derive);
     }
-    if !is_upper_camel_case(&structure.type_name()) {
+    if !is_upper_camel_case(schema_name) {
         result.add_attribute("allow(non_camel_case_types)");
     }
     result.set_access(Access::Public);
@@ -168,34 +158,6 @@ fn gen_properties(name: &str, ref_name: &str, mut_name: &str) -> ImplBlock {
         .with_function(as_mut)
         .with_function(as_bytes)
         .with_function(into_bytes)
-}
-
-/// Generates the impl block with the accessor of each nested struct of the `fields`.
-///
-/// A `Buf` type can't lend these through a temporary `Mut` type, so it has its own.
-fn gen_fields(
-    typing: Typing<'_>,
-    fields: &[Field<'_>],
-    layout: &StructLayout,
-    name: &str,
-) -> ImplBlock {
-    let mut result: ImplBlock = ImplBlock::from(name).with_comment(" Fields");
-    for (field, field_layout) in fields.iter().zip(&layout.fields) {
-        if is_struct(typing, *field) {
-            let mut function: Function = gen_child(
-                *field,
-                *field_layout,
-                layout,
-                "&self.bytes",
-                "&mut self.bytes",
-            );
-            if field.is_non_snake_case() {
-                function.add_attribute("allow(non_snake_case)");
-            }
-            result.add_function(function);
-        }
-    }
-    result
 }
 
 /// Generates the impl block decoding the `Buf` type with the `name`.

@@ -1,8 +1,8 @@
 use crate::rust::fields::Field;
-use crate::rust::gen_struct_buf::buf_name;
+use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_struct_mut::{gen_setter_signature, is_struct, mut_name};
 use crate::rust::gen_struct_ref::generated_path;
-use crate::rust::gen_struct_view::view_name;
+use crate::rust::gen_view::view_name;
 use crate::rust::naming::is_upper_camel_case;
 use crate::rust::typing::Typing;
 use code_gen::rust::{
@@ -11,7 +11,7 @@ use code_gen::rust::{
     WithTraitFunctions,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::{SpecialType, Struct, TypeTag, WithTypeName};
+use proto_packet_tree::{SpecialType, TypeTag};
 
 /// A form of a struct that can be edited.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -36,25 +36,25 @@ pub(crate) fn view_mut_name(type_name: &str) -> String {
     format!("{}ViewMut", type_name)
 }
 
-/// Generates the `ViewMut` trait of the `structure` with the Rust `type_name`.
+/// Generates the `ViewMut` trait of the type with the `schema_name` & the Rust `type_name`.
 ///
-/// It has a setter for each scalar & string field, & an accessor for each nested struct, so generic
-/// code can edit any editable form of the struct. A string can fail, since the `Mut` type can run
-/// out of room. The trait is also implemented for mutable references, since the struct's own
+/// It has a setter for each scalar & string field, & an accessor for each nested struct or message,
+/// so generic code can edit any editable form of the type. A string can fail, since the `Mut` type
+/// can run out of room. The trait is also implemented for mutable references, since the type's own
 /// accessors return one.
-pub(crate) fn gen_struct_view_mut(
+pub(crate) fn gen_view_mut(
     typing: Typing<'_>,
-    structure: &Struct,
+    schema_name: &str,
     fields: &[Field<'_>],
     type_name: &str,
 ) -> String {
-    let name: String = view_mut_name(&structure.type_name());
-    let mut_type: RustType = RustType::from(format!("super::{}", mut_name(&structure.type_name())))
+    let name: String = view_mut_name(schema_name);
+    let mut_type: RustType = RustType::from(format!("super::{}", mut_name(schema_name)))
         .with_generic(RustType::from("'_"));
-    let buf_type: String = format!("super::{}", buf_name(&structure.type_name()));
+    let buf_type: String = format!("super::{}", buf_name(schema_name));
     let generic: String = format!("V: {}", name);
     Block::default()
-        .with_statement(gen_trait(typing, structure, fields, &name, type_name))
+        .with_statement(gen_trait(typing, schema_name, fields, &name, type_name))
         .with_statement(EmptyLine::default())
         .with_statement(
             gen_impl(typing, fields, &name, "&mut V", Form::Reference)
@@ -84,7 +84,7 @@ pub(crate) fn gen_struct_view_mut(
 /// Generates the `ViewMut` trait with the `name`.
 fn gen_trait(
     typing: Typing<'_>,
-    structure: &Struct,
+    schema_name: &str,
     fields: &[Field<'_>],
     name: &str,
     type_name: &str,
@@ -94,8 +94,8 @@ fn gen_trait(
             " The editable fields of any editable form of [{}](super::{}).",
             type_name, type_name
         ))
-        .with_supertrait(format!("super::{}", view_name(&structure.type_name())).as_str());
-    if !is_upper_camel_case(&structure.type_name()) {
+        .with_supertrait(format!("super::{}", view_name(schema_name)).as_str());
+    if !is_upper_camel_case(schema_name) {
         result.add_attribute("allow(non_camel_case_types)");
     }
     if fields.iter().any(|field| field.is_non_snake_case()) {

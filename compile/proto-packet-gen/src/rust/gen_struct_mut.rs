@@ -374,3 +374,35 @@ fn gen_write(typing: Typing<'_>, field: Field<'_>, field_layout: FieldLayout) ->
         _ => unreachable!("only scalar fields have a setter"),
     }
 }
+
+/// Generates the impl block of the `Buf` type with the `name`, with an accessor for each nested
+/// struct or message of the `fields`.
+///
+/// A `Buf` type can't lend these through a temporary `Mut` type, so it has its own.
+pub(crate) fn gen_buf_accessors(
+    typing: Typing<'_>,
+    fields: &[Field<'_>],
+    layout: &StructLayout,
+    name: &str,
+) -> Option<ImplBlock> {
+    if !fields.iter().any(|field| is_struct(typing, *field)) {
+        return None;
+    }
+    let mut result: ImplBlock = ImplBlock::from(name).with_comment(" Fields");
+    for (field, field_layout) in fields.iter().zip(&layout.fields) {
+        if is_struct(typing, *field) {
+            let mut function: Function = gen_child(
+                *field,
+                *field_layout,
+                layout,
+                "&self.bytes",
+                "&mut self.bytes",
+            );
+            if field.is_non_snake_case() {
+                function.add_attribute("allow(non_snake_case)");
+            }
+            result.add_function(function);
+        }
+    }
+    Some(result)
+}
