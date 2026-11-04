@@ -4,7 +4,7 @@ use crate::rust::gen_struct_ref::{generated_path, ref_name};
 use crate::rust::gen_variant::Case;
 use crate::rust::gen_variant_mut::gen_setter_signature;
 use crate::rust::gen_view::view_name;
-use crate::rust::gen_view_mut::view_mut_name;
+use crate::rust::gen_view_mut::{Form, view_mut_name};
 use crate::rust::naming::is_upper_camel_case;
 use crate::rust::typing::Typing;
 use crate::rust::values::view_value_type;
@@ -130,22 +130,6 @@ fn gen_getter_signature(typing: Typing<'_>, case: Case<'_>) -> Signature {
         .with_result(format!("Option<{}>", value_type))
 }
 
-/// A form of a variant that can be edited.
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-enum Form {
-    /// A mutable reference to another form.
-    Reference,
-
-    /// The variant itself.
-    Native,
-
-    /// The `Mut` type.
-    Mut,
-
-    /// The `Buf` type.
-    Buf,
-}
-
 /// Generates the `ViewMut` trait of the variant with the `schema_name` & the Rust `type_name`.
 ///
 /// It has a setter for each scalar & string case, & an accessor for each nested case, so generic
@@ -260,33 +244,23 @@ fn gen_method_signature(typing: Typing<'_>, case: Case<'_>) -> Signature {
 /// Generates the statements of the method of the `case` for the `form`.
 fn gen_body(typing: Typing<'_>, case: Case<'_>, form: Form, type_name: &str) -> Vec<String> {
     if case.is_nested(typing) {
-        let receiver: &str = if form == Form::Reference {
-            "(**self)"
-        } else {
-            "self"
-        };
-        return vec![format!("{}.{}()", receiver, case.accessor_name())];
+        return vec![form.gen_accessor_call(&case.accessor_name())];
     }
-    let setter: String = case.setter_name();
-    match form {
-        Form::Reference => vec![format!("(**self).{}(value)", setter)],
-        Form::Mut => vec![format!("self.{}(value)", setter)],
-        Form::Buf => vec![format!("self.as_mut().{}(value)", setter)],
-        Form::Native => {
-            let value: &str = if case.tag.is_string() {
-                "value.to_string()"
-            } else {
-                "value"
-            };
-            let value: String = if case.is_boxed {
-                format!("Box::new({})", value)
-            } else {
-                value.to_string()
-            };
-            vec![
-                format!("*self = super::{}::{}({});", type_name, case.ident(), value),
-                "Ok(())".to_string(),
-            ]
-        }
+    if let Some(call) = form.gen_setter_call(&case.setter_name()) {
+        return vec![call];
     }
+    let value: &str = if case.tag.is_string() {
+        "value.to_string()"
+    } else {
+        "value"
+    };
+    let value: String = if case.is_boxed {
+        format!("Box::new({})", value)
+    } else {
+        value.to_string()
+    };
+    vec![
+        format!("*self = super::{}::{}({});", type_name, case.ident(), value),
+        "Ok(())".to_string(),
+    ]
 }

@@ -12,13 +12,13 @@ use code_gen::rust::{
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 
-/// A form of a struct that can be edited.
+/// A form of a type that can be edited.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-enum Form {
+pub(crate) enum Form {
     /// A mutable reference to another form.
     Reference,
 
-    /// The struct itself.
+    /// The type itself.
     Native,
 
     /// The `Mut` type.
@@ -26,6 +26,30 @@ enum Form {
 
     /// The `Buf` type.
     Buf,
+}
+
+impl Form {
+    //! Calls
+
+    /// Generates the call to the `accessor` of the form.
+    pub(crate) fn gen_accessor_call(self, accessor: &str) -> String {
+        match self {
+            Self::Reference => format!("(**self).{}()", accessor),
+            _ => format!("self.{}()", accessor),
+        }
+    }
+
+    /// Generates the call to the `setter` of the form, if it takes the trait's `value`.
+    ///
+    /// The type's own setters return the previous value, & take an owned string.
+    pub(crate) fn gen_setter_call(self, setter: &str) -> Option<String> {
+        match self {
+            Self::Reference => Some(format!("(**self).{}(value)", setter)),
+            Self::Mut => Some(format!("self.{}(value)", setter)),
+            Self::Buf => Some(format!("self.as_mut().{}(value)", setter)),
+            Self::Native => None,
+        }
+    }
 }
 
 /// Gets the name of the `ViewMut` trait of the struct with the schema `type_name`.
@@ -179,35 +203,30 @@ fn gen_signature(typing: Typing<'_>, field: Field<'_>, all_fallible: bool) -> Si
 }
 
 /// Generates the statements of the method of the `field` for the `form`.
-///
-/// The struct's own setters return the previous value, & take an owned string.
 fn gen_body(typing: Typing<'_>, field: Field<'_>, form: Form, all_fallible: bool) -> Vec<String> {
     if is_struct(typing, field) {
-        let receiver: &str = if form == Form::Reference {
-            "(**self)"
-        } else {
-            "self"
-        };
-        return vec![format!("{}.{}()", receiver, field.accessor_name())];
+        return vec![form.gen_accessor_call(&field.accessor_name())];
     }
     let setter: String = field.setter_name();
-    let is_string: bool = field.tag.is_string();
-    match form {
-        Form::Reference => vec![format!("(**self).{}(value)", setter)],
-        Form::Mut => vec![format!("self.{}(value)", setter)],
-        Form::Buf => vec![format!("self.as_mut().{}(value)", setter)],
-        Form::Native if !is_string && all_fallible => {
-            vec![format!("self.{}(value);", setter), "Ok(())".to_string()]
+    if let Some(call) = form.gen_setter_call(&setter) {
+        return vec![call];
+    }
+    if !field.tag.is_string() {
+        let mut statements: Vec<String> = vec![format!("self.{}(value);", setter)];
+        if all_fallible {
+            statements.push("Ok(())".to_string());
         }
-        Form::Native if !is_string => vec![format!("self.{}(value);", setter)],
-        Form::Native if field.is_optional => vec![
+        return statements;
+    }
+    if field.is_optional {
+        return vec![
             "let value: Option<&str> = value.into();".to_string(),
             format!("self.{}(value.map(str::to_string));", setter),
             "Ok(())".to_string(),
-        ],
-        Form::Native => vec![
-            format!("self.{}(value.to_string());", setter),
-            "Ok(())".to_string(),
-        ],
+        ];
     }
+    vec![
+        format!("self.{}(value.to_string());", setter),
+        "Ok(())".to_string(),
+    ]
 }
