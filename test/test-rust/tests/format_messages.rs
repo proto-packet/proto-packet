@@ -191,6 +191,12 @@ fn extents_can_be_longer_than_their_values() {
 }
 
 #[test]
+fn strings_are_their_whole_extent() {
+    let bytes: [u8; 11] = [1, 0, 1, 0, 3, 0, 0, 0, b'h', b'i', b'!'];
+    assert_eq!(ItemRef::new(&bytes).unwrap().text(), Some("hi!"));
+}
+
+#[test]
 fn any_non_zero_byte_is_true() {
     let mut bytes: Vec<u8> = AllKinds::default().with_flag(true).encode();
     *bytes.last_mut().unwrap() = 2;
