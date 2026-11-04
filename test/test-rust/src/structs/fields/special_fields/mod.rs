@@ -4,9 +4,11 @@ pub use special_fields::*;
 pub use special_fields_buf::*;
 pub use special_fields_mut::*;
 pub use special_fields_ref::*;
+pub use special_fields_view::*;
 
 #[allow(clippy::module_inception)]
 mod special_fields;
 mod special_fields_buf;
 mod special_fields_mut;
 mod special_fields_ref;
+mod special_fields_view;

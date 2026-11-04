@@ -4,9 +4,11 @@ pub use strings::*;
 pub use strings_buf::*;
 pub use strings_mut::*;
 pub use strings_ref::*;
+pub use strings_view::*;
 
 #[allow(clippy::module_inception)]
 mod strings;
 mod strings_buf;
 mod strings_mut;
 mod strings_ref;
+mod strings_view;

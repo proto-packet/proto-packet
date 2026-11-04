@@ -4,9 +4,11 @@ pub use self_::*;
 pub use self_buf::*;
 pub use self_mut::*;
 pub use self_ref::*;
+pub use self_view::*;
 
 #[allow(clippy::module_inception)]
 mod self_;
 mod self_buf;
 mod self_mut;
 mod self_ref;
+mod self_view;

@@ -4,9 +4,11 @@ pub use before::*;
 pub use before_buf::*;
 pub use before_mut::*;
 pub use before_ref::*;
+pub use before_view::*;
 
 #[allow(clippy::module_inception)]
 mod before;
 mod before_buf;
 mod before_mut;
 mod before_ref;
+mod before_view;

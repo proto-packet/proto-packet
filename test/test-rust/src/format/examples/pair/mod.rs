@@ -4,9 +4,11 @@ pub use pair::*;
 pub use pair_buf::*;
 pub use pair_mut::*;
 pub use pair_ref::*;
+pub use pair_view::*;
 
 #[allow(clippy::module_inception)]
 mod pair;
 mod pair_buf;
 mod pair_mut;
 mod pair_ref;
+mod pair_view;

@@ -4,9 +4,11 @@ pub use line::*;
 pub use line_buf::*;
 pub use line_mut::*;
 pub use line_ref::*;
+pub use line_view::*;
 
 #[allow(clippy::module_inception)]
 mod line;
 mod line_buf;
 mod line_mut;
 mod line_ref;
+mod line_view;

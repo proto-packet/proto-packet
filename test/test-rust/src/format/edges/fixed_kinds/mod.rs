@@ -4,9 +4,11 @@ pub use fixed_kinds::*;
 pub use fixed_kinds_buf::*;
 pub use fixed_kinds_mut::*;
 pub use fixed_kinds_ref::*;
+pub use fixed_kinds_view::*;
 
 #[allow(clippy::module_inception)]
 mod fixed_kinds;
 mod fixed_kinds_buf;
 mod fixed_kinds_mut;
 mod fixed_kinds_ref;
+mod fixed_kinds_view;

@@ -1,0 +1,144 @@
+use crate::rust::fields::Field;
+use crate::rust::gen_struct_buf::buf_name;
+use crate::rust::gen_struct_mut::mut_name;
+use crate::rust::gen_struct_ref::{generated_path, ref_name};
+use crate::rust::naming::{ident, is_upper_camel_case, type_path};
+use crate::rust::typing::Typing;
+use code_gen::rust::{
+    Access, Function, ImplBlock, Receiver, RustType, Signature, SignatureDec, Trait, WithAccess,
+    WithAttributes, WithComments, WithFunctions, WithGenerics, WithReceiver, WithResult,
+    WithTraitFunctions,
+};
+use code_gen::{Block, EmptyLine, Statement, WithStatements};
+use proto_packet_tree::{SpecialType, Struct, TypeTag, WithTypeName};
+
+/// Gets the name of the `View` trait of the struct with the schema `type_name`.
+///
+/// (ex: `FooView` for `Foo`, & `SelfView` for `Self`, whose own name is `Self_`)
+pub(crate) fn view_name(type_name: &str) -> String {
+    format!("{}View", type_name)
+}
+
+/// Generates the `View` trait of the `structure` with the Rust `type_name`.
+///
+/// It has a getter for each field, so generic code can read any form of the struct. A nested struct
+/// is an `impl` of its own `View` trait, since each form has its own type for it. The trait is also
+/// implemented for references, since the struct's own getters can return one.
+pub(crate) fn gen_struct_view(
+    typing: Typing<'_>,
+    structure: &Struct,
+    fields: &[Field<'_>],
+    type_name: &str,
+) -> String {
+    let name: String = view_name(&structure.type_name());
+    let ref_type: RustType = RustType::from(format!("super::{}", ref_name(&structure.type_name())))
+        .with_generic(RustType::from("'_"));
+    let mut_type: RustType = RustType::from(format!("super::{}", mut_name(&structure.type_name())))
+        .with_generic(RustType::from("'_"));
+    let buf_type: String = format!("super::{}", buf_name(&structure.type_name()));
+    let generic: String = format!("V: {}", name);
+    Block::default()
+        .with_statement(gen_trait(typing, structure, fields, &name, type_name))
+        .with_statement(EmptyLine::default())
+        .with_statement(
+            gen_impl(typing, fields, &name, "&V", |getter| {
+                format!("(**self).{}", getter)
+            })
+            .with_generic(generic.as_str()),
+        )
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_impl(
+            typing,
+            fields,
+            &name,
+            format!("super::{}", type_name).as_str(),
+            |getter| format!("self.{}", getter),
+        ))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_impl(typing, fields, &name, ref_type, |getter| {
+            format!("self.{}", getter)
+        }))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_impl(
+            typing,
+            fields,
+            &name,
+            buf_type.as_str(),
+            |getter| format!("self.as_ref().{}", getter),
+        ))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_impl(typing, fields, &name, mut_type, |getter| {
+            format!("self.as_ref().{}", getter)
+        }))
+        .to_code()
+}
+
+/// Generates the `View` trait with the `name`.
+fn gen_trait(
+    typing: Typing<'_>,
+    structure: &Struct,
+    fields: &[Field<'_>],
+    name: &str,
+    type_name: &str,
+) -> Trait {
+    let mut result: Trait = Trait::from(name).with_comment(format!(
+        " The fields of any form of [{}](super::{}).",
+        type_name, type_name
+    ));
+    if !is_upper_camel_case(&structure.type_name()) {
+        result.add_attribute("allow(non_camel_case_types)");
+    }
+    if fields.iter().any(|field| field.is_non_snake_case()) {
+        result.add_attribute("allow(non_snake_case)");
+    }
+    result.set_access(Access::Public);
+    for field in fields {
+        let signature_dec: SignatureDec = SignatureDec::from(gen_signature(typing, *field))
+            .with_comment(format!(" Gets the field: `{}`.", field.name));
+        result.add_signature_dec(signature_dec);
+    }
+    result
+}
+
+/// Generates the impl block of the `View` trait with the `name` for the `target`.
+///
+/// Each getter's body is the `body` of the call to the field's getter. (ex: `x()`)
+fn gen_impl<T, F>(
+    typing: Typing<'_>,
+    fields: &[Field<'_>],
+    name: &str,
+    target: T,
+    body: F,
+) -> ImplBlock
+where
+    T: Into<RustType>,
+    F: Fn(&str) -> String,
+{
+    let mut result: ImplBlock = ImplBlock::from(target).with_for_trait(name);
+    for field in fields {
+        let getter: String = format!("{}()", ident(&field.name));
+        result.add_function(
+            Function::from(gen_signature(typing, *field)).with_literal(body(&getter)),
+        );
+    }
+    result
+}
+
+/// Generates the signature of the getter of the `field`.
+fn gen_signature(typing: Typing<'_>, field: Field<'_>) -> Signature {
+    let value_type: String = match field.tag {
+        TypeTag::Primitive(primitive) => primitive.name().to_string(),
+        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
+        TypeTag::Special(SpecialType::String) => "&str".to_string(),
+        TypeTag::Named(name) if typing.is_enum(field.tag) => type_path(name.to_ref()),
+        TypeTag::Named(_) => format!("impl {}", generated_path(field.tag, "View")),
+    };
+    let result: String = if field.is_optional {
+        format!("Option<{}>", value_type)
+    } else {
+        value_type
+    };
+    Signature::from(ident(&field.name))
+        .with_receiver(Receiver::Borrowed)
+        .with_result(result)
+}

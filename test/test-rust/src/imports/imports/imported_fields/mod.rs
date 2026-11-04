@@ -4,9 +4,11 @@ pub use imported_fields::*;
 pub use imported_fields_buf::*;
 pub use imported_fields_mut::*;
 pub use imported_fields_ref::*;
+pub use imported_fields_view::*;
 
 #[allow(clippy::module_inception)]
 mod imported_fields;
 mod imported_fields_buf;
 mod imported_fields_mut;
 mod imported_fields_ref;
+mod imported_fields_view;

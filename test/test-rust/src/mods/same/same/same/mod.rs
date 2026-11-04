@@ -4,9 +4,11 @@ pub use same::*;
 pub use same_buf::*;
 pub use same_mut::*;
 pub use same_ref::*;
+pub use same_view::*;
 
 #[allow(clippy::module_inception)]
 mod same;
 mod same_buf;
 mod same_mut;
 mod same_ref;
+mod same_view;

@@ -4,9 +4,11 @@ pub use loop_byte::*;
 pub use loop_byte_buf::*;
 pub use loop_byte_mut::*;
 pub use loop_byte_ref::*;
+pub use loop_byte_view::*;
 
 #[allow(clippy::module_inception)]
 mod loop_byte;
 mod loop_byte_buf;
 mod loop_byte_mut;
 mod loop_byte_ref;
+mod loop_byte_view;

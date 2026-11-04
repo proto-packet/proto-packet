@@ -4,9 +4,11 @@ pub use empty_struct::*;
 pub use empty_struct_buf::*;
 pub use empty_struct_mut::*;
 pub use empty_struct_ref::*;
+pub use empty_struct_view::*;
 
 #[allow(clippy::module_inception)]
 mod empty_struct;
 mod empty_struct_buf;
 mod empty_struct_mut;
 mod empty_struct_ref;
+mod empty_struct_view;

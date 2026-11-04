@@ -4,9 +4,11 @@ pub use parent::*;
 pub use parent_buf::*;
 pub use parent_mut::*;
 pub use parent_ref::*;
+pub use parent_view::*;
 
 #[allow(clippy::module_inception)]
 mod parent;
 mod parent_buf;
 mod parent_mut;
 mod parent_ref;
+mod parent_view;
