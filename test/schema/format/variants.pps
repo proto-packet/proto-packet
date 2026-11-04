@@ -1,0 +1,100 @@
+import format.examples.Color;
+import format.examples.Entry;
+import format.examples.Point;
+import format.messages.Item;
+
+// The `Shape` example of `FORMAT.md`.
+variant Shape {
+
+    // A circle with the radius.
+    Circle: u32 = 1;
+
+    // A square with the corner point.
+    Square: Point = 2;
+}
+
+// A variant with a case of each kind.
+variant AllCases {
+
+    // A bit, as a byte.
+    Flag: bool = 1;
+
+    // A small integer.
+    Byte: u8 = 2;
+
+    // A large integer.
+    Large: u128 = 3;
+
+    // A UUID.
+    Id: uuid = 4;
+
+    // An enum.
+    Color: Color = 5;
+
+    // A string.
+    Text: string = 6;
+
+    // A fixed struct.
+    Point: Point = 7;
+
+    // A variable struct.
+    Entry: Entry = 8;
+
+    // A message.
+    Item: Item = 9;
+
+    // A variant.
+    Shape: Shape = 10;
+
+    // A boxed enum.
+    BoxedColor: box Color = 11;
+}
+
+// An older version of a variant.
+variant OlderCases {
+
+    // A string.
+    Text: string = 2;
+}
+
+// A newer version of a variant, with cases around the older version's.
+variant NewerCases {
+
+    // A new case before the older case.
+    Number: u64 = 1;
+
+    // A string.
+    Text: string = 2;
+
+    // A new case after the older case.
+    Point: Point = 3;
+}
+
+// A struct with variants between its other fields.
+struct WithVariants {
+
+    // A string, after the variants in the tail.
+    before: string;
+
+    // A variant.
+    shape: Shape;
+
+    // A fixed-size field.
+    number: u64;
+
+    // An optional variant.
+    maybe: optional Shape;
+}
+
+// A message with variants.
+message WithCases {
+
+    // A variant.
+    shape: Shape = 1;
+
+    // An older variant, which can hold an unknown case.
+    older: OlderCases = 2;
+
+    // A fixed-size field.
+    id: u32 = 3;
+}
