@@ -557,15 +557,18 @@ fn empty_unknown_cases_round_trip_through_json() {
 #[test]
 fn json_rejects_invalid_variants() {
     for json in [
-        r#"{"var":"Nope","val":1}"#, // an unknown name
-        r#"{"var":0,"val":""}"#,     // an invalid tag number
-        r#"{"var":8192,"val":""}"#,  // a tag number above 8,191
-        r#"{"var":-1,"val":""}"#,    // a negative tag number
-        r#"{"var":3,"val":"!!!!"}"#, // invalid base-64
-        r#"{"var":3,"val":5}"#,      // a value that isn't base-64 text
-        r#"{"var":3,"val":"AQ=="}"#, // a known case too short for its type
-        r#"{"var":"Circle"}"#,       // no value
-        r#"{"val":5}"#,              // no case
+        r#"{"var":"Nope","val":1}"#,                // an unknown name
+        r#"{"var":0,"val":""}"#,                    // an invalid tag number
+        r#"{"var":8192,"val":""}"#,                 // a tag number above 8,191
+        r#"{"var":-1,"val":""}"#,                   // a negative tag number
+        r#"{"var":3,"val":"!!!!"}"#,                // invalid base-64
+        r#"{"var":3,"val":5}"#,                     // a value that isn't base-64 text
+        r#"{"var":3,"val":"AQ=="}"#,                // a known case too short for its type
+        r#"{"var":"Circle"}"#,                      // no value
+        r#"{"val":5}"#,                             // no case
+        r#"{"var":"Number","val":1,"var":"Text"}"#, // a duplicate case
+        r#"{"var":"Number","val":1,"val":2}"#,      // a duplicate value
+        r#"{"val":1,"val":2,"var":"Number"}"#,      // a duplicate buffered value
     ] {
         assert!(
             serde_json::from_str::<NewerCases>(json).is_err(),

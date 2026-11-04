@@ -638,15 +638,17 @@ fn nested_unknown_fields_round_trip_through_json() {
 #[test]
 fn json_rejects_invalid_messages() {
     for json in [
-        r#"{"0":""}"#,                // an invalid tag number
-        r#"{"8192":""}"#,             // a tag number above 8,191
-        r#"{"7":"!!!!"}"#,            // invalid base-64
-        r#"{"7":5}"#,                 // a value that isn't base-64 text
-        r#"{"5":"AQ=="}"#,            // a known field too short for its type
-        r#"{"1":"/w=="}"#,            // a known field that isn't valid UTF-8
-        r#"{"7":"","7":""}"#,         // a duplicate tag number
-        r#"{"text":"a","text":"b"}"#, // a duplicate name
-        r#"{"text":"a","1":"aGk="}"#, // a field by name & by tag number
+        r#"{"0":""}"#,                 // an invalid tag number
+        r#"{"8192":""}"#,              // a tag number above 8,191
+        r#"{"7":"!!!!"}"#,             // invalid base-64
+        r#"{"7":5}"#,                  // a value that isn't base-64 text
+        r#"{"5":"AQ=="}"#,             // a known field too short for its type
+        r#"{"1":"/w=="}"#,             // a known field that isn't valid UTF-8
+        r#"{"7":"","7":""}"#,          // a duplicate tag number
+        r#"{"text":"a","text":"b"}"#,  // a duplicate name
+        r#"{"text":null,"text":"a"}"#, // a duplicate name after a null
+        r#"{"0007":"CQ=="}"#,          // a tag number with leading zeros
+        r#"{"text":"a","1":"aGk="}"#,  // a field by name & by tag number
     ] {
         assert!(serde_json::from_str::<Item>(json).is_err(), "{}", json);
     }
