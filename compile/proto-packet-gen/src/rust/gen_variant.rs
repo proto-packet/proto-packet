@@ -9,6 +9,9 @@ use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::gen_variant_mut::{gen_variant_buf_accessors, gen_variant_mut};
 use crate::rust::gen_variant_ref::{case_name, gen_variant_case, gen_variant_ref};
+use crate::rust::gen_variant_view::{gen_variant_view, gen_variant_view_mut};
+use crate::rust::gen_view::view_name;
+use crate::rust::gen_view_mut::view_mut_name;
 use crate::rust::message_encoding::gen_value_write;
 use crate::rust::naming::{ident, is_renamed, is_upper_camel_case, snake_case};
 use crate::rust::prelude::{Prelude, PreludeName};
@@ -157,6 +160,8 @@ pub fn gen_variant(
             buf_name(schema_name),
             mut_name(schema_name),
             case_name(schema_name),
+            view_name(schema_name),
+            view_mut_name(schema_name),
         ] {
             check_type_name(project, mod_path, &name)?;
         }
@@ -179,6 +184,14 @@ pub fn gen_variant(
         files.push(TypeFile {
             suffix: "_ref",
             code: gen_variant_ref(typing, schema_name, &cases, &type_name),
+        });
+        files.push(TypeFile {
+            suffix: "_view",
+            code: gen_variant_view(typing, schema_name, &cases, &type_name),
+        });
+        files.push(TypeFile {
+            suffix: "_view_mut",
+            code: gen_variant_view_mut(typing, schema_name, &cases, &type_name),
         });
     }
     files.insert(

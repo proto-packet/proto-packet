@@ -5,6 +5,8 @@ pub use keyword_variant_buf::*;
 pub use keyword_variant_case::*;
 pub use keyword_variant_mut::*;
 pub use keyword_variant_ref::*;
+pub use keyword_variant_view::*;
+pub use keyword_variant_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod keyword_variant;
@@ -12,3 +14,5 @@ mod keyword_variant_buf;
 mod keyword_variant_case;
 mod keyword_variant_mut;
 mod keyword_variant_ref;
+mod keyword_variant_view;
+mod keyword_variant_view_mut;

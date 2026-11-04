@@ -5,6 +5,8 @@ pub use shape_buf::*;
 pub use shape_case::*;
 pub use shape_mut::*;
 pub use shape_ref::*;
+pub use shape_view::*;
+pub use shape_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod shape;
@@ -12,3 +14,5 @@ mod shape_buf;
 mod shape_case;
 mod shape_mut;
 mod shape_ref;
+mod shape_view;
+mod shape_view_mut;

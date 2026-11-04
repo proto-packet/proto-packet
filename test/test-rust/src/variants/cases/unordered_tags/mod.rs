@@ -5,6 +5,8 @@ pub use unordered_tags_buf::*;
 pub use unordered_tags_case::*;
 pub use unordered_tags_mut::*;
 pub use unordered_tags_ref::*;
+pub use unordered_tags_view::*;
+pub use unordered_tags_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod unordered_tags;
@@ -12,3 +14,5 @@ mod unordered_tags_buf;
 mod unordered_tags_case;
 mod unordered_tags_mut;
 mod unordered_tags_ref;
+mod unordered_tags_view;
+mod unordered_tags_view_mut;

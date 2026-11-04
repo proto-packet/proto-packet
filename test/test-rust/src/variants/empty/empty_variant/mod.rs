@@ -5,6 +5,8 @@ pub use empty_variant_buf::*;
 pub use empty_variant_case::*;
 pub use empty_variant_mut::*;
 pub use empty_variant_ref::*;
+pub use empty_variant_view::*;
+pub use empty_variant_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod empty_variant;
@@ -12,3 +14,5 @@ mod empty_variant_buf;
 mod empty_variant_case;
 mod empty_variant_mut;
 mod empty_variant_ref;
+mod empty_variant_view;
+mod empty_variant_view_mut;
