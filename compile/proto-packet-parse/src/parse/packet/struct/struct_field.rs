@@ -20,6 +20,9 @@ pub fn parse_struct_field(p: &mut Parser<'_, Kind>) -> Result<StructFieldTree, P
     let field_name: Span = expect(p, Kind::Ident, ParseErrorReason::ExpectedFieldName)?;
     expect(p, Kind::Colon, ParseErrorReason::ExpectedColon)?;
     let is_optional: bool = parse_type_modifier(p, "optional");
+    if is_optional {
+        reject_type_modifier(p, "optional", ParseErrorReason::DuplicateOptional)?;
+    }
     let is_boxed: bool = parse_type_modifier(p, "box");
     reject_type_modifier(p, "optional", ParseErrorReason::OptionalAfterBox)?;
     let type_tag: TypeTagTree = parse_type_tag(p)?;

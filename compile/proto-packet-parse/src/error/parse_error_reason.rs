@@ -60,6 +60,9 @@ pub enum ParseErrorReason {
 
     /// An `optional` after a `box`. (ex: `box optional Foo`)
     OptionalAfterBox,
+
+    /// A struct field type with `optional` twice.
+    DuplicateOptional,
 }
 
 impl ParseErrorReason {
@@ -90,6 +93,7 @@ impl ParseErrorReason {
             }
             Self::OptionalVariantCase => "variant cases can't be `optional`",
             Self::OptionalAfterBox => "`optional` must come before `box`",
+            Self::DuplicateOptional => "`optional` can only appear once",
         }
     }
 
@@ -116,6 +120,7 @@ impl ParseErrorReason {
             Self::OptionalMessageField => "P_OPTIONAL_MESSAGE_FIELD",
             Self::OptionalVariantCase => "P_OPTIONAL_VARIANT_CASE",
             Self::OptionalAfterBox => "P_OPTIONAL_AFTER_BOX",
+            Self::DuplicateOptional => "P_DUPLICATE_OPTIONAL",
         }
     }
 }
