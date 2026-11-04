@@ -125,3 +125,67 @@ impl AbsentChild {
         self
     }
 }
+
+impl AbsentChild {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut tail: usize = 0;
+        if let Some(value) = &self.first {
+            tail += value.encoded_len();
+        }
+        tail = proto_packet::io::align_up(tail, 8);
+        tail += self.second.encoded_len();
+        tail += self.text.len();
+        16 + tail
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 12);
+        out.push(u8::from(self.first.is_some()));
+        proto_packet::io::write_zeros(out, 3);
+        let tail: usize = out.len();
+        if let Some(value) = &self.first {
+            value.encode_to(out);
+        }
+        proto_packet::io::write_padding(out, tail, 8);
+        proto_packet::io::write_end(out, start, tail);
+        self.second.encode_to(out);
+        proto_packet::io::write_end(out, start + 4, tail);
+        out.extend_from_slice(self.text.as_bytes());
+        proto_packet::io::write_end(out, start + 8, tail);
+    }
+}
+
+impl AbsentChild {
+    //! Decoding
+
+    /// Decodes the struct from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::AbsentChildRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the struct from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::AbsentChildRef::new_unchecked(bytes) }.decode()
+    }
+}

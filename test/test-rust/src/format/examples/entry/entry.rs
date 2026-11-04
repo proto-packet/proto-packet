@@ -80,3 +80,54 @@ impl Entry {
         self
     }
 }
+
+impl Entry {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut tail: usize = 0;
+        tail += self.text.len();
+        12 + tail
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let start: usize = out.len();
+        out.extend_from_slice(&self.id.to_le_bytes());
+        proto_packet::io::write_zeros(out, 4);
+        let tail: usize = out.len();
+        out.extend_from_slice(self.text.as_bytes());
+        proto_packet::io::write_end(out, start + 8, tail);
+    }
+}
+
+impl Entry {
+    //! Decoding
+
+    /// Decodes the struct from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::EntryRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the struct from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::EntryRef::new_unchecked(bytes) }.decode()
+    }
+}

@@ -75,8 +75,7 @@ pub fn gen_struct(
         block.add_statement(EmptyLine::default());
         block.add_statement(field.gen_impl(typing, &type_name));
     }
-    let layout: Option<StructLayout> =
-        StructLayout::new(project, structure).filter(StructLayout::is_fixed);
+    let layout: Option<StructLayout> = StructLayout::new(project, structure);
     if let Some(layout) = &layout {
         check_type_name(project, mod_path, &ref_name(&structure.type_name()))?;
         check_type_name(project, mod_path, &buf_name(&structure.type_name()))?;

@@ -102,3 +102,66 @@ impl Option {
         self
     }
 }
+
+impl Option {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut tail: usize = 0;
+        if let Some(value) = &self.next {
+            tail += value.encoded_len();
+        }
+        if let Some(value) = &self.text {
+            tail += value.len();
+        }
+        12 + tail
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> std::vec::Vec<u8> {
+        let mut result: std::vec::Vec<u8> = std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut std::vec::Vec<u8>) {
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 8);
+        out.push(u8::from(self.text.is_some()) | (u8::from(self.next.is_some()) << 1));
+        proto_packet::io::write_zeros(out, 3);
+        let tail: usize = out.len();
+        if let Some(value) = &self.next {
+            value.encode_to(out);
+        }
+        proto_packet::io::write_end(out, start, tail);
+        if let Some(value) = &self.text {
+            out.extend_from_slice(value.as_bytes());
+        }
+        proto_packet::io::write_end(out, start + 4, tail);
+    }
+}
+
+impl Option {
+    //! Decoding
+
+    /// Decodes the struct from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::OptionRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the struct from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::OptionRef::new_unchecked(bytes) }.decode()
+    }
+}

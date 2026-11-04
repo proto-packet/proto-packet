@@ -22,21 +22,41 @@ pub(crate) fn gen_encoding(
 ) -> ImplBlock {
     ImplBlock::from(type_name)
         .with_comment(" Encoding")
-        .with_function(gen_encoded_len(layout))
+        .with_function(gen_encoded_len(fields, layout))
         .with_function(gen_encode(typing))
         .with_function(gen_encode_to(typing, fields, layout))
 }
 
 /// Generates the function getting the length of the encoding.
-fn gen_encoded_len(layout: &StructLayout) -> Function {
+fn gen_encoded_len(fields: &[Field<'_>], layout: &StructLayout) -> Function {
     let signature: Signature = Signature::from("encoded_len")
         .with_receiver(Receiver::Borrowed)
         .with_result("usize");
-    Function::from(signature)
+    let mut function: Function = Function::from(signature)
         .with_comment(" Gets the length of the encoding, in bytes.")
         .with_attribute("must_use")
-        .with_access(Access::Public)
-        .with_literal(layout.fixed_size.to_string())
+        .with_access(Access::Public);
+    if layout.is_fixed() {
+        return function.with_literal(layout.fixed_size.to_string());
+    }
+    function.add_semi("let mut tail: usize = 0");
+    for entry in &layout.entries {
+        let field: Field<'_> = fields[entry.field];
+        function.add_literal(gen_entry(field, |value: &str| {
+            if is_string(field) {
+                format!("tail += {}.len();", value)
+            } else {
+                format!("tail += {}.encoded_len();", value)
+            }
+        }));
+        if entry.padded_alignment > 1 {
+            function.add_semi(format!(
+                "tail = {}::align_up(tail, {})",
+                IO, entry.padded_alignment
+            ));
+        }
+    }
+    function.with_literal(format!("{} + tail", layout.fixed_size))
 }
 
 /// Generates the function encoding the struct.
@@ -59,12 +79,42 @@ fn gen_encode(typing: Typing<'_>) -> Function {
 }
 
 /// Generates the function appending the encoding to the `out` bytes.
+///
+/// The end table is zeros until each entry is written, since writing an entry finds its length.
+/// Getting the lengths first would walk each nested struct once for each struct it is nested in.
 fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout) -> Function {
-    let statements: Vec<String> = layout
+    let mut statements: Vec<String> = layout
         .units
         .iter()
         .flat_map(|unit| gen_unit(typing, fields, layout, *unit))
         .collect();
+    if !layout.is_fixed() {
+        statements.insert(0, "let start: usize = out.len();".to_string());
+        statements.push("let tail: usize = out.len();".to_string());
+        for (index, entry) in layout.entries.iter().enumerate() {
+            let field: Field<'_> = fields[entry.field];
+            statements.push(gen_entry(field, |value: &str| {
+                if is_string(field) {
+                    format!("out.extend_from_slice({}.as_bytes());", value)
+                } else {
+                    format!("{}.encode_to(out);", value)
+                }
+            }));
+            if entry.padded_alignment > 1 {
+                statements.push(format!(
+                    "{}::write_padding(out, tail, {});",
+                    IO, entry.padded_alignment
+                ));
+            }
+            let offset: usize = layout.table_offset + index * 4;
+            let item: String = if offset == 0 {
+                "start".to_string()
+            } else {
+                format!("start + {}", offset)
+            };
+            statements.push(format!("{}::write_end(out, {}, tail);", IO, item));
+        }
+    }
     let out: &str = if statements.is_empty() { "_out" } else { "out" };
     let signature: Signature = Signature::from("encode_to")
         .with_receiver(Receiver::Borrowed)
@@ -89,7 +139,11 @@ fn gen_unit(
         UnitLayout::Field { index } => {
             vec![gen_fixed_field(typing, fields[index], layout.fields[index])]
         }
-        UnitLayout::EndTable => unreachable!("a fixed struct has no end table"),
+        UnitLayout::EndTable => vec![format!(
+            "{}::write_zeros(out, {});",
+            IO,
+            layout.entries.len() * 4
+        )],
         UnitLayout::Bits { offset, size } => (offset..offset + size)
             .map(|offset| gen_bits(fields, layout, offset))
             .collect(),
@@ -131,6 +185,30 @@ fn gen_fixed_field(typing: Typing<'_>, field: Field<'_>, layout: FieldLayout) ->
         }
         _ => format!("{}.encode_to(out);", name),
     }
+}
+
+/// Generates the statement of the tail entry of the `field`, from the statement for its value.
+///
+/// An absent field has no statement.
+fn gen_entry<F>(field: Field<'_>, statement: F) -> String
+where
+    F: Fn(&str) -> String,
+{
+    let name: String = format!("self.{}", ident(&field.name));
+    if field.is_optional {
+        format!(
+            "if let Some(value) = &{} {{ {} }}",
+            name,
+            statement("value")
+        )
+    } else {
+        statement(&name)
+    }
+}
+
+/// Checks if the `field` is a string.
+fn is_string(field: Field<'_>) -> bool {
+    *field.tag == TypeTag::Special(SpecialType::String)
 }
 
 /// Generates the statement appending the byte of the bit group at the `offset`.

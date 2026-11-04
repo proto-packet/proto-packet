@@ -103,6 +103,15 @@ fn gen_construction(
         .with_comment(" Returns an error if the `bytes` are not a valid encoding.")
         .with_access(Access::Public)
         .with_semi(format!("{}::check_len(bytes, {})?", IO, layout.fixed_size));
+    if !layout.is_fixed() {
+        new.add_semi(format!(
+            "{}::check_ends(bytes, {}, {}, {})?",
+            IO,
+            layout.table_offset,
+            layout.entries.len(),
+            layout.fixed_size
+        ));
+    }
     for (field, field_layout) in fields.iter().zip(&layout.fields) {
         if let Some(check) = gen_check(typing, *field, *field_layout, layout) {
             new.add_literal(check);

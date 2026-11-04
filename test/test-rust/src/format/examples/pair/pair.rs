@@ -120,3 +120,62 @@ impl Pair {
         self
     }
 }
+
+impl Pair {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut tail: usize = 0;
+        tail += self.first.encoded_len();
+        tail = proto_packet::io::align_up(tail, 8);
+        tail += self.second.encoded_len();
+        tail += self.note.len();
+        16 + tail
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 12);
+        proto_packet::io::write_zeros(out, 4);
+        let tail: usize = out.len();
+        self.first.encode_to(out);
+        proto_packet::io::write_padding(out, tail, 8);
+        proto_packet::io::write_end(out, start, tail);
+        self.second.encode_to(out);
+        proto_packet::io::write_end(out, start + 4, tail);
+        out.extend_from_slice(self.note.as_bytes());
+        proto_packet::io::write_end(out, start + 8, tail);
+    }
+}
+
+impl Pair {
+    //! Decoding
+
+    /// Decodes the struct from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::PairRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the struct from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::PairRef::new_unchecked(bytes) }.decode()
+    }
+}
