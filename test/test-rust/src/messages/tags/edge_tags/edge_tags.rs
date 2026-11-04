@@ -11,25 +11,10 @@
 ///     max: u32 = 8191;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct EdgeTags {
-    #[serde(skip_serializing_if = "Option::is_none")]
     min: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     max: Option<u32>,
-    #[serde(skip)]
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -173,5 +158,80 @@ impl EdgeTags {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::EdgeTagsRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for EdgeTags {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.min {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "min", value)?;
+        }
+        if let Some(value) = &self.max {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "max", value)?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for EdgeTags {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for EdgeTags {
+    const TYPE_NAME: &'static str = "EdgeTags";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "min" => {
+                if self.min.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("min"));
+                }
+                self.min = map.next_value()?;
+                Ok(true)
+            }
+            "max" => {
+                if self.max.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("max"));
+                }
+                self.max = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> Result<(), &'static str> {
+        if other.min.is_some() {
+            if self.min.is_some() {
+                return Err("min");
+            }
+            self.min = other.min;
+        }
+        if other.max.is_some() {
+            if self.max.is_some() {
+                return Err("max");
+            }
+            self.max = other.max;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }

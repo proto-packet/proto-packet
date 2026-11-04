@@ -23,33 +23,14 @@
 ///     unsigned128: u128 = 6;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct PrimitiveFields {
-    #[serde(skip_serializing_if = "Option::is_none")]
     boolean: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     unsigned8: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     unsigned16: Option<u16>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     unsigned32: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     unsigned64: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     unsigned128: Option<u128>,
-    #[serde(skip)]
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -346,5 +327,156 @@ impl PrimitiveFields {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::PrimitiveFieldsRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for PrimitiveFields {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.boolean {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "boolean", value)?;
+        }
+        if let Some(value) = &self.unsigned8 {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "unsigned8", value)?;
+        }
+        if let Some(value) = &self.unsigned16 {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "unsigned16", value)?;
+        }
+        if let Some(value) = &self.unsigned32 {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "unsigned32", value)?;
+        }
+        if let Some(value) = &self.unsigned64 {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "unsigned64", value)?;
+        }
+        if let Some(value) = &self.unsigned128 {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "unsigned128",
+                value,
+            )?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for PrimitiveFields {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for PrimitiveFields {
+    const TYPE_NAME: &'static str = "PrimitiveFields";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "boolean" => {
+                if self.boolean.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("boolean"));
+                }
+                self.boolean = map.next_value()?;
+                Ok(true)
+            }
+            "unsigned8" => {
+                if self.unsigned8.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("unsigned8"));
+                }
+                self.unsigned8 = map.next_value()?;
+                Ok(true)
+            }
+            "unsigned16" => {
+                if self.unsigned16.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field(
+                        "unsigned16",
+                    ));
+                }
+                self.unsigned16 = map.next_value()?;
+                Ok(true)
+            }
+            "unsigned32" => {
+                if self.unsigned32.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field(
+                        "unsigned32",
+                    ));
+                }
+                self.unsigned32 = map.next_value()?;
+                Ok(true)
+            }
+            "unsigned64" => {
+                if self.unsigned64.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field(
+                        "unsigned64",
+                    ));
+                }
+                self.unsigned64 = map.next_value()?;
+                Ok(true)
+            }
+            "unsigned128" => {
+                if self.unsigned128.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field(
+                        "unsigned128",
+                    ));
+                }
+                self.unsigned128 = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> Result<(), &'static str> {
+        if other.boolean.is_some() {
+            if self.boolean.is_some() {
+                return Err("boolean");
+            }
+            self.boolean = other.boolean;
+        }
+        if other.unsigned8.is_some() {
+            if self.unsigned8.is_some() {
+                return Err("unsigned8");
+            }
+            self.unsigned8 = other.unsigned8;
+        }
+        if other.unsigned16.is_some() {
+            if self.unsigned16.is_some() {
+                return Err("unsigned16");
+            }
+            self.unsigned16 = other.unsigned16;
+        }
+        if other.unsigned32.is_some() {
+            if self.unsigned32.is_some() {
+                return Err("unsigned32");
+            }
+            self.unsigned32 = other.unsigned32;
+        }
+        if other.unsigned64.is_some() {
+            if self.unsigned64.is_some() {
+                return Err("unsigned64");
+            }
+            self.unsigned64 = other.unsigned64;
+        }
+        if other.unsigned128.is_some() {
+            if self.unsigned128.is_some() {
+                return Err("unsigned128");
+            }
+            self.unsigned128 = other.unsigned128;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }

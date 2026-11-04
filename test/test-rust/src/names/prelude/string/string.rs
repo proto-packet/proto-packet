@@ -8,23 +8,9 @@
 ///     text: string = 1;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct String {
-    #[serde(skip_serializing_if = "std::option::Option::is_none")]
     text: std::option::Option<std::string::String>,
-    #[serde(skip)]
     unknown_fields: std::vec::Vec<proto_packet::io::UnknownField>,
 }
 
@@ -131,5 +117,64 @@ impl String {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::StringRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for String {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.text {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "text", value)?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for String {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for String {
+    const TYPE_NAME: &'static str = "String";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> std::result::Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "text" => {
+                if self.text.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("text"));
+                }
+                self.text = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> std::result::Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> std::result::Result<(), &'static str> {
+        if other.text.is_some() {
+            if self.text.is_some() {
+                return Err("text");
+            }
+            self.text = other.text;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }

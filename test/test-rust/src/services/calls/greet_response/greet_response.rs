@@ -8,23 +8,9 @@
 ///     greeting: string = 1;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct GreetResponse {
-    #[serde(skip_serializing_if = "Option::is_none")]
     greeting: Option<String>,
-    #[serde(skip)]
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -131,5 +117,64 @@ impl GreetResponse {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::GreetResponseRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for GreetResponse {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.greeting {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "greeting", value)?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for GreetResponse {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for GreetResponse {
+    const TYPE_NAME: &'static str = "GreetResponse";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "greeting" => {
+                if self.greeting.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("greeting"));
+                }
+                self.greeting = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> Result<(), &'static str> {
+        if other.greeting.is_some() {
+            if self.greeting.is_some() {
+                return Err("greeting");
+            }
+            self.greeting = other.greeting;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }

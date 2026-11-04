@@ -121,6 +121,8 @@ pub fn gen_message(
             &ref_name(&message.type_name()),
             "message",
         ));
+        block.add_statement(EmptyLine::default());
+        block.add_literal(gen_json(typing, &message.type_name(), &type_name, &fields));
         check_type_name(project, mod_path, &ref_name(&message.type_name()))?;
         check_type_name(project, mod_path, &buf_name(&message.type_name()))?;
         check_type_name(project, mod_path, &mut_name(&message.type_name()))?;
@@ -225,7 +227,9 @@ fn gen_dec(
         &lines,
     );
     add_derives(&mut result, false, true, true);
-    add_serde_derives(&mut result);
+    if !has_encoding {
+        add_serde_derives(&mut result);
+    }
     if !is_upper_camel_case(&message.type_name()) {
         result.add_attribute("allow(non_camel_case_types)");
     }
@@ -234,15 +238,118 @@ fn gen_dec(
     }
     result.set_access(Access::Public);
     for field in fields {
-        result.add_field(field.gen_dec(typing));
+        result.add_field(if has_encoding {
+            field.gen_plain_dec(typing)
+        } else {
+            field.gen_dec(typing)
+        });
     }
     if has_encoding {
         let unknown_type: String =
             format!("{}<{}>", typing.prelude(PreludeName::Vec), UNKNOWN_FIELD);
-        let mut unknown_fields: StructField =
-            StructField::from((UNKNOWN_FIELDS, unknown_type.as_str()));
-        unknown_fields.add_attribute("serde(skip)");
-        result.add_field(unknown_fields);
+        result.add_field(StructField::from((UNKNOWN_FIELDS, unknown_type.as_str())));
     }
     result
+}
+
+/// Generates the serde impls of the message with the `schema_name` & the `fields`.
+///
+/// A field is its schema name & value. (ex: `self_` is `self`) An unknown field is its tag number &
+/// its encoded value as base-64 text, which a reader that knows the field decodes as that field.
+fn gen_json(
+    typing: Typing<'_>,
+    schema_name: &str,
+    type_name: &str,
+    fields: &[Field<'_>],
+) -> String {
+    const TYPES: &str = "proto_packet::types";
+    const SERDE: &str = "proto_packet::serde";
+    let result: &str = typing.prelude(PreludeName::Result);
+
+    let mut serialize: Vec<String> = Vec::default();
+    let mut read_field: Vec<String> = Vec::default();
+    let mut merge: Vec<String> = Vec::default();
+    for field in fields {
+        let name: String = ident(&field.name);
+        serialize.push(format!(
+            "if let Some(value) = &self.{} {{ {}::ser::SerializeMap::serialize_entry(&mut map, \"{}\", value)?; }}",
+            name, SERDE, field.name
+        ));
+        read_field.push(format!(
+            "\"{key}\" => {{ if self.{name}.is_some() {{ return Err({serde}::de::Error::duplicate_field(\"{key}\")); }} self.{name} = map.next_value()?; Ok(true) }}",
+            key = field.name,
+            name = name,
+            serde = SERDE
+        ));
+        merge.push(format!(
+            "if other.{name}.is_some() {{ if self.{name}.is_some() {{ return Err(\"{key}\"); }} self.{name} = other.{name}; }}",
+            key = field.name,
+            name = name
+        ));
+    }
+    let (name_param, map_param, read_body): (&str, &str, String) = if fields.is_empty() {
+        ("_name", "_map", "Ok(false)".to_string())
+    } else {
+        read_field.push("_ => Ok(false),".to_string());
+        (
+            "name",
+            "map",
+            format!("match name {{ {} }}", read_field.join(" ")),
+        )
+    };
+
+    format!(
+        "impl {serde}::Serialize for {type_name} {{
+    fn serialize<S>(&self, serializer: S) -> {result}<S::Ok, S::Error>
+    where
+        S: {serde}::Serializer,
+    {{
+        let mut map: S::SerializeMap = {serde}::Serializer::serialize_map(serializer, None)?;
+        {serialize}
+        {types}::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        {serde}::ser::SerializeMap::end(map)
+    }}
+}}
+
+impl<'de> {serde}::Deserialize<'de> for {type_name} {{
+    fn deserialize<D>(deserializer: D) -> {result}<Self, D::Error>
+    where
+        D: {serde}::Deserializer<'de>,
+    {{
+        {types}::deserialize_message(deserializer)
+    }}
+}}
+
+impl {types}::JsonMessage for {type_name} {{
+    const TYPE_NAME: &'static str = \"{schema_name}\";
+
+    fn read_field<'de, A>(&mut self, {name_param}: &str, {map_param}: &mut A) -> {result}<bool, A::Error>
+    where
+        A: {serde}::de::MapAccess<'de>,
+    {{
+        {read_body}
+    }}
+
+    fn from_encoded(bytes: &[u8]) -> {result}<Self, proto_packet::io::DecodeError> {{
+        Self::decode(bytes)
+    }}
+
+    fn merge(&mut self, other: Self) -> {result}<(), &'static str> {{
+        {merge}
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
+    }}
+}}
+",
+        serde = SERDE,
+        types = TYPES,
+        type_name = type_name,
+        schema_name = schema_name,
+        result = result,
+        serialize = serialize.join(" "),
+        name_param = name_param,
+        map_param = map_param,
+        read_body = read_body,
+        merge = merge.join(" "),
+    )
 }

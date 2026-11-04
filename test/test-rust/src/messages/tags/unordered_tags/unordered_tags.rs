@@ -14,27 +14,11 @@
 ///     two: u32 = 2;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct UnorderedTags {
-    #[serde(skip_serializing_if = "Option::is_none")]
     three: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     one: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     two: Option<u32>,
-    #[serde(skip)]
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -217,5 +201,96 @@ impl UnorderedTags {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::UnorderedTagsRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for UnorderedTags {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.three {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "three", value)?;
+        }
+        if let Some(value) = &self.one {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "one", value)?;
+        }
+        if let Some(value) = &self.two {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "two", value)?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for UnorderedTags {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for UnorderedTags {
+    const TYPE_NAME: &'static str = "UnorderedTags";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "three" => {
+                if self.three.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("three"));
+                }
+                self.three = map.next_value()?;
+                Ok(true)
+            }
+            "one" => {
+                if self.one.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("one"));
+                }
+                self.one = map.next_value()?;
+                Ok(true)
+            }
+            "two" => {
+                if self.two.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("two"));
+                }
+                self.two = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> Result<(), &'static str> {
+        if other.three.is_some() {
+            if self.three.is_some() {
+                return Err("three");
+            }
+            self.three = other.three;
+        }
+        if other.one.is_some() {
+            if self.one.is_some() {
+                return Err("one");
+            }
+            self.one = other.one;
+        }
+        if other.two.is_some() {
+            if self.two.is_some() {
+                return Err("two");
+            }
+            self.two = other.two;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }

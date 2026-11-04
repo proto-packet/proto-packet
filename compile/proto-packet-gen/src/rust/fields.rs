@@ -109,12 +109,16 @@ impl Field<'_> {
 impl Field<'_> {
     //! Declaration
 
+    /// Generates the declaration of the field, for a type with hand-written serde impls.
+    pub(crate) fn gen_plain_dec(self, typing: Typing<'_>) -> StructField {
+        StructField::from(Var::from((ident(&self.name), self.storage_type(typing))))
+    }
+
     /// Generates the declaration of the field.
     ///
     /// A renamed field keeps its schema name in serde. (ex: `self_` is `self`)
     pub(crate) fn gen_dec(self, typing: Typing<'_>) -> StructField {
-        let var: Var = Var::from((ident(&self.name), self.storage_type(typing)));
-        let mut field: StructField = StructField::from(var);
+        let mut field: StructField = self.gen_plain_dec(typing);
         if is_renamed(&self.name) {
             field.add_attribute(format!("serde(rename = \"{}\")", self.name));
         }

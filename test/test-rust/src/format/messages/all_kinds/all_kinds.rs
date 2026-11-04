@@ -35,41 +35,18 @@
 ///     boxed_color: box format.examples.Color = 10;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct AllKinds {
-    #[serde(skip_serializing_if = "Option::is_none")]
     flag: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     byte: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     large: Option<u128>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<proto_packet::types::Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     color: Option<crate::format::examples::Color>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     text: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     point: Option<crate::format::examples::Point>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     entry: Option<crate::format::examples::Entry>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     item: Option<crate::format::messages::Item>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     boxed_color: Option<Box<crate::format::examples::Color>>,
-    #[serde(skip)]
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -540,5 +517,214 @@ impl AllKinds {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::AllKindsRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for AllKinds {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.flag {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "flag", value)?;
+        }
+        if let Some(value) = &self.byte {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "byte", value)?;
+        }
+        if let Some(value) = &self.large {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "large", value)?;
+        }
+        if let Some(value) = &self.id {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "id", value)?;
+        }
+        if let Some(value) = &self.color {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "color", value)?;
+        }
+        if let Some(value) = &self.text {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "text", value)?;
+        }
+        if let Some(value) = &self.point {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "point", value)?;
+        }
+        if let Some(value) = &self.entry {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "entry", value)?;
+        }
+        if let Some(value) = &self.item {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "item", value)?;
+        }
+        if let Some(value) = &self.boxed_color {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "boxed_color",
+                value,
+            )?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for AllKinds {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for AllKinds {
+    const TYPE_NAME: &'static str = "AllKinds";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "flag" => {
+                if self.flag.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("flag"));
+                }
+                self.flag = map.next_value()?;
+                Ok(true)
+            }
+            "byte" => {
+                if self.byte.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("byte"));
+                }
+                self.byte = map.next_value()?;
+                Ok(true)
+            }
+            "large" => {
+                if self.large.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("large"));
+                }
+                self.large = map.next_value()?;
+                Ok(true)
+            }
+            "id" => {
+                if self.id.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("id"));
+                }
+                self.id = map.next_value()?;
+                Ok(true)
+            }
+            "color" => {
+                if self.color.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("color"));
+                }
+                self.color = map.next_value()?;
+                Ok(true)
+            }
+            "text" => {
+                if self.text.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("text"));
+                }
+                self.text = map.next_value()?;
+                Ok(true)
+            }
+            "point" => {
+                if self.point.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("point"));
+                }
+                self.point = map.next_value()?;
+                Ok(true)
+            }
+            "entry" => {
+                if self.entry.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("entry"));
+                }
+                self.entry = map.next_value()?;
+                Ok(true)
+            }
+            "item" => {
+                if self.item.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("item"));
+                }
+                self.item = map.next_value()?;
+                Ok(true)
+            }
+            "boxed_color" => {
+                if self.boxed_color.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field(
+                        "boxed_color",
+                    ));
+                }
+                self.boxed_color = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> Result<(), &'static str> {
+        if other.flag.is_some() {
+            if self.flag.is_some() {
+                return Err("flag");
+            }
+            self.flag = other.flag;
+        }
+        if other.byte.is_some() {
+            if self.byte.is_some() {
+                return Err("byte");
+            }
+            self.byte = other.byte;
+        }
+        if other.large.is_some() {
+            if self.large.is_some() {
+                return Err("large");
+            }
+            self.large = other.large;
+        }
+        if other.id.is_some() {
+            if self.id.is_some() {
+                return Err("id");
+            }
+            self.id = other.id;
+        }
+        if other.color.is_some() {
+            if self.color.is_some() {
+                return Err("color");
+            }
+            self.color = other.color;
+        }
+        if other.text.is_some() {
+            if self.text.is_some() {
+                return Err("text");
+            }
+            self.text = other.text;
+        }
+        if other.point.is_some() {
+            if self.point.is_some() {
+                return Err("point");
+            }
+            self.point = other.point;
+        }
+        if other.entry.is_some() {
+            if self.entry.is_some() {
+                return Err("entry");
+            }
+            self.entry = other.entry;
+        }
+        if other.item.is_some() {
+            if self.item.is_some() {
+                return Err("item");
+            }
+            self.item = other.item;
+        }
+        if other.boxed_color.is_some() {
+            if self.boxed_color.is_some() {
+                return Err("boxed_color");
+            }
+            self.boxed_color = other.boxed_color;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }

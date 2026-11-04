@@ -11,25 +11,10 @@
 ///     age: u32 = 4;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct Older {
-    #[serde(skip_serializing_if = "Option::is_none")]
     name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     age: Option<u32>,
-    #[serde(skip)]
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -173,5 +158,80 @@ impl Older {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::OlderRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for Older {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.name {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "name", value)?;
+        }
+        if let Some(value) = &self.age {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "age", value)?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for Older {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for Older {
+    const TYPE_NAME: &'static str = "Older";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "name" => {
+                if self.name.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("name"));
+                }
+                self.name = map.next_value()?;
+                Ok(true)
+            }
+            "age" => {
+                if self.age.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("age"));
+                }
+                self.age = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> Result<(), &'static str> {
+        if other.name.is_some() {
+            if self.name.is_some() {
+                return Err("name");
+            }
+            self.name = other.name;
+        }
+        if other.age.is_some() {
+            if self.age.is_some() {
+                return Err("age");
+            }
+            self.age = other.age;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }

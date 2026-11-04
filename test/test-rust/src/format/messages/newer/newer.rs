@@ -20,31 +20,13 @@
 ///     entry: format.examples.Entry = 5;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct Newer {
-    #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     nickname: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     age: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     entry: Option<crate::format::examples::Entry>,
-    #[serde(skip)]
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -309,5 +291,128 @@ impl Newer {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::NewerRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for Newer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.id {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "id", value)?;
+        }
+        if let Some(value) = &self.name {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "name", value)?;
+        }
+        if let Some(value) = &self.nickname {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "nickname", value)?;
+        }
+        if let Some(value) = &self.age {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "age", value)?;
+        }
+        if let Some(value) = &self.entry {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "entry", value)?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for Newer {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for Newer {
+    const TYPE_NAME: &'static str = "Newer";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "id" => {
+                if self.id.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("id"));
+                }
+                self.id = map.next_value()?;
+                Ok(true)
+            }
+            "name" => {
+                if self.name.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("name"));
+                }
+                self.name = map.next_value()?;
+                Ok(true)
+            }
+            "nickname" => {
+                if self.nickname.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("nickname"));
+                }
+                self.nickname = map.next_value()?;
+                Ok(true)
+            }
+            "age" => {
+                if self.age.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("age"));
+                }
+                self.age = map.next_value()?;
+                Ok(true)
+            }
+            "entry" => {
+                if self.entry.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("entry"));
+                }
+                self.entry = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> Result<(), &'static str> {
+        if other.id.is_some() {
+            if self.id.is_some() {
+                return Err("id");
+            }
+            self.id = other.id;
+        }
+        if other.name.is_some() {
+            if self.name.is_some() {
+                return Err("name");
+            }
+            self.name = other.name;
+        }
+        if other.nickname.is_some() {
+            if self.nickname.is_some() {
+                return Err("nickname");
+            }
+            self.nickname = other.nickname;
+        }
+        if other.age.is_some() {
+            if self.age.is_some() {
+                return Err("age");
+            }
+            self.age = other.age;
+        }
+        if other.entry.is_some() {
+            if self.entry.is_some() {
+                return Err("entry");
+            }
+            self.entry = other.entry;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }

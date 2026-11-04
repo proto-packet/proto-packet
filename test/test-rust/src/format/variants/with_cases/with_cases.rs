@@ -14,27 +14,11 @@
 ///     id: u32 = 3;
 /// }
 /// ```
-#[derive(
-    Clone,
-    Ord,
-    PartialOrd,
-    Eq,
-    PartialEq,
-    Hash,
-    Debug,
-    Default,
-    proto_packet::serde::Serialize,
-    proto_packet::serde::Deserialize,
-)]
-#[serde(crate = "proto_packet::serde")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WithCases {
-    #[serde(skip_serializing_if = "Option::is_none")]
     shape: Option<crate::format::variants::Shape>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     older: Option<crate::format::variants::OlderCases>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<u32>,
-    #[serde(skip)]
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -229,5 +213,96 @@ impl WithCases {
     #[must_use]
     pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
         unsafe { super::WithCasesRef::new_unchecked(bytes) }.decode()
+    }
+}
+
+impl proto_packet::serde::Serialize for WithCases {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        let mut map: S::SerializeMap =
+            proto_packet::serde::Serializer::serialize_map(serializer, None)?;
+        if let Some(value) = &self.shape {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "shape", value)?;
+        }
+        if let Some(value) = &self.older {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "older", value)?;
+        }
+        if let Some(value) = &self.id {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "id", value)?;
+        }
+        proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
+        proto_packet::serde::ser::SerializeMap::end(map)
+    }
+}
+
+impl<'de> proto_packet::serde::Deserialize<'de> for WithCases {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::types::deserialize_message(deserializer)
+    }
+}
+
+impl proto_packet::types::JsonMessage for WithCases {
+    const TYPE_NAME: &'static str = "WithCases";
+
+    fn read_field<'de, A>(&mut self, name: &str, map: &mut A) -> Result<bool, A::Error>
+    where
+        A: proto_packet::serde::de::MapAccess<'de>,
+    {
+        match name {
+            "shape" => {
+                if self.shape.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("shape"));
+                }
+                self.shape = map.next_value()?;
+                Ok(true)
+            }
+            "older" => {
+                if self.older.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("older"));
+                }
+                self.older = map.next_value()?;
+                Ok(true)
+            }
+            "id" => {
+                if self.id.is_some() {
+                    return Err(proto_packet::serde::de::Error::duplicate_field("id"));
+                }
+                self.id = map.next_value()?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::decode(bytes)
+    }
+
+    fn merge(&mut self, other: Self) -> Result<(), &'static str> {
+        if other.shape.is_some() {
+            if self.shape.is_some() {
+                return Err("shape");
+            }
+            self.shape = other.shape;
+        }
+        if other.older.is_some() {
+            if self.older.is_some() {
+                return Err("older");
+            }
+            self.older = other.older;
+        }
+        if other.id.is_some() {
+            if self.id.is_some() {
+                return Err("id");
+            }
+            self.id = other.id;
+        }
+        self.unknown_fields = other.unknown_fields;
+        Ok(())
     }
 }
