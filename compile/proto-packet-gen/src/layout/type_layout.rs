@@ -2,6 +2,7 @@ use crate::layout::StructLayout;
 use proto_packet_tree::{
     PrimitiveType, Project, QualifiedName, SpecialType, Struct, TypeDec, TypeTag, WithTypeTag,
 };
+use std::collections::BTreeMap;
 
 /// The layout of a type's values in a struct.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -14,39 +15,6 @@ pub enum TypeLayout {
 
     /// A variable-size value.
     Variable { alignment: usize },
-}
-
-impl TypeLayout {
-    //! Construction
-
-    /// Gets the layout of the `tag` of the linked `project`.
-    pub fn new(project: &Project, tag: &TypeTag) -> Self {
-        let fixed = |size: usize| Self::Fixed {
-            size,
-            alignment: size.min(8),
-        };
-        match tag {
-            TypeTag::Primitive(PrimitiveType::Boolean) => Self::Bit,
-            TypeTag::Primitive(primitive) => fixed(primitive_size(*primitive)),
-            TypeTag::Special(SpecialType::Uuid) => fixed(16),
-            TypeTag::Special(SpecialType::String) => Self::Variable { alignment: 1 },
-            TypeTag::Named(name) => match linked_type(project, name) {
-                TypeDec::Enum(_) => fixed(2),
-                TypeDec::Message(_) | TypeDec::Variant(_) => Self::Variable { alignment: 1 },
-                TypeDec::Struct(structure) if is_fixed(project, structure) => {
-                    let layout: StructLayout = StructLayout::new(project, structure);
-                    Self::Fixed {
-                        size: layout.fixed_size,
-                        alignment: layout.alignment,
-                    }
-                }
-                TypeDec::Struct(structure) => Self::Variable {
-                    alignment: alignment(project, structure),
-                },
-                TypeDec::Service(_) => unreachable!("the linker rejects services as types"),
-            },
-        }
-    }
 }
 
 /// Gets the declaration of the type with the `name` in the linked `project`.
@@ -67,72 +35,137 @@ pub(crate) const fn primitive_size(primitive: PrimitiveType) -> usize {
     }
 }
 
-/// Checks if the `structure` is fixed: all its fields are fixed-size, & it contains no loop.
-fn is_fixed(project: &Project, structure: &Struct) -> bool {
-    is_fixed_visiting(project, structure, &mut Vec::default())
+/// The layouts found so far, since a struct can be reached through many paths.
+#[derive(Clone, Debug)]
+pub(crate) struct LayoutCache<'a> {
+    project: &'a Project,
+    is_fixed: BTreeMap<QualifiedName, bool>,
+    fixed_layouts: BTreeMap<QualifiedName, TypeLayout>,
 }
 
-/// Checks if the `structure` is fixed, with the `visiting` structs as variable-size.
-///
-/// A struct being visited contains itself through a loop of types, which has no fixed size.
-fn is_fixed_visiting(
-    project: &Project,
-    structure: &Struct,
-    visiting: &mut Vec<QualifiedName>,
-) -> bool {
-    structure
-        .fields()
-        .iter()
-        .all(|field| is_fixed_tag(project, field.type_tag(), visiting))
-}
+impl<'a> LayoutCache<'a> {
+    //! Construction
 
-/// Checks if the `tag` is fixed-size, with the `visiting` structs as variable-size.
-fn is_fixed_tag(project: &Project, tag: &TypeTag, visiting: &mut Vec<QualifiedName>) -> bool {
-    match tag {
-        TypeTag::Primitive(_) | TypeTag::Special(SpecialType::Uuid) => true,
-        TypeTag::Special(SpecialType::String) => false,
-        TypeTag::Named(name) => match linked_type(project, name) {
-            TypeDec::Enum(_) => true,
-            TypeDec::Struct(structure) if !visiting.contains(name) => {
-                visiting.push(name.clone());
-                let is_fixed: bool = is_fixed_visiting(project, structure, visiting);
-                visiting.pop();
-                is_fixed
-            }
-            _ => false,
-        },
+    /// Creates a new cache of the layouts of the linked `project`.
+    pub(crate) const fn new(project: &'a Project) -> Self {
+        Self {
+            project,
+            is_fixed: BTreeMap::new(),
+            fixed_layouts: BTreeMap::new(),
+        }
     }
 }
 
-/// Gets the alignment of the `structure`: the largest of it & every struct it contains.
-///
-/// A message or variant has alignment 1, whatever it contains, so its fields & cases can change.
-pub(crate) fn alignment(project: &Project, structure: &Struct) -> usize {
-    let mut structs: Vec<&Struct> = vec![structure];
-    let mut visited: Vec<&QualifiedName> = Vec::default();
-    let mut result: usize = 1;
-    while let Some(structure) = structs.pop() {
-        for field in structure.fields() {
-            let tag: &TypeTag = field.type_tag();
-            if !is_fixed_tag(project, tag, &mut Vec::default()) {
-                result = result.max(4);
-            }
-            match tag {
-                TypeTag::Named(name) => match linked_type(project, name) {
-                    TypeDec::Enum(_) => result = result.max(2),
-                    TypeDec::Struct(child) if !visited.contains(&name) => {
-                        visited.push(name);
-                        structs.push(child);
+impl LayoutCache<'_> {
+    //! Layouts
+
+    /// Gets the layout of the `tag`.
+    pub(crate) fn type_layout(&mut self, tag: &TypeTag) -> TypeLayout {
+        let fixed = |size: usize| TypeLayout::Fixed {
+            size,
+            alignment: size.min(8),
+        };
+        let project: &Project = self.project;
+        match tag {
+            TypeTag::Primitive(PrimitiveType::Boolean) => TypeLayout::Bit,
+            TypeTag::Primitive(primitive) => fixed(primitive_size(*primitive)),
+            TypeTag::Special(SpecialType::Uuid) => fixed(16),
+            TypeTag::Special(SpecialType::String) => TypeLayout::Variable { alignment: 1 },
+            TypeTag::Named(name) => match linked_type(project, name) {
+                TypeDec::Enum(_) => fixed(2),
+                TypeDec::Message(_) | TypeDec::Variant(_) => TypeLayout::Variable { alignment: 1 },
+                TypeDec::Struct(structure) if self.is_fixed(tag, &mut Vec::default()) => {
+                    if let Some(layout) = self.fixed_layouts.get(name) {
+                        return *layout;
                     }
-                    _ => {}
+                    let layout: StructLayout = StructLayout::new_cached(self, structure);
+                    let layout: TypeLayout = TypeLayout::Fixed {
+                        size: layout.fixed_size,
+                        alignment: layout.alignment,
+                    };
+                    self.fixed_layouts.insert(name.clone(), layout);
+                    layout
+                }
+                TypeDec::Struct(structure) => TypeLayout::Variable {
+                    alignment: self.alignment(structure),
                 },
-                _ => {
-                    if let TypeLayout::Fixed { alignment, .. } = TypeLayout::new(project, tag) {
-                        result = result.max(alignment);
+                TypeDec::Service(_) => unreachable!("the linker rejects services as types"),
+            },
+        }
+    }
+
+    /// Checks if the `tag` is an enum.
+    pub(crate) fn is_enum(&self, tag: &TypeTag) -> bool {
+        match tag {
+            TypeTag::Named(name) => matches!(linked_type(self.project, name), TypeDec::Enum(_)),
+            _ => false,
+        }
+    }
+
+    /// Checks if the `tag` is fixed-size, with the `visiting` structs as variable-size.
+    ///
+    /// A struct being visited contains itself through a loop of types, which has no fixed size. So
+    /// does any struct on the way to it, so the answer holds however a struct is reached.
+    fn is_fixed(&mut self, tag: &TypeTag, visiting: &mut Vec<QualifiedName>) -> bool {
+        let project: &Project = self.project;
+        match tag {
+            TypeTag::Primitive(_) | TypeTag::Special(SpecialType::Uuid) => true,
+            TypeTag::Special(SpecialType::String) => false,
+            TypeTag::Named(name) => match linked_type(project, name) {
+                TypeDec::Enum(_) => true,
+                TypeDec::Struct(structure) => {
+                    if let Some(is_fixed) = self.is_fixed.get(name) {
+                        return *is_fixed;
+                    }
+                    if visiting.contains(name) {
+                        return false;
+                    }
+                    visiting.push(name.clone());
+                    let is_fixed: bool = structure
+                        .fields()
+                        .iter()
+                        .all(|field| self.is_fixed(field.type_tag(), visiting));
+                    visiting.pop();
+                    self.is_fixed.insert(name.clone(), is_fixed);
+                    is_fixed
+                }
+                _ => false,
+            },
+        }
+    }
+
+    /// Gets the alignment of the `structure`: the largest of it & every struct it contains.
+    ///
+    /// A message or variant has alignment 1, whatever it contains, so its fields & cases can
+    /// change.
+    pub(crate) fn alignment(&mut self, structure: &Struct) -> usize {
+        let project: &Project = self.project;
+        let mut structs: Vec<&Struct> = vec![structure];
+        let mut visited: Vec<&QualifiedName> = Vec::default();
+        let mut result: usize = 1;
+        while let Some(structure) = structs.pop() {
+            for field in structure.fields() {
+                let tag: &TypeTag = field.type_tag();
+                if !self.is_fixed(tag, &mut Vec::default()) {
+                    result = result.max(4);
+                }
+                match tag {
+                    TypeTag::Named(name) => match linked_type(project, name) {
+                        TypeDec::Enum(_) => result = result.max(2),
+                        TypeDec::Struct(child) if !visited.contains(&name) => {
+                            visited.push(name);
+                            structs.push(child);
+                        }
+                        _ => {}
+                    },
+                    _ => {
+                        if let TypeLayout::Fixed { alignment, .. } = self.type_layout(tag) {
+                            result = result.max(alignment);
+                        }
                     }
                 }
             }
         }
+        result
     }
-    result
 }

@@ -1,8 +1,8 @@
 use crate::layout::{
-    BitLayout, EntryLayout, FieldLayout, TypeLayout, UnitLayout, ValueLayout, alignment,
+    BitLayout, EntryLayout, FieldLayout, LayoutCache, TypeLayout, UnitLayout, ValueLayout,
 };
 use proto_packet::io::align_up;
-use proto_packet_tree::{Project, SpecialType, Struct, StructField, TypeDec, TypeTag, WithTypeTag};
+use proto_packet_tree::{Project, SpecialType, Struct, StructField, TypeTag, WithTypeTag};
 use std::cmp::Reverse;
 
 /// The layout of a struct's encoding. (see `FORMAT.md`)
@@ -32,11 +32,16 @@ impl StructLayout {
 
     /// Gets the layout of the `structure` of the linked `project`.
     pub fn new(project: &Project, structure: &Struct) -> Self {
-        let alignment: usize = alignment(project, structure);
+        Self::new_cached(&mut LayoutCache::new(project), structure)
+    }
+
+    /// Gets the layout of the `structure` with the `cache`.
+    pub(crate) fn new_cached(cache: &mut LayoutCache<'_>, structure: &Struct) -> Self {
+        let alignment: usize = cache.alignment(structure);
         let fields: &[StructField] = structure.fields();
         let types: Vec<TypeLayout> = fields
             .iter()
-            .map(|field| TypeLayout::new(project, field.type_tag()))
+            .map(|field| cache.type_layout(field.type_tag()))
             .collect();
         let entries: Vec<EntryLayout> = entries(fields, &types);
 
@@ -75,7 +80,7 @@ impl StructLayout {
             .iter()
             .enumerate()
             .map(|(index, field)| {
-                let has_presence: bool = field.is_optional() && !is_enum(project, field.type_tag());
+                let has_presence: bool = field.is_optional() && !cache.is_enum(field.type_tag());
                 let presence: Option<BitLayout> = has_presence.then(&mut next_bit);
                 let value: ValueLayout = match types[index] {
                     TypeLayout::Bit => ValueLayout::Bit(next_bit()),
@@ -155,15 +160,4 @@ fn entries(fields: &[StructField], types: &[TypeLayout]) -> Vec<EntryLayout> {
 /// Checks if the `field` is a string.
 fn is_string(field: &StructField) -> bool {
     *field.type_tag() == TypeTag::Special(SpecialType::String)
-}
-
-/// Checks if the `tag` is an enum of the `project`.
-fn is_enum(project: &Project, tag: &TypeTag) -> bool {
-    match tag {
-        TypeTag::Named(name) => matches!(
-            project.type_dec_with_name(name.to_ref()),
-            Some(TypeDec::Enum(_))
-        ),
-        _ => false,
-    }
 }
