@@ -127,18 +127,24 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[TaggedField<'_>]) -> Function {
 
 /// Generates the statement writing the `value` of the `tagged` field.
 fn gen_write(typing: Typing<'_>, tagged: TaggedField<'_>) -> String {
-    let field: String = format!("writer.field({})", tagged.tag);
-    match tagged.field.tag {
-        TypeTag::Primitive(PrimitiveType::Boolean) => {
-            format!("{}.push(u8::from(*value));", field)
-        }
-        TypeTag::Primitive(_) => format!("{}.extend_from_slice(&value.to_le_bytes());", field),
-        TypeTag::Special(_) => format!("{}.extend_from_slice(value.as_bytes());", field),
-        TypeTag::Named(_) if typing.is_enum(tagged.field.tag) => format!(
+    gen_value_write(
+        typing,
+        tagged.field.tag,
+        &format!("writer.field({})", tagged.tag),
+    )
+}
+
+/// Generates the statement writing the `value` of the `tag` to the `out` expression.
+pub(crate) fn gen_value_write(typing: Typing<'_>, tag: &TypeTag, out: &str) -> String {
+    match tag {
+        TypeTag::Primitive(PrimitiveType::Boolean) => format!("{}.push(u8::from(*value));", out),
+        TypeTag::Primitive(_) => format!("{}.extend_from_slice(&value.to_le_bytes());", out),
+        TypeTag::Special(_) => format!("{}.extend_from_slice(value.as_bytes());", out),
+        TypeTag::Named(_) if typing.is_enum(tag) => format!(
             "{}.extend_from_slice(&value.tag_number().to_le_bytes());",
-            field
+            out
         ),
-        TypeTag::Named(_) => format!("value.encode_to({});", field),
+        TypeTag::Named(_) => format!("value.encode_to({});", out),
     }
 }
 

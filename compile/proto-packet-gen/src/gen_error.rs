@@ -16,6 +16,14 @@ pub enum GenError {
         field_name: String,
     },
 
+    /// A variant case gets the name of a generated method of its type.
+    ///
+    /// (ex: the getter `as_bytes` of the case `Bytes`, or the cases `FooBar` & `Foo_Bar`)
+    CaseNameConflict {
+        type_name: String,
+        case_name: String,
+    },
+
     /// A type is named like a generated type of its schema file. (ex: `PointRef` with `Point`)
     TypeNameConflict { mod_path: String, type_name: String },
 }
@@ -28,6 +36,7 @@ impl GenError {
         match self {
             Self::ModNameConflict { .. } => "G_MOD_NAME_CONFLICT",
             Self::FieldNameConflict { .. } => "G_FIELD_NAME_CONFLICT",
+            Self::CaseNameConflict { .. } => "G_CASE_NAME_CONFLICT",
             Self::TypeNameConflict { .. } => "G_TYPE_NAME_CONFLICT",
         }
     }
@@ -48,6 +57,14 @@ impl Display for GenError {
                 f,
                 "the field name `{}` conflicts with a generated method of `{}`",
                 field_name, type_name
+            ),
+            Self::CaseNameConflict {
+                type_name,
+                case_name,
+            } => write!(
+                f,
+                "the case name `{}` conflicts with a generated method of `{}`",
+                case_name, type_name
             ),
             Self::TypeNameConflict {
                 mod_path,

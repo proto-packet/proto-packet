@@ -54,8 +54,8 @@ impl MessageLayout {
     }
 }
 
-/// Gets the size of a message value of the `tag`, if it's a fixed-size scalar.
-fn scalar_size(project: &Project, tag: &TypeTag) -> Option<usize> {
+/// Gets the size of a message value or variant value of the `tag`, if it's a fixed-size scalar.
+pub fn scalar_size(project: &Project, tag: &TypeTag) -> Option<usize> {
     match tag {
         TypeTag::Primitive(primitive) => Some(match primitive {
             PrimitiveType::Boolean | PrimitiveType::UnsignedInt8 => 1,
