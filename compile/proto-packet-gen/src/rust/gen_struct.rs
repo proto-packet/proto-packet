@@ -39,10 +39,10 @@ const METHODS: [&str; 9] = [
     "to_buf",
 ];
 
-/// A generated file of a struct.
+/// A generated file of a struct or message.
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub struct StructFile {
-    /// The suffix of the file's module name. (ex: `_ref`, empty for the struct's own file)
+pub struct TypeFile {
+    /// The suffix of the file's module name. (ex: `_ref`, empty for the type's own file)
     pub suffix: &'static str,
 
     /// The source code.
@@ -60,7 +60,7 @@ pub fn gen_struct(
     project: &Project,
     mod_path: ModPathRef<'_>,
     structure: &Struct,
-) -> Result<Vec<StructFile>, GenError> {
+) -> Result<Vec<TypeFile>, GenError> {
     let type_name: String = ident(&structure.type_name());
     let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
@@ -113,28 +113,28 @@ pub fn gen_struct(
             &ref_name(&structure.type_name()),
         ));
     }
-    let mut files: Vec<StructFile> = vec![StructFile {
+    let mut files: Vec<TypeFile> = vec![TypeFile {
         suffix: "",
         code: block.to_code(),
     }];
     if let Some(layout) = &layout {
-        files.push(StructFile {
+        files.push(TypeFile {
             suffix: "_buf",
             code: gen_struct_buf(typing, structure, &fields, layout, &type_name),
         });
-        files.push(StructFile {
+        files.push(TypeFile {
             suffix: "_mut",
             code: gen_struct_mut(typing, structure, &fields, layout, &type_name),
         });
-        files.push(StructFile {
+        files.push(TypeFile {
             suffix: "_ref",
             code: gen_struct_ref(typing, structure, &fields, layout, &type_name),
         });
-        files.push(StructFile {
+        files.push(TypeFile {
             suffix: "_view",
             code: gen_struct_view(typing, structure, &fields, &type_name),
         });
-        files.push(StructFile {
+        files.push(TypeFile {
             suffix: "_view_mut",
             code: gen_struct_view_mut(typing, structure, &fields, &type_name),
         });

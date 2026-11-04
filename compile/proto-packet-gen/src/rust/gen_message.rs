@@ -1,4 +1,5 @@
 use crate::GenError;
+use crate::rust::TypeFile;
 use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::fields::{Field, check_field_names};
@@ -23,7 +24,7 @@ pub fn gen_message(
     project: &Project,
     mod_path: ModPathRef<'_>,
     message: &Message,
-) -> Result<String, GenError> {
+) -> Result<Vec<TypeFile>, GenError> {
     let type_name: String = ident(&message.type_name());
     let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = message
@@ -47,7 +48,10 @@ pub fn gen_message(
         block.add_statement(EmptyLine::default());
         block.add_statement(field.gen_impl(typing, &type_name));
     }
-    Ok(block.to_code())
+    Ok(vec![TypeFile {
+        suffix: "",
+        code: block.to_code(),
+    }])
 }
 
 /// Generates the declaration of the `message`.
