@@ -10,10 +10,11 @@ repository = "https://github.com/proto-packet/proto-packet"
 
 [features]
 default = ["types"]
-types = ["dep:serde", "dep:uuid"]
+types = ["dep:enc", "dep:serde", "dep:uuid"]
 service = ["types", "dep:axum"]
 
 [dependencies]
 axum = { version = "0.8.9", optional = true }
+enc = { version = "0.20.0", default-features = false, features = ["base-64"], optional = true }
 serde = { version = "1.0.229", features = ["derive"], optional = true }
 uuid = { version = "1.29.0", features = ["serde"], optional = true }
