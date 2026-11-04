@@ -34,6 +34,8 @@ pub struct BoxedFields {
     label: Option<Box<crate::types::Label>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     shape: Option<Box<crate::types::Shape>>,
+    #[serde(skip)]
+    unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
 impl BoxedFields {
@@ -62,6 +64,12 @@ impl BoxedFields {
     {
         self.set_point(point);
         self
+    }
+
+    /// Gets the mutable field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> Option<&mut crate::types::Point> {
+        self.point.as_deref_mut()
     }
 }
 
@@ -92,6 +100,12 @@ impl BoxedFields {
         self.set_label(label);
         self
     }
+
+    /// Gets the mutable field: `label`.
+    #[must_use]
+    pub fn label_mut(&mut self) -> Option<&mut crate::types::Label> {
+        self.label.as_deref_mut()
+    }
 }
 
 impl BoxedFields {
@@ -120,5 +134,106 @@ impl BoxedFields {
     {
         self.set_shape(shape);
         self
+    }
+
+    /// Gets the mutable field: `shape`.
+    #[must_use]
+    pub fn shape_mut(&mut self) -> Option<&mut crate::types::Shape> {
+        self.shape.as_deref_mut()
+    }
+}
+
+impl BoxedFields {
+    //! Unknown Fields
+
+    /// Gets the fields the message doesn't know, in tag order.
+    #[must_use]
+    pub fn unknown_fields(&self) -> &[proto_packet::io::UnknownField] {
+        &self.unknown_fields
+    }
+
+    /// Sets the unknown fields. (builder pattern)
+    #[must_use]
+    pub(super) fn with_unknown_fields(
+        mut self,
+        fields: Vec<proto_packet::io::UnknownField>,
+    ) -> Self {
+        self.unknown_fields = fields;
+        self
+    }
+}
+
+impl BoxedFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut count: usize = self.unknown_fields.len();
+        let mut values: usize = proto_packet::io::unknown_fields_len(&self.unknown_fields);
+        if let Some(value) = &self.point {
+            count += 1;
+            values += value.encoded_len();
+        }
+        if let Some(value) = &self.label {
+            count += 1;
+            values += value.encoded_len();
+        }
+        if let Some(value) = &self.shape {
+            count += 1;
+            values += value.encoded_len();
+        }
+        2 + 6 * count + values
+    }
+
+    /// Encodes the message.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let known: usize = usize::from(self.point.is_some())
+            + usize::from(self.label.is_some())
+            + usize::from(self.shape.is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
+        if let Some(value) = &self.point {
+            value.encode_to(writer.field(1));
+            writer.end_field();
+        }
+        if let Some(value) = &self.label {
+            value.encode_to(writer.field(2));
+            writer.end_field();
+        }
+        if let Some(value) = &self.shape {
+            value.encode_to(writer.field(3));
+            writer.end_field();
+        }
+        writer.finish();
+    }
+}
+
+impl BoxedFields {
+    //! Decoding
+
+    /// Decodes the message from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::BoxedFieldsRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the message from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::BoxedFieldsRef::new_unchecked(bytes) }.decode()
     }
 }

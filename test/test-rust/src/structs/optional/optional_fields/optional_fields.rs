@@ -202,6 +202,12 @@ impl OptionalFields {
         self.set_point(point);
         self
     }
+
+    /// Gets the mutable field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> Option<&mut crate::types::Point> {
+        self.point.as_mut()
+    }
 }
 
 impl OptionalFields {
@@ -231,6 +237,12 @@ impl OptionalFields {
         self.set_person(person);
         self
     }
+
+    /// Gets the mutable field: `person`.
+    #[must_use]
+    pub fn person_mut(&mut self) -> Option<&mut crate::types::Person> {
+        self.person.as_mut()
+    }
 }
 
 impl OptionalFields {
@@ -259,6 +271,12 @@ impl OptionalFields {
     {
         self.set_label(label);
         self
+    }
+
+    /// Gets the mutable field: `label`.
+    #[must_use]
+    pub fn label_mut(&mut self) -> Option<&mut crate::types::Label> {
+        self.label.as_mut()
     }
 }
 
@@ -317,5 +335,109 @@ impl OptionalFields {
     {
         self.set_shape(shape);
         self
+    }
+
+    /// Gets the mutable field: `shape`.
+    #[must_use]
+    pub fn shape_mut(&mut self) -> Option<&mut crate::types::Shape> {
+        self.shape.as_mut()
+    }
+}
+
+impl OptionalFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut tail: usize = 0;
+        if let Some(value) = &self.person {
+            tail += value.encoded_len();
+        }
+        if let Some(value) = &self.label {
+            tail += value.encoded_len();
+        }
+        if let Some(value) = &self.shape {
+            tail += value.encoded_len();
+        }
+        if let Some(value) = &self.text {
+            tail += value.len();
+        }
+        48 + tail
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let start: usize = out.len();
+        out.extend_from_slice(self.id.unwrap_or_default().as_bytes());
+        out.extend_from_slice(&self.count.unwrap_or_default().to_le_bytes());
+        match &self.point {
+            Some(value) => value.encode_to(out),
+            None => proto_packet::io::write_zeros(out, 8),
+        }
+        proto_packet::io::write_zeros(out, 16);
+        out.extend_from_slice(
+            &self
+                .color
+                .as_ref()
+                .map_or(0, |value| value.tag_number())
+                .to_le_bytes(),
+        );
+        out.push(
+            u8::from(self.count.is_some())
+                | (u8::from(self.id.is_some()) << 1)
+                | (u8::from(self.text.is_some()) << 2)
+                | (u8::from(self.point.is_some()) << 3)
+                | (u8::from(self.person.is_some()) << 4)
+                | (u8::from(self.label.is_some()) << 5)
+                | (u8::from(self.shape.is_some()) << 6),
+        );
+        proto_packet::io::write_zeros(out, 1);
+        let tail: usize = out.len();
+        if let Some(value) = &self.person {
+            value.encode_to(out);
+        }
+        proto_packet::io::write_end(out, start + 28, tail);
+        if let Some(value) = &self.label {
+            value.encode_to(out);
+        }
+        proto_packet::io::write_end(out, start + 32, tail);
+        if let Some(value) = &self.shape {
+            value.encode_to(out);
+        }
+        proto_packet::io::write_end(out, start + 36, tail);
+        if let Some(value) = &self.text {
+            out.extend_from_slice(value.as_bytes());
+        }
+        proto_packet::io::write_end(out, start + 40, tail);
+    }
+}
+
+impl OptionalFields {
+    //! Decoding
+
+    /// Decodes the struct from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::OptionalFieldsRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the struct from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::OptionalFieldsRef::new_unchecked(bytes) }.decode()
     }
 }

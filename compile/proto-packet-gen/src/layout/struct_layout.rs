@@ -35,7 +35,7 @@ impl StructLayout {
 
     /// Gets the layout of the `structure` of the linked `project`.
     ///
-    /// Returns `None` if the `structure` contains a type with no encoding yet. (ex: a variant)
+    /// Returns `None` if the `structure` contains a type with no encoding. (ex: a service)
     pub fn new(project: &Project, structure: &Struct) -> Option<Self> {
         let mut visited: Vec<QualifiedName> = Vec::default();
         let is_encodable: bool = structure

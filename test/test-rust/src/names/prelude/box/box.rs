@@ -35,6 +35,16 @@ mod unrecognized {
 }
 
 impl Box {
+    //! Construction
+
+    /// Creates an unrecognized case.
+    #[must_use]
+    pub(super) fn from_unknown(tag_number: u16, bytes: std::vec::Vec<u8>) -> Self {
+        Self::Unrecognized(unrecognized::UnrecognizedCase { tag_number, bytes })
+    }
+}
+
+impl Box {
     //! Properties
 
     /// Gets the tag number of the case.
@@ -89,5 +99,66 @@ impl Box {
             Self::Inner(value) => Some(&mut **value),
             _ => None,
         }
+    }
+}
+
+impl Box {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        match self {
+            Self::Unrecognized(case) => 2 + case.bytes.len(),
+            Self::Inner(value) => 2 + value.encoded_len(),
+            Self::Text(value) => 2 + value.len(),
+        }
+    }
+
+    /// Encodes the variant.
+    #[must_use]
+    pub fn encode(&self) -> std::vec::Vec<u8> {
+        let mut result: std::vec::Vec<u8> = std::vec::Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    pub fn encode_to(&self, out: &mut std::vec::Vec<u8>) {
+        match self {
+            Self::Unrecognized(case) => {
+                out.extend_from_slice(&case.tag_number.to_le_bytes());
+                out.extend_from_slice(&case.bytes);
+            }
+            Self::Inner(value) => {
+                out.extend_from_slice(&1_u16.to_le_bytes());
+                value.encode_to(out);
+            }
+            Self::Text(value) => {
+                out.extend_from_slice(&2_u16.to_le_bytes());
+                out.extend_from_slice(value.as_bytes());
+            }
+        }
+    }
+}
+
+impl Box {
+    //! Decoding
+
+    /// Decodes the variant from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> std::result::Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::BoxRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the variant from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::BoxRef::new_unchecked(bytes) }.decode()
     }
 }

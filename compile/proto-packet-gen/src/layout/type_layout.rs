@@ -21,7 +21,7 @@ impl TypeLayout {
 
     /// Gets the layout of the `tag` of the linked `project`.
     ///
-    /// Returns `None` if the `tag` has no encoding yet. (ex: a variant)
+    /// Returns `None` if the `tag` has no encoding. (ex: a service)
     pub fn new(project: &Project, tag: &TypeTag) -> Option<Self> {
         let fixed = |size: usize| Self::Fixed {
             size,
@@ -34,7 +34,7 @@ impl TypeLayout {
             TypeTag::Special(SpecialType::String) => Some(Self::Variable { alignment: 1 }),
             TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref())? {
                 TypeDec::Enum(_) => Some(fixed(2)),
-                TypeDec::Message(_) => Some(Self::Variable { alignment: 1 }),
+                TypeDec::Message(_) | TypeDec::Variant(_) => Some(Self::Variable { alignment: 1 }),
                 TypeDec::Struct(structure) if is_fixed(project, structure) => {
                     let layout: StructLayout = StructLayout::new(project, structure)?;
                     Some(Self::Fixed {
@@ -101,7 +101,7 @@ fn is_fixed_tag(project: &Project, tag: &TypeTag, visiting: &mut Vec<QualifiedNa
 
 /// Checks if the `tag` can be encoded, without revisiting the `visited` types.
 ///
-/// A type can't be encoded if it contains a type with no encoding yet. (ex: a variant)
+/// A type can't be encoded if it contains a type with no encoding. (ex: a service)
 pub(crate) fn is_encodable(
     project: &Project,
     tag: &TypeTag,
@@ -124,14 +124,18 @@ pub(crate) fn is_encodable(
             .fields()
             .iter()
             .all(|field| is_encodable(project, field.type_tag(), visited)),
+        Some(TypeDec::Variant(variant)) => variant
+            .cases()
+            .iter()
+            .all(|case| is_encodable(project, case.type_tag(), visited)),
         _ => false,
     }
 }
 
 /// Gets the alignment of the `structure`: the largest of it & every struct it contains.
 ///
-/// A message has alignment 1, whatever it contains, so its fields can change. Returns `None` if the
-/// `structure` contains a type with no encoding yet. (ex: a variant)
+/// A message or variant has alignment 1, whatever it contains, so its fields & cases can change.
+/// Returns `None` if the `structure` contains a type with no encoding. (ex: a service)
 pub(crate) fn alignment(project: &Project, structure: &Struct) -> Option<usize> {
     let mut structs: Vec<&Struct> = vec![structure];
     let mut visited: Vec<&QualifiedName> = Vec::default();
@@ -145,7 +149,7 @@ pub(crate) fn alignment(project: &Project, structure: &Struct) -> Option<usize> 
             match tag {
                 TypeTag::Named(name) => match project.type_dec_with_name(name.to_ref())? {
                     TypeDec::Enum(_) => result = result.max(2),
-                    TypeDec::Message(_) => {}
+                    TypeDec::Message(_) | TypeDec::Variant(_) => {}
                     TypeDec::Struct(child) => {
                         if !visited.contains(&name) {
                             visited.push(name);

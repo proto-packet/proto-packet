@@ -56,6 +56,16 @@ mod unrecognized {
 }
 
 impl Value {
+    //! Construction
+
+    /// Creates an unrecognized case.
+    #[must_use]
+    pub(super) fn from_unknown(tag_number: u16, bytes: Vec<u8>) -> Self {
+        Self::Unrecognized(unrecognized::UnrecognizedCase { tag_number, bytes })
+    }
+}
+
+impl Value {
     //! Properties
 
     /// Gets the tag number of the case.
@@ -207,5 +217,101 @@ impl Value {
             Self::Shape(value) => Some(value),
             _ => None,
         }
+    }
+}
+
+impl Value {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        match self {
+            Self::Unrecognized(case) => 2 + case.bytes.len(),
+            Self::Boolean(_) => 3,
+            Self::Unsigned64(_) => 10,
+            Self::Id(_) => 18,
+            Self::Text(value) => 2 + value.len(),
+            Self::Point(value) => 2 + value.encoded_len(),
+            Self::Person(value) => 2 + value.encoded_len(),
+            Self::Label(value) => 2 + value.encoded_len(),
+            Self::Color(_) => 4,
+            Self::Shape(value) => 2 + value.encoded_len(),
+        }
+    }
+
+    /// Encodes the variant.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        match self {
+            Self::Unrecognized(case) => {
+                out.extend_from_slice(&case.tag_number.to_le_bytes());
+                out.extend_from_slice(&case.bytes);
+            }
+            Self::Boolean(value) => {
+                out.extend_from_slice(&1_u16.to_le_bytes());
+                out.push(u8::from(*value));
+            }
+            Self::Unsigned64(value) => {
+                out.extend_from_slice(&2_u16.to_le_bytes());
+                out.extend_from_slice(&value.to_le_bytes());
+            }
+            Self::Id(value) => {
+                out.extend_from_slice(&3_u16.to_le_bytes());
+                out.extend_from_slice(value.as_bytes());
+            }
+            Self::Text(value) => {
+                out.extend_from_slice(&4_u16.to_le_bytes());
+                out.extend_from_slice(value.as_bytes());
+            }
+            Self::Point(value) => {
+                out.extend_from_slice(&5_u16.to_le_bytes());
+                value.encode_to(out);
+            }
+            Self::Person(value) => {
+                out.extend_from_slice(&6_u16.to_le_bytes());
+                value.encode_to(out);
+            }
+            Self::Label(value) => {
+                out.extend_from_slice(&7_u16.to_le_bytes());
+                value.encode_to(out);
+            }
+            Self::Color(value) => {
+                out.extend_from_slice(&8_u16.to_le_bytes());
+                out.extend_from_slice(&value.tag_number().to_le_bytes());
+            }
+            Self::Shape(value) => {
+                out.extend_from_slice(&9_u16.to_le_bytes());
+                value.encode_to(out);
+            }
+        }
+    }
+}
+
+impl Value {
+    //! Decoding
+
+    /// Decodes the variant from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::ValueRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the variant from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::ValueRef::new_unchecked(bytes) }.decode()
     }
 }

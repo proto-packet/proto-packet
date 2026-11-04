@@ -29,7 +29,7 @@ impl MessageLayout {
 
     /// Gets the layout of the `message` of the linked `project`.
     ///
-    /// Returns `None` if the `message` contains a type with no encoding yet. (ex: a variant)
+    /// Returns `None` if the `message` contains a type with no encoding. (ex: a service)
     pub fn new(project: &Project, message: &Message) -> Option<Self> {
         let mut visited: Vec<_> = Vec::default();
         let is_encodable: bool = message

@@ -1,5 +1,5 @@
 use crate::GenError;
-use crate::layout::{is_encodable, scalar_size};
+use crate::layout::scalar_size;
 use crate::rust::TypeFile;
 use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::add_docs;
@@ -127,75 +127,38 @@ pub fn gen_variant(
     } else {
         ""
     };
-    let has_encoding: bool = cases
-        .iter()
-        .all(|case| is_encodable(project, case.tag, &mut Vec::default()));
-    let mut block: Block = Block::default();
-    if has_encoding {
-        block.add_statement(gen_construction(typing, &type_name));
-        block.add_statement(EmptyLine::default());
-    }
-    block.add_statement(gen_properties(typing, &type_name, &cases));
-    block.add_statement(EmptyLine::default());
-    block.add_statement(gen_cases(typing, &type_name, &cases));
+    let mut block: Block = Block::default()
+        .with_statement(gen_construction(typing, &type_name))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_properties(typing, &type_name, &cases))
+        .with_statement(EmptyLine::default())
+        .with_statement(gen_cases(typing, &type_name, &cases));
     if cases.iter().any(|case| case.is_nested(typing)) {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_accessors(typing, &type_name, &cases));
     }
     let schema_name: String = variant.type_name().to_string();
     let schema_name: &str = &schema_name;
-    let mut files: Vec<TypeFile> = Vec::default();
-    if has_encoding {
-        block.add_statement(EmptyLine::default());
-        block.add_statement(gen_encoding(typing, &type_name, &cases));
-        block.add_statement(EmptyLine::default());
-        block.add_statement(gen_decoding(
-            typing,
-            &type_name,
-            &ref_name(schema_name),
-            "variant",
-        ));
-        for name in [
-            ref_name(schema_name),
-            buf_name(schema_name),
-            mut_name(schema_name),
-            case_name(schema_name),
-            view_name(schema_name),
-            view_mut_name(schema_name),
-        ] {
-            check_type_name(project, mod_path, &name)?;
-        }
-        files.push(TypeFile {
-            suffix: "_buf",
-            code: gen_buf(
-                schema_name,
-                &type_name,
-                gen_variant_buf_accessors(typing, &cases, &buf_name(schema_name)),
-            ),
-        });
-        files.push(TypeFile {
-            suffix: "_case",
-            code: gen_variant_case(typing, schema_name, &cases, &type_name),
-        });
-        files.push(TypeFile {
-            suffix: "_mut",
-            code: gen_variant_mut(typing, schema_name, &cases, &type_name),
-        });
-        files.push(TypeFile {
-            suffix: "_ref",
-            code: gen_variant_ref(typing, schema_name, &cases, &type_name),
-        });
-        files.push(TypeFile {
-            suffix: "_view",
-            code: gen_variant_view(typing, schema_name, &cases, &type_name),
-        });
-        files.push(TypeFile {
-            suffix: "_view_mut",
-            code: gen_variant_view_mut(typing, schema_name, &cases, &type_name),
-        });
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_encoding(typing, &type_name, &cases));
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_decoding(
+        typing,
+        &type_name,
+        &ref_name(schema_name),
+        "variant",
+    ));
+    for name in [
+        ref_name(schema_name),
+        buf_name(schema_name),
+        mut_name(schema_name),
+        case_name(schema_name),
+        view_name(schema_name),
+        view_mut_name(schema_name),
+    ] {
+        check_type_name(project, mod_path, &name)?;
     }
-    files.insert(
-        0,
+    Ok(vec![
         TypeFile {
             suffix: "",
             code: format!(
@@ -206,8 +169,35 @@ pub fn gen_variant(
                 block.to_code()
             ),
         },
-    );
-    Ok(files)
+        TypeFile {
+            suffix: "_buf",
+            code: gen_buf(
+                schema_name,
+                &type_name,
+                gen_variant_buf_accessors(typing, &cases, &buf_name(schema_name)),
+            ),
+        },
+        TypeFile {
+            suffix: "_case",
+            code: gen_variant_case(typing, schema_name, &cases, &type_name),
+        },
+        TypeFile {
+            suffix: "_mut",
+            code: gen_variant_mut(typing, schema_name, &cases, &type_name),
+        },
+        TypeFile {
+            suffix: "_ref",
+            code: gen_variant_ref(typing, schema_name, &cases, &type_name),
+        },
+        TypeFile {
+            suffix: "_view",
+            code: gen_variant_view(typing, schema_name, &cases, &type_name),
+        },
+        TypeFile {
+            suffix: "_view_mut",
+            code: gen_variant_view_mut(typing, schema_name, &cases, &type_name),
+        },
+    ])
 }
 
 /// Checks no two generated methods of the variant with the `type_name` have the same name.

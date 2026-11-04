@@ -38,6 +38,16 @@ mod unrecognized {
 }
 
 impl Expr {
+    //! Construction
+
+    /// Creates an unrecognized case.
+    #[must_use]
+    pub(super) fn from_unknown(tag_number: u16, bytes: Vec<u8>) -> Self {
+        Self::Unrecognized(unrecognized::UnrecognizedCase { tag_number, bytes })
+    }
+}
+
+impl Expr {
     //! Properties
 
     /// Gets the tag number of the case.
@@ -111,5 +121,71 @@ impl Expr {
             Self::Add(value) => Some(value),
             _ => None,
         }
+    }
+}
+
+impl Expr {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        match self {
+            Self::Unrecognized(case) => 2 + case.bytes.len(),
+            Self::Number(_) => 10,
+            Self::Negate(value) => 2 + value.encoded_len(),
+            Self::Add(value) => 2 + value.encoded_len(),
+        }
+    }
+
+    /// Encodes the variant.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        match self {
+            Self::Unrecognized(case) => {
+                out.extend_from_slice(&case.tag_number.to_le_bytes());
+                out.extend_from_slice(&case.bytes);
+            }
+            Self::Number(value) => {
+                out.extend_from_slice(&1_u16.to_le_bytes());
+                out.extend_from_slice(&value.to_le_bytes());
+            }
+            Self::Negate(value) => {
+                out.extend_from_slice(&2_u16.to_le_bytes());
+                value.encode_to(out);
+            }
+            Self::Add(value) => {
+                out.extend_from_slice(&3_u16.to_le_bytes());
+                value.encode_to(out);
+            }
+        }
+    }
+}
+
+impl Expr {
+    //! Decoding
+
+    /// Decodes the variant from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::ExprRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the variant from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::ExprRef::new_unchecked(bytes) }.decode()
     }
 }

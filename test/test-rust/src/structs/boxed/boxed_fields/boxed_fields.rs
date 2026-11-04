@@ -81,6 +81,12 @@ impl BoxedFields {
         self.set_point(point);
         self
     }
+
+    /// Gets the mutable field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> &mut crate::types::Point {
+        &mut self.point
+    }
 }
 
 impl BoxedFields {
@@ -103,6 +109,12 @@ impl BoxedFields {
         self.set_person(person);
         self
     }
+
+    /// Gets the mutable field: `person`.
+    #[must_use]
+    pub fn person_mut(&mut self) -> &mut crate::types::Person {
+        &mut self.person
+    }
 }
 
 impl BoxedFields {
@@ -124,6 +136,12 @@ impl BoxedFields {
     pub fn with_label(mut self, label: crate::types::Label) -> Self {
         self.set_label(label);
         self
+    }
+
+    /// Gets the mutable field: `label`.
+    #[must_use]
+    pub fn label_mut(&mut self) -> &mut crate::types::Label {
+        &mut self.label
     }
 }
 
@@ -168,5 +186,70 @@ impl BoxedFields {
     pub fn with_shape(mut self, shape: crate::types::Shape) -> Self {
         self.set_shape(shape);
         self
+    }
+
+    /// Gets the mutable field: `shape`.
+    #[must_use]
+    pub fn shape_mut(&mut self) -> &mut crate::types::Shape {
+        &mut self.shape
+    }
+}
+
+impl BoxedFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut tail: usize = 0;
+        tail += self.person.encoded_len();
+        tail += self.label.encoded_len();
+        tail += self.shape.encoded_len();
+        24 + tail
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let start: usize = out.len();
+        self.point.encode_to(out);
+        proto_packet::io::write_zeros(out, 12);
+        out.extend_from_slice(&self.color.tag_number().to_le_bytes());
+        proto_packet::io::write_zeros(out, 2);
+        let tail: usize = out.len();
+        self.person.encode_to(out);
+        proto_packet::io::write_end(out, start + 8, tail);
+        self.label.encode_to(out);
+        proto_packet::io::write_end(out, start + 12, tail);
+        self.shape.encode_to(out);
+        proto_packet::io::write_end(out, start + 16, tail);
+    }
+}
+
+impl BoxedFields {
+    //! Decoding
+
+    /// Decodes the struct from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::BoxedFieldsRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the struct from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::BoxedFieldsRef::new_unchecked(bytes) }.decode()
     }
 }
