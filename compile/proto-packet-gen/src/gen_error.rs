@@ -24,6 +24,9 @@ pub enum GenError {
         case_name: String,
     },
 
+    /// A struct's fixed block is larger than an end offset can reach.
+    StructTooLarge { type_name: String },
+
     /// A type is named like a generated type of its schema file. (ex: `PointRef` with `Point`)
     TypeNameConflict { mod_path: String, type_name: String },
 }
@@ -37,6 +40,7 @@ impl GenError {
             Self::ModNameConflict { .. } => "G_MOD_NAME_CONFLICT",
             Self::FieldNameConflict { .. } => "G_FIELD_NAME_CONFLICT",
             Self::CaseNameConflict { .. } => "G_CASE_NAME_CONFLICT",
+            Self::StructTooLarge { .. } => "G_STRUCT_TOO_LARGE",
             Self::TypeNameConflict { .. } => "G_TYPE_NAME_CONFLICT",
         }
     }
@@ -66,6 +70,9 @@ impl Display for GenError {
                 "the case name `{}` conflicts with a generated method of `{}`",
                 case_name, type_name
             ),
+            Self::StructTooLarge { type_name } => {
+                write!(f, "the struct `{}` is too large to encode", type_name)
+            }
             Self::TypeNameConflict {
                 mod_path,
                 type_name,

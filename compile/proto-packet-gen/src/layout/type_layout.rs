@@ -35,6 +35,10 @@ pub(crate) const fn primitive_size(primitive: PrimitiveType) -> usize {
     }
 }
 
+/// The largest fixed-size value tracked exactly, so sizes can't overflow. It's far above the largest
+/// valid fixed block.
+const MAX_TRACKED_SIZE: usize = 1 << 40;
+
 /// The layouts found so far, since a struct can be reached through many paths.
 #[derive(Clone, Debug)]
 pub(crate) struct LayoutCache<'a> {
@@ -80,7 +84,7 @@ impl LayoutCache<'_> {
                     }
                     let layout: StructLayout = StructLayout::new_cached(self, structure);
                     let layout: TypeLayout = TypeLayout::Fixed {
-                        size: layout.fixed_size,
+                        size: layout.fixed_size.min(MAX_TRACKED_SIZE),
                         alignment: layout.alignment,
                     };
                     self.fixed_layouts.insert(name.clone(), layout);

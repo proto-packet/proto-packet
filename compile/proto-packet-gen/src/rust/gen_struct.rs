@@ -67,6 +67,11 @@ pub fn gen_struct(
     let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
     let layout: StructLayout = StructLayout::new(project, structure);
+    if layout.fixed_size > u32::MAX as usize {
+        return Err(GenError::StructTooLarge {
+            type_name: format!("{}.{}", mod_path, structure.type_name()),
+        });
+    }
     let accessors: Vec<String> = fields
         .iter()
         .filter(|field| is_struct(typing, **field))
