@@ -75,7 +75,7 @@ followed by the strings. The fields of an alignment are in declaration order, & 
 A growing string therefore never moves a variable struct.
 
 The end table has a `u32` end offset for each entry, in tail order, from the start of the tail. The
-`i`th entry is `tail[end[i-1]..end[i]]`, where `end[-1]` is 0.
+`i`th entry is `tail[end[i-1]..end[i]]`, where `end[-1]` is 0. A tail is at most `u32::MAX` bytes.
 
 Each entry is padded to the alignment of the next entry, whether or not that entry is present. The
 padding is inside the entry's extent, & is not slack. The last entry isn't padded.
