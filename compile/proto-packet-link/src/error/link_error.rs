@@ -28,6 +28,13 @@ pub enum LinkError {
         location: Location,
         names: Vec<QualifiedName>,
     },
+
+    /// A loop of structs through required fields, closed at the location, so no value can exist.
+    /// (ex: `[a.A, a.A]` for `struct A { next: box A; }`)
+    RequiredLoop {
+        location: Location,
+        names: Vec<QualifiedName>,
+    },
 }
 
 impl Display for LinkError {
@@ -51,6 +58,15 @@ impl Display for LinkError {
                 write!(
                     f,
                     "the types {} form a loop without a `box`, closed by {}",
+                    names.join(" -> "),
+                    location
+                )
+            }
+            Self::RequiredLoop { location, names } => {
+                let names: Vec<String> = names.iter().map(|name| format!("`{}`", name)).collect();
+                write!(
+                    f,
+                    "the structs {} form a loop of required fields, so no value can exist, closed by {}",
                     names.join(" -> "),
                     location
                 )

@@ -21,7 +21,8 @@ fn link_report(error: &LinkError, sources: &[SchemaSource]) -> Report {
         | LinkError::ServiceAsType { location, name } => {
             (location.mod_path.to_ref(), Locate::TypeTag(location, name))
         }
-        LinkError::UnboxedLoop { location, names } => {
+        LinkError::UnboxedLoop { location, names }
+        | LinkError::RequiredLoop { location, names } => {
             let Some(name) = names.last() else {
                 return Report::from(code);
             };
@@ -61,6 +62,7 @@ fn code(error: &LinkError) -> &'static str {
         LinkError::ServiceAsType { .. } => "L_SERVICE_AS_TYPE",
         LinkError::UnresolvedImport { .. } => "L_UNRESOLVED_IMPORT",
         LinkError::UnboxedLoop { .. } => "L_UNBOXED_LOOP",
+        LinkError::RequiredLoop { .. } => "L_REQUIRED_LOOP",
     }
 }
 
