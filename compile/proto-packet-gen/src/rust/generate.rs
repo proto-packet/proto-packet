@@ -1,5 +1,5 @@
 use crate::rust::naming::{ident, is_snake_case, snake_case};
-use crate::rust::{gen_enum, gen_message, gen_service, gen_struct, gen_variant};
+use crate::rust::{StructFile, gen_enum, gen_message, gen_service, gen_struct, gen_variant};
 use crate::{GenError, GeneratedFile};
 use proto_packet_tree::{ModPathRef, Project, SchemaFile, TypeDec, WithTypeName};
 use std::collections::{BTreeMap, BTreeSet};
@@ -60,8 +60,7 @@ impl ModNode<'_> {
                     mods.push_str("#[allow(clippy::module_inception)]\n");
                 }
                 mods.push_str(&format!("mod {};\n", ident(&mod_name)));
-                let code: String = gen_type_dec(project, mod_path, type_dec)?;
-                files.extend(type_files(dir, &mod_name, type_dec, code));
+                files.extend(gen_type_files(project, mod_path, dir, &mod_name, type_dec)?);
             }
             if !uses.is_empty() {
                 code.push_str(&uses);
@@ -97,43 +96,51 @@ impl ModNode<'_> {
     }
 }
 
-/// Generates the code of the `type_dec` in the schema file at the `mod_path`.
-fn gen_type_dec(
+/// Generates the files of the `type_dec` in the schema file at the `mod_path`, for the module
+/// `mod_name` in the `dir`.
+fn gen_type_files(
     project: &Project,
     mod_path: ModPathRef<'_>,
+    dir: &str,
+    mod_name: &str,
     type_dec: &TypeDec,
-) -> Result<String, GenError> {
-    match type_dec {
-        TypeDec::Struct(structure) => gen_struct(project, mod_path, structure),
-        TypeDec::Message(message) => gen_message(project, mod_path, message),
-        TypeDec::Enum(enumeration) => Ok(gen_enum(enumeration)),
-        TypeDec::Variant(variant) => Ok(gen_variant(project, variant)),
-        TypeDec::Service(service) => Ok(gen_service(project, mod_path, service)),
-    }
+) -> Result<Vec<GeneratedFile>, GenError> {
+    let code: String = match type_dec {
+        TypeDec::Struct(structure) => {
+            let files: Vec<StructFile> = gen_struct(project, mod_path, structure)?;
+            return Ok(struct_files(dir, mod_name, files));
+        }
+        TypeDec::Message(message) => gen_message(project, mod_path, message)?,
+        TypeDec::Enum(enumeration) => gen_enum(enumeration),
+        TypeDec::Variant(variant) => gen_variant(project, variant),
+        TypeDec::Service(service) => gen_service(project, mod_path, service),
+    };
+    Ok(vec![GeneratedFile {
+        path: format!("{}{}.rs", dir, file_name(mod_name)),
+        code: format!("{}{}", HEADER, code),
+    }])
 }
 
-/// Gets the files of the `type_dec` with the `code`, for the module `mod_name` in the `dir`.
-fn type_files(dir: &str, mod_name: &str, type_dec: &TypeDec, code: String) -> Vec<GeneratedFile> {
-    let name: String = file_name(mod_name);
-    let code: String = format!("{}{}", HEADER, code);
-    if !matches!(type_dec, TypeDec::Struct(_)) {
-        let path: String = format!("{}{}.rs", dir, name);
-        return vec![GeneratedFile { path, code }];
+/// Gets the folder of the struct with the `files`, for the module `mod_name` in the `dir`.
+fn struct_files(dir: &str, mod_name: &str, files: Vec<StructFile>) -> Vec<GeneratedFile> {
+    let folder: String = format!("{}{}/", dir, file_name(mod_name));
+    let mut uses: String = String::default();
+    let mut mods: String = String::from("#[allow(clippy::module_inception)]\n");
+    let mut result: Vec<GeneratedFile> = Vec::default();
+    for file in files {
+        let module: String = format!("{}{}", mod_name, file.suffix);
+        uses.push_str(&format!("pub use {}::*;\n", ident(&module)));
+        mods.push_str(&format!("mod {};\n", ident(&module)));
+        result.push(GeneratedFile {
+            path: format!("{}{}.rs", folder, file_name(&module)),
+            code: format!("{}{}", HEADER, file.code),
+        });
     }
-    let module: String = ident(mod_name);
-    vec![
-        GeneratedFile {
-            path: format!("{}{}/mod.rs", dir, name),
-            code: format!(
-                "{}pub use {}::*;\n\n#[allow(clippy::module_inception)]\nmod {};\n",
-                HEADER, module, module
-            ),
-        },
-        GeneratedFile {
-            path: format!("{}{}/{}.rs", dir, name, name),
-            code,
-        },
-    ]
+    result.push(GeneratedFile {
+        path: format!("{}mod.rs", folder),
+        code: format!("{}{}\n{}", HEADER, uses, mods),
+    });
+    result
 }
 
 /// Gets the file name of the module with the `mod_name`. (the identifier without `r#`)

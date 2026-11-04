@@ -41,3 +41,24 @@ impl EmptyStruct {
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, _out: &mut Vec<u8>) {}
 }
+
+impl EmptyStruct {
+    //! Decoding
+
+    /// Decodes the struct from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::EmptyStructRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the struct from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::EmptyStructRef::new_unchecked(bytes) }.decode()
+    }
+}

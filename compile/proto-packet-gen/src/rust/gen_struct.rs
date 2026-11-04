@@ -2,14 +2,15 @@ use crate::GenError;
 use crate::layout::StructLayout;
 use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
-use crate::rust::encoding::gen_encoding;
+use crate::rust::encoding::{IO, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
+use crate::rust::gen_struct_ref::{gen_struct_ref, ref_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::Prelude;
 use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, ImplBlock, Signature, Struct as RustStruct, Var, WithAccess, WithAttributes,
-    WithComments, WithFunctions, WithResult, WithStructFields, WithVarParams,
+    WithComments, WithFunctions, WithResult, WithStructFields, WithUnsafeFlag, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet_tree::{
@@ -20,20 +21,40 @@ use proto_packet_tree::{
 /// The name of the constructor.
 const CONSTRUCTOR: &str = "new";
 
-/// The names of the generated methods, including those of the encoded types.
-const METHODS: [&str; 4] = [CONSTRUCTOR, "encoded_len", "encode", "encode_to"];
+/// The names of the generated methods of a struct & its `Ref` type.
+const METHODS: [&str; 8] = [
+    CONSTRUCTOR,
+    "encoded_len",
+    "encode",
+    "encode_to",
+    "decode",
+    "decode_unchecked",
+    "new_unchecked",
+    "as_bytes",
+];
+
+/// A generated file of a struct.
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+pub struct StructFile {
+    /// The suffix of the file's module name. (ex: `_ref`, empty for the struct's own file)
+    pub suffix: &'static str,
+
+    /// The source code.
+    pub code: String,
+}
 
 /// The most constructor parameters before clippy's `too_many_arguments` lint.
 const MAX_ARGUMENTS: usize = 7;
 
-/// Generates the Rust code of the `structure` in the schema file at the `mod_path`.
+/// Generates the Rust files of the `structure` in the schema file at the `mod_path`.
 ///
-/// No field can be named like a generated method. (ex: the constructor `new`)
+/// No field can be named like a generated method. (ex: the constructor `new`) A struct with an
+/// encoding has a file for each of its generated types.
 pub fn gen_struct(
     project: &Project,
     mod_path: ModPathRef<'_>,
     structure: &Struct,
-) -> Result<String, GenError> {
+) -> Result<Vec<StructFile>, GenError> {
     let type_name: String = ident(&structure.type_name());
     let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
@@ -52,13 +73,49 @@ pub fn gen_struct(
         block.add_statement(EmptyLine::default());
         block.add_statement(field.gen_impl(typing, &type_name));
     }
-    if let Some(layout) = StructLayout::new(project, structure)
-        && layout.is_fixed()
-    {
+    let layout: Option<StructLayout> =
+        StructLayout::new(project, structure).filter(StructLayout::is_fixed);
+    if let Some(layout) = &layout {
+        check_type_name(project, mod_path, &ref_name(&structure.type_name()))?;
         block.add_statement(EmptyLine::default());
-        block.add_statement(gen_encoding(typing, &type_name, &fields, &layout));
+        block.add_statement(gen_encoding(typing, &type_name, &fields, layout));
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_decoding(&type_name, &ref_name(&structure.type_name())));
     }
-    Ok(block.to_code())
+    let mut files: Vec<StructFile> = vec![StructFile {
+        suffix: "",
+        code: block.to_code(),
+    }];
+    if let Some(layout) = &layout {
+        files.push(StructFile {
+            suffix: "_ref",
+            code: gen_struct_ref(typing, structure, &fields, layout, &type_name),
+        });
+    }
+    Ok(files)
+}
+
+/// Checks no type of the schema file at the `mod_path` has the `name` of a generated type.
+fn check_type_name(
+    project: &Project,
+    mod_path: ModPathRef<'_>,
+    name: &str,
+) -> Result<(), GenError> {
+    let is_conflict: bool = project
+        .schema_file_with_mod_path(mod_path.as_ref())
+        .is_some_and(|schema_file| {
+            schema_file
+                .type_decs()
+                .iter()
+                .any(|type_dec| type_dec.type_name().value() == name)
+        });
+    if is_conflict {
+        return Err(GenError::TypeNameConflict {
+            mod_path: mod_path.to_string(),
+            type_name: name.to_string(),
+        });
+    }
+    Ok(())
 }
 
 /// Gets the generated field of the schema `field`.
@@ -153,4 +210,39 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
     ImplBlock::from(type_name)
         .with_comment(" Construction")
         .with_function(constructor)
+}
+
+/// Generates the impl block decoding the struct with the `type_name` through its `ref_name` type.
+fn gen_decoding(type_name: &str, ref_name: &str) -> ImplBlock {
+    let signature: Signature = Signature::from("decode")
+        .with_param(Var::from(("bytes", "&[u8]")))
+        .with_result(format!("Result<Self, {}::DecodeError>", IO));
+    let decode: Function = Function::from(signature)
+        .with_comment(" Decodes the struct from the `bytes`.")
+        .with_comment("")
+        .with_comment(" # Errors")
+        .with_comment(" Returns an error if the `bytes` are not a valid encoding.")
+        .with_access(Access::Public)
+        .with_literal(format!("Ok(super::{}::new(bytes)?.decode())", ref_name));
+
+    let signature: Signature = Signature::from("decode_unchecked")
+        .with_unsafe(true)
+        .with_param(Var::from(("bytes", "&[u8]")))
+        .with_result("Self");
+    let decode_unchecked: Function = Function::from(signature)
+        .with_comment(" Decodes the struct from the `bytes`, without validating them.")
+        .with_comment("")
+        .with_comment(" # Safety")
+        .with_comment(" The `bytes` must be a valid encoding.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_literal(format!(
+            "unsafe {{ super::{}::new_unchecked(bytes) }}.decode()",
+            ref_name
+        ));
+
+    ImplBlock::from(type_name)
+        .with_comment(" Decoding")
+        .with_function(decode)
+        .with_function(decode_unchecked)
 }

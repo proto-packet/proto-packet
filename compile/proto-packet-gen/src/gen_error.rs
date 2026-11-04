@@ -15,6 +15,9 @@ pub enum GenError {
         type_name: String,
         field_name: String,
     },
+
+    /// A type is named like a generated type of its schema file. (ex: `PointRef` with `Point`)
+    TypeNameConflict { mod_path: String, type_name: String },
 }
 
 impl GenError {
@@ -25,6 +28,7 @@ impl GenError {
         match self {
             Self::ModNameConflict { .. } => "G_MOD_NAME_CONFLICT",
             Self::FieldNameConflict { .. } => "G_FIELD_NAME_CONFLICT",
+            Self::TypeNameConflict { .. } => "G_TYPE_NAME_CONFLICT",
         }
     }
 }
@@ -44,6 +48,14 @@ impl Display for GenError {
                 f,
                 "the field name `{}` conflicts with a generated method of `{}`",
                 field_name, type_name
+            ),
+            Self::TypeNameConflict {
+                mod_path,
+                type_name,
+            } => write!(
+                f,
+                "the type name `{}` conflicts with a generated type in `{}`",
+                type_name, mod_path
             ),
         }
     }
