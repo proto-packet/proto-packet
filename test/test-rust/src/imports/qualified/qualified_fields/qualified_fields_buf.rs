@@ -65,6 +65,50 @@ impl QualifiedFieldsBuf {
 }
 
 impl QualifiedFieldsBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
+        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(0..8)) }
+    }
+
+    /// Gets the mut of the field: `child`.
+    #[must_use]
+    pub fn child_mut(&mut self) -> crate::mods::parent::child::ChildMut<'_> {
+        unsafe {
+            crate::mods::parent::child::ChildMut::new_unchecked(self.bytes.get_unchecked_mut(8..12))
+        }
+    }
+
+    /// Gets the mut of the field: `raw`.
+    #[must_use]
+    pub fn raw_mut(&mut self) -> crate::names::r#move::MoveStructMut<'_> {
+        unsafe {
+            crate::names::r#move::MoveStructMut::new_unchecked(self.bytes.get_unchecked_mut(12..16))
+        }
+    }
+
+    /// Gets the mut of the field: `non_raw`.
+    #[must_use]
+    pub fn non_raw_mut(&mut self) -> crate::names::r#type::self_::SelfStructMut<'_> {
+        unsafe {
+            crate::names::r#type::self_::SelfStructMut::new_unchecked(
+                self.bytes.get_unchecked_mut(16..20),
+            )
+        }
+    }
+
+    /// Gets the mut of the field: `local`.
+    #[must_use]
+    pub fn local_mut(&mut self) -> crate::imports::qualified::LocalMut<'_> {
+        unsafe {
+            crate::imports::qualified::LocalMut::new_unchecked(self.bytes.get_unchecked_mut(20..24))
+        }
+    }
+}
+
+impl QualifiedFieldsBuf {
     //! Decoding
 
     /// Decodes the [QualifiedFields](super::QualifiedFields).

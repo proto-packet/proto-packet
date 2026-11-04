@@ -133,6 +133,12 @@ impl FixedKinds {
         self.set_point(point);
         self
     }
+
+    /// Gets the mutable field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> &mut crate::format::examples::Point {
+        &mut self.point
+    }
 }
 
 impl FixedKinds {
@@ -161,6 +167,12 @@ impl FixedKinds {
     {
         self.set_maybe_point(maybe_point);
         self
+    }
+
+    /// Gets the mutable field: `maybe_point`.
+    #[must_use]
+    pub fn maybe_point_mut(&mut self) -> Option<&mut crate::format::examples::Point> {
+        self.maybe_point.as_mut()
     }
 }
 

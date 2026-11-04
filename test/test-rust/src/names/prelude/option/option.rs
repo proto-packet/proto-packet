@@ -101,6 +101,12 @@ impl Option {
         self.set_next(next);
         self
     }
+
+    /// Gets the mutable field: `next`.
+    #[must_use]
+    pub fn next_mut(&mut self) -> std::option::Option<&mut crate::names::prelude::Option> {
+        self.next.as_deref_mut()
+    }
 }
 
 impl Option {

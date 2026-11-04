@@ -65,6 +65,20 @@ impl StringsBuf {
 }
 
 impl StringsBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `entry`.
+    #[must_use]
+    pub fn entry_mut(&mut self) -> crate::format::examples::EntryMut<'_> {
+        unsafe {
+            crate::format::examples::EntryMut::new_unchecked(
+                proto_packet::io::read_entry_mut_unchecked(&mut self.bytes, 0, 0, 24),
+            )
+        }
+    }
+}
+
+impl StringsBuf {
     //! Decoding
 
     /// Decodes the [Strings](super::Strings).

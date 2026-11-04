@@ -57,6 +57,12 @@ impl NestedCopy {
         self.set_fields(fields);
         self
     }
+
+    /// Gets the mutable field: `fields`.
+    #[must_use]
+    pub fn fields_mut(&mut self) -> &mut crate::structs::copy::CopyFields {
+        &mut self.fields
+    }
 }
 
 impl NestedCopy {

@@ -65,6 +65,24 @@ impl LoopLongBuf {
 }
 
 impl LoopLongBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `next`.
+    #[must_use]
+    pub fn next_mut(&mut self) -> Option<crate::format::edges::LoopByteMut<'_>> {
+        if unsafe { proto_packet::io::read_bit_unchecked(&self.bytes, 12, 0) } {
+            Some(unsafe {
+                crate::format::edges::LoopByteMut::new_unchecked(
+                    proto_packet::io::read_entry_mut_unchecked(&mut self.bytes, 8, 0, 16),
+                )
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl LoopLongBuf {
     //! Decoding
 
     /// Decodes the [LoopLong](super::LoopLong).

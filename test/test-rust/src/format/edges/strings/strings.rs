@@ -129,6 +129,12 @@ impl Strings {
         self.set_entry(entry);
         self
     }
+
+    /// Gets the mutable field: `entry`.
+    #[must_use]
+    pub fn entry_mut(&mut self) -> &mut crate::format::examples::Entry {
+        &mut self.entry
+    }
 }
 
 impl Strings {

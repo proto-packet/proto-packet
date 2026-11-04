@@ -42,14 +42,14 @@ pub(crate) fn check_mut_names(
 }
 
 /// Checks if the `field` is a nested struct.
-fn is_struct(typing: Typing<'_>, field: Field<'_>) -> bool {
+pub(crate) fn is_struct(typing: Typing<'_>, field: Field<'_>) -> bool {
     matches!(field.tag, TypeTag::Named(_)) && !typing.is_enum(field.tag)
 }
 
 /// Gets the name of the method of the `field`. (ex: `set_x`, or `x_mut` for a nested struct)
 fn method_name(typing: Typing<'_>, field: Field<'_>) -> String {
     if is_struct(typing, field) {
-        format!("{}_mut", field.name)
+        field.accessor_name()
     } else {
         field.setter_name()
     }
@@ -173,7 +173,7 @@ fn gen_fields(
     let mut result: ImplBlock = ImplBlock::from(mut_type.clone()).with_comment(" Fields");
     for (field, field_layout) in fields.iter().zip(&layout.fields) {
         let mut function: Function = if is_struct(typing, *field) {
-            gen_child(*field, *field_layout, layout)
+            gen_child(*field, *field_layout, layout, "self.bytes", "self.bytes")
         } else if *field.tag == TypeTag::Special(SpecialType::String) {
             gen_string_setter(*field, *field_layout, layout)
         } else {
@@ -188,9 +188,17 @@ fn gen_fields(
 }
 
 /// Generates the accessor of the nested struct `field`, to edit it in place.
-fn gen_child(field: Field<'_>, field_layout: FieldLayout, layout: &StructLayout) -> Function {
+///
+/// The `bytes` & `bytes_mut` expressions are the type's bytes, as a shared & a mutable slice.
+pub(crate) fn gen_child(
+    field: Field<'_>,
+    field_layout: FieldLayout,
+    layout: &StructLayout,
+    bytes: &str,
+    bytes_mut: &str,
+) -> Function {
     let child: String = generated_path(field.tag, "Mut");
-    let bytes: String = match field_layout.value {
+    let child_bytes: String = match field_layout.value {
         ValueLayout::Fixed { offset, size } => {
             format!(
                 "self.bytes.get_unchecked_mut({}..{})",
@@ -199,23 +207,23 @@ fn gen_child(field: Field<'_>, field_layout: FieldLayout, layout: &StructLayout)
             )
         }
         ValueLayout::Entry { index } => {
-            read_entry("read_entry_mut_unchecked", layout, index, "self.bytes")
+            read_entry("read_entry_mut_unchecked", layout, index, bytes_mut)
         }
         ValueLayout::Bit(_) => unreachable!("a struct is not a bit"),
     };
-    let value: String = format!("unsafe {{ {}::new_unchecked({}) }}", child, bytes);
+    let value: String = format!("unsafe {{ {}::new_unchecked({}) }}", child, child_bytes);
     let (result, value): (String, String) = match field_layout.presence {
         Some(presence) => (
             format!("Option<{}<'_>>", child),
             format!(
                 "if {} {{ Some({}) }} else {{ None }}",
-                read_bit(presence, "self.bytes"),
+                read_bit(presence, bytes),
                 value
             ),
         ),
         None => (format!("{}<'_>", child), value),
     };
-    let signature: Signature = Signature::from(format!("{}_mut", field.name))
+    let signature: Signature = Signature::from(field.accessor_name())
         .with_receiver(Receiver::BorrowedMut)
         .with_result(result);
     Function::from(signature)

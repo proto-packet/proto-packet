@@ -65,6 +65,18 @@ impl BeforeBuf {
 }
 
 impl BeforeBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `after`.
+    #[must_use]
+    pub fn after_mut(&mut self) -> crate::imports::local::AfterMut<'_> {
+        unsafe {
+            crate::imports::local::AfterMut::new_unchecked(self.bytes.get_unchecked_mut(0..4))
+        }
+    }
+}
+
+impl BeforeBuf {
     //! Decoding
 
     /// Decodes the [Before](super::Before).

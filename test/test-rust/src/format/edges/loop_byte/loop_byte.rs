@@ -90,6 +90,12 @@ impl LoopByte {
         self.set_next(next);
         self
     }
+
+    /// Gets the mutable field: `next`.
+    #[must_use]
+    pub fn next_mut(&mut self) -> Option<&mut crate::format::edges::LoopLong> {
+        self.next.as_deref_mut()
+    }
 }
 
 impl LoopByte {

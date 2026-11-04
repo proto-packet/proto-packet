@@ -65,6 +65,16 @@ impl CopyFieldsBuf {
 }
 
 impl CopyFieldsBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
+        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(20..28)) }
+    }
+}
+
+impl CopyFieldsBuf {
     //! Decoding
 
     /// Decodes the [CopyFields](super::CopyFields).

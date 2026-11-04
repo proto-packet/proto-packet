@@ -65,6 +65,22 @@ impl OptionalCopyBuf {
 }
 
 impl OptionalCopyBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {
+        if unsafe { proto_packet::io::read_bit_unchecked(&self.bytes, 12, 1) } {
+            Some(unsafe {
+                crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(4..12))
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl OptionalCopyBuf {
     //! Decoding
 
     /// Decodes the [OptionalCopy](super::OptionalCopy).

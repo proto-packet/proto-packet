@@ -53,6 +53,12 @@ impl NonCopyStruct {
         self.set_person(person);
         self
     }
+
+    /// Gets the mutable field: `person`.
+    #[must_use]
+    pub fn person_mut(&mut self) -> &mut crate::types::Person {
+        &mut self.person
+    }
 }
 
 impl NonCopyStruct {

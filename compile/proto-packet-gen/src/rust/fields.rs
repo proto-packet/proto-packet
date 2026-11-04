@@ -136,6 +136,11 @@ impl Field<'_> {
         format!("set_{}", self.name)
     }
 
+    /// Gets the name of the field's mutable accessor. (ex: `x_mut`)
+    pub(crate) fn accessor_name(self) -> String {
+        format!("{}_mut", self.name)
+    }
+
     /// Gets the name of the field's builder. (ex: `with_x`)
     fn builder_name(self) -> String {
         format!("with_{}", self.name)

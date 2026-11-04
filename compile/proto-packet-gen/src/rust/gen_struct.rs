@@ -5,15 +5,16 @@ use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::{IO, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_struct_buf::{buf_name, gen_struct_buf};
-use crate::rust::gen_struct_mut::{check_mut_names, gen_struct_mut, mut_name};
+use crate::rust::gen_struct_mut::{check_mut_names, gen_struct_mut, is_struct, mut_name};
 use crate::rust::gen_struct_ref::{gen_struct_ref, ref_name};
 use crate::rust::gen_struct_view::{gen_struct_view, view_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
-    Access, Function, ImplBlock, Signature, Struct as RustStruct, Var, WithAccess, WithAttributes,
-    WithComments, WithFunctions, WithResult, WithStructFields, WithUnsafeFlag, WithVarParams,
+    Access, Function, ImplBlock, Receiver, Signature, Struct as RustStruct, Var, WithAccess,
+    WithAttributes, WithComments, WithFunctions, WithReceiver, WithResult, WithStructFields,
+    WithUnsafeFlag, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet_tree::{
@@ -62,10 +63,20 @@ pub fn gen_struct(
     let type_name: String = ident(&structure.type_name());
     let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
+    let layout: Option<StructLayout> = StructLayout::new(project, structure);
+    let accessors: Vec<String> = fields
+        .iter()
+        .filter(|field| layout.is_some() && is_struct(typing, **field))
+        .map(|field| field.accessor_name())
+        .collect();
+    let methods: Vec<&str> = METHODS
+        .into_iter()
+        .chain(accessors.iter().map(String::as_str))
+        .collect();
     check_field_names(
         &format!("{}.{}", mod_path, structure.type_name()),
         &fields,
-        &METHODS,
+        &methods,
     )?;
 
     let mut block: Block = Block::default().with_statement(gen_dec(typing, structure, &fields));
@@ -74,10 +85,13 @@ pub fn gen_struct(
         block.add_statement(gen_constructor(typing, &type_name, &fields));
     }
     for field in &fields {
+        let mut field_impl: ImplBlock = field.gen_impl(typing, &type_name);
+        if layout.is_some() && is_struct(typing, *field) {
+            field_impl.add_function(gen_accessor(typing, *field));
+        }
         block.add_statement(EmptyLine::default());
-        block.add_statement(field.gen_impl(typing, &type_name));
+        block.add_statement(field_impl);
     }
-    let layout: Option<StructLayout> = StructLayout::new(project, structure);
     if let Some(layout) = &layout {
         check_type_name(project, mod_path, &ref_name(&structure.type_name()))?;
         check_type_name(project, mod_path, &buf_name(&structure.type_name()))?;
@@ -104,7 +118,7 @@ pub fn gen_struct(
     if let Some(layout) = &layout {
         files.push(StructFile {
             suffix: "_buf",
-            code: gen_struct_buf(structure, &type_name),
+            code: gen_struct_buf(typing, structure, &fields, layout, &type_name),
         });
         files.push(StructFile {
             suffix: "_mut",
@@ -237,6 +251,37 @@ fn gen_constructor(typing: Typing<'_>, type_name: &str, fields: &[Field<'_>]) ->
     ImplBlock::from(type_name)
         .with_comment(" Construction")
         .with_function(constructor)
+}
+
+/// Generates the mutable accessor of the nested struct `field`. (boxes are hidden)
+fn gen_accessor(typing: Typing<'_>, field: Field<'_>) -> Function {
+    let name: String = ident(&field.name);
+    let reference: String = format!("&mut {}", typing.rust_type(field.tag));
+    let (result, expr): (String, String) = if !field.is_optional {
+        (reference, format!("&mut self.{}", name))
+    } else {
+        let method: &str = if field.is_boxed {
+            "as_deref_mut"
+        } else {
+            "as_mut"
+        };
+        (
+            format!("{}<{}>", typing.prelude(PreludeName::Option), reference),
+            format!("self.{}.{}()", name, method),
+        )
+    };
+    let signature: Signature = Signature::from(field.accessor_name())
+        .with_receiver(Receiver::BorrowedMut)
+        .with_result(result);
+    let mut function: Function = Function::from(signature)
+        .with_comment(format!(" Gets the mutable field: `{}`.", field.name))
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_literal(expr);
+    if field.is_non_snake_case() {
+        function.add_attribute("allow(non_snake_case)");
+    }
+    function
 }
 
 /// Generates the impl block decoding the struct with the `type_name` through its `ref_name` type.

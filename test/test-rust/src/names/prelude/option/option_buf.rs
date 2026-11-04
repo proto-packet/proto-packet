@@ -65,6 +65,24 @@ impl OptionBuf {
 }
 
 impl OptionBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `next`.
+    #[must_use]
+    pub fn next_mut(&mut self) -> Option<crate::names::prelude::OptionMut<'_>> {
+        if unsafe { proto_packet::io::read_bit_unchecked(&self.bytes, 8, 1) } {
+            Some(unsafe {
+                crate::names::prelude::OptionMut::new_unchecked(
+                    proto_packet::io::read_entry_mut_unchecked(&mut self.bytes, 0, 0, 12),
+                )
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl OptionBuf {
     //! Decoding
 
     /// Decodes the [Option](super::Option).

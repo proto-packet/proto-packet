@@ -1,7 +1,10 @@
+use crate::layout::StructLayout;
 use crate::rust::encoding::IO;
-use crate::rust::gen_struct_mut::mut_name;
+use crate::rust::fields::Field;
+use crate::rust::gen_struct_mut::{gen_child, is_struct, mut_name};
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::naming::is_upper_camel_case;
+use crate::rust::typing::Typing;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, Signature, Struct as RustStruct, StructField, Var,
     WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithReceiver, WithResult,
@@ -24,21 +27,31 @@ pub(crate) fn buf_name(type_name: &str) -> String {
 ///
 /// It owns the valid encoding of the struct, & reads its fields through its `Ref` type. Its file
 /// imports nothing & declares only the `Buf` type, so the prelude names are never shadowed.
-pub(crate) fn gen_struct_buf(structure: &Struct, type_name: &str) -> String {
+pub(crate) fn gen_struct_buf(
+    typing: Typing<'_>,
+    structure: &Struct,
+    fields: &[Field<'_>],
+    layout: &StructLayout,
+    type_name: &str,
+) -> String {
     let name: String = buf_name(&structure.type_name());
     let ref_name: String = ref_name(&structure.type_name());
     let mut_name: String = mut_name(&structure.type_name());
-    Block::default()
+    let mut block: Block = Block::default()
         .with_statement(gen_dec(structure, &name, type_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_construction(&name, &ref_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_from(&name, type_name))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_properties(&name, &ref_name, &mut_name))
-        .with_statement(EmptyLine::default())
-        .with_statement(gen_decoding(&name, type_name))
-        .to_code()
+        .with_statement(gen_properties(&name, &ref_name, &mut_name));
+    if fields.iter().any(|field| is_struct(typing, *field)) {
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_fields(typing, fields, layout, &name));
+    }
+    block.add_statement(EmptyLine::default());
+    block.add_statement(gen_decoding(&name, type_name));
+    block.to_code()
 }
 
 /// Generates the declaration of the `Buf` type with the `name`.
@@ -155,6 +168,34 @@ fn gen_properties(name: &str, ref_name: &str, mut_name: &str) -> ImplBlock {
         .with_function(as_mut)
         .with_function(as_bytes)
         .with_function(into_bytes)
+}
+
+/// Generates the impl block with the accessor of each nested struct of the `fields`.
+///
+/// A `Buf` type can't lend these through a temporary `Mut` type, so it has its own.
+fn gen_fields(
+    typing: Typing<'_>,
+    fields: &[Field<'_>],
+    layout: &StructLayout,
+    name: &str,
+) -> ImplBlock {
+    let mut result: ImplBlock = ImplBlock::from(name).with_comment(" Fields");
+    for (field, field_layout) in fields.iter().zip(&layout.fields) {
+        if is_struct(typing, *field) {
+            let mut function: Function = gen_child(
+                *field,
+                *field_layout,
+                layout,
+                "&self.bytes",
+                "&mut self.bytes",
+            );
+            if field.is_non_snake_case() {
+                function.add_attribute("allow(non_snake_case)");
+            }
+            result.add_function(function);
+        }
+    }
+    result
 }
 
 /// Generates the impl block decoding the `Buf` type with the `name`.

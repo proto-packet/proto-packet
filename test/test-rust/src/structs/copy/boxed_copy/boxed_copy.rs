@@ -55,6 +55,12 @@ impl BoxedCopy {
         self.set_point(point);
         self
     }
+
+    /// Gets the mutable field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> &mut crate::types::Point {
+        &mut self.point
+    }
 }
 
 impl BoxedCopy {

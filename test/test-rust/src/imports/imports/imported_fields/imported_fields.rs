@@ -58,6 +58,12 @@ impl ImportedFields {
         self.set_point(point);
         self
     }
+
+    /// Gets the mutable field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> &mut crate::types::Point {
+        &mut self.point
+    }
 }
 
 impl ImportedFields {
@@ -82,6 +88,12 @@ impl ImportedFields {
     pub fn with_child(mut self, child: crate::mods::parent::child::Child) -> Self {
         self.set_child(child);
         self
+    }
+
+    /// Gets the mutable field: `child`.
+    #[must_use]
+    pub fn child_mut(&mut self) -> &mut crate::mods::parent::child::Child {
+        &mut self.child
     }
 }
 

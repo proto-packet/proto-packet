@@ -65,6 +65,23 @@ impl NonCopyStructBuf {
 }
 
 impl NonCopyStructBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `person`.
+    #[must_use]
+    pub fn person_mut(&mut self) -> crate::types::PersonMut<'_> {
+        unsafe {
+            crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
+                &mut self.bytes,
+                0,
+                0,
+                4,
+            ))
+        }
+    }
+}
+
+impl NonCopyStructBuf {
     //! Decoding
 
     /// Decodes the [NonCopyStruct](super::NonCopyStruct).

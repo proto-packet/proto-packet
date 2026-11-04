@@ -82,6 +82,12 @@ impl QualifiedFields {
         self.set_point(point);
         self
     }
+
+    /// Gets the mutable field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> &mut crate::types::Point {
+        &mut self.point
+    }
 }
 
 impl QualifiedFields {
@@ -106,6 +112,12 @@ impl QualifiedFields {
     pub fn with_child(mut self, child: crate::mods::parent::child::Child) -> Self {
         self.set_child(child);
         self
+    }
+
+    /// Gets the mutable field: `child`.
+    #[must_use]
+    pub fn child_mut(&mut self) -> &mut crate::mods::parent::child::Child {
+        &mut self.child
     }
 }
 
@@ -132,6 +144,12 @@ impl QualifiedFields {
         self.set_raw(raw);
         self
     }
+
+    /// Gets the mutable field: `raw`.
+    #[must_use]
+    pub fn raw_mut(&mut self) -> &mut crate::names::r#move::MoveStruct {
+        &mut self.raw
+    }
 }
 
 impl QualifiedFields {
@@ -157,6 +175,12 @@ impl QualifiedFields {
         self.set_non_raw(non_raw);
         self
     }
+
+    /// Gets the mutable field: `non_raw`.
+    #[must_use]
+    pub fn non_raw_mut(&mut self) -> &mut crate::names::r#type::self_::SelfStruct {
+        &mut self.non_raw
+    }
 }
 
 impl QualifiedFields {
@@ -181,6 +205,12 @@ impl QualifiedFields {
     pub fn with_local(mut self, local: crate::imports::qualified::Local) -> Self {
         self.set_local(local);
         self
+    }
+
+    /// Gets the mutable field: `local`.
+    #[must_use]
+    pub fn local_mut(&mut self) -> &mut crate::imports::qualified::Local {
+        &mut self.local
     }
 }
 

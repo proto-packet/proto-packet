@@ -96,6 +96,12 @@ impl OptionalCopy {
         self.set_point(point);
         self
     }
+
+    /// Gets the mutable field: `point`.
+    #[must_use]
+    pub fn point_mut(&mut self) -> Option<&mut crate::types::Point> {
+        self.point.as_mut()
+    }
 }
 
 impl OptionalCopy {

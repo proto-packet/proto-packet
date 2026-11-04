@@ -57,6 +57,12 @@ impl Before {
         self.set_after(after);
         self
     }
+
+    /// Gets the mutable field: `after`.
+    #[must_use]
+    pub fn after_mut(&mut self) -> &mut crate::imports::local::After {
+        &mut self.after
+    }
 }
 
 impl Before {

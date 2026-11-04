@@ -69,6 +69,12 @@ impl Line {
         self.set_start(start);
         self
     }
+
+    /// Gets the mutable field: `start`.
+    #[must_use]
+    pub fn start_mut(&mut self) -> &mut crate::format::examples::Point {
+        &mut self.start
+    }
 }
 
 impl Line {
@@ -93,6 +99,12 @@ impl Line {
     pub fn with_end(mut self, end: crate::format::examples::Point) -> Self {
         self.set_end(end);
         self
+    }
+
+    /// Gets the mutable field: `end`.
+    #[must_use]
+    pub fn end_mut(&mut self) -> &mut crate::format::examples::Point {
+        &mut self.end
     }
 }
 

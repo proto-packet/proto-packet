@@ -72,6 +72,12 @@ impl Pair {
         self.set_first(first);
         self
     }
+
+    /// Gets the mutable field: `first`.
+    #[must_use]
+    pub fn first_mut(&mut self) -> &mut crate::format::examples::Entry {
+        &mut self.first
+    }
 }
 
 impl Pair {
@@ -96,6 +102,12 @@ impl Pair {
     pub fn with_second(mut self, second: crate::format::examples::Entry) -> Self {
         self.set_second(second);
         self
+    }
+
+    /// Gets the mutable field: `second`.
+    #[must_use]
+    pub fn second_mut(&mut self) -> &mut crate::format::examples::Entry {
+        &mut self.second
     }
 }
 

@@ -65,6 +65,18 @@ impl NestedCopyBuf {
 }
 
 impl NestedCopyBuf {
+    //! Fields
+
+    /// Gets the mut of the field: `fields`.
+    #[must_use]
+    pub fn fields_mut(&mut self) -> crate::structs::copy::CopyFieldsMut<'_> {
+        unsafe {
+            crate::structs::copy::CopyFieldsMut::new_unchecked(self.bytes.get_unchecked_mut(0..32))
+        }
+    }
+}
+
+impl NestedCopyBuf {
     //! Decoding
 
     /// Decodes the [NestedCopy](super::NestedCopy).
