@@ -18,4 +18,45 @@
     proto_packet::serde::Deserialize,
 )]
 #[serde(crate = "proto_packet::serde")]
-pub struct EmptyMessage {}
+pub struct EmptyMessage {
+    #[serde(skip)]
+    unknown_fields: Vec<proto_packet::io::UnknownField>,
+}
+
+impl EmptyMessage {
+    //! Unknown Fields
+
+    /// Gets the fields the message doesn't know, in tag order.
+    #[must_use]
+    pub fn unknown_fields(&self) -> &[proto_packet::io::UnknownField] {
+        &self.unknown_fields
+    }
+}
+
+impl EmptyMessage {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let count: usize = self.unknown_fields.len();
+        let values: usize = proto_packet::io::unknown_fields_len(&self.unknown_fields);
+        2 + 6 * count + values
+    }
+
+    /// Encodes the message.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let known: usize = 0;
+        let writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
+        writer.finish();
+    }
+}

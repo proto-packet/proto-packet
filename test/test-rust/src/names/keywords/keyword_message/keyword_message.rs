@@ -30,6 +30,8 @@ pub struct KeywordMessage {
     #[serde(rename = "self")]
     #[serde(skip_serializing_if = "Option::is_none")]
     self_: Option<u32>,
+    #[serde(skip)]
+    unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
 impl KeywordMessage {
@@ -87,5 +89,59 @@ impl KeywordMessage {
     {
         self.set_self(self_);
         self
+    }
+}
+
+impl KeywordMessage {
+    //! Unknown Fields
+
+    /// Gets the fields the message doesn't know, in tag order.
+    #[must_use]
+    pub fn unknown_fields(&self) -> &[proto_packet::io::UnknownField] {
+        &self.unknown_fields
+    }
+}
+
+impl KeywordMessage {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut count: usize = self.unknown_fields.len();
+        let mut values: usize = proto_packet::io::unknown_fields_len(&self.unknown_fields);
+        if self.r#type.is_some() {
+            count += 1;
+            values += 4;
+        }
+        if self.self_.is_some() {
+            count += 1;
+            values += 4;
+        }
+        2 + 6 * count + values
+    }
+
+    /// Encodes the message.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let known: usize = usize::from(self.r#type.is_some()) + usize::from(self.self_.is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
+        if let Some(value) = &self.r#type {
+            writer.field(1).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = &self.self_ {
+            writer.field(2).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        writer.finish();
     }
 }

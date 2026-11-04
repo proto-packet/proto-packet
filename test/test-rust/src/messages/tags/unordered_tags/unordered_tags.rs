@@ -34,6 +34,8 @@ pub struct UnorderedTags {
     one: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     two: Option<u32>,
+    #[serde(skip)]
+    unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
 impl UnorderedTags {
@@ -120,5 +122,69 @@ impl UnorderedTags {
     {
         self.set_two(two);
         self
+    }
+}
+
+impl UnorderedTags {
+    //! Unknown Fields
+
+    /// Gets the fields the message doesn't know, in tag order.
+    #[must_use]
+    pub fn unknown_fields(&self) -> &[proto_packet::io::UnknownField] {
+        &self.unknown_fields
+    }
+}
+
+impl UnorderedTags {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        let mut count: usize = self.unknown_fields.len();
+        let mut values: usize = proto_packet::io::unknown_fields_len(&self.unknown_fields);
+        if self.one.is_some() {
+            count += 1;
+            values += 4;
+        }
+        if self.two.is_some() {
+            count += 1;
+            values += 4;
+        }
+        if self.three.is_some() {
+            count += 1;
+            values += 4;
+        }
+        2 + 6 * count + values
+    }
+
+    /// Encodes the message.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        let known: usize = usize::from(self.one.is_some())
+            + usize::from(self.two.is_some())
+            + usize::from(self.three.is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
+        if let Some(value) = &self.one {
+            writer.field(1).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = &self.two {
+            writer.field(2).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = &self.three {
+            writer.field(3).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        writer.finish();
     }
 }

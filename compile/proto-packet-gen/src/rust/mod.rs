@@ -22,5 +22,6 @@ mod gen_variant;
 mod gen_view;
 mod gen_view_mut;
 mod generate;
+mod message_encoding;
 mod prelude;
 mod typing;

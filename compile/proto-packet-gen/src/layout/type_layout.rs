@@ -98,6 +98,35 @@ fn is_fixed_tag(project: &Project, tag: &TypeTag, visiting: &mut Vec<QualifiedNa
     }
 }
 
+/// Checks if the `tag` can be encoded, without revisiting the `visited` types.
+///
+/// A type can't be encoded if it contains a type with no encoding yet. (ex: a variant)
+pub(crate) fn is_encodable(
+    project: &Project,
+    tag: &TypeTag,
+    visited: &mut Vec<QualifiedName>,
+) -> bool {
+    let TypeTag::Named(name) = tag else {
+        return true;
+    };
+    if visited.contains(name) {
+        return true;
+    }
+    visited.push(name.clone());
+    match project.type_dec_with_name(name.to_ref()) {
+        Some(TypeDec::Enum(_)) => true,
+        Some(TypeDec::Struct(structure)) => structure
+            .fields()
+            .iter()
+            .all(|field| is_encodable(project, field.type_tag(), visited)),
+        Some(TypeDec::Message(message)) => message
+            .fields()
+            .iter()
+            .all(|field| is_encodable(project, field.type_tag(), visited)),
+        _ => false,
+    }
+}
+
 /// Gets the alignment of the `structure`: the largest of it & every struct it contains.
 ///
 /// Returns `None` if the `structure` contains a type with no encoding yet. (ex: a message)
