@@ -284,3 +284,36 @@ impl NineBits {
         self
     }
 }
+
+impl NineBits {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        2
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        out.push(
+            u8::from(self.a)
+                | (u8::from(self.b) << 1)
+                | (u8::from(self.c) << 2)
+                | (u8::from(self.d) << 3)
+                | (u8::from(self.e) << 4)
+                | (u8::from(self.f) << 5)
+                | (u8::from(self.g) << 6)
+                | (u8::from(self.h) << 7),
+        );
+        out.push(u8::from(self.i));
+    }
+}

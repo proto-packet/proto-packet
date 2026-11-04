@@ -97,3 +97,32 @@ impl OptionalCopy {
         self
     }
 }
+
+impl OptionalCopy {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        16
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        out.extend_from_slice(&self.count.unwrap_or_default().to_le_bytes());
+        match &self.point {
+            Some(value) => value.encode_to(out),
+            None => proto_packet::io::write_zeros(out, 8),
+        }
+        out.push(u8::from(self.count.is_some()) | (u8::from(self.point.is_some()) << 1));
+        proto_packet::io::write_zeros(out, 3);
+    }
+}

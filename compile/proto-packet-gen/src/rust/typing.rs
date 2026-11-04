@@ -47,6 +47,21 @@ impl Typing<'_> {
 }
 
 impl Typing<'_> {
+    //! Kinds
+
+    /// Checks if the `tag` is an enum.
+    pub(crate) fn is_enum(self, tag: &TypeTag) -> bool {
+        match tag {
+            TypeTag::Named(name) => matches!(
+                self.project.type_dec_with_name(name.to_ref()),
+                Some(TypeDec::Enum(_))
+            ),
+            _ => false,
+        }
+    }
+}
+
+impl Typing<'_> {
     //! Copy
 
     /// Checks if the `tag` is a `Copy` type.

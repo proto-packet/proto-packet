@@ -12,13 +12,14 @@ pub(crate) enum PreludeName {
     Send,
     String,
     Sync,
+    Vec,
 }
 
 impl PreludeName {
     //! Names
 
     /// The prelude names.
-    const ALL: [Self; 9] = [
+    const ALL: [Self; 10] = [
         Self::Box,
         Self::Into,
         Self::Option,
@@ -28,6 +29,7 @@ impl PreludeName {
         Self::Send,
         Self::String,
         Self::Sync,
+        Self::Vec,
     ];
 
     /// Gets the full path. (ex: `std::option::Option`)
@@ -42,6 +44,7 @@ impl PreludeName {
             Self::Send => "std::marker::Send",
             Self::String => "std::string::String",
             Self::Sync => "std::marker::Sync",
+            Self::Vec => "std::vec::Vec",
         }
     }
 

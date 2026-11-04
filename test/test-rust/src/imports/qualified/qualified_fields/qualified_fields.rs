@@ -183,3 +183,30 @@ impl QualifiedFields {
         self
     }
 }
+
+impl QualifiedFields {
+    //! Encoding
+
+    /// Gets the length of the encoding, in bytes.
+    #[must_use]
+    pub fn encoded_len(&self) -> usize {
+        24
+    }
+
+    /// Encodes the struct.
+    #[must_use]
+    pub fn encode(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut result);
+        result
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.point.encode_to(out);
+        self.child.encode_to(out);
+        self.raw.encode_to(out);
+        self.non_raw.encode_to(out);
+        self.local.encode_to(out);
+    }
+}

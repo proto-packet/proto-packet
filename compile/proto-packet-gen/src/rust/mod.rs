@@ -9,6 +9,7 @@ pub mod naming;
 
 mod derives;
 mod docs;
+mod encoding;
 mod fields;
 mod gen_enum;
 mod gen_message;

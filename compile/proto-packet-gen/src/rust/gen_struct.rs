@@ -1,6 +1,8 @@
 use crate::GenError;
+use crate::layout::StructLayout;
 use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
+use crate::rust::encoding::gen_encoding;
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::Prelude;
@@ -17,6 +19,9 @@ use proto_packet_tree::{
 
 /// The name of the constructor.
 const CONSTRUCTOR: &str = "new";
+
+/// The names of the generated methods, including those of the encoded types.
+const METHODS: [&str; 4] = [CONSTRUCTOR, "encoded_len", "encode", "encode_to"];
 
 /// The most constructor parameters before clippy's `too_many_arguments` lint.
 const MAX_ARGUMENTS: usize = 7;
@@ -35,7 +40,7 @@ pub fn gen_struct(
     check_field_names(
         &format!("{}.{}", mod_path, structure.type_name()),
         &fields,
-        &[CONSTRUCTOR],
+        &METHODS,
     )?;
 
     let mut block: Block = Block::default().with_statement(gen_dec(typing, structure, &fields));
@@ -46,6 +51,12 @@ pub fn gen_struct(
     for field in &fields {
         block.add_statement(EmptyLine::default());
         block.add_statement(field.gen_impl(typing, &type_name));
+    }
+    if let Some(layout) = StructLayout::new(project, structure)
+        && layout.is_fixed()
+    {
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_encoding(typing, &type_name, &fields, &layout));
     }
     Ok(block.to_code())
 }
