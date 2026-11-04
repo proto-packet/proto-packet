@@ -5,6 +5,7 @@ use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::{IO, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_struct_buf::{buf_name, gen_struct_buf};
+use crate::rust::gen_struct_mut::{check_mut_names, gen_struct_mut, mut_name};
 use crate::rust::gen_struct_ref::{gen_struct_ref, ref_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
@@ -79,6 +80,12 @@ pub fn gen_struct(
     if let Some(layout) = &layout {
         check_type_name(project, mod_path, &ref_name(&structure.type_name()))?;
         check_type_name(project, mod_path, &buf_name(&structure.type_name()))?;
+        check_type_name(project, mod_path, &mut_name(&structure.type_name()))?;
+        check_mut_names(
+            typing,
+            &format!("{}.{}", mod_path, structure.type_name()),
+            &fields,
+        )?;
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_encoding(typing, &type_name, &fields, layout));
         block.add_statement(EmptyLine::default());
@@ -96,6 +103,10 @@ pub fn gen_struct(
         files.push(StructFile {
             suffix: "_buf",
             code: gen_struct_buf(structure, &type_name),
+        });
+        files.push(StructFile {
+            suffix: "_mut",
+            code: gen_struct_mut(typing, structure, &fields, layout, &type_name),
         });
         files.push(StructFile {
             suffix: "_ref",

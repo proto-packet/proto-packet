@@ -45,6 +45,12 @@ impl BoxedCopyBuf {
         unsafe { super::BoxedCopyRef::new_unchecked(&self.bytes) }
     }
 
+    /// Gets the mut of the bytes.
+    #[must_use]
+    pub fn as_mut(&mut self) -> super::BoxedCopyMut<'_> {
+        unsafe { super::BoxedCopyMut::new_unchecked(&mut self.bytes) }
+    }
+
     /// Gets the encoded bytes.
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {

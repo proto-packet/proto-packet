@@ -2,9 +2,11 @@
 
 pub use nine_bits::*;
 pub use nine_bits_buf::*;
+pub use nine_bits_mut::*;
 pub use nine_bits_ref::*;
 
 #[allow(clippy::module_inception)]
 mod nine_bits;
 mod nine_bits_buf;
+mod nine_bits_mut;
 mod nine_bits_ref;

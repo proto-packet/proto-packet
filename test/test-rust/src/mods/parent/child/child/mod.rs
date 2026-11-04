@@ -2,9 +2,11 @@
 
 pub use child::*;
 pub use child_buf::*;
+pub use child_mut::*;
 pub use child_ref::*;
 
 #[allow(clippy::module_inception)]
 mod child;
 mod child_buf;
+mod child_mut;
 mod child_ref;

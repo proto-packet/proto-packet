@@ -23,11 +23,18 @@ pub(crate) fn ref_name(type_name: &str) -> String {
 ///
 /// (ex: `crate::a::FooRef` for `a.Foo`)
 fn ref_path(tag: &TypeTag) -> String {
+    generated_path(tag, "Ref")
+}
+
+/// Gets the path of the generated type with the `suffix`, of the struct of the named `tag`.
+///
+/// (ex: `crate::a::FooRef` for `a.Foo` & `Ref`)
+pub(crate) fn generated_path(tag: &TypeTag, suffix: &str) -> String {
     match tag {
         TypeTag::Named(name) => {
             let path: String = type_path(name.to_ref());
             let mods: &str = path.rsplit_once("::").map_or("", |(mods, _)| mods);
-            format!("{}::{}", mods, ref_name(&name.to_ref().type_name()))
+            format!("{}::{}{}", mods, name.to_ref().type_name(), suffix)
         }
         _ => unreachable!("a struct is a named type"),
     }
@@ -321,7 +328,7 @@ fn gen_read(
 }
 
 /// Generates the expression reading the `bit` of the `bytes`.
-fn read_bit(bit: BitLayout, bytes: &str) -> String {
+pub(crate) fn read_bit(bit: BitLayout, bytes: &str) -> String {
     format!(
         "unsafe {{ {}::read_bit_unchecked({}, {}, {}) }}",
         IO, bytes, bit.offset, bit.bit
@@ -339,7 +346,7 @@ fn read_fixed(offset: usize, size: usize, bytes: &str) -> String {
 }
 
 /// Generates the unsafe call to the `read` function for the entry at the `index` of the `bytes`.
-fn read_entry(read: &str, layout: &StructLayout, index: usize, bytes: &str) -> String {
+pub(crate) fn read_entry(read: &str, layout: &StructLayout, index: usize, bytes: &str) -> String {
     format!(
         "{}::{}({}, {}, {}, {})",
         IO, read, bytes, layout.table_offset, index, layout.fixed_size

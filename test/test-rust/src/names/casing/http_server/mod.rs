@@ -2,9 +2,11 @@
 
 pub use http_server::*;
 pub use http_server_buf::*;
+pub use http_server_mut::*;
 pub use http_server_ref::*;
 
 #[allow(clippy::module_inception)]
 mod http_server;
 mod http_server_buf;
+mod http_server_mut;
 mod http_server_ref;

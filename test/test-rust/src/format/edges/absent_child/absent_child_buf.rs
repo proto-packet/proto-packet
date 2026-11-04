@@ -45,6 +45,12 @@ impl AbsentChildBuf {
         unsafe { super::AbsentChildRef::new_unchecked(&self.bytes) }
     }
 
+    /// Gets the mut of the bytes.
+    #[must_use]
+    pub fn as_mut(&mut self) -> super::AbsentChildMut<'_> {
+        unsafe { super::AbsentChildMut::new_unchecked(&mut self.bytes) }
+    }
+
     /// Gets the encoded bytes.
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {

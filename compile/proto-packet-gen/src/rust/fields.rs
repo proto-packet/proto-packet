@@ -132,7 +132,7 @@ impl Field<'_> {
     //! Accessors
 
     /// Gets the name of the field's setter. (ex: `set_x`)
-    fn setter_name(self) -> String {
+    pub(crate) fn setter_name(self) -> String {
         format!("set_{}", self.name)
     }
 

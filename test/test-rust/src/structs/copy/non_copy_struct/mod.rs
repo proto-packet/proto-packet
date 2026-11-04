@@ -2,9 +2,11 @@
 
 pub use non_copy_struct::*;
 pub use non_copy_struct_buf::*;
+pub use non_copy_struct_mut::*;
 pub use non_copy_struct_ref::*;
 
 #[allow(clippy::module_inception)]
 mod non_copy_struct;
 mod non_copy_struct_buf;
+mod non_copy_struct_mut;
 mod non_copy_struct_ref;

@@ -2,9 +2,11 @@
 
 pub use list_node::*;
 pub use list_node_buf::*;
+pub use list_node_mut::*;
 pub use list_node_ref::*;
 
 #[allow(clippy::module_inception)]
 mod list_node;
 mod list_node_buf;
+mod list_node_mut;
 mod list_node_ref;

@@ -2,9 +2,11 @@
 
 pub use pair::*;
 pub use pair_buf::*;
+pub use pair_mut::*;
 pub use pair_ref::*;
 
 #[allow(clippy::module_inception)]
 mod pair;
 mod pair_buf;
+mod pair_mut;
 mod pair_ref;

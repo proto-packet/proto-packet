@@ -2,9 +2,11 @@
 
 pub use entry::*;
 pub use entry_buf::*;
+pub use entry_mut::*;
 pub use entry_ref::*;
 
 #[allow(clippy::module_inception)]
 mod entry;
 mod entry_buf;
+mod entry_mut;
 mod entry_ref;

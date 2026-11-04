@@ -2,9 +2,11 @@
 
 pub use local::*;
 pub use local_buf::*;
+pub use local_mut::*;
 pub use local_ref::*;
 
 #[allow(clippy::module_inception)]
 mod local;
 mod local_buf;
+mod local_mut;
 mod local_ref;

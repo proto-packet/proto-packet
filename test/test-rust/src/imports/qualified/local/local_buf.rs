@@ -45,6 +45,12 @@ impl LocalBuf {
         unsafe { super::LocalRef::new_unchecked(&self.bytes) }
     }
 
+    /// Gets the mut of the bytes.
+    #[must_use]
+    pub fn as_mut(&mut self) -> super::LocalMut<'_> {
+        unsafe { super::LocalMut::new_unchecked(&mut self.bytes) }
+    }
+
     /// Gets the encoded bytes.
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {

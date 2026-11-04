@@ -2,9 +2,11 @@
 
 pub use person::*;
 pub use person_buf::*;
+pub use person_mut::*;
 pub use person_ref::*;
 
 #[allow(clippy::module_inception)]
 mod person;
 mod person_buf;
+mod person_mut;
 mod person_ref;

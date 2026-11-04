@@ -45,6 +45,12 @@ impl DefaultFieldBuf {
         unsafe { super::DefaultFieldRef::new_unchecked(&self.bytes) }
     }
 
+    /// Gets the mut of the bytes.
+    #[must_use]
+    pub fn as_mut(&mut self) -> super::DefaultFieldMut<'_> {
+        unsafe { super::DefaultFieldMut::new_unchecked(&mut self.bytes) }
+    }
+
     /// Gets the encoded bytes.
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {

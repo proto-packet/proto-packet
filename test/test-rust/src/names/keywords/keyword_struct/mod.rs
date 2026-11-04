@@ -2,9 +2,11 @@
 
 pub use keyword_struct::*;
 pub use keyword_struct_buf::*;
+pub use keyword_struct_mut::*;
 pub use keyword_struct_ref::*;
 
 #[allow(clippy::module_inception)]
 mod keyword_struct;
 mod keyword_struct_buf;
+mod keyword_struct_mut;
 mod keyword_struct_ref;

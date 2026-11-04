@@ -45,6 +45,12 @@ impl ChildBuf {
         unsafe { super::ChildRef::new_unchecked(&self.bytes) }
     }
 
+    /// Gets the mut of the bytes.
+    #[must_use]
+    pub fn as_mut(&mut self) -> super::ChildMut<'_> {
+        unsafe { super::ChildMut::new_unchecked(&mut self.bytes) }
+    }
+
     /// Gets the encoded bytes.
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {

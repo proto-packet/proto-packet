@@ -2,9 +2,11 @@
 
 pub use nested_copy::*;
 pub use nested_copy_buf::*;
+pub use nested_copy_mut::*;
 pub use nested_copy_ref::*;
 
 #[allow(clippy::module_inception)]
 mod nested_copy;
 mod nested_copy_buf;
+mod nested_copy_mut;
 mod nested_copy_ref;

@@ -2,9 +2,11 @@
 
 pub use move_struct::*;
 pub use move_struct_buf::*;
+pub use move_struct_mut::*;
 pub use move_struct_ref::*;
 
 #[allow(clippy::module_inception)]
 mod move_struct;
 mod move_struct_buf;
+mod move_struct_mut;
 mod move_struct_ref;

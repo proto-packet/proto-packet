@@ -2,9 +2,11 @@
 
 pub use after::*;
 pub use after_buf::*;
+pub use after_mut::*;
 pub use after_ref::*;
 
 #[allow(clippy::module_inception)]
 mod after;
 mod after_buf;
+mod after_mut;
 mod after_ref;

@@ -1,4 +1,5 @@
 use crate::rust::encoding::IO;
+use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::naming::is_upper_camel_case;
 use code_gen::rust::{
@@ -26,6 +27,7 @@ pub(crate) fn buf_name(type_name: &str) -> String {
 pub(crate) fn gen_struct_buf(structure: &Struct, type_name: &str) -> String {
     let name: String = buf_name(&structure.type_name());
     let ref_name: String = ref_name(&structure.type_name());
+    let mut_name: String = mut_name(&structure.type_name());
     Block::default()
         .with_statement(gen_dec(structure, &name, type_name))
         .with_statement(EmptyLine::default())
@@ -33,7 +35,7 @@ pub(crate) fn gen_struct_buf(structure: &Struct, type_name: &str) -> String {
         .with_statement(EmptyLine::default())
         .with_statement(gen_from(&name, type_name))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_properties(&name, &ref_name))
+        .with_statement(gen_properties(&name, &ref_name, &mut_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_decoding(&name, type_name))
         .to_code()
@@ -104,7 +106,7 @@ fn gen_from(name: &str, type_name: &str) -> ImplBlock {
 }
 
 /// Generates the impl block with the properties of the `Buf` type with the `name`.
-fn gen_properties(name: &str, ref_name: &str) -> ImplBlock {
+fn gen_properties(name: &str, ref_name: &str, mut_name: &str) -> ImplBlock {
     let signature: Signature = Signature::from("as_ref")
         .with_receiver(Receiver::Borrowed)
         .with_result(format!("super::{}<'_>", ref_name));
@@ -115,6 +117,18 @@ fn gen_properties(name: &str, ref_name: &str) -> ImplBlock {
         .with_literal(format!(
             "unsafe {{ super::{}::new_unchecked(&self.bytes) }}",
             ref_name
+        ));
+
+    let signature: Signature = Signature::from("as_mut")
+        .with_receiver(Receiver::BorrowedMut)
+        .with_result(format!("super::{}<'_>", mut_name));
+    let as_mut: Function = Function::from(signature)
+        .with_comment(" Gets the mut of the bytes.")
+        .with_attribute("must_use")
+        .with_access(Access::Public)
+        .with_literal(format!(
+            "unsafe {{ super::{}::new_unchecked(&mut self.bytes) }}",
+            mut_name
         ));
 
     let signature: Signature = Signature::from("as_bytes")
@@ -138,6 +152,7 @@ fn gen_properties(name: &str, ref_name: &str) -> ImplBlock {
     ImplBlock::from(name)
         .with_comment(" Properties")
         .with_function(as_ref)
+        .with_function(as_mut)
         .with_function(as_bytes)
         .with_function(into_bytes)
 }

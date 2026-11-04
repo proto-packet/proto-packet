@@ -2,9 +2,11 @@
 
 pub use self_struct::*;
 pub use self_struct_buf::*;
+pub use self_struct_mut::*;
 pub use self_struct_ref::*;
 
 #[allow(clippy::module_inception)]
 mod self_struct;
 mod self_struct_buf;
+mod self_struct_mut;
 mod self_struct_ref;

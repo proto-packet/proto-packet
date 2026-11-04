@@ -2,9 +2,11 @@
 
 pub use string_field::*;
 pub use string_field_buf::*;
+pub use string_field_mut::*;
 pub use string_field_ref::*;
 
 #[allow(clippy::module_inception)]
 mod string_field;
 mod string_field_buf;
+mod string_field_mut;
 mod string_field_ref;

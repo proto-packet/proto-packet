@@ -2,9 +2,11 @@
 
 pub use result::*;
 pub use result_buf::*;
+pub use result_mut::*;
 pub use result_ref::*;
 
 #[allow(clippy::module_inception)]
 mod result;
 mod result_buf;
+mod result_mut;
 mod result_ref;

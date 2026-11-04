@@ -2,9 +2,11 @@
 
 pub use vec::*;
 pub use vec_buf::*;
+pub use vec_mut::*;
 pub use vec_ref::*;
 
 #[allow(clippy::module_inception)]
 mod vec;
 mod vec_buf;
+mod vec_mut;
 mod vec_ref;

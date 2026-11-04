@@ -2,9 +2,11 @@
 
 pub use optional_copy::*;
 pub use optional_copy_buf::*;
+pub use optional_copy_mut::*;
 pub use optional_copy_ref::*;
 
 #[allow(clippy::module_inception)]
 mod optional_copy;
 mod optional_copy_buf;
+mod optional_copy_mut;
 mod optional_copy_ref;

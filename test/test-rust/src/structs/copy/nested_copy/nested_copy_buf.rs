@@ -45,6 +45,12 @@ impl NestedCopyBuf {
         unsafe { super::NestedCopyRef::new_unchecked(&self.bytes) }
     }
 
+    /// Gets the mut of the bytes.
+    #[must_use]
+    pub fn as_mut(&mut self) -> super::NestedCopyMut<'_> {
+        unsafe { super::NestedCopyMut::new_unchecked(&mut self.bytes) }
+    }
+
     /// Gets the encoded bytes.
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {

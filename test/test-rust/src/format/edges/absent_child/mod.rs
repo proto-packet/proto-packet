@@ -2,9 +2,11 @@
 
 pub use absent_child::*;
 pub use absent_child_buf::*;
+pub use absent_child_mut::*;
 pub use absent_child_ref::*;
 
 #[allow(clippy::module_inception)]
 mod absent_child;
 mod absent_child_buf;
+mod absent_child_mut;
 mod absent_child_ref;

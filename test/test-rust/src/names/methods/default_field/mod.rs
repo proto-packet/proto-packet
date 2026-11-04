@@ -2,9 +2,11 @@
 
 pub use default_field::*;
 pub use default_field_buf::*;
+pub use default_field_mut::*;
 pub use default_field_ref::*;
 
 #[allow(clippy::module_inception)]
 mod default_field;
 mod default_field_buf;
+mod default_field_mut;
 mod default_field_ref;

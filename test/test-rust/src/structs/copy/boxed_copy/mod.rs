@@ -2,9 +2,11 @@
 
 pub use boxed_copy::*;
 pub use boxed_copy_buf::*;
+pub use boxed_copy_mut::*;
 pub use boxed_copy_ref::*;
 
 #[allow(clippy::module_inception)]
 mod boxed_copy;
 mod boxed_copy_buf;
+mod boxed_copy_mut;
 mod boxed_copy_ref;
