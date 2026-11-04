@@ -519,3 +519,129 @@ fn messages_hold_loops_of_structs() {
     let bytes: Vec<u8> = value.encode();
     assert_encoding!(LoopMessage, value, &bytes);
 }
+
+/// Gets an item with an unknown field, a `u8` of 9 with the tag number 7.
+fn item_with_unknown() -> Item {
+    let bytes: [u8; 19] = [
+        2, 0, // count
+        1, 0, 7, 0, // tags
+        2, 0, 0, 0, 3, 0, 0, 0, // ends
+        b'h', b'i', // text
+        9,    // unknown
+        0, 0, // slack
+    ];
+    Item::decode(&bytes).unwrap()
+}
+
+#[test]
+fn known_fields_stay_plain_json() {
+    assert_eq!(
+        serde_json::to_string(&item()).unwrap(),
+        r#"{"text":"hi","id":7}"#
+    );
+    assert_eq!(serde_json::to_string(&Item::default()).unwrap(), "{}");
+    assert_eq!(
+        serde_json::from_str::<Item>(r#"{"id":7,"text":"hi"}"#).unwrap(),
+        item()
+    );
+}
+
+#[test]
+fn json_ignores_nulls_and_other_keys() {
+    assert_eq!(
+        serde_json::from_str::<Item>(r#"{"text":null,"other":{"a":[1]},"id":7}"#).unwrap(),
+        Item::default().with_id(7)
+    );
+}
+
+#[test]
+fn large_integers_round_trip_through_json() {
+    let value: AllKinds = AllKinds::default().with_large(u128::MAX);
+    let json: String = serde_json::to_string(&value).unwrap();
+    assert_eq!(serde_json::from_str::<AllKinds>(&json).unwrap(), value);
+}
+
+#[test]
+fn unknown_fields_are_base_64_json() {
+    assert_eq!(
+        serde_json::to_string(&item_with_unknown()).unwrap(),
+        r#"{"text":"hi","7":"CQ=="}"#
+    );
+
+    let value: Newer = Newer::default()
+        .with_id(1)
+        .with_name("Ada".to_string())
+        .with_nickname("A".to_string())
+        .with_age(36);
+    let older: Older = Older::decode(&value.encode()).unwrap();
+    assert_eq!(
+        serde_json::to_string(&older).unwrap(),
+        r#"{"name":"Ada","age":36,"1":"AQAAAAAAAAA=","3":"QQ=="}"#
+    );
+}
+
+#[test]
+fn unknown_fields_round_trip_through_json() {
+    let bytes: Vec<u8> = newer().encode();
+    let older: Older = Older::decode(&bytes).unwrap();
+    let json: String = serde_json::to_string(&older).unwrap();
+    let reread: Older = serde_json::from_str(&json).unwrap();
+    assert_eq!(reread, older);
+    assert_eq!(reread.encode(), bytes);
+}
+
+#[test]
+fn known_fields_decode_from_base_64() {
+    let older: Older = Older::decode(&newer().encode()).unwrap();
+    let json: String = serde_json::to_string(&older).unwrap();
+    assert_eq!(serde_json::from_str::<Newer>(&json).unwrap(), newer());
+}
+
+#[test]
+fn unknown_fields_can_come_first() {
+    assert_eq!(
+        serde_json::from_str::<Item>(r#"{"7":"CQ==","text":"hi"}"#).unwrap(),
+        item_with_unknown()
+    );
+}
+
+#[test]
+fn empty_unknown_fields_round_trip_through_json() {
+    let value: Item = serde_json::from_str(r#"{"7":""}"#).unwrap();
+    assert_eq!(value.unknown_fields()[0].bytes(), [0_u8; 0]);
+    assert_eq!(serde_json::to_string(&value).unwrap(), r#"{"7":""}"#);
+}
+
+#[test]
+fn nested_unknown_fields_round_trip_through_json() {
+    let inner: Item = item_with_unknown();
+
+    let message: AllKinds = AllKinds::default().with_item(inner.clone());
+    let json: String = serde_json::to_string(&message).unwrap();
+    assert_eq!(json, r#"{"item":{"text":"hi","7":"CQ=="}}"#);
+    assert_eq!(serde_json::from_str::<AllKinds>(&json).unwrap(), message);
+
+    let structure: WithMessages = WithMessages::new("x".to_string(), inner, 8, None);
+    let json: String = serde_json::to_string(&structure).unwrap();
+    assert_eq!(
+        serde_json::from_str::<WithMessages>(&json).unwrap(),
+        structure
+    );
+}
+
+#[test]
+fn json_rejects_invalid_messages() {
+    for json in [
+        r#"{"0":""}"#,                // an invalid tag number
+        r#"{"8192":""}"#,             // a tag number above 8,191
+        r#"{"7":"!!!!"}"#,            // invalid base-64
+        r#"{"7":5}"#,                 // a value that isn't base-64 text
+        r#"{"5":"AQ=="}"#,            // a known field too short for its type
+        r#"{"1":"/w=="}"#,            // a known field that isn't valid UTF-8
+        r#"{"7":"","7":""}"#,         // a duplicate tag number
+        r#"{"text":"a","text":"b"}"#, // a duplicate name
+        r#"{"text":"a","1":"aGk="}"#, // a field by name & by tag number
+    ] {
+        assert!(serde_json::from_str::<Item>(json).is_err(), "{}", json);
+    }
+}

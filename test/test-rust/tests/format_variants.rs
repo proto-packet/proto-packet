@@ -574,3 +574,19 @@ fn json_rejects_invalid_variants() {
         );
     }
 }
+
+#[test]
+fn unknown_fields_in_cases_round_trip_through_json() {
+    let inner: Item = serde_json::from_str(r#"{"text":"hi","7":"CQ=="}"#).unwrap();
+    let value: AllCases = AllCases::Item(inner);
+    let json: String = serde_json::to_string(&value).unwrap();
+    assert_eq!(serde_json::from_str::<AllCases>(&json).unwrap(), value);
+
+    // The value first, so it goes through the buffer.
+    let reordered: &str = r#"{"val":{"text":"hi","7":"CQ=="},"var":"Item"}"#;
+    assert_eq!(serde_json::from_str::<AllCases>(reordered).unwrap(), value);
+    assert_eq!(
+        value.encode(),
+        serde_json::from_str::<AllCases>(&json).unwrap().encode()
+    );
+}
