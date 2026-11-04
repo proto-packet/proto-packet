@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
-use clerr::{Code, Properties, Report};
-use proto_packet_compile::Language;
+use clerr::Report;
+use proto_packet_compile::{Language, path_report};
 use proto_packet_parse::SchemaFileTree;
 use proto_packet_tree::SchemaFile;
 use std::path::{Path, PathBuf};
@@ -94,13 +94,11 @@ fn parse_tree(file: &Path, source: &str) -> Result<SchemaFileTree, Report> {
 /// Reads the schema `file`.
 fn read(file: &Path) -> Result<String, Report> {
     std::fs::read_to_string(file).map_err(|error| {
-        let properties: Properties = Properties::default()
-            .with_property("path", file.display().to_string())
-            .with_property("error", error.to_string());
-        Report::from(Code::error(
+        path_report(
             "CLI_READ_FILE",
             "could not read the schema file",
-        ))
-        .with_entry(properties)
+            file,
+            error,
+        )
     })
 }

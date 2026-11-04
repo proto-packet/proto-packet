@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::path::Path;
 
 /// Creates the report for the `error` with the `path`.
-pub(crate) fn path_report<E>(code: &str, message: &str, path: &Path, error: E) -> Report
+pub fn path_report<E>(code: &str, message: &str, path: &Path, error: E) -> Report
 where
     E: Display,
 {
