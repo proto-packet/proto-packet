@@ -47,6 +47,14 @@ impl PersonMut<'_> {
 impl PersonMut<'_> {
     //! Fields
 
+    /// Sets the field: `name`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the struct unchanged, if the value doesn't fit.
+    pub fn set_name(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
+        proto_packet::io::replace_entry(self.bytes, 0, 1, 0, 5, value)
+    }
+
     /// Sets the field: `age`.
     pub fn set_age(&mut self, value: u8) {
         unsafe { proto_packet::io::write_u8_unchecked(self.bytes, 4, value) };

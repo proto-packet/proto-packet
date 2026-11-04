@@ -46,4 +46,12 @@ impl StringFieldMut<'_> {
 
 impl StringFieldMut<'_> {
     //! Fields
+
+    /// Sets the field: `text`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the struct unchanged, if the value doesn't fit.
+    pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
+        proto_packet::io::replace_entry(self.bytes, 0, 1, 0, 4, value)
+    }
 }

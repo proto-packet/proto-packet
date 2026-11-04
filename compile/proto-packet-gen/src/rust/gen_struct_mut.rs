@@ -163,7 +163,7 @@ fn gen_properties(mut_type: &RustType, ref_name: &str) -> ImplBlock {
         .with_function(as_bytes)
 }
 
-/// Generates the impl block with the method of each of the `fields` that has one.
+/// Generates the impl block with the method of each of the `fields`.
 fn gen_fields(
     typing: Typing<'_>,
     fields: &[Field<'_>],
@@ -172,17 +172,17 @@ fn gen_fields(
 ) -> ImplBlock {
     let mut result: ImplBlock = ImplBlock::from(mut_type.clone()).with_comment(" Fields");
     for (field, field_layout) in fields.iter().zip(&layout.fields) {
-        let function: Option<Function> = if is_struct(typing, *field) {
-            Some(gen_child(*field, *field_layout, layout))
+        let mut function: Function = if is_struct(typing, *field) {
+            gen_child(*field, *field_layout, layout)
+        } else if *field.tag == TypeTag::Special(SpecialType::String) {
+            gen_string_setter(*field, *field_layout, layout)
         } else {
             gen_setter(typing, *field, *field_layout)
         };
-        if let Some(mut function) = function {
-            if field.is_non_snake_case() {
-                function.add_attribute("allow(non_snake_case)");
-            }
-            result.add_function(function);
+        if field.is_non_snake_case() {
+            function.add_attribute("allow(non_snake_case)");
         }
+        result.add_function(function);
     }
     result
 }
@@ -225,13 +225,64 @@ fn gen_child(field: Field<'_>, field_layout: FieldLayout, layout: &StructLayout)
         .with_literal(value)
 }
 
-/// Generates the setter of the `field`.
-fn gen_setter(typing: Typing<'_>, field: Field<'_>, field_layout: FieldLayout) -> Option<Function> {
+/// Generates the setter of the string `field`.
+///
+/// Strings are the last entries of the tail, so the entries it moves are strings, & it never moves
+/// a nested struct. An optional setter has a named lifetime, since `impl Trait` can't elide it.
+fn gen_string_setter(
+    field: Field<'_>,
+    field_layout: FieldLayout,
+    layout: &StructLayout,
+) -> Function {
+    let ValueLayout::Entry { index } = field_layout.value else {
+        unreachable!("a string is an entry")
+    };
+    let (name, param): (String, &str) = if field.is_optional {
+        let name: String = format!("{}<'v>", field.setter_name());
+        (name, "impl Into<Option<&'v str>>")
+    } else {
+        (field.setter_name(), "&str")
+    };
+    let signature: Signature = Signature::from(name)
+        .with_receiver(Receiver::BorrowedMut)
+        .with_param(Var::from(("value", param)))
+        .with_result(format!("Result<(), {}::CapacityError>", IO));
+    let mut function: Function = Function::from(signature)
+        .with_comment(format!(" Sets the field: `{}`.", field.name))
+        .with_comment("")
+        .with_comment(" # Errors")
+        .with_comment(" Returns an error, leaving the struct unchanged, if the value doesn't fit.")
+        .with_access(Access::Public);
+    let replace = |value: &str| -> String {
+        format!(
+            "{}::replace_entry(self.bytes, {}, {}, {}, {}, {})",
+            IO,
+            layout.table_offset,
+            layout.entries.len(),
+            index,
+            layout.fixed_size,
+            value
+        )
+    };
+    let Some(presence) = field_layout.presence else {
+        return function.with_literal(replace("value"));
+    };
+    function.add_semi("let value: Option<&str> = value.into()");
+    function.add_semi(format!("{}?", replace("value.unwrap_or_default()")));
+    function.add_literal(format!(
+        "unsafe {{ {}::write_bit_unchecked(self.bytes, {}, {}, value.is_some()) }};",
+        IO, presence.offset, presence.bit
+    ));
+    function.with_literal("Ok(())")
+}
+
+/// Generates the setter of the scalar `field`.
+fn gen_setter(typing: Typing<'_>, field: Field<'_>, field_layout: FieldLayout) -> Function {
     let value_type: String = match field.tag {
         TypeTag::Primitive(primitive) => primitive.name().to_string(),
         TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
         TypeTag::Named(name) => type_path(name.to_ref()),
-        TypeTag::Special(SpecialType::String) => return None,
+        TypeTag::Special(SpecialType::String) => unreachable!("a string has its own setter"),
     };
     let param: String = if field.is_optional {
         format!("impl Into<Option<{}>>", value_type)
@@ -254,7 +305,7 @@ fn gen_setter(typing: Typing<'_>, field: Field<'_>, field_layout: FieldLayout) -
             IO, presence.offset, presence.bit
         ));
     }
-    Some(function)
+    function
 }
 
 /// Generates the statement writing the `value` of the `field`.

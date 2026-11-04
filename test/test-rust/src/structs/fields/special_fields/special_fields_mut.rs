@@ -51,4 +51,12 @@ impl SpecialFieldsMut<'_> {
     pub fn set_id(&mut self, value: proto_packet::types::Uuid) {
         unsafe { proto_packet::io::write_bytes_unchecked(self.bytes, 0, *value.as_bytes()) };
     }
+
+    /// Sets the field: `text`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the struct unchanged, if the value doesn't fit.
+    pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
+        proto_packet::io::replace_entry(self.bytes, 16, 1, 0, 20, value)
+    }
 }

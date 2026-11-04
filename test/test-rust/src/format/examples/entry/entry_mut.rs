@@ -51,4 +51,12 @@ impl EntryMut<'_> {
     pub fn set_id(&mut self, value: u64) {
         unsafe { proto_packet::io::write_u64_unchecked(self.bytes, 0, value) };
     }
+
+    /// Sets the field: `text`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the struct unchanged, if the value doesn't fit.
+    pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
+        proto_packet::io::replace_entry(self.bytes, 8, 1, 0, 12, value)
+    }
 }

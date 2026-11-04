@@ -70,4 +70,12 @@ impl AbsentChildMut<'_> {
             )
         }
     }
+
+    /// Sets the field: `text`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the struct unchanged, if the value doesn't fit.
+    pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
+        proto_packet::io::replace_entry(self.bytes, 0, 3, 2, 16, value)
+    }
 }

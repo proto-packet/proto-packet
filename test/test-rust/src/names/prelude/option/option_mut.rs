@@ -47,6 +47,20 @@ impl OptionMut<'_> {
 impl OptionMut<'_> {
     //! Fields
 
+    /// Sets the field: `text`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the struct unchanged, if the value doesn't fit.
+    pub fn set_text<'v>(
+        &mut self,
+        value: impl Into<Option<&'v str>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        let value: Option<&str> = value.into();
+        proto_packet::io::replace_entry(self.bytes, 0, 2, 1, 12, value.unwrap_or_default())?;
+        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 8, 0, value.is_some()) };
+        Ok(())
+    }
+
     /// Gets the mut of the field: `next`.
     #[must_use]
     pub fn next_mut(&mut self) -> Option<crate::names::prelude::OptionMut<'_>> {
