@@ -51,6 +51,27 @@ pub unsafe fn read_entry_unchecked(bytes: &[u8], table: usize, index: usize, tai
     unsafe { bytes.get_unchecked(tail + start..tail + end) }
 }
 
+/// Reads the tail entry at the `index` mutably, of the end table at the `table`, for the tail at the
+/// `tail`.
+///
+/// # Safety
+/// The end table must be valid & within the `bytes`, & the `tail` must be within the `bytes`.
+#[must_use]
+pub unsafe fn read_entry_mut_unchecked(
+    bytes: &mut [u8],
+    table: usize,
+    index: usize,
+    tail: usize,
+) -> &mut [u8] {
+    let start: usize = if index == 0 {
+        0
+    } else {
+        unsafe { read_u32_unchecked(bytes, table + (index - 1) * 4) as usize }
+    };
+    let end: usize = unsafe { read_u32_unchecked(bytes, table + index * 4) as usize };
+    unsafe { bytes.get_unchecked_mut(tail + start..tail + end) }
+}
+
 /// Reads the string entry at the `index`, of the end table at the `table`, for the tail at the
 /// `tail`.
 ///
