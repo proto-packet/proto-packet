@@ -5,6 +5,7 @@ pub use http_server_buf::*;
 pub use http_server_mut::*;
 pub use http_server_ref::*;
 pub use http_server_view::*;
+pub use http_server_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod http_server;
@@ -12,3 +13,4 @@ mod http_server_buf;
 mod http_server_mut;
 mod http_server_ref;
 mod http_server_view;
+mod http_server_view_mut;

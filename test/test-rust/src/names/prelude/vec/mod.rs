@@ -5,6 +5,7 @@ pub use vec_buf::*;
 pub use vec_mut::*;
 pub use vec_ref::*;
 pub use vec_view::*;
+pub use vec_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod vec;
@@ -12,3 +13,4 @@ mod vec_buf;
 mod vec_mut;
 mod vec_ref;
 mod vec_view;
+mod vec_view_mut;

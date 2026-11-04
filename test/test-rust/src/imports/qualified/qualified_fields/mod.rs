@@ -5,6 +5,7 @@ pub use qualified_fields_buf::*;
 pub use qualified_fields_mut::*;
 pub use qualified_fields_ref::*;
 pub use qualified_fields_view::*;
+pub use qualified_fields_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod qualified_fields;
@@ -12,3 +13,4 @@ mod qualified_fields_buf;
 mod qualified_fields_mut;
 mod qualified_fields_ref;
 mod qualified_fields_view;
+mod qualified_fields_view_mut;

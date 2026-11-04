@@ -5,6 +5,7 @@ pub use entry_buf::*;
 pub use entry_mut::*;
 pub use entry_ref::*;
 pub use entry_view::*;
+pub use entry_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod entry;
@@ -12,3 +13,4 @@ mod entry_buf;
 mod entry_mut;
 mod entry_ref;
 mod entry_view;
+mod entry_view_mut;

@@ -5,6 +5,7 @@ pub use line_buf::*;
 pub use line_mut::*;
 pub use line_ref::*;
 pub use line_view::*;
+pub use line_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod line;
@@ -12,3 +13,4 @@ mod line_buf;
 mod line_mut;
 mod line_ref;
 mod line_view;
+mod line_view_mut;

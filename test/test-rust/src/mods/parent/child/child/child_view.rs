@@ -12,6 +12,12 @@ impl<V: ChildView> ChildView for &V {
     }
 }
 
+impl<V: ChildView> ChildView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl ChildView for super::Child {
     fn value(&self) -> u32 {
         self.value()

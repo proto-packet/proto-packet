@@ -19,6 +19,16 @@ impl<V: EntryView> EntryView for &V {
     }
 }
 
+impl<V: EntryView> EntryView for &mut V {
+    fn id(&self) -> u64 {
+        (**self).id()
+    }
+
+    fn text(&self) -> &str {
+        (**self).text()
+    }
+}
+
 impl EntryView for super::Entry {
     fn id(&self) -> u64 {
         self.id()

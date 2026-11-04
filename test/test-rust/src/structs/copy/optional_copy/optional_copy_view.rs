@@ -19,6 +19,16 @@ impl<V: OptionalCopyView> OptionalCopyView for &V {
     }
 }
 
+impl<V: OptionalCopyView> OptionalCopyView for &mut V {
+    fn count(&self) -> Option<u32> {
+        (**self).count()
+    }
+
+    fn point(&self) -> Option<impl crate::types::PointView> {
+        (**self).point()
+    }
+}
+
 impl OptionalCopyView for super::OptionalCopy {
     fn count(&self) -> Option<u32> {
         self.count()

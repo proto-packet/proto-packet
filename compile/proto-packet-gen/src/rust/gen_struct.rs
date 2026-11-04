@@ -8,6 +8,7 @@ use crate::rust::gen_struct_buf::{buf_name, gen_struct_buf};
 use crate::rust::gen_struct_mut::{check_mut_names, gen_struct_mut, is_struct, mut_name};
 use crate::rust::gen_struct_ref::{gen_struct_ref, ref_name};
 use crate::rust::gen_struct_view::{gen_struct_view, view_name};
+use crate::rust::gen_struct_view_mut::{gen_struct_view_mut, view_mut_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::typing::Typing;
@@ -97,6 +98,7 @@ pub fn gen_struct(
         check_type_name(project, mod_path, &buf_name(&structure.type_name()))?;
         check_type_name(project, mod_path, &mut_name(&structure.type_name()))?;
         check_type_name(project, mod_path, &view_name(&structure.type_name()))?;
+        check_type_name(project, mod_path, &view_mut_name(&structure.type_name()))?;
         check_mut_names(
             typing,
             &format!("{}.{}", mod_path, structure.type_name()),
@@ -131,6 +133,10 @@ pub fn gen_struct(
         files.push(StructFile {
             suffix: "_view",
             code: gen_struct_view(typing, structure, &fields, &type_name),
+        });
+        files.push(StructFile {
+            suffix: "_view_mut",
+            code: gen_struct_view_mut(typing, structure, &fields, &type_name),
         });
     }
     Ok(files)

@@ -40,6 +40,28 @@ impl<V: QualifiedFieldsView> QualifiedFieldsView for &V {
     }
 }
 
+impl<V: QualifiedFieldsView> QualifiedFieldsView for &mut V {
+    fn point(&self) -> impl crate::types::PointView {
+        (**self).point()
+    }
+
+    fn child(&self) -> impl crate::mods::parent::child::ChildView {
+        (**self).child()
+    }
+
+    fn raw(&self) -> impl crate::names::r#move::MoveStructView {
+        (**self).raw()
+    }
+
+    fn non_raw(&self) -> impl crate::names::r#type::self_::SelfStructView {
+        (**self).non_raw()
+    }
+
+    fn local(&self) -> impl crate::imports::qualified::LocalView {
+        (**self).local()
+    }
+}
+
 impl QualifiedFieldsView for super::QualifiedFields {
     fn point(&self) -> impl crate::types::PointView {
         self.point()

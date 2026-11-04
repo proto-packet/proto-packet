@@ -12,6 +12,12 @@ impl<V: MoveStructView> MoveStructView for &V {
     }
 }
 
+impl<V: MoveStructView> MoveStructView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl MoveStructView for super::MoveStruct {
     fn value(&self) -> u32 {
         self.value()

@@ -26,6 +26,20 @@ impl<V: LineView> LineView for &V {
     }
 }
 
+impl<V: LineView> LineView for &mut V {
+    fn start(&self) -> impl crate::format::examples::PointView {
+        (**self).start()
+    }
+
+    fn end(&self) -> impl crate::format::examples::PointView {
+        (**self).end()
+    }
+
+    fn width(&self) -> u8 {
+        (**self).width()
+    }
+}
+
 impl LineView for super::Line {
     fn start(&self) -> impl crate::format::examples::PointView {
         self.start()

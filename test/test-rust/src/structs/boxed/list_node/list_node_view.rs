@@ -19,6 +19,16 @@ impl<V: ListNodeView> ListNodeView for &V {
     }
 }
 
+impl<V: ListNodeView> ListNodeView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+
+    fn next(&self) -> Option<impl crate::structs::boxed::ListNodeView> {
+        (**self).next()
+    }
+}
+
 impl ListNodeView for super::ListNode {
     fn value(&self) -> u32 {
         self.value()

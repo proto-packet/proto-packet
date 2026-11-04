@@ -19,6 +19,16 @@ impl<V: PointView> PointView for &V {
     }
 }
 
+impl<V: PointView> PointView for &mut V {
+    fn x(&self) -> u32 {
+        (**self).x()
+    }
+
+    fn y(&self) -> u32 {
+        (**self).y()
+    }
+}
+
 impl PointView for super::Point {
     fn x(&self) -> u32 {
         self.x()

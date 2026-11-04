@@ -12,6 +12,12 @@ impl<V: StringFieldView> StringFieldView for &V {
     }
 }
 
+impl<V: StringFieldView> StringFieldView for &mut V {
+    fn text(&self) -> &str {
+        (**self).text()
+    }
+}
+
 impl StringFieldView for super::StringField {
     fn text(&self) -> &str {
         self.text()

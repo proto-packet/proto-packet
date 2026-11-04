@@ -40,6 +40,28 @@ impl<V: StringsView> StringsView for &V {
     }
 }
 
+impl<V: StringsView> StringsView for &mut V {
+    fn number(&self) -> u8 {
+        (**self).number()
+    }
+
+    fn first(&self) -> &str {
+        (**self).first()
+    }
+
+    fn entry(&self) -> impl crate::format::examples::EntryView {
+        (**self).entry()
+    }
+
+    fn second(&self) -> Option<&str> {
+        (**self).second()
+    }
+
+    fn third(&self) -> &str {
+        (**self).third()
+    }
+}
+
 impl StringsView for super::Strings {
     fn number(&self) -> u8 {
         self.number()

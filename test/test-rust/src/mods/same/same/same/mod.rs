@@ -5,6 +5,7 @@ pub use same_buf::*;
 pub use same_mut::*;
 pub use same_ref::*;
 pub use same_view::*;
+pub use same_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod same;
@@ -12,3 +13,4 @@ mod same_buf;
 mod same_mut;
 mod same_ref;
 mod same_view;
+mod same_view_mut;

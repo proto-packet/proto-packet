@@ -12,6 +12,12 @@ impl<V: AfterView> AfterView for &V {
     }
 }
 
+impl<V: AfterView> AfterView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl AfterView for super::After {
     fn value(&self) -> u32 {
         self.value()

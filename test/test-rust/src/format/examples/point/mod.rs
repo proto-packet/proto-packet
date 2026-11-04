@@ -5,6 +5,7 @@ pub use point_buf::*;
 pub use point_mut::*;
 pub use point_ref::*;
 pub use point_view::*;
+pub use point_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod point;
@@ -12,3 +13,4 @@ mod point_buf;
 mod point_mut;
 mod point_ref;
 mod point_view;
+mod point_view_mut;

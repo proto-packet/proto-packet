@@ -5,6 +5,7 @@ pub use self_struct_buf::*;
 pub use self_struct_mut::*;
 pub use self_struct_ref::*;
 pub use self_struct_view::*;
+pub use self_struct_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod self_struct;
@@ -12,3 +13,4 @@ mod self_struct_buf;
 mod self_struct_mut;
 mod self_struct_ref;
 mod self_struct_view;
+mod self_struct_view_mut;

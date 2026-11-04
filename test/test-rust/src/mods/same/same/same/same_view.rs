@@ -12,6 +12,12 @@ impl<V: SameView> SameView for &V {
     }
 }
 
+impl<V: SameView> SameView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl SameView for super::Same {
     fn value(&self) -> u32 {
         self.value()

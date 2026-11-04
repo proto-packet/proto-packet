@@ -12,6 +12,12 @@ impl<V: SelfStructView> SelfStructView for &V {
     }
 }
 
+impl<V: SelfStructView> SelfStructView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl SelfStructView for super::SelfStruct {
     fn value(&self) -> u32 {
         self.value()

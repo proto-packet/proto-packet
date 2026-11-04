@@ -5,6 +5,8 @@ pub trait EmptyStructView {}
 
 impl<V: EmptyStructView> EmptyStructView for &V {}
 
+impl<V: EmptyStructView> EmptyStructView for &mut V {}
+
 impl EmptyStructView for super::EmptyStruct {}
 
 impl EmptyStructView for super::EmptyStructRef<'_> {}

@@ -12,6 +12,12 @@ impl<V: LocalView> LocalView for &V {
     }
 }
 
+impl<V: LocalView> LocalView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl LocalView for super::Local {
     fn value(&self) -> u32 {
         self.value()

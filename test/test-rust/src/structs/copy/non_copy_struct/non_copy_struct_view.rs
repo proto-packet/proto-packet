@@ -12,6 +12,12 @@ impl<V: NonCopyStructView> NonCopyStructView for &V {
     }
 }
 
+impl<V: NonCopyStructView> NonCopyStructView for &mut V {
+    fn person(&self) -> impl crate::types::PersonView {
+        (**self).person()
+    }
+}
+
 impl NonCopyStructView for super::NonCopyStruct {
     fn person(&self) -> impl crate::types::PersonView {
         self.person()

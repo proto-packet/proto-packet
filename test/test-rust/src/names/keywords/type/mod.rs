@@ -5,6 +5,7 @@ pub use type_buf::*;
 pub use type_mut::*;
 pub use type_ref::*;
 pub use type_view::*;
+pub use type_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod r#type;
@@ -12,3 +13,4 @@ mod type_buf;
 mod type_mut;
 mod type_ref;
 mod type_view;
+mod type_view_mut;

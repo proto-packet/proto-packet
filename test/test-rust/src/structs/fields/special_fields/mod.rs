@@ -5,6 +5,7 @@ pub use special_fields_buf::*;
 pub use special_fields_mut::*;
 pub use special_fields_ref::*;
 pub use special_fields_view::*;
+pub use special_fields_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod special_fields;
@@ -12,3 +13,4 @@ mod special_fields_buf;
 mod special_fields_mut;
 mod special_fields_ref;
 mod special_fields_view;
+mod special_fields_view_mut;

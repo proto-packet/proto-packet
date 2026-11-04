@@ -19,6 +19,16 @@ impl<V: OptionView> OptionView for &V {
     }
 }
 
+impl<V: OptionView> OptionView for &mut V {
+    fn text(&self) -> Option<&str> {
+        (**self).text()
+    }
+
+    fn next(&self) -> Option<impl crate::names::prelude::OptionView> {
+        (**self).next()
+    }
+}
+
 impl OptionView for super::Option {
     fn text(&self) -> Option<&str> {
         self.text()

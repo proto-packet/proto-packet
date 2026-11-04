@@ -40,6 +40,28 @@ impl<V: OptView> OptView for &V {
     }
 }
 
+impl<V: OptView> OptView for &mut V {
+    fn a(&self) -> bool {
+        (**self).a()
+    }
+
+    fn b(&self) -> Option<u32> {
+        (**self).b()
+    }
+
+    fn c(&self) -> Option<bool> {
+        (**self).c()
+    }
+
+    fn d(&self) -> Option<&str> {
+        (**self).d()
+    }
+
+    fn e(&self) -> Option<crate::format::examples::Color> {
+        (**self).e()
+    }
+}
+
 impl OptView for super::Opt {
     fn a(&self) -> bool {
         self.a()

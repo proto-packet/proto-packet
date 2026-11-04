@@ -47,6 +47,32 @@ impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &V {
     }
 }
 
+impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &mut V {
+    fn boolean(&self) -> bool {
+        (**self).boolean()
+    }
+
+    fn unsigned8(&self) -> u8 {
+        (**self).unsigned8()
+    }
+
+    fn unsigned16(&self) -> u16 {
+        (**self).unsigned16()
+    }
+
+    fn unsigned32(&self) -> u32 {
+        (**self).unsigned32()
+    }
+
+    fn unsigned64(&self) -> u64 {
+        (**self).unsigned64()
+    }
+
+    fn unsigned128(&self) -> u128 {
+        (**self).unsigned128()
+    }
+}
+
 impl PrimitiveFieldsView for super::PrimitiveFields {
     fn boolean(&self) -> bool {
         self.boolean()

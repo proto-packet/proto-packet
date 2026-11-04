@@ -12,6 +12,12 @@ impl<V: BeforeView> BeforeView for &V {
     }
 }
 
+impl<V: BeforeView> BeforeView for &mut V {
+    fn after(&self) -> impl crate::imports::local::AfterView {
+        (**self).after()
+    }
+}
+
 impl BeforeView for super::Before {
     fn after(&self) -> impl crate::imports::local::AfterView {
         self.after()

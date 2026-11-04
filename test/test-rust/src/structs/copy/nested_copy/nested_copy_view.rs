@@ -12,6 +12,12 @@ impl<V: NestedCopyView> NestedCopyView for &V {
     }
 }
 
+impl<V: NestedCopyView> NestedCopyView for &mut V {
+    fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
+        (**self).fields()
+    }
+}
+
 impl NestedCopyView for super::NestedCopy {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
         self.fields()

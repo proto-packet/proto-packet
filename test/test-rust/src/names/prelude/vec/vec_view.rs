@@ -12,6 +12,12 @@ impl<V: VecView> VecView for &V {
     }
 }
 
+impl<V: VecView> VecView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl VecView for super::Vec {
     fn value(&self) -> u32 {
         self.value()

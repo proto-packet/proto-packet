@@ -40,6 +40,28 @@ impl<V: FixedKindsView> FixedKindsView for &V {
     }
 }
 
+impl<V: FixedKindsView> FixedKindsView for &mut V {
+    fn id(&self) -> proto_packet::types::Uuid {
+        (**self).id()
+    }
+
+    fn color(&self) -> crate::format::examples::Color {
+        (**self).color()
+    }
+
+    fn point(&self) -> impl crate::format::examples::PointView {
+        (**self).point()
+    }
+
+    fn maybe_point(&self) -> Option<impl crate::format::examples::PointView> {
+        (**self).maybe_point()
+    }
+
+    fn maybe_color(&self) -> Option<crate::format::examples::Color> {
+        (**self).maybe_color()
+    }
+}
+
 impl FixedKindsView for super::FixedKinds {
     fn id(&self) -> proto_packet::types::Uuid {
         self.id()

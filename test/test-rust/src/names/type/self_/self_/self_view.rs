@@ -12,6 +12,12 @@ impl<V: SelfView> SelfView for &V {
     }
 }
 
+impl<V: SelfView> SelfView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl SelfView for super::Self_ {
     fn value(&self) -> u32 {
         self.value()

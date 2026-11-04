@@ -12,6 +12,12 @@ impl<V: TypeView> TypeView for &V {
     }
 }
 
+impl<V: TypeView> TypeView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl TypeView for super::Type {
     fn value(&self) -> u32 {
         self.value()

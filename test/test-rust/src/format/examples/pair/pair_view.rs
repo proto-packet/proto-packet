@@ -26,6 +26,20 @@ impl<V: PairView> PairView for &V {
     }
 }
 
+impl<V: PairView> PairView for &mut V {
+    fn first(&self) -> impl crate::format::examples::EntryView {
+        (**self).first()
+    }
+
+    fn second(&self) -> impl crate::format::examples::EntryView {
+        (**self).second()
+    }
+
+    fn note(&self) -> &str {
+        (**self).note()
+    }
+}
+
 impl PairView for super::Pair {
     fn first(&self) -> impl crate::format::examples::EntryView {
         self.first()

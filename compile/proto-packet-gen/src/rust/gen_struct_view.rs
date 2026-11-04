@@ -23,7 +23,7 @@ pub(crate) fn view_name(type_name: &str) -> String {
 ///
 /// It has a getter for each field, so generic code can read any form of the struct. A nested struct
 /// is an `impl` of its own `View` trait, since each form has its own type for it. The trait is also
-/// implemented for references, since the struct's own getters can return one.
+/// implemented for references, since the struct's own getters & accessors can return one.
 pub(crate) fn gen_struct_view(
     typing: Typing<'_>,
     structure: &Struct,
@@ -42,6 +42,13 @@ pub(crate) fn gen_struct_view(
         .with_statement(EmptyLine::default())
         .with_statement(
             gen_impl(typing, fields, &name, "&V", |getter| {
+                format!("(**self).{}", getter)
+            })
+            .with_generic(generic.as_str()),
+        )
+        .with_statement(EmptyLine::default())
+        .with_statement(
+            gen_impl(typing, fields, &name, "&mut V", |getter| {
                 format!("(**self).{}", getter)
             })
             .with_generic(generic.as_str()),

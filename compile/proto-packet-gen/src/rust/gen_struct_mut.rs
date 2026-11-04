@@ -233,10 +233,48 @@ pub(crate) fn gen_child(
         .with_literal(value)
 }
 
+/// Gets the type of a value of the scalar or string `field`.
+fn setter_type(field: Field<'_>) -> String {
+    match field.tag {
+        TypeTag::Primitive(primitive) => primitive.name().to_string(),
+        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
+        TypeTag::Special(SpecialType::String) => "&str".to_string(),
+        TypeTag::Named(name) => type_path(name.to_ref()),
+    }
+}
+
+/// Generates the signature of the setter of the scalar or string `field`.
+///
+/// An optional string has a named lifetime, since `impl Trait` can't elide it.
+pub(crate) fn gen_setter_signature(field: Field<'_>) -> Signature {
+    let is_string: bool = *field.tag == TypeTag::Special(SpecialType::String);
+    let (name, param): (String, String) = if field.is_optional && is_string {
+        (
+            format!("{}<'v>", field.setter_name()),
+            "impl Into<Option<&'v str>>".to_string(),
+        )
+    } else if field.is_optional {
+        (
+            field.setter_name(),
+            format!("impl Into<Option<{}>>", setter_type(field)),
+        )
+    } else {
+        (field.setter_name(), setter_type(field))
+    };
+    let signature: Signature = Signature::from(name)
+        .with_receiver(Receiver::BorrowedMut)
+        .with_param(Var::from(("value", param.as_str())));
+    if is_string {
+        signature.with_result(format!("Result<(), {}::CapacityError>", IO))
+    } else {
+        signature
+    }
+}
+
 /// Generates the setter of the string `field`.
 ///
 /// Strings are the last entries of the tail, so the entries it moves are strings, & it never moves
-/// a nested struct. An optional setter has a named lifetime, since `impl Trait` can't elide it.
+/// a nested struct.
 fn gen_string_setter(
     field: Field<'_>,
     field_layout: FieldLayout,
@@ -245,17 +283,7 @@ fn gen_string_setter(
     let ValueLayout::Entry { index } = field_layout.value else {
         unreachable!("a string is an entry")
     };
-    let (name, param): (String, &str) = if field.is_optional {
-        let name: String = format!("{}<'v>", field.setter_name());
-        (name, "impl Into<Option<&'v str>>")
-    } else {
-        (field.setter_name(), "&str")
-    };
-    let signature: Signature = Signature::from(name)
-        .with_receiver(Receiver::BorrowedMut)
-        .with_param(Var::from(("value", param)))
-        .with_result(format!("Result<(), {}::CapacityError>", IO));
-    let mut function: Function = Function::from(signature)
+    let mut function: Function = Function::from(gen_setter_signature(field))
         .with_comment(format!(" Sets the field: `{}`.", field.name))
         .with_comment("")
         .with_comment(" # Errors")
@@ -286,25 +314,14 @@ fn gen_string_setter(
 
 /// Generates the setter of the scalar `field`.
 fn gen_setter(typing: Typing<'_>, field: Field<'_>, field_layout: FieldLayout) -> Function {
-    let value_type: String = match field.tag {
-        TypeTag::Primitive(primitive) => primitive.name().to_string(),
-        TypeTag::Special(SpecialType::Uuid) => "proto_packet::types::Uuid".to_string(),
-        TypeTag::Named(name) => type_path(name.to_ref()),
-        TypeTag::Special(SpecialType::String) => unreachable!("a string has its own setter"),
-    };
-    let param: String = if field.is_optional {
-        format!("impl Into<Option<{}>>", value_type)
-    } else {
-        value_type.clone()
-    };
-    let signature: Signature = Signature::from(field.setter_name())
-        .with_receiver(Receiver::BorrowedMut)
-        .with_param(Var::from(("value", param.as_str())));
-    let mut function: Function = Function::from(signature)
+    let mut function: Function = Function::from(gen_setter_signature(field))
         .with_comment(format!(" Sets the field: `{}`.", field.name))
         .with_access(Access::Public);
     if field.is_optional {
-        function.add_semi(format!("let value: Option<{}> = value.into()", value_type));
+        function.add_semi(format!(
+            "let value: Option<{}> = value.into()",
+            setter_type(field)
+        ));
     }
     function.add_literal(gen_write(typing, field, field_layout));
     if let Some(presence) = field_layout.presence {

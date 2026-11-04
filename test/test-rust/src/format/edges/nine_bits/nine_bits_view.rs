@@ -68,6 +68,44 @@ impl<V: NineBitsView> NineBitsView for &V {
     }
 }
 
+impl<V: NineBitsView> NineBitsView for &mut V {
+    fn a(&self) -> bool {
+        (**self).a()
+    }
+
+    fn b(&self) -> bool {
+        (**self).b()
+    }
+
+    fn c(&self) -> bool {
+        (**self).c()
+    }
+
+    fn d(&self) -> bool {
+        (**self).d()
+    }
+
+    fn e(&self) -> bool {
+        (**self).e()
+    }
+
+    fn f(&self) -> bool {
+        (**self).f()
+    }
+
+    fn g(&self) -> bool {
+        (**self).g()
+    }
+
+    fn h(&self) -> bool {
+        (**self).h()
+    }
+
+    fn i(&self) -> bool {
+        (**self).i()
+    }
+}
+
 impl NineBitsView for super::NineBits {
     fn a(&self) -> bool {
         self.a()

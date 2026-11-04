@@ -33,6 +33,24 @@ impl<V: MixedView> MixedView for &V {
     }
 }
 
+impl<V: MixedView> MixedView for &mut V {
+    fn a(&self) -> u8 {
+        (**self).a()
+    }
+
+    fn b(&self) -> u64 {
+        (**self).b()
+    }
+
+    fn c(&self) -> u16 {
+        (**self).c()
+    }
+
+    fn d(&self) -> bool {
+        (**self).d()
+    }
+}
+
 impl MixedView for super::Mixed {
     fn a(&self) -> u8 {
         self.a()

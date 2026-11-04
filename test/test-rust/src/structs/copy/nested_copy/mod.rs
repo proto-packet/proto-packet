@@ -5,6 +5,7 @@ pub use nested_copy_buf::*;
 pub use nested_copy_mut::*;
 pub use nested_copy_ref::*;
 pub use nested_copy_view::*;
+pub use nested_copy_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod nested_copy;
@@ -12,3 +13,4 @@ mod nested_copy_buf;
 mod nested_copy_mut;
 mod nested_copy_ref;
 mod nested_copy_view;
+mod nested_copy_view_mut;

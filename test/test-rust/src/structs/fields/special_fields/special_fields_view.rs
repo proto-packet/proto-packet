@@ -19,6 +19,16 @@ impl<V: SpecialFieldsView> SpecialFieldsView for &V {
     }
 }
 
+impl<V: SpecialFieldsView> SpecialFieldsView for &mut V {
+    fn id(&self) -> proto_packet::types::Uuid {
+        (**self).id()
+    }
+
+    fn text(&self) -> &str {
+        (**self).text()
+    }
+}
+
 impl SpecialFieldsView for super::SpecialFields {
     fn id(&self) -> proto_packet::types::Uuid {
         self.id()

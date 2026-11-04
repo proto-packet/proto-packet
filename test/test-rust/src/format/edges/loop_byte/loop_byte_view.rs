@@ -19,6 +19,16 @@ impl<V: LoopByteView> LoopByteView for &V {
     }
 }
 
+impl<V: LoopByteView> LoopByteView for &mut V {
+    fn value(&self) -> u8 {
+        (**self).value()
+    }
+
+    fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
+        (**self).next()
+    }
+}
+
 impl LoopByteView for super::LoopByte {
     fn value(&self) -> u8 {
         self.value()

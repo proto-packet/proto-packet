@@ -5,6 +5,7 @@ pub use person_buf::*;
 pub use person_mut::*;
 pub use person_ref::*;
 pub use person_view::*;
+pub use person_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod person;
@@ -12,3 +13,4 @@ mod person_buf;
 mod person_mut;
 mod person_ref;
 mod person_view;
+mod person_view_mut;

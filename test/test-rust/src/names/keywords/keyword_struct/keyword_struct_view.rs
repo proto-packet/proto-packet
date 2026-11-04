@@ -26,6 +26,20 @@ impl<V: KeywordStructView> KeywordStructView for &V {
     }
 }
 
+impl<V: KeywordStructView> KeywordStructView for &mut V {
+    fn r#type(&self) -> u32 {
+        (**self).r#type()
+    }
+
+    fn r#match(&self) -> &str {
+        (**self).r#match()
+    }
+
+    fn self_(&self) -> u32 {
+        (**self).self_()
+    }
+}
+
 impl KeywordStructView for super::KeywordStruct {
     fn r#type(&self) -> u32 {
         self.r#type()

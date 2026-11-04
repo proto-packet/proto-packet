@@ -12,6 +12,12 @@ impl<V: BoxedCopyView> BoxedCopyView for &V {
     }
 }
 
+impl<V: BoxedCopyView> BoxedCopyView for &mut V {
+    fn point(&self) -> impl crate::types::PointView {
+        (**self).point()
+    }
+}
+
 impl BoxedCopyView for super::BoxedCopy {
     fn point(&self) -> impl crate::types::PointView {
         self.point()

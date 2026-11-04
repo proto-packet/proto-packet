@@ -13,6 +13,12 @@ impl<V: HTTPServerView> HTTPServerView for &V {
     }
 }
 
+impl<V: HTTPServerView> HTTPServerView for &mut V {
+    fn maxConnections(&self) -> u32 {
+        (**self).maxConnections()
+    }
+}
+
 impl HTTPServerView for super::HTTPServer {
     fn maxConnections(&self) -> u32 {
         self.maxConnections()

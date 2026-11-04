@@ -19,6 +19,16 @@ impl<V: PersonView> PersonView for &V {
     }
 }
 
+impl<V: PersonView> PersonView for &mut V {
+    fn name(&self) -> &str {
+        (**self).name()
+    }
+
+    fn age(&self) -> u8 {
+        (**self).age()
+    }
+}
+
 impl PersonView for super::Person {
     fn name(&self) -> &str {
         self.name()

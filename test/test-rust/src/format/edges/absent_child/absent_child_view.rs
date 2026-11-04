@@ -26,6 +26,20 @@ impl<V: AbsentChildView> AbsentChildView for &V {
     }
 }
 
+impl<V: AbsentChildView> AbsentChildView for &mut V {
+    fn first(&self) -> Option<impl crate::format::examples::EntryView> {
+        (**self).first()
+    }
+
+    fn second(&self) -> impl crate::format::examples::EntryView {
+        (**self).second()
+    }
+
+    fn text(&self) -> &str {
+        (**self).text()
+    }
+}
+
 impl AbsentChildView for super::AbsentChild {
     fn first(&self) -> Option<impl crate::format::examples::EntryView> {
         self.first()

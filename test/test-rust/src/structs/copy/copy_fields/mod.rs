@@ -5,6 +5,7 @@ pub use copy_fields_buf::*;
 pub use copy_fields_mut::*;
 pub use copy_fields_ref::*;
 pub use copy_fields_view::*;
+pub use copy_fields_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod copy_fields;
@@ -12,3 +13,4 @@ mod copy_fields_buf;
 mod copy_fields_mut;
 mod copy_fields_ref;
 mod copy_fields_view;
+mod copy_fields_view_mut;

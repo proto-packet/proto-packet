@@ -5,6 +5,7 @@ pub use option_buf::*;
 pub use option_mut::*;
 pub use option_ref::*;
 pub use option_view::*;
+pub use option_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod option;
@@ -12,3 +13,4 @@ mod option_buf;
 mod option_mut;
 mod option_ref;
 mod option_view;
+mod option_view_mut;

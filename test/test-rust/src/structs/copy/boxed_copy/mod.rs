@@ -5,6 +5,7 @@ pub use boxed_copy_buf::*;
 pub use boxed_copy_mut::*;
 pub use boxed_copy_ref::*;
 pub use boxed_copy_view::*;
+pub use boxed_copy_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod boxed_copy;
@@ -12,3 +13,4 @@ mod boxed_copy_buf;
 mod boxed_copy_mut;
 mod boxed_copy_ref;
 mod boxed_copy_view;
+mod boxed_copy_view_mut;

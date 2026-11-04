@@ -19,6 +19,16 @@ impl<V: ImportedFieldsView> ImportedFieldsView for &V {
     }
 }
 
+impl<V: ImportedFieldsView> ImportedFieldsView for &mut V {
+    fn point(&self) -> impl crate::types::PointView {
+        (**self).point()
+    }
+
+    fn child(&self) -> impl crate::mods::parent::child::ChildView {
+        (**self).child()
+    }
+}
+
 impl ImportedFieldsView for super::ImportedFields {
     fn point(&self) -> impl crate::types::PointView {
         self.point()

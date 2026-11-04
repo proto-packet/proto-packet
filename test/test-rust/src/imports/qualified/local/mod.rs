@@ -5,6 +5,7 @@ pub use local_buf::*;
 pub use local_mut::*;
 pub use local_ref::*;
 pub use local_view::*;
+pub use local_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod local;
@@ -12,3 +13,4 @@ mod local_buf;
 mod local_mut;
 mod local_ref;
 mod local_view;
+mod local_view_mut;

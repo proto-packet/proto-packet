@@ -5,6 +5,7 @@ pub use mixed_buf::*;
 pub use mixed_mut::*;
 pub use mixed_ref::*;
 pub use mixed_view::*;
+pub use mixed_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod mixed;
@@ -12,3 +13,4 @@ mod mixed_buf;
 mod mixed_mut;
 mod mixed_ref;
 mod mixed_view;
+mod mixed_view_mut;

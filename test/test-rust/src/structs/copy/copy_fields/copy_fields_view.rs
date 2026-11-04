@@ -33,6 +33,24 @@ impl<V: CopyFieldsView> CopyFieldsView for &V {
     }
 }
 
+impl<V: CopyFieldsView> CopyFieldsView for &mut V {
+    fn count(&self) -> u32 {
+        (**self).count()
+    }
+
+    fn id(&self) -> proto_packet::types::Uuid {
+        (**self).id()
+    }
+
+    fn point(&self) -> impl crate::types::PointView {
+        (**self).point()
+    }
+
+    fn color(&self) -> crate::types::Color {
+        (**self).color()
+    }
+}
+
 impl CopyFieldsView for super::CopyFields {
     fn count(&self) -> u32 {
         self.count()

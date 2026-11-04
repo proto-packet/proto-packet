@@ -5,6 +5,7 @@ pub use child_buf::*;
 pub use child_mut::*;
 pub use child_ref::*;
 pub use child_view::*;
+pub use child_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod child;
@@ -12,3 +13,4 @@ mod child_buf;
 mod child_mut;
 mod child_ref;
 mod child_view;
+mod child_view_mut;

@@ -5,6 +5,7 @@ pub use loop_long_buf::*;
 pub use loop_long_mut::*;
 pub use loop_long_ref::*;
 pub use loop_long_view::*;
+pub use loop_long_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod loop_long;
@@ -12,3 +13,4 @@ mod loop_long_buf;
 mod loop_long_mut;
 mod loop_long_ref;
 mod loop_long_view;
+mod loop_long_view_mut;

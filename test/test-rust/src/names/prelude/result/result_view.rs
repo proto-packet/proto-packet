@@ -12,6 +12,12 @@ impl<V: ResultView> ResultView for &V {
     }
 }
 
+impl<V: ResultView> ResultView for &mut V {
+    fn value(&self) -> u32 {
+        (**self).value()
+    }
+}
+
 impl ResultView for super::Result {
     fn value(&self) -> u32 {
         self.value()

@@ -12,6 +12,12 @@ impl<V: DefaultFieldView> DefaultFieldView for &V {
     }
 }
 
+impl<V: DefaultFieldView> DefaultFieldView for &mut V {
+    fn default(&self) -> u32 {
+        (**self).default()
+    }
+}
+
 impl DefaultFieldView for super::DefaultField {
     fn default(&self) -> u32 {
         self.default()

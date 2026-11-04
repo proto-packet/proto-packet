@@ -5,6 +5,7 @@ pub use non_copy_struct_buf::*;
 pub use non_copy_struct_mut::*;
 pub use non_copy_struct_ref::*;
 pub use non_copy_struct_view::*;
+pub use non_copy_struct_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod non_copy_struct;
@@ -12,3 +13,4 @@ mod non_copy_struct_buf;
 mod non_copy_struct_mut;
 mod non_copy_struct_ref;
 mod non_copy_struct_view;
+mod non_copy_struct_view_mut;

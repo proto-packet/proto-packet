@@ -5,6 +5,7 @@ pub use primitive_fields_buf::*;
 pub use primitive_fields_mut::*;
 pub use primitive_fields_ref::*;
 pub use primitive_fields_view::*;
+pub use primitive_fields_view_mut::*;
 
 #[allow(clippy::module_inception)]
 mod primitive_fields;
@@ -12,3 +13,4 @@ mod primitive_fields_buf;
 mod primitive_fields_mut;
 mod primitive_fields_ref;
 mod primitive_fields_view;
+mod primitive_fields_view_mut;
