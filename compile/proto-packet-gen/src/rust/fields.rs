@@ -142,7 +142,7 @@ impl Field<'_> {
     }
 
     /// Gets the name of the field's builder. (ex: `with_x`)
-    fn builder_name(self) -> String {
+    pub(crate) fn builder_name(self) -> String {
         format!("with_{}", self.name)
     }
 
@@ -172,22 +172,16 @@ impl Field<'_> {
     }
 
     /// Generates the getter of the field.
-    ///
-    /// The getter of a field named `new` does not return `Self`. (only messages can have one)
     fn gen_getter(self, typing: Typing<'_>) -> Function {
         let (result, expr): (RustType, String) = self.getter(typing);
         let signature: Signature = Signature::from(ident(&self.name))
             .with_receiver(Receiver::Borrowed)
             .with_result(result);
-        let mut function: Function = Function::from(signature)
+        Function::from(signature)
             .with_comment(format!(" Gets the field: `{}`.", self.name))
             .with_attribute("must_use")
             .with_access(Access::Public)
-            .with_literal(expr);
-        if self.name == "new" {
-            function.add_attribute("allow(clippy::new_ret_no_self)");
-        }
-        function
+            .with_literal(expr)
     }
 
     /// Generates the setter of the field. (it returns the previous value)

@@ -113,6 +113,7 @@ pub fn gen_struct(
             typing,
             &type_name,
             &ref_name(&structure.type_name()),
+            "struct",
         ));
     }
     let mut files: Vec<TypeFile> = vec![TypeFile {
@@ -149,7 +150,7 @@ pub fn gen_struct(
 }
 
 /// Checks no type of the schema file at the `mod_path` has the `name` of a generated type.
-fn check_type_name(
+pub(crate) fn check_type_name(
     project: &Project,
     mod_path: ModPathRef<'_>,
     name: &str,
@@ -296,8 +297,14 @@ fn gen_accessor(typing: Typing<'_>, field: Field<'_>) -> Function {
     function
 }
 
-/// Generates the impl block decoding the struct with the `type_name` through its `ref_name` type.
-fn gen_decoding(typing: Typing<'_>, type_name: &str, ref_name: &str) -> ImplBlock {
+/// Generates the impl block decoding the `kind` of type with the `type_name` through its `ref_name`
+/// type. (ex: a `struct`)
+pub(crate) fn gen_decoding(
+    typing: Typing<'_>,
+    type_name: &str,
+    ref_name: &str,
+    kind: &str,
+) -> ImplBlock {
     let signature: Signature = Signature::from("decode")
         .with_param(Var::from(("bytes", "&[u8]")))
         .with_result(format!(
@@ -306,7 +313,7 @@ fn gen_decoding(typing: Typing<'_>, type_name: &str, ref_name: &str) -> ImplBloc
             IO
         ));
     let decode: Function = Function::from(signature)
-        .with_comment(" Decodes the struct from the `bytes`.")
+        .with_comment(format!(" Decodes the {} from the `bytes`.", kind))
         .with_comment("")
         .with_comment(" # Errors")
         .with_comment(" Returns an error if the `bytes` are not a valid encoding.")
@@ -318,7 +325,10 @@ fn gen_decoding(typing: Typing<'_>, type_name: &str, ref_name: &str) -> ImplBloc
         .with_param(Var::from(("bytes", "&[u8]")))
         .with_result("Self");
     let decode_unchecked: Function = Function::from(signature)
-        .with_comment(" Decodes the struct from the `bytes`, without validating them.")
+        .with_comment(format!(
+            " Decodes the {} from the `bytes`, without validating them.",
+            kind
+        ))
         .with_comment("")
         .with_comment(" # Safety")
         .with_comment(" The `bytes` must be a valid encoding.")

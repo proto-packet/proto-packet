@@ -54,11 +54,11 @@ pub(crate) fn gen_struct_ref(
     let name: String = ref_name(&structure.type_name());
     let ref_type: RustType = RustType::from(name.as_str()).with_generic(RustType::from("'a"));
     let mut block: Block = Block::default()
-        .with_statement(gen_dec(structure, &name, type_name))
+        .with_statement(gen_ref_dec(&structure.type_name(), &name, type_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_construction(typing, fields, layout, &ref_type))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_properties(&ref_type));
+        .with_statement(gen_ref_properties(&ref_type));
     if !fields.is_empty() {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_fields(typing, fields, layout, &ref_type));
@@ -75,7 +75,7 @@ pub(crate) fn gen_struct_ref(
 }
 
 /// Generates the declaration of the `Ref` type with the `name`.
-fn gen_dec(structure: &Struct, name: &str, type_name: &str) -> RustStruct {
+pub(crate) fn gen_ref_dec(schema_name: &str, name: &str, type_name: &str) -> RustStruct {
     let mut result: RustStruct = RustStruct::from(name)
         .with_comment(format!(
             " A read-only view of an encoded [{}](super::{}).",
@@ -86,7 +86,7 @@ fn gen_dec(structure: &Struct, name: &str, type_name: &str) -> RustStruct {
     for derive in ["Copy", "Clone", "Debug"] {
         result.add_derive(derive);
     }
-    if !is_upper_camel_case(&structure.type_name()) {
+    if !is_upper_camel_case(schema_name) {
         result.add_attribute("allow(non_camel_case_types)");
     }
     result.set_access(Access::Public);
@@ -192,7 +192,7 @@ fn gen_check(
 }
 
 /// Generates the impl block with the properties of the `ref_type`.
-fn gen_properties(ref_type: &RustType) -> ImplBlock {
+pub(crate) fn gen_ref_properties(ref_type: &RustType) -> ImplBlock {
     let signature: Signature = Signature::from("as_bytes")
         .with_receiver(Receiver::Borrowed)
         .with_result("&'a [u8]");

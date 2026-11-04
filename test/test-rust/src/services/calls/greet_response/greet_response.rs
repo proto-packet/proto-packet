@@ -65,6 +65,16 @@ impl GreetResponse {
     pub fn unknown_fields(&self) -> &[proto_packet::io::UnknownField] {
         &self.unknown_fields
     }
+
+    /// Sets the unknown fields. (builder pattern)
+    #[must_use]
+    pub(super) fn with_unknown_fields(
+        mut self,
+        fields: Vec<proto_packet::io::UnknownField>,
+    ) -> Self {
+        self.unknown_fields = fields;
+        self
+    }
 }
 
 impl GreetResponse {
@@ -100,5 +110,26 @@ impl GreetResponse {
             writer.end_field();
         }
         writer.finish();
+    }
+}
+
+impl GreetResponse {
+    //! Decoding
+
+    /// Decodes the message from the `bytes`.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn decode(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Ok(super::GreetResponseRef::new(bytes)?.decode())
+    }
+
+    /// Decodes the message from the `bytes`, without validating them.
+    ///
+    /// # Safety
+    /// The `bytes` must be a valid encoding.
+    #[must_use]
+    pub unsafe fn decode_unchecked(bytes: &[u8]) -> Self {
+        unsafe { super::GreetResponseRef::new_unchecked(bytes) }.decode()
     }
 }

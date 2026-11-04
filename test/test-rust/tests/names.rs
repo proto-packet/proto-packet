@@ -5,7 +5,7 @@ use proto_packet_test::names::casing::{HTTPServer, Log_Level};
 use proto_packet_test::names::keywords::{
     KeywordEnum, KeywordMessage, KeywordStruct, KeywordVariant,
 };
-use proto_packet_test::names::methods::{DefaultField, NewField};
+use proto_packet_test::names::methods::DefaultField;
 
 #[test]
 fn keywords_json() {
@@ -34,5 +34,4 @@ fn casing_json() {
 #[test]
 fn constructor_names() {
     assert_eq!(DefaultField::new(1).default(), 1);
-    assert_eq!(NewField::default().with_new(1).new(), Some(1));
 }

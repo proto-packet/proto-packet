@@ -4,14 +4,17 @@ use crate::rust::TypeFile;
 use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::fields::{Field, check_field_names};
+use crate::rust::gen_message_ref::gen_message_ref;
+use crate::rust::gen_struct::{check_type_name, gen_decoding};
+use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::message_encoding::{TaggedField, gen_message_encoding};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::typing::Typing;
 use code_gen::rust::{
-    Access, Function, ImplBlock, Receiver, Signature, Struct as RustStruct, StructField,
+    Access, Function, ImplBlock, Receiver, Signature, Struct as RustStruct, StructField, Var,
     WithAccess, WithAttributes, WithComments, WithFunctions, WithReceiver, WithResult,
-    WithStructFields,
+    WithStructFields, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet::io::WithTagNumber;
@@ -28,13 +31,19 @@ const UNKNOWN_FIELDS: &str = "unknown_fields";
 /// The type of an unknown field.
 const UNKNOWN_FIELD: &str = "proto_packet::io::UnknownField";
 
-/// The names of the generated methods of a message.
-const METHODS: [&str; 5] = [
+/// The names of the generated methods of a message & its `Ref` type.
+const METHODS: [&str; 11] = [
     CONSTRUCTOR,
     UNKNOWN_FIELDS,
+    "with_unknown_fields",
     "encoded_len",
     "encode",
     "encode_to",
+    "decode",
+    "decode_unchecked",
+    "new",
+    "new_unchecked",
+    "as_bytes",
 ];
 
 /// Generates the Rust code of the `message` in the schema file at the `mod_path`.
@@ -71,6 +80,7 @@ pub fn gen_message(
         block.add_statement(EmptyLine::default());
         block.add_statement(field.gen_impl(typing, &type_name));
     }
+    let mut files: Vec<TypeFile> = Vec::default();
     if let Some(layout) = &layout {
         let tagged: Vec<TaggedField> = layout
             .fields
@@ -82,18 +92,35 @@ pub fn gen_message(
             })
             .collect();
         block.add_statement(EmptyLine::default());
-        block.add_statement(gen_unknown_fields(&type_name));
+        block.add_statement(gen_unknown_fields(typing, &type_name));
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_message_encoding(typing, &type_name, &tagged));
+        block.add_statement(EmptyLine::default());
+        block.add_statement(gen_decoding(
+            typing,
+            &type_name,
+            &ref_name(&message.type_name()),
+            "message",
+        ));
+        check_type_name(project, mod_path, &ref_name(&message.type_name()))?;
+        files.push(TypeFile {
+            suffix: "_ref",
+            code: gen_message_ref(typing, &message.type_name(), &tagged, &type_name),
+        });
     }
-    Ok(vec![TypeFile {
-        suffix: "",
-        code: block.to_code(),
-    }])
+    files.insert(
+        0,
+        TypeFile {
+            suffix: "",
+            code: block.to_code(),
+        },
+    );
+    Ok(files)
 }
 
 /// Generates the impl block with the unknown fields of the message with the `type_name`.
-fn gen_unknown_fields(type_name: &str) -> ImplBlock {
+fn gen_unknown_fields(typing: Typing<'_>, type_name: &str) -> ImplBlock {
+    let unknown_type: String = format!("{}<{}>", typing.prelude(PreludeName::Vec), UNKNOWN_FIELD);
     let signature: Signature = Signature::from("unknown_fields")
         .with_receiver(Receiver::Borrowed)
         .with_result(format!("&[{}]", UNKNOWN_FIELD));
@@ -102,9 +129,20 @@ fn gen_unknown_fields(type_name: &str) -> ImplBlock {
         .with_attribute("must_use")
         .with_access(Access::Public)
         .with_literal("&self.unknown_fields");
+    let signature: Signature = Signature::from("with_unknown_fields")
+        .with_receiver(Receiver::OwnedMut)
+        .with_param(Var::from(("fields", unknown_type.as_str())))
+        .with_result("Self");
+    let with_unknown_fields: Function = Function::from(signature)
+        .with_comment(" Sets the unknown fields. (builder pattern)")
+        .with_attribute("must_use")
+        .with_access(Access::PublicInSuper)
+        .with_semi("self.unknown_fields = fields")
+        .with_literal("self");
     ImplBlock::from(type_name)
         .with_comment(" Unknown Fields")
         .with_function(unknown_fields)
+        .with_function(with_unknown_fields)
 }
 
 /// Generates the declaration of the `message`.
