@@ -69,6 +69,14 @@ generated code writes `var` first, so only reordered input fails. (ex: sorted ke
 reports a buffered number above `u64::MAX` as a float, so the full fix waits for a JSON encoding
 without serde. (`gen_variant.rs`)
 
+### Recursive Types
+
+A `Ref` type validates its nested structs by recursion, so a struct that contains itself recurses
+once for each level in its bytes. Nothing limits the depth, so crafted bytes overflow the stack &
+abort the process. (ex: 200,000 levels of `ListNode`, 2.4 MB, overflow an 8 MB stack) Decoding &
+dropping the decoded value recurse the same way. (ex: a depth limit with a `DecodeError`)
+(`gen_struct_ref.rs`)
+
 ## Compile
 
 ### Target Folder
