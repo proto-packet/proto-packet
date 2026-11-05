@@ -1,7 +1,6 @@
 use crate::io::read::entry_range_unchecked;
 use crate::io::{
-    DecodeError, TagNumber, UnknownField, check_ends, check_len, read_u16_unchecked,
-    read_u32_unchecked,
+    DecodeError, TagNumber, check_ends, check_len, read_u16_unchecked, read_u32_unchecked,
 };
 use std::ops::Range;
 
@@ -34,38 +33,6 @@ pub fn check_message(bytes: &[u8]) -> Result<(), DecodeError> {
         previous = tag;
     }
     check_ends(bytes, ends_offset(count), count, values_offset(count))
-}
-
-/// Checks the message `bytes`, calling `check` with the tag & the value of each field.
-///
-/// # Errors
-/// Returns an error if the `bytes` are shorter than the index, the tags aren't strictly increasing
-/// valid tag numbers, the end table is invalid, or `check` returns an error.
-pub fn check_fields<F>(bytes: &[u8], mut check: F) -> Result<(), DecodeError>
-where
-    F: FnMut(u16, &[u8]) -> Result<(), DecodeError>,
-{
-    check_len(bytes, 2)?;
-    let count: usize = unsafe { read_u16_unchecked(bytes, 0) as usize };
-    let (ends, values): (usize, usize) = (ends_offset(count), values_offset(count));
-    check_len(bytes, values)?;
-    let capacity: usize = bytes.len() - values;
-    let (mut previous, mut start): (u16, usize) = (0, 0);
-    for index in 0..count {
-        let tag: u16 = unsafe { read_u16_unchecked(bytes, 2 + 2 * index) };
-        if tag <= previous || !TagNumber::is_valid(tag) {
-            return Err(DecodeError::InvalidTags);
-        }
-        let end: usize = unsafe { read_u32_unchecked(bytes, ends + 4 * index) as usize };
-        if end < start || end > capacity {
-            return Err(DecodeError::InvalidEndTable);
-        }
-        check(tag, unsafe {
-            bytes.get_unchecked(values + start..values + end)
-        })?;
-        (previous, start) = (tag, end);
-    }
-    Ok(())
 }
 
 /// The tags & the values of the fields of a message, in tag order.
@@ -162,29 +129,4 @@ pub unsafe fn find_field_unchecked(bytes: &[u8], tag: u16) -> Option<&[u8]> {
 pub unsafe fn find_field_mut_unchecked(bytes: &mut [u8], tag: u16) -> Option<&mut [u8]> {
     let range: Range<usize> = unsafe { find_range_unchecked(bytes, tag) }?;
     Some(unsafe { bytes.get_unchecked_mut(range) })
-}
-
-/// Reads the fields of the message `bytes` that aren't in the sorted `known` tags.
-///
-/// # Safety
-/// The message index must be valid.
-#[must_use]
-pub unsafe fn read_unknown_fields_unchecked(bytes: &[u8], known: &[u16]) -> Vec<UnknownField> {
-    let count: usize = unsafe { read_u16_unchecked(bytes, 0) as usize };
-    let mut result: Vec<UnknownField> = Vec::default();
-    let mut next: usize = 0;
-    for index in 0..count {
-        let tag: u16 = unsafe { read_u16_unchecked(bytes, 2 + 2 * index) };
-        while known.get(next).is_some_and(|known| *known < tag) {
-            next += 1;
-        }
-        if known.get(next) != Some(&tag) {
-            let (ends, values): (usize, usize) = (ends_offset(count), values_offset(count));
-            let range: Range<usize> = unsafe { entry_range_unchecked(bytes, ends, index, values) };
-            let value: &[u8] = unsafe { bytes.get_unchecked(range) };
-            let tag: TagNumber = unsafe { TagNumber::new_unchecked(tag) };
-            result.push(UnknownField::new(tag, value.to_vec()));
-        }
-    }
-    result
 }
