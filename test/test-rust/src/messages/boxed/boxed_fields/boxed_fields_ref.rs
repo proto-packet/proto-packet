@@ -78,13 +78,32 @@ impl<'a> BoxedFieldsRef<'a> {
     /// Decodes the [BoxedFields](super::BoxedFields).
     #[must_use]
     pub fn decode(&self) -> super::BoxedFields {
-        super::BoxedFields::default()
-            .with_point(self.point().map(|value| value.decode()))
-            .with_label(self.label().map(|value| value.decode()))
-            .with_shape(self.shape().map(|value| value.decode()))
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2, 3])
-            })
+        let mut result: super::BoxedFields = super::BoxedFields::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result.set_point(
+                        unsafe { crate::types::PointRef::new_unchecked(value) }.decode(),
+                    );
+                }
+                2 => {
+                    result.set_label(
+                        unsafe { crate::types::LabelRef::new_unchecked(value) }.decode(),
+                    );
+                }
+                3 => {
+                    result.set_shape(
+                        unsafe { crate::types::ShapeRef::new_unchecked(value) }.decode(),
+                    );
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

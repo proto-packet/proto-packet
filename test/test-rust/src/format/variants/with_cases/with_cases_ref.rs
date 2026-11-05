@@ -78,13 +78,31 @@ impl<'a> WithCasesRef<'a> {
     /// Decodes the [WithCases](super::WithCases).
     #[must_use]
     pub fn decode(&self) -> super::WithCases {
-        super::WithCases::default()
-            .with_shape(self.shape().map(|value| value.decode()))
-            .with_older(self.older().map(|value| value.decode()))
-            .with_id(self.id())
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2, 3])
-            })
+        let mut result: super::WithCases = super::WithCases::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result.set_shape(
+                        unsafe { crate::format::variants::ShapeRef::new_unchecked(value) }.decode(),
+                    );
+                }
+                2 => {
+                    result.set_older(
+                        unsafe { crate::format::variants::OlderCasesRef::new_unchecked(value) }
+                            .decode(),
+                    );
+                }
+                3 => {
+                    result.set_id(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

@@ -68,12 +68,26 @@ impl<'a> LoopMessageRef<'a> {
     /// Decodes the [LoopMessage](super::LoopMessage).
     #[must_use]
     pub fn decode(&self) -> super::LoopMessage {
-        super::LoopMessage::default()
-            .with_value(self.value())
-            .with_next(self.next().map(|value| value.decode()))
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2])
-            })
+        let mut result: super::LoopMessage = super::LoopMessage::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result.set_value(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                2 => {
+                    result.set_next(
+                        unsafe { crate::format::messages::LoopStructRef::new_unchecked(value) }
+                            .decode(),
+                    );
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

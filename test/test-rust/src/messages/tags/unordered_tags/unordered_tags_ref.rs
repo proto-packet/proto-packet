@@ -78,13 +78,26 @@ impl<'a> UnorderedTagsRef<'a> {
     /// Decodes the [UnorderedTags](super::UnorderedTags).
     #[must_use]
     pub fn decode(&self) -> super::UnorderedTags {
-        super::UnorderedTags::default()
-            .with_one(self.one())
-            .with_two(self.two())
-            .with_three(self.three())
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2, 3])
-            })
+        let mut result: super::UnorderedTags = super::UnorderedTags::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result.set_one(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                2 => {
+                    result.set_two(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                3 => {
+                    result.set_three(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

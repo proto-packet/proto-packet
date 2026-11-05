@@ -164,23 +164,65 @@ impl<'a> AllKindsRef<'a> {
     /// Decodes the [AllKinds](super::AllKinds).
     #[must_use]
     pub fn decode(&self) -> super::AllKinds {
-        super::AllKinds::default()
-            .with_flag(self.flag())
-            .with_byte(self.byte())
-            .with_large(self.large())
-            .with_id(self.id())
-            .with_color(self.color())
-            .with_text(self.text().map(str::to_string))
-            .with_point(self.point().map(|value| value.decode()))
-            .with_entry(self.entry().map(|value| value.decode()))
-            .with_item(self.item().map(|value| value.decode()))
-            .with_boxed_color(self.boxed_color())
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(
-                    self.bytes,
-                    &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                )
-            })
+        let mut result: super::AllKinds = super::AllKinds::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result.set_flag(unsafe { proto_packet::io::read_u8_unchecked(value, 0) } != 0);
+                }
+                2 => {
+                    result.set_byte(unsafe { proto_packet::io::read_u8_unchecked(value, 0) });
+                }
+                3 => {
+                    result.set_large(unsafe { proto_packet::io::read_u128_unchecked(value, 0) });
+                }
+                4 => {
+                    result.set_id(proto_packet::types::Uuid::from_bytes(unsafe {
+                        proto_packet::io::read_bytes_unchecked(value, 0)
+                    }));
+                }
+                5 => {
+                    result.set_color(crate::format::examples::Color::from_tag_number(unsafe {
+                        proto_packet::io::TagNumber::new_unchecked(
+                            proto_packet::io::read_u16_unchecked(value, 0),
+                        )
+                    }));
+                }
+                6 => {
+                    result.set_text(unsafe { std::str::from_utf8_unchecked(value) }.to_string());
+                }
+                7 => {
+                    result.set_point(
+                        unsafe { crate::format::examples::PointRef::new_unchecked(value) }.decode(),
+                    );
+                }
+                8 => {
+                    result.set_entry(
+                        unsafe { crate::format::examples::EntryRef::new_unchecked(value) }.decode(),
+                    );
+                }
+                9 => {
+                    result.set_item(
+                        unsafe { crate::format::messages::ItemRef::new_unchecked(value) }.decode(),
+                    );
+                }
+                10 => {
+                    result.set_boxed_color(crate::format::examples::Color::from_tag_number(
+                        unsafe {
+                            proto_packet::io::TagNumber::new_unchecked(
+                                proto_packet::io::read_u16_unchecked(value, 0),
+                            )
+                        },
+                    ));
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

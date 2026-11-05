@@ -108,16 +108,41 @@ impl<'a> PrimitiveFieldsRef<'a> {
     /// Decodes the [PrimitiveFields](super::PrimitiveFields).
     #[must_use]
     pub fn decode(&self) -> super::PrimitiveFields {
-        super::PrimitiveFields::default()
-            .with_boolean(self.boolean())
-            .with_unsigned8(self.unsigned8())
-            .with_unsigned16(self.unsigned16())
-            .with_unsigned32(self.unsigned32())
-            .with_unsigned64(self.unsigned64())
-            .with_unsigned128(self.unsigned128())
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2, 3, 4, 5, 6])
-            })
+        let mut result: super::PrimitiveFields = super::PrimitiveFields::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result
+                        .set_boolean(unsafe { proto_packet::io::read_u8_unchecked(value, 0) } != 0);
+                }
+                2 => {
+                    result.set_unsigned8(unsafe { proto_packet::io::read_u8_unchecked(value, 0) });
+                }
+                3 => {
+                    result
+                        .set_unsigned16(unsafe { proto_packet::io::read_u16_unchecked(value, 0) });
+                }
+                4 => {
+                    result
+                        .set_unsigned32(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                5 => {
+                    result
+                        .set_unsigned64(unsafe { proto_packet::io::read_u64_unchecked(value, 0) });
+                }
+                6 => {
+                    result.set_unsigned128(unsafe {
+                        proto_packet::io::read_u128_unchecked(value, 0)
+                    });
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

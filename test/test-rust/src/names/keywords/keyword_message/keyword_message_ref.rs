@@ -68,12 +68,23 @@ impl<'a> KeywordMessageRef<'a> {
     /// Decodes the [KeywordMessage](super::KeywordMessage).
     #[must_use]
     pub fn decode(&self) -> super::KeywordMessage {
-        super::KeywordMessage::default()
-            .with_type(self.r#type())
-            .with_self(self.self_())
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 2])
-            })
+        let mut result: super::KeywordMessage = super::KeywordMessage::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result.set_type(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                2 => {
+                    result.set_self(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

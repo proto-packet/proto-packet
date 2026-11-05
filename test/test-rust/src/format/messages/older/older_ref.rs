@@ -68,12 +68,23 @@ impl<'a> OlderRef<'a> {
     /// Decodes the [Older](super::Older).
     #[must_use]
     pub fn decode(&self) -> super::Older {
-        super::Older::default()
-            .with_name(self.name().map(str::to_string))
-            .with_age(self.age())
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[2, 4])
-            })
+        let mut result: super::Older = super::Older::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                2 => {
+                    result.set_name(unsafe { std::str::from_utf8_unchecked(value) }.to_string());
+                }
+                4 => {
+                    result.set_age(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

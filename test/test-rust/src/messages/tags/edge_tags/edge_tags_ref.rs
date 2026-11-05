@@ -68,12 +68,23 @@ impl<'a> EdgeTagsRef<'a> {
     /// Decodes the [EdgeTags](super::EdgeTags).
     #[must_use]
     pub fn decode(&self) -> super::EdgeTags {
-        super::EdgeTags::default()
-            .with_min(self.min())
-            .with_max(self.max())
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1, 8191])
-            })
+        let mut result: super::EdgeTags = super::EdgeTags::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result.set_min(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                8191 => {
+                    result.set_max(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

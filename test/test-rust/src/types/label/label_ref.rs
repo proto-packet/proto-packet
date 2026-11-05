@@ -58,11 +58,20 @@ impl<'a> LabelRef<'a> {
     /// Decodes the [Label](super::Label).
     #[must_use]
     pub fn decode(&self) -> super::Label {
-        super::Label::default()
-            .with_text(self.text().map(str::to_string))
-            .with_unknown_fields(unsafe {
-                proto_packet::io::read_unknown_fields_unchecked(self.bytes, &[1])
-            })
+        let mut result: super::Label = super::Label::default();
+        let mut unknown_fields: Vec<proto_packet::io::UnknownField> = Vec::default();
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
+            match tag {
+                1 => {
+                    result.set_text(unsafe { std::str::from_utf8_unchecked(value) }.to_string());
+                }
+                _ => unknown_fields.push(proto_packet::io::UnknownField::new(
+                    unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
+                    value.to_vec(),
+                )),
+            }
+        }
+        result.with_unknown_fields(unknown_fields)
     }
 
     /// Copies the bytes into an owned buf.

@@ -158,20 +158,27 @@ fn gen_decoding(
     let signature: Signature = Signature::from("decode")
         .with_receiver(Receiver::Borrowed)
         .with_result(format!("super::{}", type_name));
-    let known: Vec<String> = fields.iter().map(|tagged| tagged.tag.to_string()).collect();
-    let mut decoded: String = format!("super::{}::default()", type_name);
-    for tagged in fields {
-        decoded.push_str(&format!(
-            ".{}({})",
-            tagged.field.builder_name(),
-            gen_decoded_field(typing, *tagged)
-        ));
-    }
-    decoded.push_str(&format!(
-        ".with_unknown_fields(unsafe {{ {}::read_unknown_fields_unchecked(self.bytes, &[{}]) }})",
-        IO,
-        known.join(", ")
-    ));
+    let unknown: String = format!(
+        "unknown_fields.push({}::UnknownField::new(unsafe {{ {}::TagNumber::new_unchecked(tag) }}, value.to_vec()))",
+        IO, IO
+    );
+    let read: String = if fields.is_empty() {
+        format!("{};", unknown)
+    } else {
+        let arms: Vec<String> = fields
+            .iter()
+            .map(|tagged| {
+                format!(
+                    "{} => {{ result.{}({}); }}",
+                    tagged.tag,
+                    tagged.field.setter_name(),
+                    gen_decoded_field(typing, *tagged)
+                )
+            })
+            .collect();
+        format!("match tag {{ {} _ => {}, }}", arms.join(" "), unknown)
+    };
+    let binding: &str = if fields.is_empty() { "" } else { "mut " };
     let decode: Function = Function::from(signature)
         .with_comment(format!(
             " Decodes the [{}](super::{}).",
@@ -179,7 +186,19 @@ fn gen_decoding(
         ))
         .with_attribute("must_use")
         .with_access(Access::Public)
-        .with_literal(decoded);
+        .with_semi(format!(
+            "let {}result: super::{} = super::{}::default()",
+            binding, type_name, type_name
+        ))
+        .with_semi(format!(
+            "let mut unknown_fields: Vec<{}::UnknownField> = Vec::default()",
+            IO
+        ))
+        .with_literal(format!(
+            "for (tag, value) in unsafe {{ {}::message_fields_unchecked(self.bytes) }} {{ {} }}",
+            IO, read
+        ))
+        .with_literal("result.with_unknown_fields(unknown_fields)");
 
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
@@ -188,14 +207,12 @@ fn gen_decoding(
         .with_function(gen_to_buf(buf_name))
 }
 
-/// Generates the expression of the owned value of the `tagged` field.
+/// Generates the expression of the owned value of the `tagged` field, from its `value` bytes.
 fn gen_decoded_field(typing: Typing<'_>, tagged: TaggedField<'_>) -> String {
-    let getter: String = format!("self.{}()", ident(&tagged.field.name));
+    let read: String = gen_read(typing, tagged.field.tag);
     match tagged.field.tag {
-        TypeTag::Special(SpecialType::String) => format!("{}.map(str::to_string)", getter),
-        TypeTag::Named(_) if !typing.is_enum(tagged.field.tag) => {
-            format!("{}.map(|value| value.decode())", getter)
-        }
-        _ => getter,
+        TypeTag::Special(SpecialType::String) => format!("{}.to_string()", read),
+        TypeTag::Named(_) if !typing.is_enum(tagged.field.tag) => format!("{}.decode()", read),
+        _ => read,
     }
 }
