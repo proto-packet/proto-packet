@@ -15,11 +15,16 @@ impl<'a> LoopMessageRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_message(bytes)?;
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 1) } {
-            proto_packet::io::check_len(value, 4)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 2) } {
-            crate::format::messages::LoopStructRef::new(value)?;
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
+            match tag {
+                1 => {
+                    proto_packet::io::check_len(value, 4)?;
+                }
+                2 => {
+                    crate::format::messages::LoopStructRef::new(value)?;
+                }
+                _ => {}
+            }
         }
         Ok(Self { bytes })
     }

@@ -15,41 +15,46 @@ impl<'a> AllKindsRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_message(bytes)?;
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 1) } {
-            proto_packet::io::check_len(value, 1)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 2) } {
-            proto_packet::io::check_len(value, 1)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 3) } {
-            proto_packet::io::check_len(value, 16)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 4) } {
-            proto_packet::io::check_len(value, 16)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 5) } {
-            proto_packet::io::check_len(value, 2)?;
-            proto_packet::io::check_tag_number(unsafe {
-                proto_packet::io::read_u16_unchecked(value, 0)
-            })?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 6) } {
-            proto_packet::io::check_utf8(value)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 7) } {
-            crate::format::examples::PointRef::new(value)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 8) } {
-            crate::format::examples::EntryRef::new(value)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 9) } {
-            crate::format::messages::ItemRef::new(value)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 10) } {
-            proto_packet::io::check_len(value, 2)?;
-            proto_packet::io::check_tag_number(unsafe {
-                proto_packet::io::read_u16_unchecked(value, 0)
-            })?;
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
+            match tag {
+                1 => {
+                    proto_packet::io::check_len(value, 1)?;
+                }
+                2 => {
+                    proto_packet::io::check_len(value, 1)?;
+                }
+                3 => {
+                    proto_packet::io::check_len(value, 16)?;
+                }
+                4 => {
+                    proto_packet::io::check_len(value, 16)?;
+                }
+                5 => {
+                    proto_packet::io::check_len(value, 2)?;
+                    proto_packet::io::check_tag_number(unsafe {
+                        proto_packet::io::read_u16_unchecked(value, 0)
+                    })?;
+                }
+                6 => {
+                    proto_packet::io::check_utf8(value)?;
+                }
+                7 => {
+                    crate::format::examples::PointRef::new(value)?;
+                }
+                8 => {
+                    crate::format::examples::EntryRef::new(value)?;
+                }
+                9 => {
+                    crate::format::messages::ItemRef::new(value)?;
+                }
+                10 => {
+                    proto_packet::io::check_len(value, 2)?;
+                    proto_packet::io::check_tag_number(unsafe {
+                        proto_packet::io::read_u16_unchecked(value, 0)
+                    })?;
+                }
+                _ => {}
+            }
         }
         Ok(Self { bytes })
     }

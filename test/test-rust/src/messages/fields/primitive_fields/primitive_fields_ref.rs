@@ -15,23 +15,28 @@ impl<'a> PrimitiveFieldsRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_message(bytes)?;
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 1) } {
-            proto_packet::io::check_len(value, 1)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 2) } {
-            proto_packet::io::check_len(value, 1)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 3) } {
-            proto_packet::io::check_len(value, 2)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 4) } {
-            proto_packet::io::check_len(value, 4)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 5) } {
-            proto_packet::io::check_len(value, 8)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 6) } {
-            proto_packet::io::check_len(value, 16)?;
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
+            match tag {
+                1 => {
+                    proto_packet::io::check_len(value, 1)?;
+                }
+                2 => {
+                    proto_packet::io::check_len(value, 1)?;
+                }
+                3 => {
+                    proto_packet::io::check_len(value, 2)?;
+                }
+                4 => {
+                    proto_packet::io::check_len(value, 4)?;
+                }
+                5 => {
+                    proto_packet::io::check_len(value, 8)?;
+                }
+                6 => {
+                    proto_packet::io::check_len(value, 16)?;
+                }
+                _ => {}
+            }
         }
         Ok(Self { bytes })
     }

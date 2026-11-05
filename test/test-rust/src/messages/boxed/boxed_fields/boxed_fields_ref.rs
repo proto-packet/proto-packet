@@ -15,14 +15,19 @@ impl<'a> BoxedFieldsRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_message(bytes)?;
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 1) } {
-            crate::types::PointRef::new(value)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 2) } {
-            crate::types::LabelRef::new(value)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 3) } {
-            crate::types::ShapeRef::new(value)?;
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
+            match tag {
+                1 => {
+                    crate::types::PointRef::new(value)?;
+                }
+                2 => {
+                    crate::types::LabelRef::new(value)?;
+                }
+                3 => {
+                    crate::types::ShapeRef::new(value)?;
+                }
+                _ => {}
+            }
         }
         Ok(Self { bytes })
     }

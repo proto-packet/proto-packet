@@ -15,14 +15,19 @@ impl<'a> WithCasesRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_message(bytes)?;
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 1) } {
-            crate::format::variants::ShapeRef::new(value)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 2) } {
-            crate::format::variants::OlderCasesRef::new(value)?;
-        }
-        if let Some(value) = unsafe { proto_packet::io::find_field_unchecked(bytes, 3) } {
-            proto_packet::io::check_len(value, 4)?;
+        for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
+            match tag {
+                1 => {
+                    crate::format::variants::ShapeRef::new(value)?;
+                }
+                2 => {
+                    crate::format::variants::OlderCasesRef::new(value)?;
+                }
+                3 => {
+                    proto_packet::io::check_len(value, 4)?;
+                }
+                _ => {}
+            }
         }
         Ok(Self { bytes })
     }

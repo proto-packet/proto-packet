@@ -54,13 +54,25 @@ fn gen_construction(
 ) -> ImplBlock {
     let mut new: Function =
         gen_new("ref", "&'a [u8]").with_semi(format!("{}::check_message(bytes)?", IO));
-    for tagged in fields {
+    if !fields.is_empty() {
+        let arms: Vec<String> = fields
+            .iter()
+            .map(|tagged| {
+                format!(
+                    "{} => {{ {} }}",
+                    tagged.tag,
+                    gen_value_check(typing, tagged.field.tag, tagged.size)
+                )
+            })
+            .collect();
         new.add_literal(format!(
-            "if let Some(value) = unsafe {{ {}::find_field_unchecked(bytes, {}) }} {{ {} }}",
+            "for (tag, value) in unsafe {{ {}::message_fields_unchecked(bytes) }} {{ match tag {{ {} _ => {{}} }} }}",
             IO,
-            tagged.tag,
-            gen_value_check(typing, tagged.field.tag, tagged.size)
+            arms.join(" ")
         ));
+    }
+    if fields.len() == 1 {
+        new.add_attribute("allow(clippy::single_match)");
     }
     let new: Function = new.with_literal("Ok(Self { bytes })");
 
