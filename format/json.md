@@ -2,15 +2,16 @@
 
 This document specifies the JSON form of ProtoPacket values.
 
-| Type            | JSON                                                          |
-|-----------------|---------------------------------------------------------------|
-| `bool`          | A boolean.                                                    |
-| `u8` to `u128`  | A number.                                                     |
-| `uuid`          | A string, in its string form.                                 |
-| `string`        | A string.                                                     |
-| enum            | A case name, or a tag number if the writer doesn't know it.   |
+| Type            | JSON                                                           |
+|-----------------|----------------------------------------------------------------|
+| `bool`          | A boolean.                                                     |
+| `u8` to `u128`  | A number.                                                      |
+| `i8` to `i128`  | A number.                                                      |
+| `uuid`          | A string, in its string form.                                  |
+| `string`        | A string.                                                      |
+| enum            | A case name, or a tag number if the writer doesn't know it.    |
 | struct, message | An object of the fields, by name. Absent fields aren't listed. |
-| variant         | `{"var": <case name>, "val": <value>}`                        |
+| variant         | `{"var": <case name>, "val": <value>}`                         |
 
 A renamed field or case keeps its schema name. Keys can be in any order, & other keys are ignored.
 
