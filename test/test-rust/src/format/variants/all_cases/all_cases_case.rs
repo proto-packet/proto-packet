@@ -38,4 +38,7 @@ pub enum AllCasesCase<'a> {
 
     /// The case: `BoxedColor`.
     BoxedColor(crate::format::examples::Color),
+
+    /// The case: `Signed`.
+    Signed(i64),
 }

@@ -61,6 +61,9 @@ impl<'a> AllCasesRef<'a> {
                     proto_packet::io::read_u16_unchecked(value, 0)
                 })?;
             }
+            12 => {
+                proto_packet::io::check_exact_len(value, 8)?;
+            }
             _ => {}
         }
         Ok(Self { bytes })
@@ -139,6 +142,9 @@ impl<'a> AllCasesRef<'a> {
                     )
                 },
             )),
+            12 => super::AllCasesCase::Signed(unsafe {
+                proto_packet::io::read_i64_unchecked(value, 0)
+            }),
             tag_number => super::AllCasesCase::Unrecognized {
                 tag_number,
                 bytes: value,
@@ -265,6 +271,16 @@ impl<'a> AllCasesRef<'a> {
             ))
         }))
     }
+
+    /// Gets the value of the case: `Signed`.
+    #[must_use]
+    pub fn as_signed(&self) -> Option<i64> {
+        if self.tag_number() != 12 {
+            return None;
+        }
+        let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
+        Some(unsafe { proto_packet::io::read_i64_unchecked(value, 0) })
+    }
 }
 
 impl<'a> AllCasesRef<'a> {
@@ -288,6 +304,7 @@ impl<'a> AllCasesRef<'a> {
             super::AllCasesCase::Item(value) => super::AllCases::Item(value.decode()),
             super::AllCasesCase::Shape(value) => super::AllCases::Shape(value.decode()),
             super::AllCasesCase::BoxedColor(value) => super::AllCases::BoxedColor(Box::new(value)),
+            super::AllCasesCase::Signed(value) => super::AllCases::Signed(value),
         }
     }
 

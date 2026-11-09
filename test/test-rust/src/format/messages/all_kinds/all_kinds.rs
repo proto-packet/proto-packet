@@ -33,6 +33,9 @@
 ///
 ///     // A boxed enum.
 ///     boxed_color: box format.examples.Color = 10;
+///
+///     // A signed integer.
+///     signed: i64 = 11;
 /// }
 /// ```
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
@@ -47,6 +50,7 @@ pub struct AllKinds {
     entry: Option<crate::format::examples::Entry>,
     item: Option<crate::format::messages::Item>,
     boxed_color: Option<Box<crate::format::examples::Color>>,
+    signed: Option<i64>,
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -359,6 +363,35 @@ impl AllKinds {
 }
 
 impl AllKinds {
+    //! Field: `signed`
+
+    /// Gets the field: `signed`.
+    #[must_use]
+    pub fn signed(&self) -> Option<i64> {
+        self.signed
+    }
+
+    /// Sets the field: `signed`. Returns the previous value.
+    pub fn set_signed<F>(&mut self, signed: F) -> Option<i64>
+    where
+        F: Into<Option<i64>>,
+    {
+        let signed: Option<i64> = signed.into();
+        std::mem::replace(&mut self.signed, signed)
+    }
+
+    /// Sets the field: `signed`. (builder pattern)
+    #[must_use]
+    pub fn with_signed<F>(mut self, signed: F) -> Self
+    where
+        F: Into<Option<i64>>,
+    {
+        self.set_signed(signed);
+        self
+    }
+}
+
+impl AllKinds {
     //! Unknown Fields
 
     /// Gets the fields the message doesn't know, in tag order.
@@ -426,6 +459,10 @@ impl AllKinds {
             count += 1;
             values += 2;
         }
+        if self.signed.is_some() {
+            count += 1;
+            values += 8;
+        }
         proto_packet::io::message_index_len(count) + values
     }
 
@@ -448,7 +485,8 @@ impl AllKinds {
             + usize::from(self.point.is_some())
             + usize::from(self.entry.is_some())
             + usize::from(self.item.is_some())
-            + usize::from(self.boxed_color.is_some());
+            + usize::from(self.boxed_color.is_some())
+            + usize::from(self.signed.is_some());
         let mut writer: proto_packet::io::MessageWriter =
             proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
         if let Some(value) = &self.flag {
@@ -493,6 +531,10 @@ impl AllKinds {
             writer
                 .field(10)
                 .extend_from_slice(&value.tag_number().to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = &self.signed {
+            writer.field(11).extend_from_slice(&value.to_le_bytes());
             writer.end_field();
         }
         writer.finish();
@@ -561,6 +603,9 @@ impl proto_packet::serde::Serialize for AllKinds {
                 value,
             )?;
         }
+        if let Some(value) = &self.signed {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "signed", value)?;
+        }
         proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
         proto_packet::serde::ser::SerializeMap::end(map)
     }
@@ -621,6 +666,10 @@ impl proto_packet::types::JsonMessage for AllKinds {
             }
             "boxed_color" => {
                 self.boxed_color = map.next_value()?;
+                Ok(true)
+            }
+            "signed" => {
+                self.signed = map.next_value()?;
                 Ok(true)
             }
             _ => Ok(false),
@@ -691,6 +740,12 @@ impl proto_packet::types::JsonMessage for AllKinds {
                 return Err("boxed_color");
             }
             self.boxed_color = other.boxed_color;
+        }
+        if other.signed.is_some() {
+            if self.signed.is_some() {
+                return Err("signed");
+            }
+            self.signed = other.signed;
         }
         self.unknown_fields = other.unknown_fields;
         Ok(())

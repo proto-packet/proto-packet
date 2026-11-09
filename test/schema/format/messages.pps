@@ -44,6 +44,9 @@ message AllKinds {
 
     // A boxed enum.
     boxed_color: box Color = 10;
+
+    // A signed integer.
+    signed: i64 = 11;
 }
 
 // An older version of a message.

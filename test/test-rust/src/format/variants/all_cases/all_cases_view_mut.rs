@@ -43,6 +43,9 @@ pub trait AllCasesViewMut: super::AllCasesView {
         &mut self,
         value: crate::format::examples::Color,
     ) -> Result<(), proto_packet::io::CapacityError>;
+
+    /// Sets the case: `Signed`.
+    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
@@ -97,6 +100,10 @@ impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
         value: crate::format::examples::Color,
     ) -> Result<(), proto_packet::io::CapacityError> {
         (**self).set_boxed_color(value)
+    }
+
+    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
+        (**self).set_signed(value)
     }
 }
 
@@ -160,6 +167,11 @@ impl AllCasesViewMut for super::AllCases {
         *self = super::AllCases::BoxedColor(Box::new(value));
         Ok(())
     }
+
+    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
+        *self = super::AllCases::Signed(value);
+        Ok(())
+    }
 }
 
 impl AllCasesViewMut for super::AllCasesMut<'_> {
@@ -215,6 +227,10 @@ impl AllCasesViewMut for super::AllCasesMut<'_> {
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.set_boxed_color(value)
     }
+
+    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
+        self.set_signed(value)
+    }
 }
 
 impl AllCasesViewMut for super::AllCasesBuf {
@@ -269,5 +285,9 @@ impl AllCasesViewMut for super::AllCasesBuf {
         value: crate::format::examples::Color,
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.as_mut().set_boxed_color(value)
+    }
+
+    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
+        self.as_mut().set_signed(value)
     }
 }

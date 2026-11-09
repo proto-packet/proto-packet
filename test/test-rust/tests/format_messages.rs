@@ -53,6 +53,7 @@ fn all_kinds() -> AllKinds {
         .with_entry(Entry::new(5, "entry".to_string()))
         .with_item(item())
         .with_boxed_color(Color::Red)
+        .with_signed(-2)
 }
 
 /// Gets a newer message, with a field around each of the older fields.
@@ -113,6 +114,13 @@ fn every_kind_round_trips() {
     assert_eq!(kinds.entry().unwrap().text(), "entry");
     assert_eq!(kinds.item().unwrap().id(), Some(7));
     assert_eq!(kinds.boxed_color(), Some(Color::Red));
+    assert_eq!(kinds.signed(), Some(-2));
+}
+
+#[test]
+fn signed_integers_are_twos_complement() {
+    let bytes: [u8; 12] = [1, 0, 11, 0, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+    assert_encoding!(AllKinds, AllKinds::default().with_signed(-2), &bytes);
 }
 
 #[test]

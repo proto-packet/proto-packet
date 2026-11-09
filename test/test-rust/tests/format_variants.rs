@@ -40,6 +40,7 @@ fn all_cases() -> Vec<AllCases> {
         AllCases::Item(Item::default().with_text("hi".to_string()).with_id(7)),
         AllCases::Shape(Shape::Circle(8)),
         AllCases::BoxedColor(Box::new(Color::Red)),
+        AllCases::Signed(-2),
     ]
 }
 
@@ -55,6 +56,16 @@ fn shape_examples() {
         Shape,
         Shape::Square(Point::new(1, 2)),
         &[2, 0, 1, 0, 0, 0, 2, 0, 0, 0]
+    );
+}
+
+#[test]
+fn signed_integers_are_twos_complement() {
+    let bytes: [u8; 10] = [12, 0, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+    assert_encoding!(AllCases, AllCases::Signed(-2), &bytes);
+    assert_eq!(
+        serde_json::to_string(&AllCases::Signed(-2)).unwrap(),
+        r#"{"var":"Signed","val":-2}"#
     );
 }
 

@@ -26,6 +26,25 @@ message PrimitiveFields {
     unsigned128: u128 = 6;
 }
 
+// A message with a field of each signed integer type.
+message SignedFields {
+
+    // An 8-bit signed integer field.
+    signed8: i8 = 1;
+
+    // A 16-bit signed integer field.
+    signed16: i16 = 2;
+
+    // A 32-bit signed integer field.
+    signed32: i32 = 3;
+
+    // A 64-bit signed integer field.
+    signed64: i64 = 4;
+
+    // A 128-bit signed integer field.
+    signed128: i128 = 5;
+}
+
 // A message with a field of each special type.
 message SpecialFields {
 

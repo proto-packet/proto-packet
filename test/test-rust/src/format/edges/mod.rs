@@ -5,6 +5,7 @@ pub use fixed_kinds::*;
 pub use loop_byte::*;
 pub use loop_long::*;
 pub use nine_bits::*;
+pub use signed_kinds::*;
 pub use strings::*;
 
 mod absent_child;
@@ -12,4 +13,5 @@ mod fixed_kinds;
 mod loop_byte;
 mod loop_long;
 mod nine_bits;
+mod signed_kinds;
 mod strings;

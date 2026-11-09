@@ -5,7 +5,8 @@ use proto_packet::io::{CapacityError, DecodeError};
 use proto_packet::types::Uuid;
 use proto_packet_test::format::edges::{
     AbsentChild, FixedKinds, FixedKindsBuf, FixedKindsMut, FixedKindsRef, FixedKindsView,
-    FixedKindsViewMut, LoopByte, LoopLong, NineBits, NineBitsMut, NineBitsRef, Strings, StringsMut,
+    FixedKindsViewMut, LoopByte, LoopLong, NineBits, NineBitsMut, NineBitsRef, SignedKinds,
+    SignedKindsMut, SignedKindsRef, Strings, StringsMut,
 };
 use proto_packet_test::format::examples::{
     Color, Entry, EntryView, EntryViewMut, Line, LineBuf, LineMut, LineRef, LineView, LineViewMut,
@@ -141,6 +142,74 @@ fn fixed_kinds() {
     assert_eq!(kinds.id(), ID);
     assert_eq!(kinds.maybe_point().unwrap().y(), 4);
     assert_eq!(kinds.maybe_color(), Some(Color::Red));
+}
+
+#[test]
+fn signed_integers_are_twos_complement() {
+    let bytes: Vec<u8> = [
+        &[0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF][..], // d
+        &[0xFB],                                               // e
+        &[0xFF; 15],
+        &[0xFD, 0xFF, 0xFF, 0xFF], // c
+        &[0xFE, 0xFF],             // b
+        &[0, 0],                   // f, absent
+        &[0xFF],                   // a
+        &[0],                      // bits
+    ]
+    .concat();
+    assert_eq!(bytes.len(), 34);
+    assert_encoding!(
+        SignedKinds,
+        SignedKinds::new(-1, -2, -3, -4, -5, None),
+        &bytes
+    );
+
+    let kinds: SignedKindsRef = SignedKindsRef::new(&bytes).unwrap();
+    assert_eq!(
+        (kinds.a(), kinds.b(), kinds.c(), kinds.d(), kinds.e()),
+        (-1, -2, -3, -4, -5)
+    );
+    assert_eq!(kinds.f(), None);
+}
+
+#[test]
+fn signed_integers_keep_their_range() {
+    for value in [
+        SignedKinds::new(
+            i8::MIN,
+            i16::MIN,
+            i32::MIN,
+            i64::MIN,
+            i128::MIN,
+            Some(i16::MIN),
+        ),
+        SignedKinds::new(
+            i8::MAX,
+            i16::MAX,
+            i32::MAX,
+            i64::MAX,
+            i128::MAX,
+            Some(i16::MAX),
+        ),
+        SignedKinds::new(0, 0, 0, 0, 0, Some(0)),
+    ] {
+        let bytes: Vec<u8> = value.encode();
+        assert_encoding!(SignedKinds, value, &bytes);
+    }
+}
+
+#[test]
+fn mut_sets_signed_integers_in_place() {
+    let mut bytes: Vec<u8> = SignedKinds::new(1, 2, 3, 4, 5, None).encode();
+    let mut kinds: SignedKindsMut = SignedKindsMut::new(&mut bytes).unwrap();
+    kinds.set_a(-1);
+    kinds.set_d(i64::MIN);
+    kinds.set_e(-5);
+    kinds.set_f(-6);
+    assert_eq!(
+        SignedKinds::decode(&bytes),
+        Ok(SignedKinds::new(-1, 2, 3, i64::MIN, -5, Some(-6)))
+    );
 }
 
 #[test]

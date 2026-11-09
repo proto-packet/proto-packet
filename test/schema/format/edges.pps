@@ -33,6 +33,28 @@ struct NineBits {
     i: bool;
 }
 
+// A struct with a signed integer of each size.
+struct SignedKinds {
+
+    // An alignment 1 field.
+    a: i8;
+
+    // An alignment 2 field.
+    b: i16;
+
+    // An alignment 4 field.
+    c: i32;
+
+    // An alignment 8 field.
+    d: i64;
+
+    // A 16-byte field, of alignment 8.
+    e: i128;
+
+    // An optional field.
+    f: optional i16;
+}
+
 // A fixed struct of the other fixed-size types, with optional fields.
 struct FixedKinds {
 

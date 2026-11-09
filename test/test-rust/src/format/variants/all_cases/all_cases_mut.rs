@@ -162,4 +162,13 @@ impl AllCasesMut<'_> {
     ) -> Result<(), proto_packet::io::CapacityError> {
         proto_packet::io::replace_variant(self.bytes, 11, &value.tag_number().to_le_bytes())
     }
+
+    /// Sets the case: `Signed`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
+    pub fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
+        proto_packet::io::replace_variant(self.bytes, 12, &value.to_le_bytes())
+    }
 }

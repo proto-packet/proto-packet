@@ -31,6 +31,9 @@ pub trait AllKindsView {
 
     /// Gets the field: `boxed_color`.
     fn boxed_color(&self) -> Option<crate::format::examples::Color>;
+
+    /// Gets the field: `signed`.
+    fn signed(&self) -> Option<i64>;
 }
 
 impl<V: AllKindsView> AllKindsView for &V {
@@ -72,6 +75,10 @@ impl<V: AllKindsView> AllKindsView for &V {
 
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
         (**self).boxed_color()
+    }
+
+    fn signed(&self) -> Option<i64> {
+        (**self).signed()
     }
 }
 
@@ -115,6 +122,10 @@ impl<V: AllKindsView> AllKindsView for &mut V {
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
         (**self).boxed_color()
     }
+
+    fn signed(&self) -> Option<i64> {
+        (**self).signed()
+    }
 }
 
 impl AllKindsView for super::AllKinds {
@@ -156,6 +167,10 @@ impl AllKindsView for super::AllKinds {
 
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
         self.boxed_color()
+    }
+
+    fn signed(&self) -> Option<i64> {
+        self.signed()
     }
 }
 
@@ -199,6 +214,10 @@ impl AllKindsView for super::AllKindsRef<'_> {
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
         self.boxed_color()
     }
+
+    fn signed(&self) -> Option<i64> {
+        self.signed()
+    }
 }
 
 impl AllKindsView for super::AllKindsBuf {
@@ -241,6 +260,10 @@ impl AllKindsView for super::AllKindsBuf {
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
         self.as_ref().boxed_color()
     }
+
+    fn signed(&self) -> Option<i64> {
+        self.as_ref().signed()
+    }
 }
 
 impl AllKindsView for super::AllKindsMut<'_> {
@@ -282,5 +305,9 @@ impl AllKindsView for super::AllKindsMut<'_> {
 
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
         self.as_ref().boxed_color()
+    }
+
+    fn signed(&self) -> Option<i64> {
+        self.as_ref().signed()
     }
 }

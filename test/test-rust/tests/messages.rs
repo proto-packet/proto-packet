@@ -3,7 +3,9 @@ mod common;
 use common::{ID, ID_JSON, assert_json};
 use proto_packet_test::messages::boxed::{BoxedFields, Comment};
 use proto_packet_test::messages::empty::EmptyMessage;
-use proto_packet_test::messages::fields::{NamedFields, PrimitiveFields, SpecialFields};
+use proto_packet_test::messages::fields::{
+    NamedFields, PrimitiveFields, SignedFields, SpecialFields,
+};
 use proto_packet_test::types::{Color, Label, Person, Point, Shape};
 
 #[test]
@@ -25,6 +27,16 @@ fn fields_json() {
         &format!(
             r#"{{"boolean":false,"unsigned8":1,"unsigned128":{}}}"#,
             u128::MAX
+        ),
+    );
+    assert_json(
+        &SignedFields::default()
+            .with_signed8(i8::MIN)
+            .with_signed64(-4)
+            .with_signed128(i128::MAX),
+        &format!(
+            r#"{{"signed8":-128,"signed64":-4,"signed128":{}}}"#,
+            i128::MAX
         ),
     );
     assert_json(

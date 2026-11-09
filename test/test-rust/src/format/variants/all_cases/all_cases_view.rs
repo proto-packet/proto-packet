@@ -37,6 +37,9 @@ pub trait AllCasesView {
 
     /// Gets the value of the case: `BoxedColor`.
     fn as_boxed_color(&self) -> Option<crate::format::examples::Color>;
+
+    /// Gets the value of the case: `Signed`.
+    fn as_signed(&self) -> Option<i64>;
 }
 
 impl<V: AllCasesView> AllCasesView for &V {
@@ -86,6 +89,10 @@ impl<V: AllCasesView> AllCasesView for &V {
 
     fn as_boxed_color(&self) -> Option<crate::format::examples::Color> {
         (**self).as_boxed_color()
+    }
+
+    fn as_signed(&self) -> Option<i64> {
+        (**self).as_signed()
     }
 }
 
@@ -137,6 +144,10 @@ impl<V: AllCasesView> AllCasesView for &mut V {
     fn as_boxed_color(&self) -> Option<crate::format::examples::Color> {
         (**self).as_boxed_color()
     }
+
+    fn as_signed(&self) -> Option<i64> {
+        (**self).as_signed()
+    }
 }
 
 impl AllCasesView for super::AllCases {
@@ -186,6 +197,10 @@ impl AllCasesView for super::AllCases {
 
     fn as_boxed_color(&self) -> Option<crate::format::examples::Color> {
         self.as_boxed_color()
+    }
+
+    fn as_signed(&self) -> Option<i64> {
+        self.as_signed()
     }
 }
 
@@ -237,6 +252,10 @@ impl AllCasesView for super::AllCasesRef<'_> {
     fn as_boxed_color(&self) -> Option<crate::format::examples::Color> {
         self.as_boxed_color()
     }
+
+    fn as_signed(&self) -> Option<i64> {
+        self.as_signed()
+    }
 }
 
 impl AllCasesView for super::AllCasesBuf {
@@ -287,6 +306,10 @@ impl AllCasesView for super::AllCasesBuf {
     fn as_boxed_color(&self) -> Option<crate::format::examples::Color> {
         self.as_ref().as_boxed_color()
     }
+
+    fn as_signed(&self) -> Option<i64> {
+        self.as_ref().as_signed()
+    }
 }
 
 impl AllCasesView for super::AllCasesMut<'_> {
@@ -336,5 +359,9 @@ impl AllCasesView for super::AllCasesMut<'_> {
 
     fn as_boxed_color(&self) -> Option<crate::format::examples::Color> {
         self.as_ref().as_boxed_color()
+    }
+
+    fn as_signed(&self) -> Option<i64> {
+        self.as_ref().as_signed()
     }
 }

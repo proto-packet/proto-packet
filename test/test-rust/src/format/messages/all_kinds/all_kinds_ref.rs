@@ -56,6 +56,9 @@ impl<'a> AllKindsRef<'a> {
                         proto_packet::io::read_u16_unchecked(value, 0)
                     })?;
                 }
+                11 => {
+                    proto_packet::io::check_exact_len(value, 8)?;
+                }
                 _ => {}
             }
         }
@@ -164,6 +167,13 @@ impl<'a> AllKindsRef<'a> {
             ))
         }))
     }
+
+    /// Gets the field: `signed`.
+    #[must_use]
+    pub fn signed(&self) -> Option<i64> {
+        let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 11) }?;
+        Some(unsafe { proto_packet::io::read_i64_unchecked(value, 0) })
+    }
 }
 
 impl<'a> AllKindsRef<'a> {
@@ -223,6 +233,9 @@ impl<'a> AllKindsRef<'a> {
                             )
                         },
                     ));
+                }
+                11 => {
+                    result.set_signed(unsafe { proto_packet::io::read_i64_unchecked(value, 0) });
                 }
                 _ => unknown_fields.push(proto_packet::io::UnknownField::new(
                     unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },

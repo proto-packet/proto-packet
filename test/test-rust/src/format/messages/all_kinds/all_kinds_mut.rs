@@ -171,4 +171,22 @@ impl AllKindsMut<'_> {
             bytes.as_ref().map(|bytes| bytes.as_slice()),
         )
     }
+
+    /// Sets the field: `signed`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
+    pub fn set_signed(
+        &mut self,
+        value: impl Into<Option<i64>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        let value: Option<i64> = value.into();
+        let bytes: Option<[u8; 8]> = value.map(|value| value.to_le_bytes());
+        proto_packet::io::replace_field(
+            self.bytes,
+            11,
+            bytes.as_ref().map(|bytes| bytes.as_slice()),
+        )
+    }
 }

@@ -38,6 +38,9 @@ pub enum AllCases {
 
     /// A boxed enum.
     BoxedColor(Box<crate::format::examples::Color>),
+
+    /// A signed integer.
+    Signed(i64),
 }
 
 mod unrecognized {
@@ -77,6 +80,7 @@ impl AllCases {
             Self::Item(_) => 9,
             Self::Shape(_) => 10,
             Self::BoxedColor(_) => 11,
+            Self::Signed(_) => 12,
         }
     }
 
@@ -191,6 +195,15 @@ impl AllCases {
             _ => None,
         }
     }
+
+    /// Gets the value of the case: `Signed`.
+    #[must_use]
+    pub fn as_signed(&self) -> Option<i64> {
+        match self {
+            Self::Signed(value) => Some(*value),
+            _ => None,
+        }
+    }
 }
 
 impl AllCases {
@@ -252,6 +265,7 @@ impl AllCases {
             Self::Item(value) => 2 + value.encoded_len(),
             Self::Shape(value) => 2 + value.encoded_len(),
             Self::BoxedColor(_) => 4,
+            Self::Signed(_) => 10,
         }
     }
 
@@ -313,6 +327,10 @@ impl AllCases {
             Self::BoxedColor(value) => {
                 out.extend_from_slice(&11_u16.to_le_bytes());
                 out.extend_from_slice(&value.tag_number().to_le_bytes());
+            }
+            Self::Signed(value) => {
+                out.extend_from_slice(&12_u16.to_le_bytes());
+                out.extend_from_slice(&value.to_le_bytes());
             }
         }
     }
@@ -384,6 +402,9 @@ impl proto_packet::serde::Serialize for AllCases {
             Self::BoxedColor(value) => {
                 proto_packet::types::serialize_case(serializer, "AllCases", "BoxedColor", value)
             }
+            Self::Signed(value) => {
+                proto_packet::types::serialize_case(serializer, "AllCases", "Signed", value)
+            }
         }
     }
 }
@@ -438,6 +459,9 @@ impl proto_packet::types::JsonVariant for AllCases {
             "BoxedColor" => Ok(Self::BoxedColor(
                 proto_packet::serde::Deserialize::deserialize(value)?,
             )),
+            "Signed" => Ok(Self::Signed(proto_packet::serde::Deserialize::deserialize(
+                value,
+            )?)),
             _ => Err(proto_packet::serde::de::Error::unknown_variant(
                 name,
                 &[
@@ -452,6 +476,7 @@ impl proto_packet::types::JsonVariant for AllCases {
                     "Item",
                     "Shape",
                     "BoxedColor",
+                    "Signed",
                 ],
             )),
         }

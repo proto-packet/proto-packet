@@ -2,8 +2,10 @@
 
 pub use named_fields::*;
 pub use primitive_fields::*;
+pub use signed_fields::*;
 pub use special_fields::*;
 
 mod named_fields;
 mod primitive_fields;
+mod signed_fields;
 mod special_fields;

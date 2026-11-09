@@ -4,7 +4,9 @@ use common::{ID, ID_JSON, assert_json};
 use proto_packet_test::structs::boxed::{BoxedFields, ListNode, OptionalBoxedFields};
 use proto_packet_test::structs::copy::{BoxedCopy, CopyFields, NestedCopy, OptionalCopy};
 use proto_packet_test::structs::empty::EmptyStruct;
-use proto_packet_test::structs::fields::{NamedFields, PrimitiveFields, SpecialFields};
+use proto_packet_test::structs::fields::{
+    NamedFields, PrimitiveFields, SignedFields, SpecialFields,
+};
 use proto_packet_test::structs::optional::OptionalFields;
 use proto_packet_test::types::{Color, Label, Person, Point, Shape};
 
@@ -31,6 +33,14 @@ fn fields_json() {
         &format!(
             r#"{{"boolean":true,"unsigned8":1,"unsigned16":2,"unsigned32":3,"unsigned64":4,"unsigned128":{}}}"#,
             u128::MAX
+        ),
+    );
+    assert_json(
+        &SignedFields::new(-1, -2, -3, i64::MIN, i128::MIN),
+        &format!(
+            r#"{{"signed8":-1,"signed16":-2,"signed32":-3,"signed64":{},"signed128":{}}}"#,
+            i64::MIN,
+            i128::MIN
         ),
     );
     assert_json(

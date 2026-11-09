@@ -48,6 +48,9 @@ variant AllCases {
 
     // A boxed enum.
     BoxedColor: box Color = 11;
+
+    // A signed integer.
+    Signed: i64 = 12;
 }
 
 // An older version of a variant.

@@ -26,6 +26,25 @@ struct PrimitiveFields {
     unsigned128: u128;
 }
 
+// A struct with a field of each signed integer type.
+struct SignedFields {
+
+    // An 8-bit signed integer field.
+    signed8: i8;
+
+    // A 16-bit signed integer field.
+    signed16: i16;
+
+    // A 32-bit signed integer field.
+    signed32: i32;
+
+    // A 64-bit signed integer field.
+    signed64: i64;
+
+    // A 128-bit signed integer field.
+    signed128: i128;
+}
+
 // A struct with a field of each special type.
 struct SpecialFields {
 
