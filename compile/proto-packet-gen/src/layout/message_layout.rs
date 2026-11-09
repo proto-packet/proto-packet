@@ -15,7 +15,7 @@ pub struct MessageFieldLayout {
     pub size: Option<usize>,
 }
 
-/// The layout of a message's encoding. (see `FORMAT.md`)
+/// The layout of a message's encoding. (see `format/binary.md`)
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct MessageLayout {
     /// The fields, in tag order.

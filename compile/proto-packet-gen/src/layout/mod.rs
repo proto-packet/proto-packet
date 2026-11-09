@@ -1,4 +1,4 @@
-//! The language-neutral layouts of encoded types. (see `FORMAT.md`)
+//! The language-neutral layouts of encoded types. (see `format/binary.md`)
 
 pub use bit_layout::*;
 pub use entry_layout::*;

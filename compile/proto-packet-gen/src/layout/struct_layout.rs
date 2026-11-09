@@ -5,7 +5,7 @@ use proto_packet::io::align_up;
 use proto_packet_tree::{Project, Struct, StructField, WithTypeTag};
 use std::cmp::Reverse;
 
-/// The layout of a struct's encoding. (see `FORMAT.md`)
+/// The layout of a struct's encoding. (see `format/binary.md`)
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct StructLayout {
     /// The alignment.
