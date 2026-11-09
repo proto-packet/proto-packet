@@ -32,6 +32,7 @@ pub(crate) const fn primitive_size(primitive: PrimitiveType) -> usize {
         PrimitiveType::UnsignedInt32 => 4,
         PrimitiveType::UnsignedInt64 => 8,
         PrimitiveType::UnsignedInt128 => 16,
+        _ => todo!(),
     }
 }
 
