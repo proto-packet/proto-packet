@@ -6,30 +6,6 @@ pub(crate) fn read_end(bytes: &[u8], offset: usize) -> usize {
     u32::from_le_bytes(*end) as usize
 }
 
-/// Replaces the case of the variant `bytes` with the `tag` & the `value`, in place.
-///
-/// The rest of the `bytes` are zeroed. An `exact` value must fill the `bytes`, since its length is
-/// the rest of the extent. (ex: a string)
-///
-/// # Errors
-/// Returns an error, leaving the `bytes` unchanged, if the case does not fit.
-pub fn replace_case(
-    bytes: &mut [u8],
-    tag: u16,
-    value: &[u8],
-    exact: bool,
-) -> Result<(), CapacityError> {
-    let required: usize = 2 + value.len();
-    let capacity: usize = bytes.len();
-    if required > capacity || (exact && required != capacity) {
-        return Err(CapacityError { required, capacity });
-    }
-    bytes[..2].copy_from_slice(&tag.to_le_bytes());
-    bytes[2..required].copy_from_slice(value);
-    bytes[required..].fill(0);
-    Ok(())
-}
-
 /// Replaces the string `entry` with the `value`, in place.
 ///
 /// # Errors
