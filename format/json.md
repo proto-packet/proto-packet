@@ -7,6 +7,7 @@ This document specifies the JSON form of ProtoPacket values.
 | `bool`          | A boolean.                                                     |
 | `u8` to `u128`  | A number.                                                      |
 | `i8` to `i128`  | A number.                                                      |
+| `f32`, `f64`    | A number, or a name if it isn't finite.                        |
 | `uuid`          | A string, in its string form.                                  |
 | `string`        | A string.                                                      |
 | enum            | A case name, or a tag number if the writer doesn't know it.    |
@@ -14,6 +15,9 @@ This document specifies the JSON form of ProtoPacket values.
 | variant         | `{"var": <case name>, "val": <value>}`                         |
 
 A renamed field or case keeps its schema name. Keys can be in any order, & other keys are ignored.
+
+A float that isn't finite is one of the strings `"NaN"`, `"Infinity"` or `"-Infinity"`, since JSON
+numbers can't hold them. A reader also takes a whole number for a float. (ex: `1` for `1.0`)
 
 ## Unknown Fields & Cases
 
@@ -48,3 +52,4 @@ Readers reject JSON when:
 - A field is given by name & by tag number.
 - A key is an invalid tag number.
 - A tag-numbered value isn't valid base-64, or isn't valid for a field or case the reader knows.
+- A number is out of the range of an `f32`.
