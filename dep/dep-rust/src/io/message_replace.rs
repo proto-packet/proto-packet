@@ -1,6 +1,6 @@
-use crate::io::CapacityError;
 use crate::io::message_read::search_tags;
 use crate::io::replace::read_end;
+use crate::io::{CapacityError, message_index_len};
 
 /// Reads the `u16` at the `offset`.
 fn read_u16(bytes: &[u8], offset: usize) -> u16 {
@@ -8,19 +8,15 @@ fn read_u16(bytes: &[u8], offset: usize) -> u16 {
     u16::from_le_bytes(*value)
 }
 
-/// Writes the `u32` to the `offset`.
-fn write_u32(bytes: &mut [u8], offset: usize, value: usize) {
-    bytes[offset..offset + 4].copy_from_slice(&(value as u32).to_le_bytes());
-}
-
 /// Replaces the value of the field with the `tag` in the message `bytes`, in place.
 ///
-/// A `None` `value` removes the field, & a new field is added at its place in the tags. Values that
-/// keep their length don't move anything. Otherwise the index & the other values move, the message
-/// can grow to the end of the `bytes`, & freed bytes are zeroed.
+/// # Note
+/// - Nothing moves in place, so the message must stay the same length.
+/// - A `None` `value` is an absent field.
 ///
 /// # Errors
-/// Returns an error, leaving the `bytes` unchanged, if the message would not fit.
+/// Returns an error, leaving the `bytes` unchanged, if the message would change its length. The
+/// error has the length it would need.
 ///
 /// # Panics
 /// Panics if the message index is not valid & within the `bytes`.
@@ -31,99 +27,44 @@ pub fn replace_field(
 ) -> Result<(), CapacityError> {
     let count: usize = read_u16(bytes, 0) as usize;
     let tag_at = |index: usize| read_u16(bytes, 2 + 2 * index);
-    let (index, is_present): (usize, bool) = match search_tags(count, tag, tag_at) {
-        Ok(index) => (index, true),
-        Err(index) => (index, false),
+    let index: Option<usize> = search_tags(count, tag, tag_at).ok();
+    let capacity: usize = bytes.len();
+    let Some(index) = index else {
+        return match value {
+            Some(value) => Err(CapacityError {
+                required: capacity - message_index_len(count)
+                    + message_index_len(count + 1)
+                    + value.len(),
+                capacity,
+            }),
+            None => Ok(()),
+        };
     };
-    if !is_present && value.is_none() {
-        return Ok(());
-    }
 
-    let old_ends: usize = 2 + 2 * count;
-    let old_values: usize = 2 + 6 * count;
+    let ends: usize = 2 + 2 * count;
+    let values: usize = message_index_len(count);
     let start: usize = match index {
         0 => 0,
-        _ => read_end(bytes, old_ends + (index - 1) * 4),
+        _ => read_end(bytes, ends + (index - 1) * 4),
     };
-    let end: usize = if is_present {
-        read_end(bytes, old_ends + index * 4)
+    let end: usize = if index + 1 == count {
+        capacity - values
     } else {
-        start
+        read_end(bytes, ends + index * 4)
     };
-    let last: usize = match count {
-        0 => 0,
-        _ => read_end(bytes, old_ends + (count - 1) * 4),
-    };
-
-    let new_count: usize = match (is_present, value.is_some()) {
-        (true, false) => count - 1,
-        (false, true) => count + 1,
-        _ => count,
-    };
-    let new_ends: usize = 2 + 2 * new_count;
-    let new_values: usize = 2 + 6 * new_count;
-    let new_len: usize = value.map_or(0, <[u8]>::len);
-    let new_end: usize = start + new_len;
-    let new_last: usize = last - (end - start) + new_len;
-    if new_count == count && new_len == end - start {
-        if let Some(value) = value {
-            bytes[old_values + start..old_values + end].copy_from_slice(value);
+    match value {
+        Some(value) if value.len() == end - start => {
+            bytes[values + start..values + end].copy_from_slice(value);
+            Ok(())
         }
-        return Ok(());
+        Some(value) => Err(CapacityError {
+            required: capacity - (end - start) + value.len(),
+            capacity,
+        }),
+        None => Err(CapacityError {
+            required: capacity - (end - start) - message_index_len(count)
+                + message_index_len(count - 1),
+            capacity,
+        }),
     }
-
-    let required: usize = new_values + new_last;
-    let capacity: usize = bytes.len().min(new_values + u32::MAX as usize);
-    if required > capacity {
-        return Err(CapacityError { required, capacity });
-    }
-
-    let old_used: usize = old_values + last;
-    if new_count > count {
-        // Grow: the values move first, leaving room for the index.
-        bytes.copy_within(old_values + end..old_used, new_values + new_end);
-        bytes.copy_within(old_values..old_values + start, new_values);
-        bytes.copy_within(
-            old_ends + index * 4..old_ends + count * 4,
-            new_ends + (index + 1) * 4,
-        );
-        bytes.copy_within(old_ends..old_ends + index * 4, new_ends);
-        bytes.copy_within(2 + 2 * index..old_ends, 2 + 2 * (index + 1));
-    } else {
-        // Shrink: the index moves first, since the values are about to move over it.
-        if new_count < count {
-            bytes.copy_within(2 + 2 * (index + 1)..old_ends, 2 + 2 * index);
-            bytes.copy_within(old_ends..old_ends + index * 4, new_ends);
-            bytes.copy_within(
-                old_ends + (index + 1) * 4..old_ends + count * 4,
-                new_ends + index * 4,
-            );
-        }
-        if new_values + new_end > old_values + end {
-            bytes.copy_within(old_values + end..old_used, new_values + new_end);
-            bytes.copy_within(old_values..old_values + start, new_values);
-        } else {
-            bytes.copy_within(old_values..old_values + start, new_values);
-            bytes.copy_within(old_values + end..old_used, new_values + new_end);
-        }
-    }
-
-    if let Some(value) = value {
-        bytes[new_values + start..new_values + new_end].copy_from_slice(value);
-        bytes[2 + 2 * index..2 + 2 * index + 2].copy_from_slice(&tag.to_le_bytes());
-    }
-    bytes[0..2].copy_from_slice(&(new_count as u16).to_le_bytes());
-
-    let first_moved: usize = if value.is_some() { index + 1 } else { index };
-    if value.is_some() {
-        write_u32(bytes, new_ends + index * 4, new_end);
-    }
-    for item in first_moved..new_count {
-        let moved: usize = read_end(bytes, new_ends + item * 4) - end + new_end;
-        write_u32(bytes, new_ends + item * 4, moved);
-    }
-    if required < old_used {
-        bytes[required..old_used].fill(0);
-    }
-    Ok(())
 }

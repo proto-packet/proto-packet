@@ -4,7 +4,7 @@
 /// // A struct with messages between its other fields.
 /// struct WithMessages {
 ///
-///     // A string, after the messages in the tail.
+///     // A string, before the messages in the tail.
 ///     before: string;
 ///
 ///     // A message.

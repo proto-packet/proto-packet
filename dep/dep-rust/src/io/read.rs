@@ -39,26 +39,6 @@ pub unsafe fn read_bit_unchecked(bytes: &[u8], offset: usize, bit: u8) -> bool {
     unsafe { *bytes.get_unchecked(offset) & (1 << bit) != 0 }
 }
 
-/// Gets the range of the entry at the `index`, of the end table at the `table`, for the entries at
-/// the `tail`.
-///
-/// # Safety
-/// The end table must be valid & within the `bytes`.
-pub(crate) unsafe fn entry_range_unchecked(
-    bytes: &[u8],
-    table: usize,
-    index: usize,
-    tail: usize,
-) -> Range<usize> {
-    let start: usize = if index == 0 {
-        0
-    } else {
-        unsafe { read_u32_unchecked(bytes, table + (index - 1) * 4) as usize }
-    };
-    let end: usize = unsafe { read_u32_unchecked(bytes, table + index * 4) as usize };
-    tail + start..tail + end
-}
-
 /// Gets the range of the entry at the `index` of a struct's tail.
 ///
 /// # Note

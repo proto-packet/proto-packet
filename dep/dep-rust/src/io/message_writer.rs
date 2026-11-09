@@ -1,4 +1,4 @@
-use crate::io::{UnknownField, write_end};
+use crate::io::{UnknownField, message_index_len, write_end};
 
 /// Responsible for appending an encoded message.
 ///
@@ -20,12 +20,13 @@ impl<'a> MessageWriter<'a> {
     pub fn new(out: &'a mut Vec<u8>, known: usize, unknown: &'a [UnknownField]) -> Self {
         let count: usize = known + unknown.len();
         let start: usize = out.len();
-        out.resize(start + 2 + 6 * count, 0);
+        let values: usize = start + message_index_len(count);
+        out.resize(values, 0);
         out[start..start + 2].copy_from_slice(&(count as u16).to_le_bytes());
         Self {
             tags: start + 2,
             ends: start + 2 + 2 * count,
-            values: start + 2 + 6 * count,
+            values,
             out,
             unknown,
         }
@@ -43,9 +44,14 @@ impl MessageWriter<'_> {
     }
 
     /// Ends the field being written.
+    ///
+    /// # Note
+    /// - The last field has no end, since its value ends where the message ends.
     pub fn end_field(&mut self) {
-        write_end(self.out, self.ends, self.values);
-        self.ends += 4;
+        if self.ends < self.values {
+            write_end(self.out, self.ends, self.values);
+            self.ends += 4;
+        }
     }
 
     /// Finishes the message.

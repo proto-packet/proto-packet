@@ -34,7 +34,7 @@ fn item_bytes() -> Vec<u8> {
     vec![
         2, 0, // count
         1, 0, 5, 0, // tags
-        2, 0, 0, 0, 6, 0, 0, 0, // ends
+        2, 0, 0, 0, // ends
         b'h', b'i', // text
         7, 0, 0, 0, // id
     ]
@@ -68,7 +68,7 @@ fn newer() -> Newer {
 #[test]
 fn item_example() {
     let bytes: Vec<u8> = item_bytes();
-    assert_eq!(bytes.len(), 20);
+    assert_eq!(bytes.len(), 16);
     assert_encoding!(Item, item(), &bytes);
 
     let value: ItemRef = ItemRef::new(&bytes).unwrap();
@@ -77,7 +77,7 @@ fn item_example() {
 
 #[test]
 fn absent_fields_are_not_listed() {
-    let bytes: [u8; 12] = [1, 0, 5, 0, 4, 0, 0, 0, 7, 0, 0, 0];
+    let bytes: [u8; 8] = [1, 0, 5, 0, 7, 0, 0, 0];
     assert_encoding!(Item, Item::default().with_id(7), &bytes);
 
     let value: ItemRef = ItemRef::new(&bytes).unwrap();
@@ -123,7 +123,7 @@ fn tags_are_sorted() {
 fn the_size_ignores_the_tag_numbers() {
     let value: EdgeTags = EdgeTags::default().with_min(1).with_max(2);
     let bytes: Vec<u8> = value.encode();
-    assert_eq!(bytes.len(), 2 + 4 + 8 + 8);
+    assert_eq!(bytes.len(), 2 + 4 + 4 + 8);
     assert_encoding!(EdgeTags, value, &bytes);
 }
 
@@ -186,13 +186,13 @@ fn slack_is_ignored() {
 
 #[test]
 fn extents_can_be_longer_than_their_values() {
-    let bytes: [u8; 16] = [1, 0, 5, 0, 8, 0, 0, 0, 7, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF];
+    let bytes: [u8; 12] = [1, 0, 5, 0, 7, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF];
     assert_eq!(ItemRef::new(&bytes).unwrap().id(), Some(7));
 }
 
 #[test]
 fn strings_are_their_whole_extent() {
-    let bytes: [u8; 11] = [1, 0, 1, 0, 3, 0, 0, 0, b'h', b'i', b'!'];
+    let bytes: [u8; 7] = [1, 0, 1, 0, b'h', b'i', b'!'];
     assert_eq!(ItemRef::new(&bytes).unwrap().text(), Some("hi!"));
 }
 
@@ -217,7 +217,7 @@ fn rejects_short_bytes() {
     assert_eq!(
         Item::decode(&[1, 0]),
         Err(DecodeError::TooShort {
-            expected: 8,
+            expected: 4,
             actual: 2,
         })
     );
@@ -245,18 +245,24 @@ fn rejects_invalid_tags() {
 
 #[test]
 fn rejects_end_tables() {
-    let mut decreasing: Vec<u8> = item_bytes();
-    decreasing[6] = 7;
-    assert_eq!(Item::decode(&decreasing), Err(DecodeError::InvalidEndTable));
-
     let mut too_long: Vec<u8> = item_bytes();
-    too_long[10] = 7;
+    too_long[6] = 7;
     assert_eq!(Item::decode(&too_long), Err(DecodeError::InvalidEndTable));
+
+    let decreasing: [u8; 23] = [
+        3, 0, // count
+        1, 0, 5, 0, 7, 0, // tags
+        2, 0, 0, 0, 1, 0, 0, 0, // ends
+        b'h', b'i', // text
+        7, 0, 0, 0, // id
+        9, // unknown
+    ];
+    assert_eq!(Item::decode(&decreasing), Err(DecodeError::InvalidEndTable));
 }
 
 #[test]
 fn rejects_short_values() {
-    let bytes: [u8; 10] = [1, 0, 5, 0, 2, 0, 0, 0, 7, 0];
+    let bytes: [u8; 6] = [1, 0, 5, 0, 7, 0];
     assert_eq!(
         Item::decode(&bytes),
         Err(DecodeError::TooShort {
@@ -269,7 +275,7 @@ fn rejects_short_values() {
 #[test]
 fn rejects_invalid_utf8() {
     let mut bytes: Vec<u8> = item_bytes();
-    bytes[14] = 0xFF;
+    bytes[10] = 0xFF;
     assert_eq!(Item::decode(&bytes), Err(DecodeError::InvalidUtf8));
 }
 
@@ -313,39 +319,39 @@ fn mut_sets_values_in_place() {
 }
 
 #[test]
-fn mut_removes_fields() {
+fn mut_rejects_changes_of_length() {
     let mut bytes: Vec<u8> = item_bytes();
     let mut value: ItemMut = ItemMut::new(&mut bytes).unwrap();
-    value.set_text(None).unwrap();
-    assert_eq!(value.as_ref().text(), None);
-    assert_eq!(value.as_ref().id(), Some(7));
-
-    let expected: Vec<u8> = Item::default().with_id(7).encode();
-    assert_eq!(bytes[..expected.len()], expected);
-    assert!(bytes[expected.len()..].iter().all(|byte| *byte == 0));
-}
-
-#[test]
-fn mut_adds_fields_into_slack() {
-    let mut bytes: Vec<u8> = Item::default().with_id(7).encode();
-    bytes.resize(20, 0);
-    let mut value: ItemMut = ItemMut::new(&mut bytes).unwrap();
-    value.set_text("hi").unwrap();
+    assert_eq!(
+        value.set_text(None),
+        Err(CapacityError {
+            required: 8,
+            capacity: 16,
+        })
+    );
+    assert_eq!(
+        value.set_text("hello"),
+        Err(CapacityError {
+            required: 19,
+            capacity: 16,
+        })
+    );
     assert_eq!(bytes, item_bytes());
 }
 
 #[test]
-fn mut_rejects_values_that_do_not_fit() {
+fn mut_rejects_new_fields() {
     let original: Vec<u8> = Item::default().with_id(7).encode();
     let mut bytes: Vec<u8> = original.clone();
     let mut value: ItemMut = ItemMut::new(&mut bytes).unwrap();
     assert_eq!(
         value.set_text("hi"),
         Err(CapacityError {
-            required: 20,
-            capacity: 12,
+            required: 16,
+            capacity: 8,
         })
     );
+    value.set_text(None).unwrap();
     assert_eq!(bytes, original);
 }
 
@@ -354,10 +360,10 @@ fn mut_keeps_unknown_fields() {
     let mut bytes: Vec<u8> = newer().encode();
     let mut older: OlderMut = OlderMut::new(&mut bytes).unwrap();
     older.set_age(40).unwrap();
-    older.set_name("Al").unwrap();
+    older.set_name("Eve").unwrap();
     assert_eq!(
         Newer::decode(&bytes),
-        Ok(newer().with_age(40).with_name("Al".to_string()))
+        Ok(newer().with_age(40).with_name("Eve".to_string()))
     );
 }
 
@@ -439,10 +445,10 @@ fn depth<C: CommentView>(comment: &C) -> usize {
 }
 
 /// Sets the text of every comment of any editable form.
-fn blank<C: CommentViewMut>(comment: &mut C) -> Result<(), CapacityError> {
-    comment.set_text("")?;
+fn mark<C: CommentViewMut>(comment: &mut C) -> Result<(), CapacityError> {
+    comment.set_text("x")?;
     match comment.reply_mut() {
-        Some(mut reply) => blank(&mut reply),
+        Some(mut reply) => mark(&mut reply),
         None => Ok(()),
     }
 }
@@ -462,10 +468,10 @@ fn recursive_messages() {
     assert_eq!(depth(&CommentRef::new(&bytes).unwrap()), 3);
 
     let mut edit = value.clone();
-    blank(&mut edit).unwrap();
-    assert_eq!(edit.reply().unwrap().text(), Some(""));
-    blank(&mut proto_packet_test::messages::boxed::CommentMut::new(&mut bytes).unwrap()).unwrap();
-    assert_eq!(Comment::decode(&bytes).unwrap().text(), Some(""));
+    mark(&mut edit).unwrap();
+    assert_eq!(edit.reply().unwrap().text(), Some("x"));
+    mark(&mut proto_packet_test::messages::boxed::CommentMut::new(&mut bytes).unwrap()).unwrap();
+    assert_eq!(Comment::decode(&bytes), Ok(edit));
 }
 
 /// Gets a struct with messages.
@@ -504,13 +510,14 @@ fn structs_reject_invalid_messages() {
 }
 
 #[test]
-fn structs_edit_their_messages_within_their_extent() {
+fn structs_edit_their_messages_in_place() {
     let mut bytes: Vec<u8> = with_messages().encode();
     let mut value: WithMessagesMut = WithMessagesMut::new(&mut bytes).unwrap();
     value.item_mut().set_id(5).unwrap();
     assert!(value.item_mut().set_text("too long").is_err());
-    value.item_mut().set_text(None).unwrap();
-    assert_eq!(value.as_ref().item().text(), None);
+    assert!(value.item_mut().set_text(None).is_err());
+    value.item_mut().set_text("yo").unwrap();
+    assert_eq!(value.as_ref().item().text(), Some("yo"));
     assert_eq!(value.as_ref().item().id(), Some(5));
     assert_eq!(value.as_ref().before(), "before");
     WithMessagesRef::new(value.as_bytes()).unwrap();
@@ -527,13 +534,12 @@ fn messages_hold_loops_of_structs() {
 
 /// Gets an item with an unknown field, a `u8` of 9 with the tag number 7.
 fn item_with_unknown() -> Item {
-    let bytes: [u8; 19] = [
+    let bytes: [u8; 13] = [
         2, 0, // count
         1, 0, 7, 0, // tags
-        2, 0, 0, 0, 3, 0, 0, 0, // ends
+        2, 0, 0, 0, // ends
         b'h', b'i', // text
         9,    // unknown
-        0, 0, // slack
     ];
     Item::decode(&bytes).unwrap()
 }

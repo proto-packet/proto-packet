@@ -1,4 +1,3 @@
-use crate::io::read::entry_range_unchecked;
 use crate::io::{
     DecodeError, TagNumber, check_ends, check_len, read_u16_unchecked, read_u32_unchecked,
 };
@@ -10,8 +9,30 @@ const fn ends_offset(count: usize) -> usize {
 }
 
 /// Gets the offset of the values of a message with the `count` of fields.
+///
+/// # Note
+/// - The last field has no end, since its value ends where the message ends.
 const fn values_offset(count: usize) -> usize {
-    2 + 6 * count
+    2 + 2 * count + 4 * count.saturating_sub(1)
+}
+
+/// Gets the range of the value at the `index` of the message `bytes` with the `count` of fields.
+///
+/// # Safety
+/// The message index must be valid.
+unsafe fn value_range_unchecked(bytes: &[u8], count: usize, index: usize) -> Range<usize> {
+    let (ends, values): (usize, usize) = (ends_offset(count), values_offset(count));
+    let start: usize = if index == 0 {
+        0
+    } else {
+        unsafe { read_u32_unchecked(bytes, ends + (index - 1) * 4) as usize }
+    };
+    let end: usize = if index + 1 == count {
+        bytes.len() - values
+    } else {
+        unsafe { read_u32_unchecked(bytes, ends + index * 4) as usize }
+    };
+    values + start..values + end
 }
 
 /// Gets the length of the index of a message with the `count` of fields.
@@ -38,7 +59,12 @@ pub fn check_message(bytes: &[u8]) -> Result<(), DecodeError> {
         }
         previous = tag;
     }
-    check_ends(bytes, ends_offset(count), count, values_offset(count))
+    check_ends(
+        bytes,
+        ends_offset(count),
+        count.saturating_sub(1),
+        values_offset(count),
+    )
 }
 
 /// The tags & the values of the fields of a message, in tag order.
@@ -47,7 +73,6 @@ pub struct MessageFields<'a> {
     bytes: &'a [u8],
     count: usize,
     index: usize,
-    start: usize,
 }
 
 /// Gets the tags & the values of the fields of the message `bytes`, in tag order.
@@ -61,7 +86,6 @@ pub unsafe fn message_fields_unchecked(bytes: &[u8]) -> MessageFields<'_> {
         bytes,
         count,
         index: 0,
-        start: 0,
     }
 }
 
@@ -72,13 +96,11 @@ impl<'a> Iterator for MessageFields<'a> {
         if self.index == self.count {
             return None;
         }
-        let (ends, values): (usize, usize) = (ends_offset(self.count), values_offset(self.count));
         let bytes: &'a [u8] = self.bytes;
         let tag: u16 = unsafe { read_u16_unchecked(bytes, 2 + 2 * self.index) };
-        let end: usize = unsafe { read_u32_unchecked(bytes, ends + 4 * self.index) as usize };
-        let value: &'a [u8] = unsafe { bytes.get_unchecked(values + self.start..values + end) };
+        let range: Range<usize> = unsafe { value_range_unchecked(bytes, self.count, self.index) };
+        let value: &'a [u8] = unsafe { bytes.get_unchecked(range) };
         self.index += 1;
-        self.start = end;
         Some((tag, value))
     }
 }
@@ -113,8 +135,7 @@ unsafe fn find_range_unchecked(bytes: &[u8], tag: u16) -> Option<Range<usize>> {
     let count: usize = unsafe { read_u16_unchecked(bytes, 0) as usize };
     let tag_at = |index: usize| unsafe { read_u16_unchecked(bytes, 2 + 2 * index) };
     let index: usize = search_tags(count, tag, tag_at).ok()?;
-    let (ends, values): (usize, usize) = (ends_offset(count), values_offset(count));
-    Some(unsafe { entry_range_unchecked(bytes, ends, index, values) })
+    Some(unsafe { value_range_unchecked(bytes, count, index) })
 }
 
 /// Finds the value of the field with the `tag` in the message `bytes`.
