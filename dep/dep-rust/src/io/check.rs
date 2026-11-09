@@ -1,4 +1,6 @@
+use crate::io::read::tail_entry_range_unchecked;
 use crate::io::{DecodeError, TagNumber};
+use std::ops::Range;
 
 /// Checks the `bytes` can hold a fixed block of the `size`.
 ///
@@ -77,4 +79,57 @@ pub const fn check_optional_tag_number(value: u16) -> Result<(), DecodeError> {
     } else {
         check_tag_number(value)
     }
+}
+
+/// Checks the end table of a struct's tail, at the `table` with the `count` of ends.
+///
+/// The end table must be within the `bytes`, so check their length first.
+///
+/// # Errors
+/// Returns an error if the end table starts before the end of the `header`, decreases, or goes past
+/// the end of the `bytes`.
+///
+/// # Panics
+/// Panics if the end table is not within the `bytes`.
+pub fn check_tail_ends(
+    bytes: &[u8],
+    table: usize,
+    count: usize,
+    header: usize,
+) -> Result<(), DecodeError> {
+    let (ends, _): (&[[u8; 4]], &[u8]) = bytes[table..table + count * 4].as_chunks();
+    let mut previous: usize = header;
+    for end in ends {
+        let end: usize = u32::from_le_bytes(*end) as usize;
+        if end < previous {
+            return Err(DecodeError::InvalidEndTable);
+        }
+        previous = end;
+    }
+    if previous > bytes.len() {
+        return Err(DecodeError::InvalidEndTable);
+    }
+    Ok(())
+}
+
+/// Checks the entry at the `index` of a struct's tail, & gets it.
+///
+/// The end table at the `table` must be valid, so check it first. The `count` is of the entries.
+///
+/// # Errors
+/// Returns an error if the entry starts after it ends, once its padding is counted.
+pub fn check_tail_entry(
+    bytes: &[u8],
+    table: usize,
+    index: usize,
+    count: usize,
+    header: usize,
+    alignment: usize,
+) -> Result<&[u8], DecodeError> {
+    let range: Range<usize> =
+        unsafe { tail_entry_range_unchecked(bytes, table, index, count, header, alignment) };
+    if range.start > range.end {
+        return Err(DecodeError::InvalidEndTable);
+    }
+    Ok(&bytes[range])
 }

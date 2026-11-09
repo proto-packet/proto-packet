@@ -75,3 +75,18 @@ pub fn replace_case(
     bytes[required..].fill(0);
     Ok(())
 }
+
+/// Replaces the string `entry` with the `value`, in place.
+///
+/// # Errors
+/// Returns an error, leaving the `entry` unchanged, if the `value` isn't the entry's length.
+pub fn replace_str(entry: &mut [u8], value: &str) -> Result<(), CapacityError> {
+    if value.len() != entry.len() {
+        return Err(CapacityError {
+            required: value.len(),
+            capacity: entry.len(),
+        });
+    }
+    entry.copy_from_slice(value.as_bytes());
+    Ok(())
+}
