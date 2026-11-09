@@ -35,13 +35,19 @@ pub enum PrimitiveType {
 
     /// A signed 128-bit integer.
     SignedInt128,
+
+    /// A 32-bit float.
+    Float32,
+
+    /// A 64-bit float.
+    Float64,
 }
 
 impl PrimitiveType {
     //! Names
 
     /// The primitive types.
-    pub const ALL: [Self; 11] = [
+    pub const ALL: [Self; 13] = [
         Self::Boolean,
         Self::UnsignedInt8,
         Self::UnsignedInt16,
@@ -53,6 +59,8 @@ impl PrimitiveType {
         Self::SignedInt32,
         Self::SignedInt64,
         Self::SignedInt128,
+        Self::Float32,
+        Self::Float64,
     ];
 
     /// Gets the name. (ex: `u8`)
@@ -69,6 +77,8 @@ impl PrimitiveType {
             Self::SignedInt32 => "i32",
             Self::SignedInt64 => "i64",
             Self::SignedInt128 => "i128",
+            Self::Float32 => "f32",
+            Self::Float64 => "f64",
         }
     }
 
