@@ -20,6 +20,15 @@ pub enum DecodeError {
 
     /// An enum value or a variant's tag is not a valid tag number.
     InvalidTagNumber { value: u16 },
+
+    /// A padding byte or an unused bit is not 0.
+    InvalidPadding,
+
+    /// An absent field is not zeros, or its entry is not empty.
+    InvalidAbsentField,
+
+    /// A `bool` byte is not 0 or 1.
+    InvalidBool { value: u8 },
 }
 
 impl Display for DecodeError {
@@ -35,6 +44,9 @@ impl Display for DecodeError {
             Self::InvalidTags => f.write_str("invalid tags"),
             Self::InvalidUtf8 => f.write_str("invalid UTF-8"),
             Self::InvalidTagNumber { value } => write!(f, "invalid tag number: {}", value),
+            Self::InvalidPadding => f.write_str("invalid padding"),
+            Self::InvalidAbsentField => f.write_str("invalid absent field"),
+            Self::InvalidBool { value } => write!(f, "invalid bool: {}", value),
         }
     }
 }

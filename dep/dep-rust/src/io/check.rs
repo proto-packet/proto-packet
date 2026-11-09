@@ -145,5 +145,90 @@ pub fn check_tail_entry(
     if range.start > range.end {
         return Err(DecodeError::InvalidEndTable);
     }
+    let previous: usize = tail_entry_previous(bytes, table, index, header);
+    check_padding(&bytes[previous..range.start])?;
     Ok(&bytes[range])
+}
+
+/// Gets where the entry before the entry at the `index` of a struct's tail ends.
+fn tail_entry_previous(bytes: &[u8], table: usize, index: usize, header: usize) -> usize {
+    match index {
+        0 => header,
+        _ => {
+            let end: &[u8; 4] = bytes[table + (index - 1) * 4..]
+                .first_chunk()
+                .expect("end out of bounds");
+            u32::from_le_bytes(*end) as usize
+        }
+    }
+}
+
+/// Checks the absent entry at the `index` of a struct's tail is empty.
+///
+/// The end table at the `table` must be valid, so check it first. The `count` is of the entries.
+///
+/// # Errors
+/// Returns an error if the entry is not empty.
+pub fn check_tail_absent(
+    bytes: &[u8],
+    table: usize,
+    index: usize,
+    count: usize,
+    header: usize,
+) -> Result<(), DecodeError> {
+    let range: Range<usize> =
+        unsafe { tail_entry_range_unchecked(bytes, table, index, count, header, 1) };
+    if range.start == range.end {
+        Ok(())
+    } else {
+        Err(DecodeError::InvalidAbsentField)
+    }
+}
+
+/// Checks the `padding` is zeros.
+///
+/// # Errors
+/// Returns an error if a byte is not 0.
+pub fn check_padding(padding: &[u8]) -> Result<(), DecodeError> {
+    if padding.iter().all(|byte| *byte == 0) {
+        Ok(())
+    } else {
+        Err(DecodeError::InvalidPadding)
+    }
+}
+
+/// Checks the bits of the `byte` from the `used` count of bits up are 0.
+///
+/// # Errors
+/// Returns an error if an unused bit is not 0.
+pub const fn check_unused_bits(byte: u8, used: u8) -> Result<(), DecodeError> {
+    if byte >> used == 0 {
+        Ok(())
+    } else {
+        Err(DecodeError::InvalidPadding)
+    }
+}
+
+/// Checks the bytes of an `absent` fixed-size field are zeros.
+///
+/// # Errors
+/// Returns an error if a byte is not 0.
+pub fn check_absent(absent: &[u8]) -> Result<(), DecodeError> {
+    if absent.iter().all(|byte| *byte == 0) {
+        Ok(())
+    } else {
+        Err(DecodeError::InvalidAbsentField)
+    }
+}
+
+/// Checks the `byte` of a `bool` is 0 or 1.
+///
+/// # Errors
+/// Returns an error if the `byte` is above 1.
+pub const fn check_bool(byte: u8) -> Result<(), DecodeError> {
+    if byte <= 1 {
+        Ok(())
+    } else {
+        Err(DecodeError::InvalidBool { value: byte })
+    }
 }
