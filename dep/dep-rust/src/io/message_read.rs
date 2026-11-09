@@ -14,6 +14,12 @@ const fn values_offset(count: usize) -> usize {
     2 + 6 * count
 }
 
+/// Gets the length of the index of a message with the `count` of fields.
+#[must_use]
+pub const fn message_index_len(count: usize) -> usize {
+    values_offset(count)
+}
+
 /// Checks the index of the message `bytes`.
 ///
 /// # Errors
