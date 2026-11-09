@@ -1,5 +1,6 @@
 use crate::io::{
-    DecodeError, TagNumber, check_ends, check_len, read_u16_unchecked, read_u32_unchecked,
+    DecodeError, TagNumber, check_ends, check_exact_len, check_len, read_u16_unchecked,
+    read_u32_unchecked,
 };
 use std::ops::Range;
 
@@ -45,10 +46,13 @@ pub const fn message_index_len(count: usize) -> usize {
 ///
 /// # Errors
 /// Returns an error if the `bytes` are shorter than the index, the tags aren't strictly increasing
-/// valid tag numbers, or the end table is invalid.
+/// valid tag numbers, the end table is invalid, or a message without fields has more bytes.
 pub fn check_message(bytes: &[u8]) -> Result<(), DecodeError> {
     check_len(bytes, 2)?;
     let count: usize = unsafe { read_u16_unchecked(bytes, 0) as usize };
+    if count == 0 {
+        return check_exact_len(bytes, 2);
+    }
     check_len(bytes, values_offset(count))?;
     let (tags, _): (&[[u8; 2]], &[u8]) = bytes[2..ends_offset(count)].as_chunks();
     let mut previous: u16 = 0;

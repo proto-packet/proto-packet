@@ -89,6 +89,13 @@ fn empty_messages() {
     assert_encoding!(Item, Item::default(), &[0, 0]);
     assert_encoding!(EmptyMessage, EmptyMessage::default(), &[0, 0]);
     EmptyMessageRef::new(&[0, 0]).unwrap();
+    assert_eq!(
+        Item::decode(&[0, 0, 0xFF]),
+        Err(DecodeError::TooLong {
+            expected: 2,
+            actual: 3,
+        })
+    );
 }
 
 #[test]
