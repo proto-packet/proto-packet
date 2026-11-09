@@ -379,11 +379,11 @@ impl OptionalFields {
         let start: usize = out.len();
         out.extend_from_slice(self.id.unwrap_or_default().as_bytes());
         out.extend_from_slice(&self.count.unwrap_or_default().to_le_bytes());
+        proto_packet::io::write_zeros(out, 16);
         match &self.point {
             Some(value) => value.encode_to(out),
             None => proto_packet::io::write_zeros(out, 8),
         }
-        proto_packet::io::write_zeros(out, 16);
         out.extend_from_slice(
             &self
                 .color
@@ -405,19 +405,19 @@ impl OptionalFields {
         if let Some(value) = &self.person {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 28, tail);
+        proto_packet::io::write_end(out, start + 20, tail);
         if let Some(value) = &self.label {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 32, tail);
+        proto_packet::io::write_end(out, start + 24, tail);
         if let Some(value) = &self.shape {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 36, tail);
+        proto_packet::io::write_end(out, start + 28, tail);
         if let Some(value) = &self.text {
             out.extend_from_slice(value.as_bytes());
         }
-        proto_packet::io::write_end(out, start + 40, tail);
+        proto_packet::io::write_end(out, start + 32, tail);
     }
 }
 

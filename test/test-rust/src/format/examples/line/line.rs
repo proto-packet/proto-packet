@@ -136,7 +136,7 @@ impl Line {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        20
+        17
     }
 
     /// Encodes the struct.
@@ -152,7 +152,6 @@ impl Line {
         self.start.encode_to(out);
         self.end.encode_to(out);
         out.extend_from_slice(&self.width.to_le_bytes());
-        proto_packet::io::write_zeros(out, 3);
     }
 }
 

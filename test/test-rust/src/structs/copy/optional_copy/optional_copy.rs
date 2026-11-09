@@ -110,7 +110,7 @@ impl OptionalCopy {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        16
+        13
     }
 
     /// Encodes the struct.
@@ -129,7 +129,6 @@ impl OptionalCopy {
             None => proto_packet::io::write_zeros(out, 8),
         }
         out.push(u8::from(self.count.is_some()) | (u8::from(self.point.is_some()) << 1));
-        proto_packet::io::write_zeros(out, 3);
     }
 }
 

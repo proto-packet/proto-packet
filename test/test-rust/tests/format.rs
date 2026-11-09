@@ -9,9 +9,10 @@ use proto_packet_test::format::edges::{
 };
 use proto_packet_test::format::examples::{
     Color, Entry, EntryView, EntryViewMut, Line, LineBuf, LineMut, LineRef, LineView, LineViewMut,
-    Mixed, MixedMut, MixedRef, Opt, OptBuf, OptMut, OptRef, OptView, OptViewMut, Pair, PairBuf,
-    PairMut, PairRef, PairView, PairViewMut, Person, PersonBuf, PersonMut, PersonRef,
-    PersonViewMut, Point, PointBuf, PointMut, PointRef, PointView, PointViewMut,
+    Mixed, MixedMut, MixedRef, Opt, OptBuf, OptMut, OptRef, OptView, OptViewMut, Outer, OuterRef,
+    Padded, PaddedRef, Pair, PairBuf, PairMut, PairRef, PairView, PairViewMut, Person, PersonBuf,
+    PersonMut, PersonRef, PersonViewMut, Point, PointBuf, PointMut, PointRef, PointView,
+    PointViewMut,
 };
 use proto_packet_test::structs::boxed::{
     ListNode, ListNodeBuf, ListNodeMut, ListNodeRef, ListNodeView, ListNodeViewMut,
@@ -42,7 +43,7 @@ fn point_example() {
 
 #[test]
 fn mixed_example() {
-    let bytes: [u8; 16] = [2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 1, 0, 0, 0, 0];
+    let bytes: [u8; 12] = [2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 1];
     assert_encoding!(Mixed, Mixed::new(1, 2, 3, true), &bytes);
 
     let mixed: MixedRef = MixedRef::new(&bytes).unwrap();
@@ -54,7 +55,7 @@ fn mixed_example() {
 
 #[test]
 fn line_example() {
-    let bytes: [u8; 20] = [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0, 5, 0, 0, 0];
+    let bytes: [u8; 17] = [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0, 5];
     let line: Line = Line::new(Point::new(1, 2), Point::new(3, 4), 5);
     assert_encoding!(Line, line, &bytes);
 
@@ -63,6 +64,43 @@ fn line_example() {
     assert_eq!(line_ref.end().x(), 3);
     assert_eq!(line_ref.width(), 5);
     assert_eq!(line_ref.decode(), line);
+}
+
+#[test]
+fn outer_example() {
+    let bytes: Vec<u8> = [
+        &[2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 1][..], // m
+        &[4, 0, 0, 0],                             // x
+        &[5],                                      // y
+    ]
+    .concat();
+    let outer: Outer = Outer::new(Mixed::new(1, 2, 3, true), 4, 5);
+    assert_eq!(bytes.len(), 17);
+    assert_encoding!(Outer, outer, &bytes);
+
+    let outer_ref: OuterRef = OuterRef::new(&bytes).unwrap();
+    assert_eq!(outer_ref.m().b(), 2);
+    assert_eq!((outer_ref.x(), outer_ref.y()), (4, 5));
+}
+
+#[test]
+fn padded_example() {
+    let line = |base: u32| Line::new(Point::new(base, base + 1), Point::new(base + 2, 9), 7);
+    let bytes: Vec<u8> = [
+        &[8, 0, 0, 0][..],                                    // x
+        &[1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 9, 0, 0, 0, 7], // a
+        &[0; 3],                                              // padding
+        &[4, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0, 9, 0, 0, 0, 7], // b
+    ]
+    .concat();
+    let padded: Padded = Padded::new(line(1), 8, line(4));
+    assert_eq!(bytes.len(), 41);
+    assert_encoding!(Padded, padded, &bytes);
+
+    let padded_ref: PaddedRef = PaddedRef::new(&bytes).unwrap();
+    assert_eq!(padded_ref.a().width(), 7);
+    assert_eq!(padded_ref.x(), 8);
+    assert_eq!(padded_ref.b().start().x(), 4);
 }
 
 #[test]
@@ -83,7 +121,7 @@ fn fixed_kinds() {
         &[0; 8],                   // maybe_point, absent
         &[1, 0],                   // color
         &[0, 0],                   // maybe_color, absent
-        &[0, 0, 0, 0],             // bits & padding
+        &[0],                      // bits
     ]
     .concat();
     let value: FixedKinds = FixedKinds::new(ID, Color::Red, Point::new(1, 2), None, None);
@@ -135,9 +173,11 @@ fn slack_is_ignored() {
 
 #[test]
 fn padding_is_ignored() {
-    let mut bytes: [u8; 16] = [2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 1, 0, 0, 0, 0];
-    bytes[12] = 0xFF;
-    assert_eq!(Mixed::decode(&bytes), Ok(Mixed::new(1, 2, 3, true)));
+    let line: Line = Line::new(Point::new(1, 2), Point::new(3, 4), 5);
+    let padded: Padded = Padded::new(line, 8, line);
+    let mut bytes: Vec<u8> = padded.encode();
+    bytes[21] = 0xFF;
+    assert_eq!(Padded::decode(&bytes), Ok(padded));
 }
 
 #[test]

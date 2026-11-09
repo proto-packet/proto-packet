@@ -76,7 +76,7 @@ impl OptionalFieldsMut<'_> {
         value: impl Into<Option<&'v str>>,
     ) -> Result<(), proto_packet::io::CapacityError> {
         let value: Option<&str> = value.into();
-        proto_packet::io::replace_entry(self.bytes, 28, 4, 3, 48, value.unwrap_or_default())?;
+        proto_packet::io::replace_entry(self.bytes, 20, 4, 3, 48, value.unwrap_or_default())?;
         unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 46, 2, value.is_some()) };
         Ok(())
     }
@@ -86,7 +86,7 @@ impl OptionalFieldsMut<'_> {
     pub fn point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 3) } {
             Some(unsafe {
-                crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(20..28))
+                crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(36..44))
             })
         } else {
             None
@@ -99,7 +99,7 @@ impl OptionalFieldsMut<'_> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 4) } {
             Some(unsafe {
                 crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes, 28, 0, 48,
+                    self.bytes, 20, 0, 48,
                 ))
             })
         } else {
@@ -113,7 +113,7 @@ impl OptionalFieldsMut<'_> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 5) } {
             Some(unsafe {
                 crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes, 28, 1, 48,
+                    self.bytes, 20, 1, 48,
                 ))
             })
         } else {
@@ -139,7 +139,7 @@ impl OptionalFieldsMut<'_> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 6) } {
             Some(unsafe {
                 crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes, 28, 2, 48,
+                    self.bytes, 20, 2, 48,
                 ))
             })
         } else {

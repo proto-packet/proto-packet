@@ -71,7 +71,7 @@ impl NestedCopy {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        32
+        30
     }
 
     /// Encodes the struct.

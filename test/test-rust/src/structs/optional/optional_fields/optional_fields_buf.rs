@@ -73,7 +73,7 @@ impl OptionalFieldsBuf {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 46, 3) } {
             Some(unsafe {
                 crate::types::PointMut::new_unchecked(
-                    self.bytes.as_mut_slice().get_unchecked_mut(20..28),
+                    self.bytes.as_mut_slice().get_unchecked_mut(36..44),
                 )
             })
         } else {
@@ -88,7 +88,7 @@ impl OptionalFieldsBuf {
             Some(unsafe {
                 crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
                     self.bytes.as_mut_slice(),
-                    28,
+                    20,
                     0,
                     48,
                 ))
@@ -105,7 +105,7 @@ impl OptionalFieldsBuf {
             Some(unsafe {
                 crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
                     self.bytes.as_mut_slice(),
-                    28,
+                    20,
                     1,
                     48,
                 ))
@@ -122,7 +122,7 @@ impl OptionalFieldsBuf {
             Some(unsafe {
                 crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
                     self.bytes.as_mut_slice(),
-                    28,
+                    20,
                     2,
                     48,
                 ))

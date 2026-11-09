@@ -37,6 +37,32 @@ struct Line {
     width: u8;
 }
 
+// The `Outer` example of `format/binary.md`.
+struct Outer {
+
+    // A struct of alignment 8, with a size that isn't a multiple of 8.
+    m: Mixed;
+
+    // An alignment 4 field.
+    x: u32;
+
+    // An alignment 1 field.
+    y: u8;
+}
+
+// The `Padded` example of `format/binary.md`.
+struct Padded {
+
+    // A struct of alignment 4, with a size that isn't a multiple of 4.
+    a: Line;
+
+    // An alignment 4 field, placed before the structs.
+    x: u32;
+
+    // A struct that needs padding before it.
+    b: Line;
+}
+
 // The `Person` example of `format/binary.md`.
 struct Person {
 

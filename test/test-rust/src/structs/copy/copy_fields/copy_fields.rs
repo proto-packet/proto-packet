@@ -156,7 +156,7 @@ impl CopyFields {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        32
+        30
     }
 
     /// Encodes the struct.
@@ -173,7 +173,6 @@ impl CopyFields {
         out.extend_from_slice(&self.count.to_le_bytes());
         self.point.encode_to(out);
         out.extend_from_slice(&self.color.tag_number().to_le_bytes());
-        proto_packet::io::write_zeros(out, 2);
     }
 }
 

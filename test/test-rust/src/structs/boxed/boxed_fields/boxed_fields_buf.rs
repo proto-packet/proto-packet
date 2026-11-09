@@ -71,7 +71,9 @@ impl BoxedFieldsBuf {
     #[must_use]
     pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
         unsafe {
-            crate::types::PointMut::new_unchecked(self.bytes.as_mut_slice().get_unchecked_mut(0..8))
+            crate::types::PointMut::new_unchecked(
+                self.bytes.as_mut_slice().get_unchecked_mut(12..20),
+            )
         }
     }
 
@@ -81,7 +83,7 @@ impl BoxedFieldsBuf {
         unsafe {
             crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
                 self.bytes.as_mut_slice(),
-                8,
+                0,
                 0,
                 24,
             ))
@@ -94,7 +96,7 @@ impl BoxedFieldsBuf {
         unsafe {
             crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
                 self.bytes.as_mut_slice(),
-                8,
+                0,
                 1,
                 24,
             ))
@@ -107,7 +109,7 @@ impl BoxedFieldsBuf {
         unsafe {
             crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
                 self.bytes.as_mut_slice(),
-                8,
+                0,
                 2,
                 24,
             ))

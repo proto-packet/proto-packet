@@ -15,19 +15,19 @@ impl<'a> BoxedFieldsRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 24)?;
-        proto_packet::io::check_ends(bytes, 8, 3, 24)?;
-        crate::types::PointRef::new(unsafe { bytes.get_unchecked(0..8) })?;
+        proto_packet::io::check_ends(bytes, 0, 3, 24)?;
+        crate::types::PointRef::new(unsafe { bytes.get_unchecked(12..20) })?;
         crate::types::PersonRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 8, 0, 24)
+            proto_packet::io::read_entry_unchecked(bytes, 0, 0, 24)
         })?;
         crate::types::LabelRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 8, 1, 24)
+            proto_packet::io::read_entry_unchecked(bytes, 0, 1, 24)
         })?;
         proto_packet::io::check_tag_number(unsafe {
             proto_packet::io::read_u16_unchecked(bytes, 20)
         })?;
         crate::types::ShapeRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 8, 2, 24)
+            proto_packet::io::read_entry_unchecked(bytes, 0, 2, 24)
         })?;
         Ok(Self { bytes })
     }
@@ -58,7 +58,7 @@ impl<'a> BoxedFieldsRef<'a> {
     /// Gets the field: `point`.
     #[must_use]
     pub fn point(&self) -> crate::types::PointRef<'a> {
-        unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(0..8)) }
+        unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(12..20)) }
     }
 
     /// Gets the field: `person`.
@@ -66,7 +66,7 @@ impl<'a> BoxedFieldsRef<'a> {
     pub fn person(&self) -> crate::types::PersonRef<'a> {
         unsafe {
             crate::types::PersonRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 8, 0, 24,
+                self.bytes, 0, 0, 24,
             ))
         }
     }
@@ -76,7 +76,7 @@ impl<'a> BoxedFieldsRef<'a> {
     pub fn label(&self) -> crate::types::LabelRef<'a> {
         unsafe {
             crate::types::LabelRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 8, 1, 24,
+                self.bytes, 0, 1, 24,
             ))
         }
     }
@@ -96,7 +96,7 @@ impl<'a> BoxedFieldsRef<'a> {
     pub fn shape(&self) -> crate::types::ShapeRef<'a> {
         unsafe {
             crate::types::ShapeRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 8, 2, 24,
+                self.bytes, 0, 2, 24,
             ))
         }
     }

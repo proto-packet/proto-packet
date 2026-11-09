@@ -219,17 +219,17 @@ impl BoxedFields {
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
-        self.point.encode_to(out);
         proto_packet::io::write_zeros(out, 12);
+        self.point.encode_to(out);
         out.extend_from_slice(&self.color.tag_number().to_le_bytes());
         proto_packet::io::write_zeros(out, 2);
         let tail: usize = out.len();
         self.person.encode_to(out);
-        proto_packet::io::write_end(out, start + 8, tail);
+        proto_packet::io::write_end(out, start, tail);
         self.label.encode_to(out);
-        proto_packet::io::write_end(out, start + 12, tail);
+        proto_packet::io::write_end(out, start + 4, tail);
         self.shape.encode_to(out);
-        proto_packet::io::write_end(out, start + 16, tail);
+        proto_packet::io::write_end(out, start + 8, tail);
     }
 }
 

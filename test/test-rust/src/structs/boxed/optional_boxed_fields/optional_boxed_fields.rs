@@ -265,11 +265,11 @@ impl OptionalBoxedFields {
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 12);
         match &self.point {
             Some(value) => value.encode_to(out),
             None => proto_packet::io::write_zeros(out, 8),
         }
-        proto_packet::io::write_zeros(out, 12);
         out.extend_from_slice(
             &self
                 .color
@@ -288,15 +288,15 @@ impl OptionalBoxedFields {
         if let Some(value) = &self.person {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 8, tail);
+        proto_packet::io::write_end(out, start, tail);
         if let Some(value) = &self.label {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 12, tail);
+        proto_packet::io::write_end(out, start + 4, tail);
         if let Some(value) = &self.shape {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 16, tail);
+        proto_packet::io::write_end(out, start + 8, tail);
     }
 }
 

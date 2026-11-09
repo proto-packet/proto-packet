@@ -52,7 +52,7 @@ impl OptionalBoxedFieldsMut<'_> {
     pub fn point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 22, 0) } {
             Some(unsafe {
-                crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(0..8))
+                crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(12..20))
             })
         } else {
             None
@@ -65,7 +65,7 @@ impl OptionalBoxedFieldsMut<'_> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 22, 1) } {
             Some(unsafe {
                 crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes, 8, 0, 24,
+                    self.bytes, 0, 0, 24,
                 ))
             })
         } else {
@@ -79,7 +79,7 @@ impl OptionalBoxedFieldsMut<'_> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 22, 2) } {
             Some(unsafe {
                 crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes, 8, 1, 24,
+                    self.bytes, 0, 1, 24,
                 ))
             })
         } else {
@@ -105,7 +105,7 @@ impl OptionalBoxedFieldsMut<'_> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 22, 3) } {
             Some(unsafe {
                 crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes, 8, 2, 24,
+                    self.bytes, 0, 2, 24,
                 ))
             })
         } else {

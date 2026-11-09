@@ -211,7 +211,7 @@ impl FixedKinds {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        40
+        37
     }
 
     /// Encodes the struct.
@@ -239,7 +239,6 @@ impl FixedKinds {
                 .to_le_bytes(),
         );
         out.push(u8::from(self.maybe_point.is_some()));
-        proto_packet::io::write_zeros(out, 3);
     }
 }
 

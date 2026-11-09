@@ -14,7 +14,7 @@ impl<'a> OptionalCopyRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 16)?;
+        proto_packet::io::check_len(bytes, 13)?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 12, 1) } {
             crate::types::PointRef::new(unsafe { bytes.get_unchecked(4..12) })?;
         }

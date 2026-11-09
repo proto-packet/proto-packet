@@ -140,7 +140,7 @@ impl Mixed {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        16
+        12
     }
 
     /// Encodes the struct.
@@ -157,7 +157,6 @@ impl Mixed {
         out.extend_from_slice(&self.c.to_le_bytes());
         out.extend_from_slice(&self.a.to_le_bytes());
         out.push(u8::from(self.d));
-        proto_packet::io::write_zeros(out, 4);
     }
 }
 

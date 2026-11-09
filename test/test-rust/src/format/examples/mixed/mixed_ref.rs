@@ -14,7 +14,7 @@ impl<'a> MixedRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 16)?;
+        proto_packet::io::check_len(bytes, 12)?;
         Ok(Self { bytes })
     }
 

@@ -50,7 +50,7 @@ impl BoxedFieldsMut<'_> {
     /// Gets the mut of the field: `point`.
     #[must_use]
     pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
-        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(0..8)) }
+        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(12..20)) }
     }
 
     /// Gets the mut of the field: `person`.
@@ -58,7 +58,7 @@ impl BoxedFieldsMut<'_> {
     pub fn person_mut(&mut self) -> crate::types::PersonMut<'_> {
         unsafe {
             crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                self.bytes, 8, 0, 24,
+                self.bytes, 0, 0, 24,
             ))
         }
     }
@@ -68,7 +68,7 @@ impl BoxedFieldsMut<'_> {
     pub fn label_mut(&mut self) -> crate::types::LabelMut<'_> {
         unsafe {
             crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                self.bytes, 8, 1, 24,
+                self.bytes, 0, 1, 24,
             ))
         }
     }
@@ -83,7 +83,7 @@ impl BoxedFieldsMut<'_> {
     pub fn shape_mut(&mut self) -> crate::types::ShapeMut<'_> {
         unsafe {
             crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                self.bytes, 8, 2, 24,
+                self.bytes, 0, 2, 24,
             ))
         }
     }

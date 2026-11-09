@@ -2,7 +2,7 @@ use crate::layout::{
     BitLayout, EntryLayout, FieldLayout, LayoutCache, TypeLayout, UnitLayout, ValueLayout,
 };
 use proto_packet::io::align_up;
-use proto_packet_tree::{Project, Struct, StructField, WithTypeTag};
+use proto_packet_tree::{Project, Struct, StructField, TypeTag, WithTypeTag};
 use std::cmp::Reverse;
 
 /// The layout of a struct's encoding. (see `format/binary.md`)
@@ -11,7 +11,7 @@ pub struct StructLayout {
     /// The alignment.
     pub alignment: usize,
 
-    /// The size of the fixed block, with its padding. (the size of a fixed struct)
+    /// The size of the fixed block. (the size of a fixed struct)
     pub fixed_size: usize,
 
     /// The offset of the end table in the fixed block. (0 without entries)
@@ -45,24 +45,37 @@ impl StructLayout {
             .collect();
         let entries: Vec<EntryLayout> = entries(fields, &types);
 
+        let is_struct: Vec<bool> = fields
+            .iter()
+            .map(|field| {
+                let tag: &TypeTag = field.type_tag();
+                matches!(tag, TypeTag::Named(_)) && !cache.is_enum(tag)
+            })
+            .collect();
+
         let mut units: Vec<UnitLayout> = Vec::default();
         let mut offsets: Vec<usize> = vec![0; fields.len()];
         let mut offset: usize = 0;
         let mut table_offset: usize = 0;
         for group in [8, 4, 2, 1] {
-            for (index, layout) in types.iter().enumerate() {
-                if let TypeLayout::Fixed { size, alignment } = *layout
-                    && alignment == group
-                {
-                    units.push(UnitLayout::Field { index });
-                    offsets[index] = offset;
-                    offset += size;
+            for structs in [false, true] {
+                if structs && group == 4 && !entries.is_empty() {
+                    offset = pad(&mut units, offset, 4);
+                    units.push(UnitLayout::EndTable);
+                    table_offset = offset;
+                    offset += entries.len() * 4;
                 }
-            }
-            if group == 4 && !entries.is_empty() {
-                units.push(UnitLayout::EndTable);
-                table_offset = offset;
-                offset += entries.len() * 4;
+                for (index, layout) in types.iter().enumerate() {
+                    if let TypeLayout::Fixed { size, alignment } = *layout
+                        && alignment == group
+                        && is_struct[index] == structs
+                    {
+                        offset = pad(&mut units, offset, alignment);
+                        units.push(UnitLayout::Field { index });
+                        offsets[index] = offset;
+                        offset += size;
+                    }
+                }
             }
         }
 
@@ -107,13 +120,8 @@ impl StructLayout {
             offset += size;
         }
 
-        let padded_alignment: usize = entries.first().map_or(alignment, |entry| entry.alignment);
-        let fixed_size: usize = align_up(offset, padded_alignment);
-        if fixed_size != offset {
-            units.push(UnitLayout::Padding {
-                size: fixed_size - offset,
-            });
-        }
+        let tail_alignment: usize = entries.first().map_or(1, |entry| entry.alignment);
+        let fixed_size: usize = pad(&mut units, offset, tail_alignment);
 
         Self {
             alignment,
@@ -133,6 +141,20 @@ impl StructLayout {
     pub fn is_fixed(&self) -> bool {
         self.entries.is_empty()
     }
+}
+
+/// Adds the padding that aligns the `offset` to the `units`, & gets the aligned offset.
+///
+/// # Note
+/// - Only a struct field can end off a multiple of the next unit's alignment.
+fn pad(units: &mut Vec<UnitLayout>, offset: usize, alignment: usize) -> usize {
+    let aligned: usize = align_up(offset, alignment);
+    if aligned != offset {
+        units.push(UnitLayout::Padding {
+            size: aligned - offset,
+        });
+    }
+    aligned
 }
 
 /// Gets the entries of the `fields` with the `types`: the variable structs, messages & variants by
