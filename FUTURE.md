@@ -59,13 +59,13 @@ rustdoc reads them as Markdown. (`docs.rs`)
 - Ordinary text can fail `cargo doc` with `-D warnings`. (ex: `Vec<u32>` is an unclosed HTML tag, &
   `[Thing]` a broken intra-doc link)
 
-### Variant `u128` Cases
+### Variant `u128` & `i128` Cases
 
 A variant is `{"var": ..., "val": ...}` in JSON. When `val` comes before `var`, the value is buffered
-until the case is known, & serde_json reports a number above `u64::MAX` as a float, so a larger
-`u128` value fails to read. (ex: sorted keys) The generated code writes `var` first, so only
-reordered input fails. The full fix waits for a JSON encoding without serde.
-(`dep/dep-rust/src/types/variant_json.rs` & `buffered.rs`)
+until the case is known, & serde_json reports a number above `u64::MAX` or below `i64::MIN` as a
+float, so a `u128` or `i128` value outside that range fails to read. (ex: sorted keys) The generated
+code writes `var` first, so only reordered input fails. The full fix waits for a JSON encoding
+without serde. (`dep/dep-rust/src/types/variant_json.rs` & `buffered.rs`)
 
 ### Recursive Types
 
