@@ -59,43 +59,6 @@ pub(crate) unsafe fn entry_range_unchecked(
     tail + start..tail + end
 }
 
-/// Reads the tail entry at the `index`, of the end table at the `table`, for the tail at the `tail`.
-///
-/// # Safety
-/// The end table must be valid & within the `bytes`, & the `tail` must be within the `bytes`.
-#[must_use]
-pub unsafe fn read_entry_unchecked(bytes: &[u8], table: usize, index: usize, tail: usize) -> &[u8] {
-    let range: Range<usize> = unsafe { entry_range_unchecked(bytes, table, index, tail) };
-    unsafe { bytes.get_unchecked(range) }
-}
-
-/// Reads the tail entry at the `index` mutably, of the end table at the `table`, for the tail at the
-/// `tail`.
-///
-/// # Safety
-/// The end table must be valid & within the `bytes`, & the `tail` must be within the `bytes`.
-#[must_use]
-pub unsafe fn read_entry_mut_unchecked(
-    bytes: &mut [u8],
-    table: usize,
-    index: usize,
-    tail: usize,
-) -> &mut [u8] {
-    let range: Range<usize> = unsafe { entry_range_unchecked(bytes, table, index, tail) };
-    unsafe { bytes.get_unchecked_mut(range) }
-}
-
-/// Reads the string entry at the `index`, of the end table at the `table`, for the tail at the
-/// `tail`.
-///
-/// # Safety
-/// The end table must be valid & within the `bytes`, the `tail` must be within the `bytes`, & the
-/// entry must be valid UTF-8.
-#[must_use]
-pub unsafe fn read_str_unchecked(bytes: &[u8], table: usize, index: usize, tail: usize) -> &str {
-    unsafe { std::str::from_utf8_unchecked(read_entry_unchecked(bytes, table, index, tail)) }
-}
-
 /// Gets the range of the entry at the `index` of a struct's tail.
 ///
 /// # Note
