@@ -229,7 +229,7 @@ impl Newer {
             count += 1;
             values += value.encoded_len();
         }
-        2 + 6 * count + values
+        proto_packet::io::message_index_len(count) + values
     }
 
     /// Encodes the message.

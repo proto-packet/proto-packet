@@ -69,7 +69,7 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
             }
         });
     }
-    function.with_literal("2 + 6 * count + values")
+    function.with_literal(format!("{}::message_index_len(count) + values", IO))
 }
 
 /// Generates the function appending the encoding to the `out` bytes.

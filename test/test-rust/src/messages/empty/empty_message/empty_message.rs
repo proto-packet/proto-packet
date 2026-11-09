@@ -38,7 +38,7 @@ impl EmptyMessage {
     pub fn encoded_len(&self) -> usize {
         let count: usize = self.unknown_fields.len();
         let values: usize = proto_packet::io::unknown_fields_len(&self.unknown_fields);
-        2 + 6 * count + values
+        proto_packet::io::message_index_len(count) + values
     }
 
     /// Encodes the message.

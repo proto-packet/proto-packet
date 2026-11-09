@@ -149,7 +149,7 @@ impl UnorderedTags {
             count += 1;
             values += 4;
         }
-        2 + 6 * count + values
+        proto_packet::io::message_index_len(count) + values
     }
 
     /// Encodes the message.

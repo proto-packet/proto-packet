@@ -75,7 +75,7 @@ impl GreetRequest {
             count += 1;
             values += value.len();
         }
-        2 + 6 * count + values
+        proto_packet::io::message_index_len(count) + values
     }
 
     /// Encodes the message.
