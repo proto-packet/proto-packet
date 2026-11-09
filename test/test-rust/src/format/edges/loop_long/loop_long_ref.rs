@@ -15,10 +15,13 @@ impl<'a> LoopLongRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 9)?;
+        proto_packet::io::check_unused_bits(bytes[8], 1)?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 8, 0) } {
             crate::format::edges::LoopByteRef::new(proto_packet::io::check_tail_entry(
                 bytes, 0, 0, 1, 9, 8,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 0, 1, 9)?;
         }
         Ok(Self { bytes })
     }

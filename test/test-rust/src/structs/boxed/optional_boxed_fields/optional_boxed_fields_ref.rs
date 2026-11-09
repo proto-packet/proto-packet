@@ -16,18 +16,25 @@ impl<'a> OptionalBoxedFieldsRef<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 19)?;
         proto_packet::io::check_tail_ends(bytes, 0, 2, 19)?;
+        proto_packet::io::check_unused_bits(bytes[18], 4)?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 18, 0) } {
             crate::types::PointRef::new(unsafe { bytes.get_unchecked(8..16) })?;
+        } else {
+            proto_packet::io::check_absent(&bytes[8..16])?;
         }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 18, 1) } {
             crate::types::PersonRef::new(proto_packet::io::check_tail_entry(
                 bytes, 0, 0, 3, 19, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 0, 3, 19)?;
         }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 18, 2) } {
             crate::types::LabelRef::new(proto_packet::io::check_tail_entry(
                 bytes, 0, 1, 3, 19, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 1, 3, 19)?;
         }
         proto_packet::io::check_optional_tag_number(unsafe {
             proto_packet::io::read_u16_unchecked(bytes, 16)
@@ -36,6 +43,8 @@ impl<'a> OptionalBoxedFieldsRef<'a> {
             crate::types::ShapeRef::new(proto_packet::io::check_tail_entry(
                 bytes, 0, 2, 3, 19, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 2, 3, 19)?;
         }
         Ok(Self { bytes })
     }

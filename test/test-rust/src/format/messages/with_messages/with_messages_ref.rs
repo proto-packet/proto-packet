@@ -16,6 +16,7 @@ impl<'a> WithMessagesRef<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 17)?;
         proto_packet::io::check_tail_ends(bytes, 8, 2, 17)?;
+        proto_packet::io::check_unused_bits(bytes[16], 1)?;
         proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 8, 0, 3, 17, 1)?)?;
         crate::format::messages::ItemRef::new(proto_packet::io::check_tail_entry(
             bytes, 8, 1, 3, 17, 1,
@@ -24,6 +25,8 @@ impl<'a> WithMessagesRef<'a> {
             crate::format::messages::ItemRef::new(proto_packet::io::check_tail_entry(
                 bytes, 8, 2, 3, 17, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 8, 2, 3, 17)?;
         }
         Ok(Self { bytes })
     }

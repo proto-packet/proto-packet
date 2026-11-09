@@ -204,12 +204,13 @@ fn strings_are_their_whole_extent() {
 }
 
 #[test]
-fn any_non_zero_byte_is_true() {
+fn rejects_bool_bytes_above_1() {
     let mut bytes: Vec<u8> = AllKinds::default().with_flag(true).encode();
     *bytes.last_mut().unwrap() = 2;
-    let value: AllKinds = AllKinds::decode(&bytes).unwrap();
-    assert_eq!(value.flag(), Some(true));
-    assert_eq!(*value.encode().last().unwrap(), 1);
+    assert_eq!(
+        AllKinds::decode(&bytes),
+        Err(DecodeError::InvalidBool { value: 2 })
+    );
 }
 
 #[test]

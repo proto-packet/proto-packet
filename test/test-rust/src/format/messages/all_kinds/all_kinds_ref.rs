@@ -19,6 +19,9 @@ impl<'a> AllKindsRef<'a> {
             match tag {
                 1 => {
                     proto_packet::io::check_exact_len(value, 1)?;
+                    proto_packet::io::check_bool(unsafe {
+                        proto_packet::io::read_u8_unchecked(value, 0)
+                    })?;
                 }
                 2 => {
                     proto_packet::io::check_exact_len(value, 1)?;

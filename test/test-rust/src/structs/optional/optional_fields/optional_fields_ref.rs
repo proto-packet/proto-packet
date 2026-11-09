@@ -16,23 +16,38 @@ impl<'a> OptionalFieldsRef<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 43)?;
         proto_packet::io::check_tail_ends(bytes, 20, 3, 43)?;
+        proto_packet::io::check_unused_bits(bytes[42], 7)?;
+        if !unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 0) } {
+            proto_packet::io::check_absent(&bytes[16..20])?;
+        }
+        if !unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 1) } {
+            proto_packet::io::check_absent(&bytes[0..16])?;
+        }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 2) } {
             proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
                 bytes, 20, 0, 4, 43, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 20, 0, 4, 43)?;
         }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 3) } {
             crate::types::PointRef::new(unsafe { bytes.get_unchecked(32..40) })?;
+        } else {
+            proto_packet::io::check_absent(&bytes[32..40])?;
         }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 4) } {
             crate::types::PersonRef::new(proto_packet::io::check_tail_entry(
                 bytes, 20, 1, 4, 43, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 20, 1, 4, 43)?;
         }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 5) } {
             crate::types::LabelRef::new(proto_packet::io::check_tail_entry(
                 bytes, 20, 2, 4, 43, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 20, 2, 4, 43)?;
         }
         proto_packet::io::check_optional_tag_number(unsafe {
             proto_packet::io::read_u16_unchecked(bytes, 40)
@@ -41,6 +56,8 @@ impl<'a> OptionalFieldsRef<'a> {
             crate::types::ShapeRef::new(proto_packet::io::check_tail_entry(
                 bytes, 20, 3, 4, 43, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 20, 3, 4, 43)?;
         }
         Ok(Self { bytes })
     }

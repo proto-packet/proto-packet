@@ -7,9 +7,13 @@ pub enum UnitLayout {
     /// The end table.
     EndTable,
 
-    /// The bit group, at the `offset` & of the `size` in bytes.
-    Bits { offset: usize, size: usize },
+    /// The bit group, at the `offset` & of the `size` in bytes, with the `count` of bits.
+    Bits {
+        offset: usize,
+        size: usize,
+        count: usize,
+    },
 
-    /// The padding, of the `size` in bytes.
-    Padding { size: usize },
+    /// The padding, at the `offset` & of the `size` in bytes.
+    Padding { offset: usize, size: usize },
 }

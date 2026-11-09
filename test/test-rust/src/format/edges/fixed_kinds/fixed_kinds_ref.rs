@@ -15,12 +15,15 @@ impl<'a> FixedKindsRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_exact_len(bytes, 37)?;
+        proto_packet::io::check_unused_bits(bytes[36], 1)?;
         proto_packet::io::check_tag_number(unsafe {
             proto_packet::io::read_u16_unchecked(bytes, 32)
         })?;
         crate::format::examples::PointRef::new(unsafe { bytes.get_unchecked(16..24) })?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 36, 0) } {
             crate::format::examples::PointRef::new(unsafe { bytes.get_unchecked(24..32) })?;
+        } else {
+            proto_packet::io::check_absent(&bytes[24..32])?;
         }
         proto_packet::io::check_optional_tag_number(unsafe {
             proto_packet::io::read_u16_unchecked(bytes, 34)

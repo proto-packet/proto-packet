@@ -15,10 +15,21 @@ impl<'a> OptRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 7)?;
+        proto_packet::io::check_unused_bits(bytes[6], 5)?;
+        if !unsafe { proto_packet::io::read_bit_unchecked(bytes, 6, 1) } {
+            proto_packet::io::check_absent(&bytes[0..4])?;
+        }
+        if !unsafe { proto_packet::io::read_bit_unchecked(bytes, 6, 2) }
+            && unsafe { proto_packet::io::read_bit_unchecked(bytes, 6, 3) }
+        {
+            return Err(proto_packet::io::DecodeError::InvalidAbsentField);
+        }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 6, 4) } {
             proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
                 bytes, 0, 0, 1, 7, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 0, 1, 7)?;
         }
         proto_packet::io::check_optional_tag_number(unsafe {
             proto_packet::io::read_u16_unchecked(bytes, 4)

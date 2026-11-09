@@ -1,4 +1,4 @@
-use crate::layout::{BitLayout, FieldLayout, StructLayout, ValueLayout};
+use crate::layout::{BitLayout, FieldLayout, StructLayout, UnitLayout, ValueLayout};
 use crate::rust::encoding::IO;
 use crate::rust::fields::Field;
 use crate::rust::gen_buf::buf_name;
@@ -111,6 +111,11 @@ fn gen_construction(
             layout.fixed_size
         ));
     }
+    for unit in &layout.units {
+        if let Some(check) = gen_unit_check(*unit) {
+            new.add_semi(check);
+        }
+    }
     for (field, field_layout) in fields.iter().zip(&layout.fields) {
         if let Some(check) = gen_check(typing, *field, *field_layout, layout) {
             new.add_literal(check);
@@ -125,8 +130,76 @@ fn gen_construction(
         .with_function(gen_new_unchecked("ref", "&'a [u8]"))
 }
 
-/// Generates the statement validating the `field`, if its type can be invalid.
+/// Generates the expression checking the padding or the unused bits of the `unit`, if it has any.
+fn gen_unit_check(unit: UnitLayout) -> Option<String> {
+    match unit {
+        UnitLayout::Padding { offset, size } => Some(format!(
+            "{}::check_padding(&bytes[{}..{}])?",
+            IO,
+            offset,
+            offset + size
+        )),
+        UnitLayout::Bits {
+            offset,
+            size,
+            count,
+        } if count % 8 != 0 => Some(format!(
+            "{}::check_unused_bits(bytes[{}], {})?",
+            IO,
+            offset + size - 1,
+            count % 8
+        )),
+        _ => None,
+    }
+}
+
+/// Generates the statement validating the `field`, if its bytes can be invalid.
+///
+/// # Note
+/// - An absent field must be zeros or an empty entry, so each value has one encoding.
 fn gen_check(
+    typing: Typing<'_>,
+    field: Field<'_>,
+    field_layout: FieldLayout,
+    layout: &StructLayout,
+) -> Option<String> {
+    let present: Option<String> = gen_present_check(typing, field, field_layout, layout);
+    let Some(presence) = field_layout.presence else {
+        return present;
+    };
+    let presence: String = read_bit(presence, "bytes");
+    let absent: String = match field_layout.value {
+        ValueLayout::Bit(bit) => {
+            return Some(format!(
+                "if !{} && {} {{ return Err({}::DecodeError::InvalidAbsentField); }}",
+                presence,
+                read_bit(bit, "bytes"),
+                IO
+            ));
+        }
+        ValueLayout::Fixed { offset, size } => format!(
+            "{}::check_absent(&bytes[{}..{}])?;",
+            IO,
+            offset,
+            offset + size
+        ),
+        ValueLayout::Entry { index } => format!(
+            "{}::check_tail_absent(bytes, {}, {}, {}, {})?;",
+            IO,
+            layout.table_offset,
+            index,
+            layout.entries.len(),
+            layout.fixed_size
+        ),
+    };
+    Some(match present {
+        Some(present) => format!("if {} {{ {} }} else {{ {} }}", presence, present, absent),
+        None => format!("if !{} {{ {} }}", presence, absent),
+    })
+}
+
+/// Generates the statement validating the present `field`, if its type can be invalid.
+fn gen_present_check(
     typing: Typing<'_>,
     field: Field<'_>,
     field_layout: FieldLayout,
@@ -163,10 +236,7 @@ fn gen_check(
         ),
         _ => return None,
     };
-    Some(match field_layout.presence {
-        Some(presence) => format!("if {} {{ {} }}", read_bit(presence, "bytes"), check),
-        None => check,
-    })
+    Some(check)
 }
 
 /// Generates the impl block with the properties of the `ref_type`.

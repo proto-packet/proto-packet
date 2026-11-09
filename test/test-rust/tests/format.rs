@@ -178,12 +178,29 @@ fn rejects_extra_bytes() {
 }
 
 #[test]
-fn padding_is_ignored() {
+fn rejects_padding_that_is_not_zeros() {
     let line: Line = Line::new(Point::new(1, 2), Point::new(3, 4), 5);
-    let padded: Padded = Padded::new(line, 8, line);
-    let mut bytes: Vec<u8> = padded.encode();
-    bytes[21] = 0xFF;
-    assert_eq!(Padded::decode(&bytes), Ok(padded));
+    let mut in_the_header: Vec<u8> = Padded::new(line, 8, line).encode();
+    in_the_header[21] = 0xFF;
+    assert_eq!(
+        Padded::decode(&in_the_header),
+        Err(DecodeError::InvalidPadding)
+    );
+
+    let mut in_the_tail: Vec<u8> = pair_bytes();
+    in_the_tail[21] = 0xFF;
+    assert_eq!(Pair::decode(&in_the_tail), Err(DecodeError::InvalidPadding));
+}
+
+#[test]
+fn rejects_unused_bits_that_are_not_zeros() {
+    assert_eq!(
+        NineBits::decode(&[0b1000_0101, 0b0000_0011]),
+        Err(DecodeError::InvalidPadding)
+    );
+    let mut bytes: Vec<u8> = Mixed::new(1, 2, 3, true).encode();
+    bytes[11] = 0b0000_0011;
+    assert_eq!(Mixed::decode(&bytes), Err(DecodeError::InvalidPadding));
 }
 
 #[test]
@@ -412,10 +429,28 @@ fn rejects_invalid_children() {
 }
 
 #[test]
-fn absent_fields_are_not_validated() {
-    let bytes: [u8; 9] = [0, 0, 0, 0, 0, 0, 0b0000_0001, 0xFF, 0xFF];
-    let value: Opt = Opt::new(true, None, None, None, None);
-    assert_eq!(Opt::decode(&bytes), Ok(value));
+fn rejects_absent_fields_that_are_not_empty() {
+    let absent: Vec<u8> = Opt::new(true, None, None, None, None).encode();
+    assert_eq!(absent, [0, 0, 0, 0, 0, 0, 0b0000_0001]);
+
+    let mut number: Vec<u8> = absent.clone();
+    number[0] = 5;
+    assert_eq!(Opt::decode(&number), Err(DecodeError::InvalidAbsentField));
+
+    let mut bit: Vec<u8> = absent.clone();
+    bit[6] = 0b0000_1001;
+    assert_eq!(Opt::decode(&bit), Err(DecodeError::InvalidAbsentField));
+
+    let mut string: Vec<u8> = absent.clone();
+    string.extend_from_slice(b"hi");
+    assert_eq!(Opt::decode(&string), Err(DecodeError::InvalidAbsentField));
+
+    let mut point: Vec<u8> = FixedKinds::new(ID, Color::Red, Point::new(1, 2), None, None).encode();
+    point[24] = 3;
+    assert_eq!(
+        FixedKinds::decode(&point),
+        Err(DecodeError::InvalidAbsentField)
+    );
 }
 
 #[test]

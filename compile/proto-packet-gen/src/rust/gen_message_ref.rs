@@ -91,6 +91,10 @@ pub(crate) fn gen_value_check(typing: Typing<'_>, tag: &TypeTag, size: Option<us
             "{}::check_exact_len(value, {})?; {}::check_tag_number(unsafe {{ {}::read_u16_unchecked(value, 0) }})?;",
             IO, size, IO, IO
         ),
+        (TypeTag::Primitive(PrimitiveType::Boolean), Some(size)) => format!(
+            "{}::check_exact_len(value, {})?; {}::check_bool(unsafe {{ {}::read_u8_unchecked(value, 0) }})?;",
+            IO, size, IO, IO
+        ),
         (_, Some(size)) => format!("{}::check_exact_len(value, {})?;", IO, size),
         (_, None) => format!("{}::new(value)?;", generated_path(tag, "Ref")),
     }

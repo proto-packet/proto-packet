@@ -222,6 +222,16 @@ fn rejects_invalid_values() {
 }
 
 #[test]
+fn rejects_bool_bytes_above_1() {
+    let mut bytes: Vec<u8> = AllCases::Flag(true).encode();
+    *bytes.last_mut().unwrap() = 2;
+    assert_eq!(
+        AllCases::decode(&bytes),
+        Err(DecodeError::InvalidBool { value: 2 })
+    );
+}
+
+#[test]
 fn unknown_cases_are_not_validated() {
     OlderCases::decode(&[9, 0, 0xFF, 0xFF]).unwrap();
 }

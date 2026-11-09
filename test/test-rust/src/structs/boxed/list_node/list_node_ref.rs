@@ -15,10 +15,13 @@ impl<'a> ListNodeRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 5)?;
+        proto_packet::io::check_unused_bits(bytes[4], 1)?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 4, 0) } {
             crate::structs::boxed::ListNodeRef::new(proto_packet::io::check_tail_entry(
                 bytes, 0, 0, 1, 5, 4,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 0, 1, 5)?;
         }
         Ok(Self { bytes })
     }

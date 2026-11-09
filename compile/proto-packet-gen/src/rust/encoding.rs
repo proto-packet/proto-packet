@@ -145,10 +145,12 @@ fn gen_unit(
             vec![gen_fixed_field(typing, fields[index], layout.fields[index])]
         }
         UnitLayout::EndTable => vec![format!("{}::write_zeros(out, {});", IO, layout.ends() * 4)],
-        UnitLayout::Bits { offset, size } => (offset..offset + size)
+        UnitLayout::Bits { offset, size, .. } => (offset..offset + size)
             .map(|offset| gen_bits(fields, layout, offset))
             .collect(),
-        UnitLayout::Padding { size } => vec![format!("{}::write_zeros(out, {});", IO, size)],
+        UnitLayout::Padding { size, .. } => {
+            vec![format!("{}::write_zeros(out, {});", IO, size)]
+        }
     }
 }
 

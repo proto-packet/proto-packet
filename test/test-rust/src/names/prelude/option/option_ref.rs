@@ -16,15 +16,20 @@ impl<'a> OptionRef<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 5)?;
         proto_packet::io::check_tail_ends(bytes, 0, 1, 5)?;
+        proto_packet::io::check_unused_bits(bytes[4], 2)?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 4, 0) } {
             proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
                 bytes, 0, 0, 2, 5, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 0, 2, 5)?;
         }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 4, 1) } {
             crate::names::prelude::OptionRef::new(proto_packet::io::check_tail_entry(
                 bytes, 0, 1, 2, 5, 4,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 1, 2, 5)?;
         }
         Ok(Self { bytes })
     }

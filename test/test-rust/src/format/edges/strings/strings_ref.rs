@@ -16,6 +16,7 @@ impl<'a> StringsRef<'a> {
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 14)?;
         proto_packet::io::check_tail_ends(bytes, 0, 3, 14)?;
+        proto_packet::io::check_unused_bits(bytes[13], 1)?;
         proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 0, 0, 4, 14, 1)?)?;
         crate::format::examples::EntryRef::new(proto_packet::io::check_tail_entry(
             bytes, 0, 1, 4, 14, 8,
@@ -24,6 +25,8 @@ impl<'a> StringsRef<'a> {
             proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
                 bytes, 0, 2, 4, 14, 1,
             )?)?;
+        } else {
+            proto_packet::io::check_tail_absent(bytes, 0, 2, 4, 14)?;
         }
         proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 0, 3, 4, 14, 1)?)?;
         Ok(Self { bytes })

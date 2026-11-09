@@ -116,6 +116,7 @@ impl StructLayout {
             units.push(UnitLayout::Bits {
                 offset: bits_offset,
                 size,
+                count: bit_count,
             });
             offset += size;
         }
@@ -156,6 +157,7 @@ fn pad(units: &mut Vec<UnitLayout>, offset: usize, alignment: usize) -> usize {
     let aligned: usize = align_up(offset, alignment);
     if aligned != offset {
         units.push(UnitLayout::Padding {
+            offset,
             size: aligned - offset,
         });
     }
