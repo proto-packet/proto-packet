@@ -1,5 +1,6 @@
 use crate::rust::naming::type_path;
 use crate::rust::prelude::{Prelude, PreludeName};
+use crate::rust::values::primitive_type;
 use code_gen::rust::{Reference, RustType};
 use proto_packet_tree::{
     Project, QualifiedName, SpecialType, Struct, TypeDec, TypeTag, WithTypeTag,
@@ -36,7 +37,7 @@ impl Typing<'_> {
     /// Gets the Rust type of the `tag`. (ex: `String`)
     pub(crate) fn rust_type(self, tag: &TypeTag) -> RustType {
         match tag {
-            TypeTag::Primitive(primitive) => RustType::from(primitive.name()),
+            TypeTag::Primitive(primitive) => RustType::from(primitive_type(*primitive)),
             TypeTag::Special(SpecialType::Uuid) => RustType::from("proto_packet::types::Uuid"),
             TypeTag::Special(SpecialType::String) => {
                 RustType::from(self.prelude(PreludeName::String))

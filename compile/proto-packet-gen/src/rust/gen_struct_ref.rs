@@ -5,7 +5,7 @@ use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
 use crate::rust::naming::{ident, is_upper_camel_case, type_path};
 use crate::rust::typing::Typing;
-use crate::rust::values::ref_value_type;
+use crate::rust::values::{float_bits, ref_value_type};
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, Struct as RustStruct, StructField,
     WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithGenerics,
@@ -224,6 +224,17 @@ fn gen_present_check(
             generated_path(field.tag, "Ref"),
             read_fixed(offset, size, "bytes")
         ),
+        (ValueLayout::Fixed { offset, .. }, TypeTag::Primitive(primitive)) => {
+            let bits: &str = float_bits(*primitive)?;
+            format!(
+                "{}::check_{}(unsafe {{ {}::read_{}_unchecked(bytes, {}) }})?;",
+                IO,
+                primitive.name(),
+                IO,
+                bits,
+                offset
+            )
+        }
         (ValueLayout::Entry { index }, TypeTag::Special(SpecialType::String)) => format!(
             "{}::check_utf8({}?)?;",
             IO,
