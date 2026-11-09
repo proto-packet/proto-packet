@@ -187,7 +187,7 @@ fn person_example() {
     assert_eq!((person.name(), person.age()), ("Ada", 36));
 }
 
-/// Gets the bytes of the `Pair` example of `FORMAT.md`.
+/// Gets the bytes of the `Pair` example of `format/binary.md`.
 fn pair_bytes() -> Vec<u8> {
     [
         &[24, 0, 0, 0, 38, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0][..], // ends & padding
@@ -201,7 +201,7 @@ fn pair_bytes() -> Vec<u8> {
     .concat()
 }
 
-/// Gets the value of the `Pair` example of `FORMAT.md`.
+/// Gets the value of the `Pair` example of `format/binary.md`.
 fn pair() -> Pair {
     Pair::new(
         Entry::new(1, "hello".to_string()),

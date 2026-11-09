@@ -1,4 +1,4 @@
-// The `Point` example of `FORMAT.md`.
+// The `Point` example of `format/binary.md`.
 struct Point {
 
     // The x coordinate.
@@ -8,7 +8,7 @@ struct Point {
     y: u32;
 }
 
-// The `Mixed` example of `FORMAT.md`.
+// The `Mixed` example of `format/binary.md`.
 struct Mixed {
 
     // An alignment 1 field.
@@ -24,7 +24,7 @@ struct Mixed {
     d: bool;
 }
 
-// The `Line` example of `FORMAT.md`.
+// The `Line` example of `format/binary.md`.
 struct Line {
 
     // The start.
@@ -37,7 +37,7 @@ struct Line {
     width: u8;
 }
 
-// The `Person` example of `FORMAT.md`.
+// The `Person` example of `format/binary.md`.
 struct Person {
 
     // The name.
@@ -47,7 +47,7 @@ struct Person {
     age: u8;
 }
 
-// The `Entry` example of `FORMAT.md`.
+// The `Entry` example of `format/binary.md`.
 struct Entry {
 
     // The ID.
@@ -57,7 +57,7 @@ struct Entry {
     text: string;
 }
 
-// The `Pair` example of `FORMAT.md`.
+// The `Pair` example of `format/binary.md`.
 struct Pair {
 
     // The first entry.
@@ -70,14 +70,14 @@ struct Pair {
     note: string;
 }
 
-// The `Color` example of `FORMAT.md`.
+// The `Color` example of `format/binary.md`.
 enum Color {
 
     // Red.
     Red = 1;
 }
 
-// The `Opt` example of `FORMAT.md`.
+// The `Opt` example of `format/binary.md`.
 struct Opt {
 
     // A bit.

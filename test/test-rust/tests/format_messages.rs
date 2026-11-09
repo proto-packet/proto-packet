@@ -24,12 +24,12 @@ macro_rules! assert_encoding {
     }};
 }
 
-/// Gets the value of the `Item` example of `FORMAT.md`.
+/// Gets the value of the `Item` example of `format/binary.md`.
 fn item() -> Item {
     Item::default().with_text("hi".to_string()).with_id(7)
 }
 
-/// Gets the bytes of the `Item` example of `FORMAT.md`.
+/// Gets the bytes of the `Item` example of `format/binary.md`.
 fn item_bytes() -> Vec<u8> {
     vec![
         2, 0, // count

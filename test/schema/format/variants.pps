@@ -3,7 +3,7 @@ import format.examples.Entry;
 import format.examples.Point;
 import format.messages.Item;
 
-// The `Shape` example of `FORMAT.md`.
+// The `Shape` example of `format/binary.md`.
 variant Shape {
 
     // A circle with the radius.

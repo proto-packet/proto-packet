@@ -2,7 +2,7 @@ import format.examples.Color;
 import format.examples.Entry;
 import format.examples.Point;
 
-// The `Item` example of `FORMAT.md`.
+// The `Item` example of `format/binary.md`.
 message Item {
 
     // The text.
