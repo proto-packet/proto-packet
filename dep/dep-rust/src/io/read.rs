@@ -20,6 +20,11 @@ read!(read_u16_unchecked, u16);
 read!(read_u32_unchecked, u32);
 read!(read_u64_unchecked, u64);
 read!(read_u128_unchecked, u128);
+read!(read_i8_unchecked, i8);
+read!(read_i16_unchecked, i16);
+read!(read_i32_unchecked, i32);
+read!(read_i64_unchecked, i64);
+read!(read_i128_unchecked, i128);
 
 /// Reads the `N` bytes at the `offset`.
 ///

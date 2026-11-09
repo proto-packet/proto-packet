@@ -43,6 +43,11 @@ write_int!(write_u16_unchecked, u16);
 write_int!(write_u32_unchecked, u32);
 write_int!(write_u64_unchecked, u64);
 write_int!(write_u128_unchecked, u128);
+write_int!(write_i8_unchecked, i8);
+write_int!(write_i16_unchecked, i16);
+write_int!(write_i32_unchecked, i32);
+write_int!(write_i64_unchecked, i64);
+write_int!(write_i128_unchecked, i128);
 
 /// Writes the `N` bytes of the `value` at the `offset`.
 ///
