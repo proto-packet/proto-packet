@@ -1,9 +1,10 @@
 use std::fmt::{Display, Formatter};
 
-/// An error from a value that doesn't fit in place. The bytes are left unchanged.
+/// An error from an edit that would change a length in place. The bytes are left unchanged.
 ///
-/// The lengths are of what's being edited: a struct's tail, a message or a variant. A variant's
-/// string must fill the variant, so one that's too short fails with less required than available.
+/// # Note
+/// - Nothing moves in place, so a value must be the length of the one it replaces.
+/// - The lengths are of what's being edited. This is a struct's string, a message or a variant.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct CapacityError {
     /// The length needed, in bytes.
