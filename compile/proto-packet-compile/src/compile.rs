@@ -1,5 +1,5 @@
 use crate::report::path_report;
-use crate::{Config, SchemaSource, link, read_schema_sources, validate_project};
+use crate::{Config, SchemaSource, check_sources, read_schema_sources};
 use clerr::{Code, Properties, Report};
 use proto_packet_gen::GeneratedFile;
 use proto_packet_tree::Project;
@@ -40,8 +40,7 @@ pub fn compile(language: Language, source: &Path, target: &Path) -> Result<(), R
     let config: Config = Config::read(source)?;
     let sources: Vec<SchemaSource> = read_schema_sources(source, &config)?;
     check_schema_files(&sources, target)?;
-    let project: Project = validate_project(&sources)?;
-    let project: Project = link(&project, &sources)?;
+    let project: Project = check_sources(&sources)?;
     let files: Vec<GeneratedFile> = match language {
         Language::Rust => proto_packet_gen::rust::generate(&project),
     }
