@@ -28,6 +28,14 @@ enum Command {
         file: PathBuf,
     },
 
+    /// Checks the project in the source folder for errors.
+    ///
+    /// Nothing is written. Generating code has its own errors, which only compiling finds.
+    Check {
+        /// The project's source folder.
+        source: PathBuf,
+    },
+
     /// Compiles the project in the source folder to code in the target folder.
     ///
     /// The contents of the target folder are replaced once the code is generated.
@@ -48,6 +56,7 @@ fn main() -> ExitCode {
     let result: Result<(), Report> = match Cli::parse().command {
         Command::Parse { file } => parse(&file),
         Command::Validate { file } => validate(&file),
+        Command::Check { source } => proto_packet_compile::check(&source).map(|_| ()),
         Command::Compile {
             language,
             source,
