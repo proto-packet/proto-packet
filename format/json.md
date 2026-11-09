@@ -17,9 +17,8 @@ This document specifies the JSON form of ProtoPacket values.
 A renamed field or case keeps its schema name. Keys can be in any order, & other keys are ignored.
 
 A float is a string, so that it reads back as the exact float that was written. (ex: `"1.5"`) A
-JSON parser can round a plain number to another float. A float that isn't finite is `"NaN"`,
-`"Infinity"` or `"-Infinity"`. A reader also takes a plain number, which is only as exact as its
-parser.
+JSON parser can round a plain number to another float, so readers reject one. A float that isn't
+finite is `"NaN"`, `"Infinity"` or `"-Infinity"`.
 
 ## Unknown Fields & Cases
 
@@ -54,4 +53,5 @@ Readers reject JSON when:
 - A field is given by name & by tag number.
 - A key is an invalid tag number.
 - A tag-numbered value isn't valid base-64, or isn't valid for a field or case the reader knows.
-- A float isn't a decimal number or one of its names, or is out of the range of its type.
+- A float isn't a string of a decimal number or of one of its names, or is out of the range of its
+  type.
