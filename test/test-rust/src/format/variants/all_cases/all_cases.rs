@@ -41,6 +41,9 @@ pub enum AllCases {
 
     /// A signed integer.
     Signed(i64),
+
+    /// A float.
+    Float(proto_packet::types::Float64),
 }
 
 mod unrecognized {
@@ -81,6 +84,7 @@ impl AllCases {
             Self::Shape(_) => 10,
             Self::BoxedColor(_) => 11,
             Self::Signed(_) => 12,
+            Self::Float(_) => 13,
         }
     }
 
@@ -204,6 +208,15 @@ impl AllCases {
             _ => None,
         }
     }
+
+    /// Gets the value of the case: `Float`.
+    #[must_use]
+    pub fn as_float(&self) -> Option<proto_packet::types::Float64> {
+        match self {
+            Self::Float(value) => Some(*value),
+            _ => None,
+        }
+    }
 }
 
 impl AllCases {
@@ -266,6 +279,7 @@ impl AllCases {
             Self::Shape(value) => 2 + value.encoded_len(),
             Self::BoxedColor(_) => 4,
             Self::Signed(_) => 10,
+            Self::Float(_) => 10,
         }
     }
 
@@ -330,6 +344,10 @@ impl AllCases {
             }
             Self::Signed(value) => {
                 out.extend_from_slice(&12_u16.to_le_bytes());
+                out.extend_from_slice(&value.to_le_bytes());
+            }
+            Self::Float(value) => {
+                out.extend_from_slice(&13_u16.to_le_bytes());
                 out.extend_from_slice(&value.to_le_bytes());
             }
         }
@@ -405,6 +423,9 @@ impl proto_packet::serde::Serialize for AllCases {
             Self::Signed(value) => {
                 proto_packet::types::serialize_case(serializer, "AllCases", "Signed", value)
             }
+            Self::Float(value) => {
+                proto_packet::types::serialize_case(serializer, "AllCases", "Float", value)
+            }
         }
     }
 }
@@ -462,6 +483,9 @@ impl proto_packet::types::JsonVariant for AllCases {
             "Signed" => Ok(Self::Signed(proto_packet::serde::Deserialize::deserialize(
                 value,
             )?)),
+            "Float" => Ok(Self::Float(proto_packet::serde::Deserialize::deserialize(
+                value,
+            )?)),
             _ => Err(proto_packet::serde::de::Error::unknown_variant(
                 name,
                 &[
@@ -477,6 +501,7 @@ impl proto_packet::types::JsonVariant for AllCases {
                     "Shape",
                     "BoxedColor",
                     "Signed",
+                    "Float",
                 ],
             )),
         }

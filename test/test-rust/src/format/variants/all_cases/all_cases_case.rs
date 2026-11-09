@@ -41,4 +41,7 @@ pub enum AllCasesCase<'a> {
 
     /// The case: `Signed`.
     Signed(i64),
+
+    /// The case: `Float`.
+    Float(proto_packet::types::Float64),
 }

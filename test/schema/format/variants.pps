@@ -51,6 +51,9 @@ variant AllCases {
 
     // A signed integer.
     Signed: i64 = 12;
+
+    // A float.
+    Float: f64 = 13;
 }
 
 // An older version of a variant.

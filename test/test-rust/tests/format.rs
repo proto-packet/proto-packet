@@ -2,11 +2,11 @@ mod common;
 
 use common::ID;
 use proto_packet::io::{CapacityError, DecodeError};
-use proto_packet::types::Uuid;
+use proto_packet::types::{Float32, Float64, Uuid};
 use proto_packet_test::format::edges::{
     AbsentChild, FixedKinds, FixedKindsBuf, FixedKindsMut, FixedKindsRef, FixedKindsView,
-    FixedKindsViewMut, LoopByte, LoopLong, NineBits, NineBitsMut, NineBitsRef, SignedKinds,
-    SignedKindsMut, SignedKindsRef, Strings, StringsMut,
+    FixedKindsViewMut, FloatKinds, FloatKindsMut, FloatKindsRef, LoopByte, LoopLong, NineBits,
+    NineBitsMut, NineBitsRef, SignedKinds, SignedKindsMut, SignedKindsRef, Strings, StringsMut,
 };
 use proto_packet_test::format::examples::{
     Color, Entry, EntryView, EntryViewMut, Line, LineBuf, LineMut, LineRef, LineView, LineViewMut,
@@ -209,6 +209,60 @@ fn mut_sets_signed_integers_in_place() {
     assert_eq!(
         SignedKinds::decode(&bytes),
         Ok(SignedKinds::new(-1, 2, 3, i64::MIN, -5, Some(-6)))
+    );
+}
+
+/// Gets the bytes of the struct with a float of each size, with the `a` float.
+fn float_kinds_bytes(a: [u8; 4]) -> Vec<u8> {
+    [
+        &[0, 0, 0, 0, 0, 0, 0, 0xC0][..], // b
+        &a,                               // a
+        &[0, 0, 0, 0],                    // c, absent
+        &[0],                             // bits
+    ]
+    .concat()
+}
+
+#[test]
+fn floats_are_their_bits() {
+    let bytes: Vec<u8> = float_kinds_bytes([0, 0, 0xC0, 0x3F]);
+    assert_eq!(bytes.len(), 17);
+    let value: FloatKinds = FloatKinds::new(Float32::new(1.5), Float64::new(-2.0), None);
+    assert_encoding!(FloatKinds, value, &bytes);
+
+    let kinds: FloatKindsRef = FloatKindsRef::new(&bytes).unwrap();
+    assert_eq!((kinds.a().get(), kinds.b().get()), (1.5, -2.0));
+    assert_eq!(kinds.c(), None);
+}
+
+#[test]
+fn nans_are_the_one_nan() {
+    let bytes: Vec<u8> = float_kinds_bytes([0, 0, 0xC0, 0x7F]);
+    let value: FloatKinds = FloatKinds::new(Float32::new(-f32::NAN), Float64::new(-2.0), None);
+    assert_encoding!(FloatKinds, value, &bytes);
+
+    for other_nan in [[0, 0, 0xC0, 0xFF], [1, 0, 0xC0, 0x7F], [1, 0, 0x80, 0x7F]] {
+        assert_eq!(
+            FloatKinds::decode(&float_kinds_bytes(other_nan)),
+            Err(DecodeError::InvalidFloat)
+        );
+    }
+}
+
+#[test]
+fn mut_sets_floats_in_place() {
+    let mut bytes: Vec<u8> = float_kinds_bytes([0, 0, 0xC0, 0x3F]);
+    let mut kinds: FloatKindsMut = FloatKindsMut::new(&mut bytes).unwrap();
+    kinds.set_a(Float32::new(f32::NAN));
+    kinds.set_b(Float64::new(0.5));
+    kinds.set_c(Float32::new(-0.0));
+    assert_eq!(
+        FloatKinds::decode(&bytes),
+        Ok(FloatKinds::new(
+            Float32::NAN,
+            Float64::new(0.5),
+            Some(Float32::new(-0.0))
+        ))
     );
 }
 

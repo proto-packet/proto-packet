@@ -46,6 +46,12 @@ pub trait AllCasesViewMut: super::AllCasesView {
 
     /// Sets the case: `Signed`.
     fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError>;
+
+    /// Sets the case: `Float`.
+    fn set_float(
+        &mut self,
+        value: proto_packet::types::Float64,
+    ) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
@@ -104,6 +110,13 @@ impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
 
     fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
         (**self).set_signed(value)
+    }
+
+    fn set_float(
+        &mut self,
+        value: proto_packet::types::Float64,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        (**self).set_float(value)
     }
 }
 
@@ -172,6 +185,14 @@ impl AllCasesViewMut for super::AllCases {
         *self = super::AllCases::Signed(value);
         Ok(())
     }
+
+    fn set_float(
+        &mut self,
+        value: proto_packet::types::Float64,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        *self = super::AllCases::Float(value);
+        Ok(())
+    }
 }
 
 impl AllCasesViewMut for super::AllCasesMut<'_> {
@@ -231,6 +252,13 @@ impl AllCasesViewMut for super::AllCasesMut<'_> {
     fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
         self.set_signed(value)
     }
+
+    fn set_float(
+        &mut self,
+        value: proto_packet::types::Float64,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.set_float(value)
+    }
 }
 
 impl AllCasesViewMut for super::AllCasesBuf {
@@ -289,5 +317,12 @@ impl AllCasesViewMut for super::AllCasesBuf {
 
     fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
         self.as_mut().set_signed(value)
+    }
+
+    fn set_float(
+        &mut self,
+        value: proto_packet::types::Float64,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.as_mut().set_float(value)
     }
 }

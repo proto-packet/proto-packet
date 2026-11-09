@@ -2,6 +2,7 @@ mod common;
 
 use common::ID;
 use proto_packet::io::{CapacityError, DecodeError};
+use proto_packet::types::Float64;
 use proto_packet_test::format::examples::{Color, Entry, Point, PointView, PointViewMut};
 use proto_packet_test::format::messages::Item;
 use proto_packet_test::format::variants::{
@@ -41,6 +42,7 @@ fn all_cases() -> Vec<AllCases> {
         AllCases::Shape(Shape::Circle(8)),
         AllCases::BoxedColor(Box::new(Color::Red)),
         AllCases::Signed(-2),
+        AllCases::Float(Float64::new(1.5)),
     ]
 }
 
@@ -66,6 +68,24 @@ fn signed_integers_are_twos_complement() {
     assert_eq!(
         serde_json::to_string(&AllCases::Signed(-2)).unwrap(),
         r#"{"var":"Signed","val":-2}"#
+    );
+}
+
+#[test]
+fn floats_are_their_bits() {
+    let bytes: [u8; 10] = [13, 0, 0, 0, 0, 0, 0, 0, 0, 0xC0];
+    assert_encoding!(AllCases, AllCases::Float(Float64::new(-2.0)), &bytes);
+
+    let mut other_nan: [u8; 10] = bytes;
+    other_nan[8..].copy_from_slice(&[0xF8, 0xFF]);
+    assert_eq!(AllCases::decode(&other_nan), Err(DecodeError::InvalidFloat));
+    assert_eq!(
+        serde_json::to_string(&AllCases::Float(Float64::NAN)).unwrap(),
+        r#"{"var":"Float","val":"NaN"}"#
+    );
+    assert_eq!(
+        serde_json::from_str::<AllCases>(r#"{"val":"NaN","var":"Float"}"#).unwrap(),
+        AllCases::Float(Float64::NAN)
     );
 }
 

@@ -58,6 +58,12 @@ pub trait AllKindsViewMut: super::AllKindsView {
         &mut self,
         value: impl Into<Option<i64>>,
     ) -> Result<(), proto_packet::io::CapacityError>;
+
+    /// Sets the field: `float`.
+    fn set_float(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Float64>>,
+    ) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AllKindsViewMut> AllKindsViewMut for &mut V {
@@ -127,6 +133,13 @@ impl<V: AllKindsViewMut> AllKindsViewMut for &mut V {
         value: impl Into<Option<i64>>,
     ) -> Result<(), proto_packet::io::CapacityError> {
         (**self).set_signed(value)
+    }
+
+    fn set_float(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Float64>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        (**self).set_float(value)
     }
 }
 
@@ -207,6 +220,14 @@ impl AllKindsViewMut for super::AllKinds {
         self.set_signed(value);
         Ok(())
     }
+
+    fn set_float(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Float64>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.set_float(value);
+        Ok(())
+    }
 }
 
 impl AllKindsViewMut for super::AllKindsMut<'_> {
@@ -277,6 +298,13 @@ impl AllKindsViewMut for super::AllKindsMut<'_> {
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.set_signed(value)
     }
+
+    fn set_float(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Float64>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.set_float(value)
+    }
 }
 
 impl AllKindsViewMut for super::AllKindsBuf {
@@ -346,5 +374,12 @@ impl AllKindsViewMut for super::AllKindsBuf {
         value: impl Into<Option<i64>>,
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.as_mut().set_signed(value)
+    }
+
+    fn set_float(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Float64>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.as_mut().set_float(value)
     }
 }

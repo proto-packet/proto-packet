@@ -36,6 +36,9 @@
 ///
 ///     // A signed integer.
 ///     signed: i64 = 11;
+///
+///     // A float.
+///     float: f64 = 12;
 /// }
 /// ```
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
@@ -51,6 +54,7 @@ pub struct AllKinds {
     item: Option<crate::format::messages::Item>,
     boxed_color: Option<Box<crate::format::examples::Color>>,
     signed: Option<i64>,
+    float: Option<proto_packet::types::Float64>,
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -392,6 +396,35 @@ impl AllKinds {
 }
 
 impl AllKinds {
+    //! Field: `float`
+
+    /// Gets the field: `float`.
+    #[must_use]
+    pub fn float(&self) -> Option<proto_packet::types::Float64> {
+        self.float
+    }
+
+    /// Sets the field: `float`. Returns the previous value.
+    pub fn set_float<F>(&mut self, float: F) -> Option<proto_packet::types::Float64>
+    where
+        F: Into<Option<proto_packet::types::Float64>>,
+    {
+        let float: Option<proto_packet::types::Float64> = float.into();
+        std::mem::replace(&mut self.float, float)
+    }
+
+    /// Sets the field: `float`. (builder pattern)
+    #[must_use]
+    pub fn with_float<F>(mut self, float: F) -> Self
+    where
+        F: Into<Option<proto_packet::types::Float64>>,
+    {
+        self.set_float(float);
+        self
+    }
+}
+
+impl AllKinds {
     //! Unknown Fields
 
     /// Gets the fields the message doesn't know, in tag order.
@@ -463,6 +496,10 @@ impl AllKinds {
             count += 1;
             values += 8;
         }
+        if self.float.is_some() {
+            count += 1;
+            values += 8;
+        }
         proto_packet::io::message_index_len(count) + values
     }
 
@@ -486,7 +523,8 @@ impl AllKinds {
             + usize::from(self.entry.is_some())
             + usize::from(self.item.is_some())
             + usize::from(self.boxed_color.is_some())
-            + usize::from(self.signed.is_some());
+            + usize::from(self.signed.is_some())
+            + usize::from(self.float.is_some());
         let mut writer: proto_packet::io::MessageWriter =
             proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
         if let Some(value) = &self.flag {
@@ -535,6 +573,10 @@ impl AllKinds {
         }
         if let Some(value) = &self.signed {
             writer.field(11).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = &self.float {
+            writer.field(12).extend_from_slice(&value.to_le_bytes());
             writer.end_field();
         }
         writer.finish();
@@ -606,6 +648,9 @@ impl proto_packet::serde::Serialize for AllKinds {
         if let Some(value) = &self.signed {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "signed", value)?;
         }
+        if let Some(value) = &self.float {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "float", value)?;
+        }
         proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
         proto_packet::serde::ser::SerializeMap::end(map)
     }
@@ -670,6 +715,10 @@ impl proto_packet::types::JsonMessage for AllKinds {
             }
             "signed" => {
                 self.signed = map.next_value()?;
+                Ok(true)
+            }
+            "float" => {
+                self.float = map.next_value()?;
                 Ok(true)
             }
             _ => Ok(false),
@@ -746,6 +795,12 @@ impl proto_packet::types::JsonMessage for AllKinds {
                 return Err("signed");
             }
             self.signed = other.signed;
+        }
+        if other.float.is_some() {
+            if self.float.is_some() {
+                return Err("float");
+            }
+            self.float = other.float;
         }
         self.unknown_fields = other.unknown_fields;
         Ok(())

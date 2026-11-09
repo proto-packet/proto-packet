@@ -2,6 +2,7 @@ mod common;
 
 use common::ID;
 use proto_packet::io::{CapacityError, DecodeError};
+use proto_packet::types::Float64;
 use proto_packet_test::format::examples::{Color, Entry, Point};
 use proto_packet_test::format::messages::{
     AllKinds, AllKindsMut, AllKindsRef, Item, ItemBuf, ItemMut, ItemRef, ItemView, ItemViewMut,
@@ -54,6 +55,7 @@ fn all_kinds() -> AllKinds {
         .with_item(item())
         .with_boxed_color(Color::Red)
         .with_signed(-2)
+        .with_float(Float64::new(1.5))
 }
 
 /// Gets a newer message, with a field around each of the older fields.
@@ -115,6 +117,18 @@ fn every_kind_round_trips() {
     assert_eq!(kinds.item().unwrap().id(), Some(7));
     assert_eq!(kinds.boxed_color(), Some(Color::Red));
     assert_eq!(kinds.signed(), Some(-2));
+    assert_eq!(kinds.float(), Some(Float64::new(1.5)));
+}
+
+#[test]
+fn floats_are_their_bits() {
+    let bytes: [u8; 12] = [1, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0xC0];
+    let value: AllKinds = AllKinds::default().with_float(Float64::new(-2.0));
+    assert_encoding!(AllKinds, value, &bytes);
+
+    let mut other_nan: [u8; 12] = bytes;
+    other_nan[10..].copy_from_slice(&[0xF8, 0xFF]);
+    assert_eq!(AllKinds::decode(&other_nan), Err(DecodeError::InvalidFloat));
 }
 
 #[test]

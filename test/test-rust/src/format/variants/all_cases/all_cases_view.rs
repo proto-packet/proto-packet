@@ -40,6 +40,9 @@ pub trait AllCasesView {
 
     /// Gets the value of the case: `Signed`.
     fn as_signed(&self) -> Option<i64>;
+
+    /// Gets the value of the case: `Float`.
+    fn as_float(&self) -> Option<proto_packet::types::Float64>;
 }
 
 impl<V: AllCasesView> AllCasesView for &V {
@@ -93,6 +96,10 @@ impl<V: AllCasesView> AllCasesView for &V {
 
     fn as_signed(&self) -> Option<i64> {
         (**self).as_signed()
+    }
+
+    fn as_float(&self) -> Option<proto_packet::types::Float64> {
+        (**self).as_float()
     }
 }
 
@@ -148,6 +155,10 @@ impl<V: AllCasesView> AllCasesView for &mut V {
     fn as_signed(&self) -> Option<i64> {
         (**self).as_signed()
     }
+
+    fn as_float(&self) -> Option<proto_packet::types::Float64> {
+        (**self).as_float()
+    }
 }
 
 impl AllCasesView for super::AllCases {
@@ -201,6 +212,10 @@ impl AllCasesView for super::AllCases {
 
     fn as_signed(&self) -> Option<i64> {
         self.as_signed()
+    }
+
+    fn as_float(&self) -> Option<proto_packet::types::Float64> {
+        self.as_float()
     }
 }
 
@@ -256,6 +271,10 @@ impl AllCasesView for super::AllCasesRef<'_> {
     fn as_signed(&self) -> Option<i64> {
         self.as_signed()
     }
+
+    fn as_float(&self) -> Option<proto_packet::types::Float64> {
+        self.as_float()
+    }
 }
 
 impl AllCasesView for super::AllCasesBuf {
@@ -310,6 +329,10 @@ impl AllCasesView for super::AllCasesBuf {
     fn as_signed(&self) -> Option<i64> {
         self.as_ref().as_signed()
     }
+
+    fn as_float(&self) -> Option<proto_packet::types::Float64> {
+        self.as_ref().as_float()
+    }
 }
 
 impl AllCasesView for super::AllCasesMut<'_> {
@@ -363,5 +386,9 @@ impl AllCasesView for super::AllCasesMut<'_> {
 
     fn as_signed(&self) -> Option<i64> {
         self.as_ref().as_signed()
+    }
+
+    fn as_float(&self) -> Option<proto_packet::types::Float64> {
+        self.as_ref().as_float()
     }
 }

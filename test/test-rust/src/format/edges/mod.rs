@@ -2,6 +2,7 @@
 
 pub use absent_child::*;
 pub use fixed_kinds::*;
+pub use float_kinds::*;
 pub use loop_byte::*;
 pub use loop_long::*;
 pub use nine_bits::*;
@@ -10,6 +11,7 @@ pub use strings::*;
 
 mod absent_child;
 mod fixed_kinds;
+mod float_kinds;
 mod loop_byte;
 mod loop_long;
 mod nine_bits;

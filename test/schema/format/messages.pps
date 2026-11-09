@@ -47,6 +47,9 @@ message AllKinds {
 
     // A signed integer.
     signed: i64 = 11;
+
+    // A float.
+    float: f64 = 12;
 }
 
 // An older version of a message.

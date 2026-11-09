@@ -55,6 +55,19 @@ struct SignedKinds {
     f: optional i16;
 }
 
+// A struct with a float of each size.
+struct FloatKinds {
+
+    // An alignment 4 field.
+    a: f32;
+
+    // An alignment 8 field.
+    b: f64;
+
+    // An optional field.
+    c: optional f32;
+}
+
 // A fixed struct of the other fixed-size types, with optional fields.
 struct FixedKinds {
 

@@ -34,6 +34,9 @@ pub trait AllKindsView {
 
     /// Gets the field: `signed`.
     fn signed(&self) -> Option<i64>;
+
+    /// Gets the field: `float`.
+    fn float(&self) -> Option<proto_packet::types::Float64>;
 }
 
 impl<V: AllKindsView> AllKindsView for &V {
@@ -79,6 +82,10 @@ impl<V: AllKindsView> AllKindsView for &V {
 
     fn signed(&self) -> Option<i64> {
         (**self).signed()
+    }
+
+    fn float(&self) -> Option<proto_packet::types::Float64> {
+        (**self).float()
     }
 }
 
@@ -126,6 +133,10 @@ impl<V: AllKindsView> AllKindsView for &mut V {
     fn signed(&self) -> Option<i64> {
         (**self).signed()
     }
+
+    fn float(&self) -> Option<proto_packet::types::Float64> {
+        (**self).float()
+    }
 }
 
 impl AllKindsView for super::AllKinds {
@@ -171,6 +182,10 @@ impl AllKindsView for super::AllKinds {
 
     fn signed(&self) -> Option<i64> {
         self.signed()
+    }
+
+    fn float(&self) -> Option<proto_packet::types::Float64> {
+        self.float()
     }
 }
 
@@ -218,6 +233,10 @@ impl AllKindsView for super::AllKindsRef<'_> {
     fn signed(&self) -> Option<i64> {
         self.signed()
     }
+
+    fn float(&self) -> Option<proto_packet::types::Float64> {
+        self.float()
+    }
 }
 
 impl AllKindsView for super::AllKindsBuf {
@@ -264,6 +283,10 @@ impl AllKindsView for super::AllKindsBuf {
     fn signed(&self) -> Option<i64> {
         self.as_ref().signed()
     }
+
+    fn float(&self) -> Option<proto_packet::types::Float64> {
+        self.as_ref().float()
+    }
 }
 
 impl AllKindsView for super::AllKindsMut<'_> {
@@ -309,5 +332,9 @@ impl AllKindsView for super::AllKindsMut<'_> {
 
     fn signed(&self) -> Option<i64> {
         self.as_ref().signed()
+    }
+
+    fn float(&self) -> Option<proto_packet::types::Float64> {
+        self.as_ref().float()
     }
 }
