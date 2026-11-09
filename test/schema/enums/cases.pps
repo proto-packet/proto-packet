@@ -12,7 +12,7 @@ enum EdgeTags {
     Min = 1;
 
     // The maximum tag number.
-    Max = 8191;
+    Max = 65535;
 }
 
 // An enum with the tag numbers out of declaration order. (ordered by tag number)

@@ -26,7 +26,7 @@ impl EdgeTags {
     pub const fn from_tag_number(tag_number: proto_packet::io::TagNumber) -> Self {
         match tag_number.value() {
             1 => Self::Min,
-            8191 => Self::Max,
+            65535 => Self::Max,
             tag_number => Self::Unrecognized(unrecognized::UnrecognizedTagNumber(tag_number)),
         }
     }
@@ -64,7 +64,7 @@ impl EdgeTags {
         match self {
             Self::Unrecognized(unrecognized) => unrecognized.0,
             Self::Min => 1,
-            Self::Max => 8191,
+            Self::Max => 65535,
         }
     }
 }

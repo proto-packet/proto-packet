@@ -20,7 +20,7 @@ impl<'a> EdgeTagsRef<'a> {
                 1 => {
                     proto_packet::io::check_len(value, 4)?;
                 }
-                8191 => {
+                65535 => {
                     proto_packet::io::check_len(value, 4)?;
                 }
                 _ => {}
@@ -62,7 +62,7 @@ impl<'a> EdgeTagsRef<'a> {
     /// Gets the field: `max`.
     #[must_use]
     pub fn max(&self) -> Option<u32> {
-        let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 8191) }?;
+        let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 65535) }?;
         Some(unsafe { proto_packet::io::read_u32_unchecked(value, 0) })
     }
 }
@@ -80,7 +80,7 @@ impl<'a> EdgeTagsRef<'a> {
                 1 => {
                     result.set_min(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
                 }
-                8191 => {
+                65535 => {
                     result.set_max(unsafe { proto_packet::io::read_u32_unchecked(value, 0) });
                 }
                 _ => unknown_fields.push(proto_packet::io::UnknownField::new(

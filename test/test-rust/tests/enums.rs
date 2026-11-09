@@ -12,7 +12,7 @@ use proto_packet_test::enums::empty::EmptyEnum;
 fn tag_numbers() {
     assert_eq!(SingleCase::Only.tag_number(), 1);
     assert_eq!(EdgeTags::Min.tag_number(), 1);
-    assert_eq!(EdgeTags::Max.tag_number(), 8191);
+    assert_eq!(EdgeTags::Max.tag_number(), 65535);
     assert_eq!(UnorderedTags::Three.tag_number(), 3);
     assert_eq!(UnorderedTags::One.tag_number(), 1);
     assert_eq!(UnorderedTags::Two.tag_number(), 2);
@@ -26,7 +26,7 @@ fn tag(value: u16) -> TagNumber {
 #[test]
 fn from_tag_numbers() {
     assert_eq!(EdgeTags::from_tag_number(tag(1)), EdgeTags::Min);
-    assert_eq!(EdgeTags::from_tag_number(tag(8191)), EdgeTags::Max);
+    assert_eq!(EdgeTags::from_tag_number(tag(65535)), EdgeTags::Max);
     assert!(matches!(
         EdgeTags::from_tag_number(tag(2)),
         EdgeTags::Unrecognized(_)
@@ -74,7 +74,7 @@ fn unrecognized(tag_number: u16) -> UnorderedTags {
 #[test]
 fn unrecognized_tag_numbers() {
     assert_eq!(unrecognized(4).tag_number(), 4);
-    assert_eq!(unrecognized(8191).tag_number(), 8191);
+    assert_eq!(unrecognized(65535).tag_number(), 65535);
     assert_eq!(unrecognized(4), unrecognized(4));
     assert_ne!(unrecognized(4), unrecognized(5));
 }
@@ -105,7 +105,7 @@ fn unrecognized_ordered_by_tag_number() {
     ];
     cases.sort();
     let tags: Vec<u16> = cases.iter().map(|case| case.tag_number()).collect();
-    assert_eq!(tags, [1, 2, 8191]);
+    assert_eq!(tags, [1, 2, 65535]);
 }
 
 #[test]

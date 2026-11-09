@@ -5,7 +5,7 @@ message EdgeTags {
     min: u32 = 1;
 
     // The maximum tag number.
-    max: u32 = 8191;
+    max: u32 = 65535;
 }
 
 // A message with the tag numbers out of declaration order.

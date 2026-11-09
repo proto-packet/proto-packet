@@ -8,7 +8,7 @@
 ///     min: u32 = 1;
 ///
 ///     // The maximum tag number.
-///     max: u32 = 8191;
+///     max: u32 = 65535;
 /// }
 /// ```
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
@@ -133,7 +133,7 @@ impl EdgeTags {
             writer.end_field();
         }
         if let Some(value) = &self.max {
-            writer.field(8191).extend_from_slice(&value.to_le_bytes());
+            writer.field(65535).extend_from_slice(&value.to_le_bytes());
             writer.end_field();
         }
         writer.finish();

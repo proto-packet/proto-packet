@@ -72,7 +72,7 @@ impl EdgeTagsMut<'_> {
         let bytes: Option<[u8; 4]> = value.map(|value| value.to_le_bytes());
         proto_packet::io::replace_field(
             self.bytes,
-            8191,
+            65535,
             bytes.as_ref().map(|bytes| bytes.as_slice()),
         )
     }
