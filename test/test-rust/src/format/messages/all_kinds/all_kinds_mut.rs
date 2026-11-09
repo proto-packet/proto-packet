@@ -50,7 +50,8 @@ impl AllKindsMut<'_> {
     /// Sets the field: `flag`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_flag(
         &mut self,
         value: impl Into<Option<bool>>,
@@ -63,7 +64,8 @@ impl AllKindsMut<'_> {
     /// Sets the field: `byte`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_byte(
         &mut self,
         value: impl Into<Option<u8>>,
@@ -76,7 +78,8 @@ impl AllKindsMut<'_> {
     /// Sets the field: `large`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_large(
         &mut self,
         value: impl Into<Option<u128>>,
@@ -89,7 +92,8 @@ impl AllKindsMut<'_> {
     /// Sets the field: `id`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_id(
         &mut self,
         value: impl Into<Option<proto_packet::types::Uuid>>,
@@ -102,7 +106,8 @@ impl AllKindsMut<'_> {
     /// Sets the field: `color`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_color(
         &mut self,
         value: impl Into<Option<crate::format::examples::Color>>,
@@ -115,7 +120,8 @@ impl AllKindsMut<'_> {
     /// Sets the field: `text`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_text<'v>(
         &mut self,
         value: impl Into<Option<&'v str>>,
@@ -151,7 +157,8 @@ impl AllKindsMut<'_> {
     /// Sets the field: `boxed_color`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_boxed_color(
         &mut self,
         value: impl Into<Option<crate::format::examples::Color>>,

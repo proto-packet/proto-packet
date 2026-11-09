@@ -63,8 +63,8 @@ pub(crate) fn view_mut_name(type_name: &str) -> String {
 ///
 /// It has a setter for each scalar & string field, & an accessor for each nested struct or message,
 /// so generic code can edit any editable form of the type. A string can fail, since the `Mut` type
-/// can run out of room, & so can any field of a message, for the same reason, if `all_fallible`. The
-/// trait is also implemented for mutable references, since the type's own accessors return one.
+/// can't change its length, & so can any field of a message, for the same reason, if `all_fallible`.
+/// The trait is also implemented for mutable references, since the type's own accessors return one.
 pub(crate) fn gen_view_mut(
     typing: Typing<'_>,
     schema_name: &str,

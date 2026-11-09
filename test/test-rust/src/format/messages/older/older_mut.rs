@@ -50,7 +50,8 @@ impl OlderMut<'_> {
     /// Sets the field: `name`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_name<'v>(
         &mut self,
         value: impl Into<Option<&'v str>>,
@@ -62,7 +63,8 @@ impl OlderMut<'_> {
     /// Sets the field: `age`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_age(
         &mut self,
         value: impl Into<Option<u32>>,

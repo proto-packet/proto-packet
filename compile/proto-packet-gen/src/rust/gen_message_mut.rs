@@ -115,7 +115,10 @@ fn gen_setter(typing: Typing<'_>, tagged: TaggedField<'_>) -> Function {
         .with_comment(format!(" Sets the field: `{}`.", field.name))
         .with_comment("")
         .with_comment(" # Errors")
-        .with_comment(" Returns an error, leaving the message unchanged, if the value doesn't fit.")
+        .with_comment(
+            " Returns an error, leaving the message unchanged, if the message would change its",
+        )
+        .with_comment(" length.")
         .with_access(Access::Public)
         .with_semi(format!(
             "let value: Option<{}> = value.into()",

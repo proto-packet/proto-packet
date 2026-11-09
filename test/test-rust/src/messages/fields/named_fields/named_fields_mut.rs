@@ -74,7 +74,8 @@ impl NamedFieldsMut<'_> {
     /// Sets the field: `color`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_color(
         &mut self,
         value: impl Into<Option<crate::types::Color>>,

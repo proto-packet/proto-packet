@@ -50,7 +50,8 @@ impl EdgeTagsMut<'_> {
     /// Sets the field: `min`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_min(
         &mut self,
         value: impl Into<Option<u32>>,
@@ -63,7 +64,8 @@ impl EdgeTagsMut<'_> {
     /// Sets the field: `max`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_max(
         &mut self,
         value: impl Into<Option<u32>>,

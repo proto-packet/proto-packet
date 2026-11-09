@@ -50,7 +50,8 @@ impl PrimitiveFieldsMut<'_> {
     /// Sets the field: `boolean`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_boolean(
         &mut self,
         value: impl Into<Option<bool>>,
@@ -63,7 +64,8 @@ impl PrimitiveFieldsMut<'_> {
     /// Sets the field: `unsigned8`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_unsigned8(
         &mut self,
         value: impl Into<Option<u8>>,
@@ -76,7 +78,8 @@ impl PrimitiveFieldsMut<'_> {
     /// Sets the field: `unsigned16`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_unsigned16(
         &mut self,
         value: impl Into<Option<u16>>,
@@ -89,7 +92,8 @@ impl PrimitiveFieldsMut<'_> {
     /// Sets the field: `unsigned32`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_unsigned32(
         &mut self,
         value: impl Into<Option<u32>>,
@@ -102,7 +106,8 @@ impl PrimitiveFieldsMut<'_> {
     /// Sets the field: `unsigned64`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_unsigned64(
         &mut self,
         value: impl Into<Option<u64>>,
@@ -115,7 +120,8 @@ impl PrimitiveFieldsMut<'_> {
     /// Sets the field: `unsigned128`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_unsigned128(
         &mut self,
         value: impl Into<Option<u128>>,

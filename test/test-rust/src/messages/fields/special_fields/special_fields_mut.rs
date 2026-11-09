@@ -50,7 +50,8 @@ impl SpecialFieldsMut<'_> {
     /// Sets the field: `id`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_id(
         &mut self,
         value: impl Into<Option<proto_packet::types::Uuid>>,
@@ -63,7 +64,8 @@ impl SpecialFieldsMut<'_> {
     /// Sets the field: `text`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_text<'v>(
         &mut self,
         value: impl Into<Option<&'v str>>,

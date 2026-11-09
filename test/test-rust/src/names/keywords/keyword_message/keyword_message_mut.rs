@@ -50,7 +50,8 @@ impl KeywordMessageMut<'_> {
     /// Sets the field: `type`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_type(
         &mut self,
         value: impl Into<Option<u32>>,
@@ -63,7 +64,8 @@ impl KeywordMessageMut<'_> {
     /// Sets the field: `self`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_self(
         &mut self,
         value: impl Into<Option<u32>>,

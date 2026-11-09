@@ -50,7 +50,8 @@ impl UnorderedTagsMut<'_> {
     /// Sets the field: `one`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_one(
         &mut self,
         value: impl Into<Option<u32>>,
@@ -63,7 +64,8 @@ impl UnorderedTagsMut<'_> {
     /// Sets the field: `two`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_two(
         &mut self,
         value: impl Into<Option<u32>>,
@@ -76,7 +78,8 @@ impl UnorderedTagsMut<'_> {
     /// Sets the field: `three`.
     ///
     /// # Errors
-    /// Returns an error, leaving the message unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
     pub fn set_three(
         &mut self,
         value: impl Into<Option<u32>>,
