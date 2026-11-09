@@ -16,6 +16,20 @@ pub const fn check_len(bytes: &[u8], size: usize) -> Result<(), DecodeError> {
     Ok(())
 }
 
+/// Checks the `bytes` are exactly the `size` of a fixed-size value.
+///
+/// # Errors
+/// Returns an error if the `bytes` are shorter or longer than the `size`.
+pub const fn check_exact_len(bytes: &[u8], size: usize) -> Result<(), DecodeError> {
+    if bytes.len() > size {
+        return Err(DecodeError::TooLong {
+            expected: size,
+            actual: bytes.len(),
+        });
+    }
+    check_len(bytes, size)
+}
+
 /// Checks the end table at the `table`, with the `count` of entries, for the tail at the `tail`.
 ///
 /// The end table & the `tail` must be within the `bytes`, so check their length first.

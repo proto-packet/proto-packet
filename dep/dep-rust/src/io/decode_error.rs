@@ -6,6 +6,9 @@ pub enum DecodeError {
     /// The bytes are shorter than the value needs.
     TooShort { expected: usize, actual: usize },
 
+    /// The bytes are longer than the value needs.
+    TooLong { expected: usize, actual: usize },
+
     /// An end table decreases, or goes past the end of its tail.
     InvalidEndTable,
 
@@ -24,6 +27,9 @@ impl Display for DecodeError {
         match self {
             Self::TooShort { expected, actual } => {
                 write!(f, "expected at least {} bytes, got {}", expected, actual)
+            }
+            Self::TooLong { expected, actual } => {
+                write!(f, "expected {} bytes, got {}", expected, actual)
             }
             Self::InvalidEndTable => f.write_str("invalid end table"),
             Self::InvalidTags => f.write_str("invalid tags"),
