@@ -70,10 +70,17 @@ impl LoopStructBuf {
     /// Gets the mut of the field: `next`.
     #[must_use]
     pub fn next_mut(&mut self) -> Option<crate::format::messages::LoopMessageMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 12, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 8, 0) } {
             Some(unsafe {
                 crate::format::messages::LoopMessageMut::new_unchecked(
-                    proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 8, 0, 13),
+                    proto_packet::io::read_tail_entry_mut_unchecked(
+                        self.bytes.as_mut_slice(),
+                        0,
+                        0,
+                        1,
+                        9,
+                        1,
+                    ),
                 )
             })
         } else {

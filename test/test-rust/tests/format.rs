@@ -213,7 +213,7 @@ fn keeps_unrecognized_tag_numbers() {
 
 #[test]
 fn person_example() {
-    let bytes: [u8; 8] = [3, 0, 0, 0, 36, b'A', b'd', b'a'];
+    let bytes: [u8; 4] = [36, b'A', b'd', b'a'];
     assert_encoding!(Person, Person::new("Ada".to_string(), 36), &bytes);
 
     let person: PersonRef = PersonRef::new(&bytes).unwrap();
@@ -223,11 +223,11 @@ fn person_example() {
 /// Gets the bytes of the `Pair` example of `format/binary.md`.
 fn pair_bytes() -> Vec<u8> {
     [
-        &[24, 0, 0, 0, 38, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0][..], // ends & padding
-        &[1, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0],                    // first
+        &[21, 0, 0, 0, 34, 0, 0, 0][..], // ends
+        &[1, 0, 0, 0, 0, 0, 0, 0],       // first
         b"hello",
-        &[0; 7],
-        &[2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0], // second
+        &[0; 3],                   // padding
+        &[2, 0, 0, 0, 0, 0, 0, 0], // second
         b"hi",
         b"ok",
     ]
@@ -246,7 +246,7 @@ fn pair() -> Pair {
 #[test]
 fn pair_example() {
     let bytes: Vec<u8> = pair_bytes();
-    assert_eq!(bytes.len(), 56);
+    assert_eq!(bytes.len(), 36);
     assert_encoding!(Pair, pair(), &bytes);
 
     let pair: PairRef = PairRef::new(&bytes).unwrap();
@@ -274,7 +274,7 @@ fn variable_children_are_aligned() {
 
 #[test]
 fn opt_example() {
-    let bytes: [u8; 13] = [0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0b0001_0101, b'h', b'i'];
+    let bytes: [u8; 9] = [0, 0, 0, 0, 0, 0, 0b0001_0101, b'h', b'i'];
     let value: Opt = Opt::new(true, None, Some(false), Some("hi".to_string()), None);
     assert_encoding!(Opt, value, &bytes);
 
@@ -290,8 +290,10 @@ fn opt_example() {
 fn absent_entries_are_empty() {
     let second: Entry = Entry::new(1, "hi".to_string());
     let bytes: Vec<u8> = [
-        &[0, 0, 0, 0, 14, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0][..], // ends, bits & padding
-        &[1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0],                   // second
+        &[9, 0, 0, 0, 26, 0, 0, 0][..], // ends
+        &[0],                           // bits
+        &[0; 7],                        // padding
+        &[1, 0, 0, 0, 0, 0, 0, 0],      // second
         b"hi",
         b"ok",
     ]
@@ -302,15 +304,16 @@ fn absent_entries_are_empty() {
     let first: Entry = Entry::new(2, "hello".to_string());
     let present: AbsentChild = AbsentChild::new(Some(first), second, "ok".to_string());
     let bytes: Vec<u8> = present.encode();
-    assert_eq!(bytes.len(), 56);
+    assert_eq!(bytes.len(), 44);
+    assert_eq!(bytes[..8], [29, 0, 0, 0, 42, 0, 0, 0]);
     assert_encoding!(AbsentChild, present, &bytes);
 }
 
 #[test]
 fn loops_share_their_alignment() {
     let bytes: Vec<u8> = [
-        &[16, 0, 0, 0, 1, 1, 0, 0][..],                        // LoopByte
-        &[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0][..], // LoopLong
+        &[1, 1, 0, 0, 0, 0, 0, 0][..],    // LoopByte, with its padding
+        &[2, 0, 0, 0, 0, 0, 0, 0, 0][..], // LoopLong
     ]
     .concat();
     let value: LoopByte = LoopByte::new(1, Some(LoopLong::new(2, None)));
@@ -318,7 +321,7 @@ fn loops_share_their_alignment() {
 
     let long: LoopLong = LoopLong::new(1, Some(LoopByte::new(2, None)));
     let bytes: Vec<u8> = long.encode();
-    assert_eq!(bytes.len(), 16 + 8);
+    assert_eq!(bytes.len(), 16 + 2);
     assert_encoding!(LoopLong, long, &bytes);
 }
 
@@ -335,63 +338,76 @@ fn linked_lists_nest() {
 }
 
 #[test]
-fn slack_is_dropped_by_decoding() {
-    let bytes: [u8; 10] = [3, 0, 0, 0, 36, b'A', b'd', b'a', 0xFF, 0xFF];
+fn the_last_entry_ends_with_the_struct() {
+    let bytes: [u8; 5] = [36, b'A', b'd', b'a', b'!'];
     let person: Person = Person::decode(&bytes).unwrap();
-    assert_eq!(person, Person::new("Ada".to_string(), 36));
-    assert_eq!(person.encode(), bytes[..8]);
+    assert_eq!(person, Person::new("Ada!".to_string(), 36));
 }
 
 #[test]
 fn rejects_end_tables() {
-    let past_the_end: [u8; 6] = [9, 0, 0, 0, 36, b'A'];
+    let mut before_the_header_ends: Vec<u8> = pair_bytes();
+    before_the_header_ends[0] = 7;
     assert_eq!(
-        Person::decode(&past_the_end),
+        Pair::decode(&before_the_header_ends),
         Err(DecodeError::InvalidEndTable)
     );
 
     let mut decreasing: Vec<u8> = pair_bytes();
-    decreasing[4] = 10;
+    decreasing[4] = 20;
     assert_eq!(Pair::decode(&decreasing), Err(DecodeError::InvalidEndTable));
 
-    let mut too_long: Vec<u8> = pair_bytes();
-    too_long[8] = 41;
-    assert_eq!(Pair::decode(&too_long), Err(DecodeError::InvalidEndTable));
+    let mut past_the_end: Vec<u8> = pair_bytes();
+    past_the_end[4] = 37;
+    assert_eq!(
+        Pair::decode(&past_the_end),
+        Err(DecodeError::InvalidEndTable)
+    );
 }
 
 #[test]
-fn rejects_short_fixed_blocks() {
+fn rejects_entries_that_start_after_they_end() {
+    let mut bytes: Vec<u8> = pair_bytes();
+    bytes[4] = 22; // `second` starts at 24, after its padding
+    assert_eq!(Pair::decode(&bytes), Err(DecodeError::InvalidEndTable));
+}
+
+#[test]
+fn rejects_short_headers() {
     assert_eq!(
-        Person::decode(&[0; 4]),
+        Person::decode(&[]),
         Err(DecodeError::TooShort {
-            expected: 5,
-            actual: 4,
+            expected: 1,
+            actual: 0,
         })
     );
 }
 
 #[test]
 fn rejects_invalid_utf8() {
-    assert_eq!(
-        Person::decode(&[1, 0, 0, 0, 36, 0xFF]),
-        Err(DecodeError::InvalidUtf8)
-    );
+    assert_eq!(Person::decode(&[36, 0xFF]), Err(DecodeError::InvalidUtf8));
 }
 
 #[test]
 fn rejects_invalid_children() {
     let mut bytes: Vec<u8> = pair_bytes();
-    bytes[16 + 8] = 200; // the end of `first`
-    assert_eq!(Pair::decode(&bytes), Err(DecodeError::InvalidEndTable));
+    bytes[0] = 12; // the end of `first`, which leaves it 4 bytes
+    assert_eq!(
+        Pair::decode(&bytes),
+        Err(DecodeError::TooShort {
+            expected: 8,
+            actual: 4,
+        })
+    );
 
     let mut bytes: Vec<u8> = pair_bytes();
-    bytes[16 + 12] = 0xFF; // the text of `first`
+    bytes[8 + 8] = 0xFF; // the text of `first`
     assert_eq!(Pair::decode(&bytes), Err(DecodeError::InvalidUtf8));
 }
 
 #[test]
 fn absent_fields_are_not_validated() {
-    let bytes: [u8; 13] = [0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0b0000_0001, 0xFF, 0xFF];
+    let bytes: [u8; 9] = [0, 0, 0, 0, 0, 0, 0b0000_0001, 0xFF, 0xFF];
     let value: Opt = Opt::new(true, None, None, None, None);
     assert_eq!(Opt::decode(&bytes), Ok(value));
 }
@@ -481,42 +497,31 @@ fn mut_only_reaches_present_optional_structs() {
 }
 
 #[test]
-fn mut_shrinks_strings_and_zeroes_the_freed_bytes() {
+fn mut_sets_strings_of_the_same_length() {
     let mut bytes: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
     let mut person: PersonMut = PersonMut::new(&mut bytes).unwrap();
-    person.set_name("Al").unwrap();
-    assert_eq!(bytes, [2, 0, 0, 0, 36, b'A', b'l', 0]);
-    assert_eq!(
-        Person::decode(&bytes),
-        Ok(Person::new("Al".to_string(), 36))
-    );
+    person.set_name("Bob").unwrap();
+    assert_eq!(bytes, [36, b'B', b'o', b'b']);
 }
 
 #[test]
-fn mut_grows_strings_into_slack() {
-    let mut bytes: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
-    bytes.extend_from_slice(&[0; 3]);
-    let mut person: PersonMut = PersonMut::new(&mut bytes).unwrap();
-    person.set_name("Grace!").unwrap();
-    assert_eq!(person.as_ref().name(), "Grace!");
-}
-
-#[test]
-fn mut_rejects_strings_that_do_not_fit() {
+fn mut_rejects_strings_of_another_length() {
     let original: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
     let mut bytes: Vec<u8> = original.clone();
     let mut person: PersonMut = PersonMut::new(&mut bytes).unwrap();
-    assert_eq!(
-        person.set_name("Grace"),
-        Err(CapacityError {
-            required: 5,
-            capacity: 3,
-        })
-    );
+    for (name, required) in [("Grace", 5), ("Al", 2), ("", 0)] {
+        assert_eq!(
+            person.set_name(name),
+            Err(CapacityError {
+                required,
+                capacity: 3,
+            })
+        );
+    }
     assert_eq!(bytes, original);
 }
 
-/// Gets the test struct with strings after a variable struct.
+/// Gets the test struct with strings around a variable struct.
 fn strings() -> Strings {
     Strings::new(
         7,
@@ -528,38 +533,46 @@ fn strings() -> Strings {
 }
 
 #[test]
-fn mut_moves_the_later_strings() {
+fn mut_sets_strings_between_other_entries() {
     let mut bytes: Vec<u8> = strings().encode();
     let mut value: StringsMut = StringsMut::new(&mut bytes).unwrap();
-    value.set_first("1st").unwrap();
-    assert_eq!(value.as_ref().second(), Some("second"));
-    assert_eq!(value.as_ref().third(), "third");
-    value.set_first("first").unwrap();
-    assert_eq!(bytes, strings().encode());
-}
-
-#[test]
-fn mut_never_moves_nested_structs() {
-    let mut bytes: Vec<u8> = strings().encode();
-    let mut value: StringsMut = StringsMut::new(&mut bytes).unwrap();
-    let entry: usize = value.as_ref().entry().as_bytes().as_ptr() as usize;
-    value.set_third("3").unwrap();
-    value.set_first("").unwrap();
-    assert_eq!(value.as_ref().entry().as_bytes().as_ptr() as usize, entry);
-    assert_eq!(value.as_ref().entry().text(), "text");
+    value.set_first("FIRST").unwrap();
+    value.set_third("THIRD").unwrap();
+    assert!(value.set_first("1st").is_err());
+    assert_eq!(
+        Strings::decode(&bytes),
+        Ok(Strings::new(
+            7,
+            "FIRST".to_string(),
+            Entry::new(1, "text".to_string()),
+            Some("second".to_string()),
+            "THIRD".to_string(),
+        ))
+    );
 }
 
 #[test]
 fn mut_sets_optional_strings() {
     let mut bytes: Vec<u8> = strings().encode();
     let mut value: StringsMut = StringsMut::new(&mut bytes).unwrap();
-    value.set_second(None).unwrap();
-    assert_eq!(value.as_ref().second(), None);
+    value.set_second("SECOND").unwrap();
+    assert_eq!(value.as_ref().second(), Some("SECOND"));
+    assert_eq!(
+        value.set_second(None),
+        Err(CapacityError {
+            required: 0,
+            capacity: 6,
+        })
+    );
+    assert_eq!(value.as_ref().second(), Some("SECOND"));
     assert_eq!(value.as_ref().third(), "third");
-    value.set_second("2nd").unwrap();
-    assert_eq!(value.as_ref().second(), Some("2nd"));
-    value.set_second("").unwrap();
-    assert_eq!(value.as_ref().second(), Some(""));
+
+    let mut bytes: Vec<u8> = Opt::new(false, None, None, None, None).encode();
+    let mut opt: OptMut = OptMut::new(&mut bytes).unwrap();
+    opt.set_d("").unwrap();
+    assert_eq!(opt.as_ref().d(), Some(""));
+    opt.set_d(None).unwrap();
+    assert_eq!(opt.as_ref().d(), None);
 }
 
 #[test]
@@ -572,33 +585,22 @@ fn mut_failed_optional_strings_stay_absent() {
 }
 
 #[test]
-fn children_grow_into_their_padding() {
+fn mut_edits_nested_variable_structs() {
     let mut bytes: Vec<u8> = pair_bytes();
     let mut pair: PairMut = PairMut::new(&mut bytes).unwrap();
     assert_eq!(
-        pair.first_mut().set_text("hello, world!"),
+        pair.first_mut().set_text("hello, world"),
         Err(CapacityError {
-            required: 13,
-            capacity: 12,
+            required: 12,
+            capacity: 5,
         })
     );
-    pair.first_mut().set_text("hello, world").unwrap();
-    assert_eq!(pair.as_ref().first().text(), "hello, world");
-    assert_eq!(pair.as_ref().second().text(), "hi");
+    pair.first_mut().set_text("HELLO").unwrap();
+    pair.second_mut().set_id(8);
+    assert_eq!(pair.as_ref().first().text(), "HELLO");
+    assert_eq!(pair.as_ref().second().id(), 8);
     assert_eq!(pair.as_ref().note(), "ok");
     PairRef::new(pair.as_bytes()).unwrap();
-}
-
-#[test]
-fn children_keep_their_extent_when_they_shrink() {
-    let mut bytes: Vec<u8> = pair_bytes();
-    let mut pair: PairMut = PairMut::new(&mut bytes).unwrap();
-    pair.first_mut().set_text("").unwrap();
-    assert_eq!(pair.as_ref().second().id(), 2);
-    assert_eq!(bytes.len(), 56);
-    assert_eq!(bytes[..4], [24, 0, 0, 0]);
-    let decoded: Pair = Pair::decode(&bytes).unwrap();
-    assert_eq!(decoded.first().text(), "");
 }
 
 #[test]
@@ -767,8 +769,8 @@ fn view_muts_set_strings() {
     assert_eq!(person.name(), "Grace Hopper");
 
     let mut buf: PersonBuf = PersonBuf::from(&Person::new("Ada".to_string(), 36));
-    rename(&mut buf, "Al").unwrap();
-    assert_eq!(buf.decode(), Person::new("Al".to_string(), 36));
+    rename(&mut buf, "Bob").unwrap();
+    assert_eq!(buf.decode(), Person::new("Bob".to_string(), 36));
     assert_eq!(
         rename(&mut buf, "Grace"),
         Err(CapacityError {
@@ -780,8 +782,8 @@ fn view_muts_set_strings() {
     let mut bytes: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
     let mut edit: PersonMut = PersonMut::new(&mut bytes).unwrap();
     assert!(rename(&mut edit, "Grace").is_err());
-    rename(&mut edit, "Bo").unwrap();
-    assert_eq!(edit.as_ref().name(), "Bo");
+    rename(&mut edit, "Eve").unwrap();
+    assert_eq!(edit.as_ref().name(), "Eve");
 }
 
 /// Edits any editable form of a line, through its `Copy` nested struct.
@@ -792,7 +794,7 @@ fn raise_line<L: LineViewMut>(line: &mut L) {
 
 /// Edits any editable form of a pair, through its non-`Copy` nested structs.
 fn retag<P: PairViewMut>(pair: &mut P) -> Result<(), CapacityError> {
-    pair.first_mut().set_text("hey")?;
+    pair.first_mut().set_text("HELLO")?;
     pair.second_mut().set_id(8);
     pair.set_note("no")
 }
@@ -815,7 +817,7 @@ fn view_muts_edit_nested_structs() {
     assert_eq!(Line::decode(&bytes), Ok(expected));
 
     let expected: Pair = Pair::new(
-        Entry::new(1, "hey".to_string()),
+        Entry::new(1, "HELLO".to_string()),
         Entry::new(8, "hi".to_string()),
         "no".to_string(),
     );
@@ -870,12 +872,14 @@ fn view_muts_set_optional_fields() {
 
     let mut bytes: Vec<u8> = filled.encode();
     let mut edit: OptMut = OptMut::new(&mut bytes).unwrap();
-    clear_opt(&mut edit).unwrap();
     fill_opt(&mut edit).unwrap();
-    assert_eq!(bytes, filled.encode());
+    assert!(clear_opt(&mut edit).is_err());
+    assert_eq!(edit.as_ref().d(), Some("hi"));
 
     let mut buf: OptBuf = OptBuf::from(&absent);
     assert!(fill_opt(&mut buf).is_err());
+    clear_opt(&mut buf).unwrap();
+    assert_eq!(buf.decode(), absent);
 }
 
 /// Edits the optional nested struct of any editable form of a `FixedKinds`, if it's present.

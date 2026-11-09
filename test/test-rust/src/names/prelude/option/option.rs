@@ -115,14 +115,15 @@ impl Option {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
-        if let Some(value) = &self.next {
-            tail += value.encoded_len();
-        }
+        let mut len: usize = 5;
         if let Some(value) = &self.text {
-            tail += value.len();
+            len += value.len();
         }
-        12 + tail
+        if let Some(value) = &self.next {
+            len = proto_packet::io::align_up(len, 4);
+            len += value.encoded_len();
+        }
+        len
     }
 
     /// Encodes the struct.
@@ -136,18 +137,16 @@ impl Option {
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut std::vec::Vec<u8>) {
         let start: usize = out.len();
-        proto_packet::io::write_zeros(out, 8);
+        proto_packet::io::write_zeros(out, 4);
         out.push(u8::from(self.text.is_some()) | (u8::from(self.next.is_some()) << 1));
-        proto_packet::io::write_zeros(out, 3);
-        let tail: usize = out.len();
-        if let Some(value) = &self.next {
-            value.encode_to(out);
-        }
-        proto_packet::io::write_end(out, start, tail);
         if let Some(value) = &self.text {
             out.extend_from_slice(value.as_bytes());
         }
-        proto_packet::io::write_end(out, start + 4, tail);
+        proto_packet::io::write_end(out, start, start);
+        if let Some(value) = &self.next {
+            proto_packet::io::write_padding(out, start, 4);
+            value.encode_to(out);
+        }
     }
 }
 

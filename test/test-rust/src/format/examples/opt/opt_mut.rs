@@ -49,36 +49,40 @@ impl OptMut<'_> {
 
     /// Sets the field: `a`.
     pub fn set_a(&mut self, value: bool) {
-        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 10, 0, value) };
+        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 6, 0, value) };
     }
 
     /// Sets the field: `b`.
     pub fn set_b(&mut self, value: impl Into<Option<u32>>) {
         let value: Option<u32> = value.into();
         unsafe { proto_packet::io::write_u32_unchecked(self.bytes, 0, value.unwrap_or_default()) };
-        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 10, 1, value.is_some()) };
+        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 6, 1, value.is_some()) };
     }
 
     /// Sets the field: `c`.
     pub fn set_c(&mut self, value: impl Into<Option<bool>>) {
         let value: Option<bool> = value.into();
         unsafe {
-            proto_packet::io::write_bit_unchecked(self.bytes, 10, 3, value.unwrap_or_default())
+            proto_packet::io::write_bit_unchecked(self.bytes, 6, 3, value.unwrap_or_default())
         };
-        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 10, 2, value.is_some()) };
+        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 6, 2, value.is_some()) };
     }
 
     /// Sets the field: `d`.
     ///
     /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the struct unchanged, if the value isn't the length
+    /// of the one it replaces.
     pub fn set_d<'v>(
         &mut self,
         value: impl Into<Option<&'v str>>,
     ) -> Result<(), proto_packet::io::CapacityError> {
         let value: Option<&str> = value.into();
-        proto_packet::io::replace_entry(self.bytes, 4, 1, 0, 11, value.unwrap_or_default())?;
-        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 10, 4, value.is_some()) };
+        proto_packet::io::replace_str(
+            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 0, 1, 7, 1) },
+            value.unwrap_or_default(),
+        )?;
+        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 6, 4, value.is_some()) };
         Ok(())
     }
 
@@ -88,7 +92,7 @@ impl OptMut<'_> {
         unsafe {
             proto_packet::io::write_u16_unchecked(
                 self.bytes,
-                8,
+                4,
                 value.map_or(0, |value| value.tag_number()),
             )
         };

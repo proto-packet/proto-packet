@@ -87,9 +87,9 @@ impl Entry {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
-        tail += self.text.len();
-        12 + tail
+        let mut len: usize = 8;
+        len += self.text.len();
+        len
     }
 
     /// Encodes the struct.
@@ -102,12 +102,8 @@ impl Entry {
 
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
-        let start: usize = out.len();
         out.extend_from_slice(&self.id.to_le_bytes());
-        proto_packet::io::write_zeros(out, 4);
-        let tail: usize = out.len();
         out.extend_from_slice(self.text.as_bytes());
-        proto_packet::io::write_end(out, start + 8, tail);
     }
 }
 

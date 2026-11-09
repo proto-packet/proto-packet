@@ -104,11 +104,12 @@ impl ListNode {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
+        let mut len: usize = 5;
         if let Some(value) = &self.next {
-            tail += value.encoded_len();
+            len = proto_packet::io::align_up(len, 4);
+            len += value.encoded_len();
         }
-        12 + tail
+        len
     }
 
     /// Encodes the struct.
@@ -123,14 +124,11 @@ impl ListNode {
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
         out.extend_from_slice(&self.value.to_le_bytes());
-        proto_packet::io::write_zeros(out, 4);
         out.push(u8::from(self.next.is_some()));
-        proto_packet::io::write_zeros(out, 3);
-        let tail: usize = out.len();
         if let Some(value) = &self.next {
+            proto_packet::io::write_padding(out, start, 4);
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 4, tail);
     }
 }
 

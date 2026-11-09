@@ -85,7 +85,7 @@ struct LoopLong {
     next: optional box LoopByte;
 }
 
-// A struct with strings after a variable struct, to move in place.
+// A struct with strings around a variable struct.
 struct Strings {
 
     // The number.
@@ -94,7 +94,7 @@ struct Strings {
     // The first string.
     first: string;
 
-    // The variable struct, before the strings in the tail.
+    // The variable struct, between the strings in the tail.
     entry: Entry;
 
     // An optional string.

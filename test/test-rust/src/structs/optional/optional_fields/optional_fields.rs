@@ -350,20 +350,20 @@ impl OptionalFields {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
+        let mut len: usize = 43;
+        if let Some(value) = &self.text {
+            len += value.len();
+        }
         if let Some(value) = &self.person {
-            tail += value.encoded_len();
+            len += value.encoded_len();
         }
         if let Some(value) = &self.label {
-            tail += value.encoded_len();
+            len += value.encoded_len();
         }
         if let Some(value) = &self.shape {
-            tail += value.encoded_len();
+            len += value.encoded_len();
         }
-        if let Some(value) = &self.text {
-            tail += value.len();
-        }
-        48 + tail
+        len
     }
 
     /// Encodes the struct.
@@ -379,7 +379,7 @@ impl OptionalFields {
         let start: usize = out.len();
         out.extend_from_slice(self.id.unwrap_or_default().as_bytes());
         out.extend_from_slice(&self.count.unwrap_or_default().to_le_bytes());
-        proto_packet::io::write_zeros(out, 16);
+        proto_packet::io::write_zeros(out, 12);
         match &self.point {
             Some(value) => value.encode_to(out),
             None => proto_packet::io::write_zeros(out, 8),
@@ -400,24 +400,21 @@ impl OptionalFields {
                 | (u8::from(self.label.is_some()) << 5)
                 | (u8::from(self.shape.is_some()) << 6),
         );
-        proto_packet::io::write_zeros(out, 1);
-        let tail: usize = out.len();
-        if let Some(value) = &self.person {
-            value.encode_to(out);
-        }
-        proto_packet::io::write_end(out, start + 20, tail);
-        if let Some(value) = &self.label {
-            value.encode_to(out);
-        }
-        proto_packet::io::write_end(out, start + 24, tail);
-        if let Some(value) = &self.shape {
-            value.encode_to(out);
-        }
-        proto_packet::io::write_end(out, start + 28, tail);
         if let Some(value) = &self.text {
             out.extend_from_slice(value.as_bytes());
         }
-        proto_packet::io::write_end(out, start + 32, tail);
+        proto_packet::io::write_end(out, start + 20, start);
+        if let Some(value) = &self.person {
+            value.encode_to(out);
+        }
+        proto_packet::io::write_end(out, start + 24, start);
+        if let Some(value) = &self.label {
+            value.encode_to(out);
+        }
+        proto_packet::io::write_end(out, start + 28, start);
+        if let Some(value) = &self.shape {
+            value.encode_to(out);
+        }
     }
 }
 

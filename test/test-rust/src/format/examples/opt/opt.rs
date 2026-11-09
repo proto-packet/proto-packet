@@ -203,11 +203,11 @@ impl Opt {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
+        let mut len: usize = 7;
         if let Some(value) = &self.d {
-            tail += value.len();
+            len += value.len();
         }
-        11 + tail
+        len
     }
 
     /// Encodes the struct.
@@ -220,9 +220,7 @@ impl Opt {
 
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
-        let start: usize = out.len();
         out.extend_from_slice(&self.b.unwrap_or_default().to_le_bytes());
-        proto_packet::io::write_zeros(out, 4);
         out.extend_from_slice(
             &self
                 .e
@@ -237,11 +235,9 @@ impl Opt {
                 | (u8::from(self.c.unwrap_or_default()) << 3)
                 | (u8::from(self.d.is_some()) << 4),
         );
-        let tail: usize = out.len();
         if let Some(value) = &self.d {
             out.extend_from_slice(value.as_bytes());
         }
-        proto_packet::io::write_end(out, start + 4, tail);
     }
 }
 

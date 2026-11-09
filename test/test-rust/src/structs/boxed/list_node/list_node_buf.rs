@@ -70,10 +70,17 @@ impl ListNodeBuf {
     /// Gets the mut of the field: `next`.
     #[must_use]
     pub fn next_mut(&mut self) -> Option<crate::structs::boxed::ListNodeMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 8, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 4, 0) } {
             Some(unsafe {
                 crate::structs::boxed::ListNodeMut::new_unchecked(
-                    proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 4, 0, 12),
+                    proto_packet::io::read_tail_entry_mut_unchecked(
+                        self.bytes.as_mut_slice(),
+                        0,
+                        0,
+                        1,
+                        5,
+                        4,
+                    ),
                 )
             })
         } else {

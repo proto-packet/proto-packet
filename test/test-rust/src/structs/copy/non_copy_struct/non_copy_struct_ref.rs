@@ -14,11 +14,8 @@ impl<'a> NonCopyStructRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 4)?;
-        proto_packet::io::check_ends(bytes, 0, 1, 4)?;
-        crate::types::PersonRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 0, 4)
-        })?;
+        proto_packet::io::check_len(bytes, 0)?;
+        crate::types::PersonRef::new(proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 0, 1)?)?;
         Ok(Self { bytes })
     }
 
@@ -49,8 +46,8 @@ impl<'a> NonCopyStructRef<'a> {
     #[must_use]
     pub fn person(&self) -> crate::types::PersonRef<'a> {
         unsafe {
-            crate::types::PersonRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 0, 0, 4,
+            crate::types::PersonRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
+                self.bytes, 0, 0, 1, 0, 1,
             ))
         }
     }

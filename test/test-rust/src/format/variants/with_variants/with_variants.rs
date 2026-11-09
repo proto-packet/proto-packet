@@ -172,13 +172,13 @@ impl WithVariants {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
-        tail += self.shape.encoded_len();
+        let mut len: usize = 17;
+        len += self.before.len();
+        len += self.shape.encoded_len();
         if let Some(value) = &self.maybe {
-            tail += value.encoded_len();
+            len += value.encoded_len();
         }
-        tail += self.before.len();
-        21 + tail
+        len
     }
 
     /// Encodes the struct.
@@ -193,17 +193,15 @@ impl WithVariants {
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
         out.extend_from_slice(&self.number.to_le_bytes());
-        proto_packet::io::write_zeros(out, 12);
+        proto_packet::io::write_zeros(out, 8);
         out.push(u8::from(self.maybe.is_some()));
-        let tail: usize = out.len();
+        out.extend_from_slice(self.before.as_bytes());
+        proto_packet::io::write_end(out, start + 8, start);
         self.shape.encode_to(out);
-        proto_packet::io::write_end(out, start + 8, tail);
+        proto_packet::io::write_end(out, start + 12, start);
         if let Some(value) = &self.maybe {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 12, tail);
-        out.extend_from_slice(self.before.as_bytes());
-        proto_packet::io::write_end(out, start + 16, tail);
     }
 }
 

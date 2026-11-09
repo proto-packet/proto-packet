@@ -97,12 +97,12 @@ fn gen_construction(
 ) -> ImplBlock {
     let mut new: Function = gen_new("ref", "&'a [u8]")
         .with_semi(format!("{}::check_len(bytes, {})?", IO, layout.fixed_size));
-    if !layout.is_fixed() {
+    if layout.ends() > 0 {
         new.add_semi(format!(
-            "{}::check_ends(bytes, {}, {}, {})?",
+            "{}::check_tail_ends(bytes, {}, {}, {})?",
             IO,
             layout.table_offset,
-            layout.entries.len(),
+            layout.ends(),
             layout.fixed_size
         ));
     }
@@ -147,14 +147,14 @@ fn gen_check(
             read_fixed(offset, size, "bytes")
         ),
         (ValueLayout::Entry { index }, TypeTag::Special(SpecialType::String)) => format!(
-            "{}::check_utf8(unsafe {{ {} }})?;",
+            "{}::check_utf8({}?)?;",
             IO,
-            read_entry("read_entry_unchecked", layout, index, "bytes")
+            read_entry("check_tail_entry", layout, index, "bytes")
         ),
         (ValueLayout::Entry { index }, _) => format!(
-            "{}::new(unsafe {{ {} }})?;",
+            "{}::new({}?)?;",
             generated_path(field.tag, "Ref"),
-            read_entry("read_entry_unchecked", layout, index, "bytes")
+            read_entry("check_tail_entry", layout, index, "bytes")
         ),
         _ => return None,
     };
@@ -270,13 +270,18 @@ fn gen_read(
             read_fixed(offset, size, BYTES)
         ),
         (ValueLayout::Entry { index }, TypeTag::Special(SpecialType::String)) => format!(
-            "unsafe {{ {} }}",
-            read_entry("read_str_unchecked", layout, index, BYTES)
+            "unsafe {{ {}::read_tail_str_unchecked({}, {}, {}, {}, {}) }}",
+            IO,
+            BYTES,
+            layout.table_offset,
+            index,
+            layout.entries.len(),
+            layout.fixed_size
         ),
         (ValueLayout::Entry { index }, _) => format!(
             "unsafe {{ {}::new_unchecked({}) }}",
             generated_path(field.tag, "Ref"),
-            read_entry("read_entry_unchecked", layout, index, BYTES)
+            read_entry("read_tail_entry_unchecked", layout, index, BYTES)
         ),
     };
     match field_layout.presence {
@@ -307,11 +312,18 @@ fn read_fixed(offset: usize, size: usize, bytes: &str) -> String {
     format!("{}.get_unchecked({}..{})", bytes, offset, offset + size)
 }
 
-/// Generates the unsafe call to the `read` function for the entry at the `index` of the `bytes`.
+/// Generates the call to the `read` function for the entry at the `index` of the `bytes`.
 pub(crate) fn read_entry(read: &str, layout: &StructLayout, index: usize, bytes: &str) -> String {
     format!(
-        "{}::{}({}, {}, {}, {})",
-        IO, read, bytes, layout.table_offset, index, layout.fixed_size
+        "{}::{}({}, {}, {}, {}, {}, {})",
+        IO,
+        read,
+        bytes,
+        layout.table_offset,
+        index,
+        layout.entries.len(),
+        layout.fixed_size,
+        layout.entries[index].alignment
     )
 }
 

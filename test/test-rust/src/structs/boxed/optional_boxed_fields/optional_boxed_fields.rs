@@ -241,17 +241,17 @@ impl OptionalBoxedFields {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
+        let mut len: usize = 19;
         if let Some(value) = &self.person {
-            tail += value.encoded_len();
+            len += value.encoded_len();
         }
         if let Some(value) = &self.label {
-            tail += value.encoded_len();
+            len += value.encoded_len();
         }
         if let Some(value) = &self.shape {
-            tail += value.encoded_len();
+            len += value.encoded_len();
         }
-        24 + tail
+        len
     }
 
     /// Encodes the struct.
@@ -265,7 +265,7 @@ impl OptionalBoxedFields {
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
-        proto_packet::io::write_zeros(out, 12);
+        proto_packet::io::write_zeros(out, 8);
         match &self.point {
             Some(value) => value.encode_to(out),
             None => proto_packet::io::write_zeros(out, 8),
@@ -283,20 +283,17 @@ impl OptionalBoxedFields {
                 | (u8::from(self.label.is_some()) << 2)
                 | (u8::from(self.shape.is_some()) << 3),
         );
-        proto_packet::io::write_zeros(out, 1);
-        let tail: usize = out.len();
         if let Some(value) = &self.person {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start, tail);
+        proto_packet::io::write_end(out, start, start);
         if let Some(value) = &self.label {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 4, tail);
+        proto_packet::io::write_end(out, start + 4, start);
         if let Some(value) = &self.shape {
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start + 8, tail);
     }
 }
 

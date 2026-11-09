@@ -50,15 +50,15 @@ impl NamedFieldsMut<'_> {
     /// Gets the mut of the field: `point`.
     #[must_use]
     pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
-        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(12..20)) }
+        unsafe { crate::types::PointMut::new_unchecked(self.bytes.get_unchecked_mut(8..16)) }
     }
 
     /// Gets the mut of the field: `person`.
     #[must_use]
     pub fn person_mut(&mut self) -> crate::types::PersonMut<'_> {
         unsafe {
-            crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                self.bytes, 0, 0, 24,
+            crate::types::PersonMut::new_unchecked(proto_packet::io::read_tail_entry_mut_unchecked(
+                self.bytes, 0, 0, 3, 18, 1,
             ))
         }
     }
@@ -67,23 +67,23 @@ impl NamedFieldsMut<'_> {
     #[must_use]
     pub fn label_mut(&mut self) -> crate::types::LabelMut<'_> {
         unsafe {
-            crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                self.bytes, 0, 1, 24,
+            crate::types::LabelMut::new_unchecked(proto_packet::io::read_tail_entry_mut_unchecked(
+                self.bytes, 0, 1, 3, 18, 1,
             ))
         }
     }
 
     /// Sets the field: `color`.
     pub fn set_color(&mut self, value: crate::types::Color) {
-        unsafe { proto_packet::io::write_u16_unchecked(self.bytes, 20, value.tag_number()) };
+        unsafe { proto_packet::io::write_u16_unchecked(self.bytes, 16, value.tag_number()) };
     }
 
     /// Gets the mut of the field: `shape`.
     #[must_use]
     pub fn shape_mut(&mut self) -> crate::types::ShapeMut<'_> {
         unsafe {
-            crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                self.bytes, 0, 2, 24,
+            crate::types::ShapeMut::new_unchecked(proto_packet::io::read_tail_entry_mut_unchecked(
+                self.bytes, 0, 2, 3, 18, 1,
             ))
         }
     }

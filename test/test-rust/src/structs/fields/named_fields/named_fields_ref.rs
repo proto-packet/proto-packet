@@ -14,21 +14,15 @@ impl<'a> NamedFieldsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 24)?;
-        proto_packet::io::check_ends(bytes, 0, 3, 24)?;
-        crate::types::PointRef::new(unsafe { bytes.get_unchecked(12..20) })?;
-        crate::types::PersonRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 0, 24)
-        })?;
-        crate::types::LabelRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 1, 24)
-        })?;
+        proto_packet::io::check_len(bytes, 18)?;
+        proto_packet::io::check_tail_ends(bytes, 0, 2, 18)?;
+        crate::types::PointRef::new(unsafe { bytes.get_unchecked(8..16) })?;
+        crate::types::PersonRef::new(proto_packet::io::check_tail_entry(bytes, 0, 0, 3, 18, 1)?)?;
+        crate::types::LabelRef::new(proto_packet::io::check_tail_entry(bytes, 0, 1, 3, 18, 1)?)?;
         proto_packet::io::check_tag_number(unsafe {
-            proto_packet::io::read_u16_unchecked(bytes, 20)
+            proto_packet::io::read_u16_unchecked(bytes, 16)
         })?;
-        crate::types::ShapeRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 2, 24)
-        })?;
+        crate::types::ShapeRef::new(proto_packet::io::check_tail_entry(bytes, 0, 2, 3, 18, 1)?)?;
         Ok(Self { bytes })
     }
 
@@ -58,15 +52,15 @@ impl<'a> NamedFieldsRef<'a> {
     /// Gets the field: `point`.
     #[must_use]
     pub fn point(&self) -> crate::types::PointRef<'a> {
-        unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(12..20)) }
+        unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(8..16)) }
     }
 
     /// Gets the field: `person`.
     #[must_use]
     pub fn person(&self) -> crate::types::PersonRef<'a> {
         unsafe {
-            crate::types::PersonRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 0, 0, 24,
+            crate::types::PersonRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
+                self.bytes, 0, 0, 3, 18, 1,
             ))
         }
     }
@@ -75,8 +69,8 @@ impl<'a> NamedFieldsRef<'a> {
     #[must_use]
     pub fn label(&self) -> crate::types::LabelRef<'a> {
         unsafe {
-            crate::types::LabelRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 0, 1, 24,
+            crate::types::LabelRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
+                self.bytes, 0, 1, 3, 18, 1,
             ))
         }
     }
@@ -86,7 +80,7 @@ impl<'a> NamedFieldsRef<'a> {
     pub fn color(&self) -> crate::types::Color {
         crate::types::Color::from_tag_number(unsafe {
             proto_packet::io::TagNumber::new_unchecked(proto_packet::io::read_u16_unchecked(
-                self.bytes, 20,
+                self.bytes, 16,
             ))
         })
     }
@@ -95,8 +89,8 @@ impl<'a> NamedFieldsRef<'a> {
     #[must_use]
     pub fn shape(&self) -> crate::types::ShapeRef<'a> {
         unsafe {
-            crate::types::ShapeRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 0, 2, 24,
+            crate::types::ShapeRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
+                self.bytes, 0, 2, 3, 18, 1,
             ))
         }
     }

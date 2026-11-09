@@ -61,9 +61,9 @@ impl StringField {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
-        tail += self.text.len();
-        4 + tail
+        let mut len: usize = 0;
+        len += self.text.len();
+        len
     }
 
     /// Encodes the struct.
@@ -76,11 +76,7 @@ impl StringField {
 
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
-        let start: usize = out.len();
-        proto_packet::io::write_zeros(out, 4);
-        let tail: usize = out.len();
         out.extend_from_slice(self.text.as_bytes());
-        proto_packet::io::write_end(out, start, tail);
     }
 }
 

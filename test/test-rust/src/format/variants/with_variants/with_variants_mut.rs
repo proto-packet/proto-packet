@@ -50,9 +50,13 @@ impl WithVariantsMut<'_> {
     /// Sets the field: `before`.
     ///
     /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the struct unchanged, if the value isn't the length
+    /// of the one it replaces.
     pub fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_entry(self.bytes, 8, 3, 2, 21, value)
+        proto_packet::io::replace_str(
+            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 8, 0, 3, 17, 1) },
+            value,
+        )
     }
 
     /// Gets the mut of the field: `shape`.
@@ -60,7 +64,7 @@ impl WithVariantsMut<'_> {
     pub fn shape_mut(&mut self) -> crate::format::variants::ShapeMut<'_> {
         unsafe {
             crate::format::variants::ShapeMut::new_unchecked(
-                proto_packet::io::read_entry_mut_unchecked(self.bytes, 8, 0, 21),
+                proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 8, 1, 3, 17, 1),
             )
         }
     }
@@ -73,10 +77,10 @@ impl WithVariantsMut<'_> {
     /// Gets the mut of the field: `maybe`.
     #[must_use]
     pub fn maybe_mut(&mut self) -> Option<crate::format::variants::ShapeMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 20, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 16, 0) } {
             Some(unsafe {
                 crate::format::variants::ShapeMut::new_unchecked(
-                    proto_packet::io::read_entry_mut_unchecked(self.bytes, 8, 1, 21),
+                    proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 8, 2, 3, 17, 1),
                 )
             })
         } else {

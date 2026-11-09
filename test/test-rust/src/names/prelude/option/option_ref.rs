@@ -14,17 +14,17 @@ impl<'a> OptionRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 12)?;
-        proto_packet::io::check_ends(bytes, 0, 2, 12)?;
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 8, 0) } {
-            proto_packet::io::check_utf8(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 0, 1, 12)
-            })?;
+        proto_packet::io::check_len(bytes, 5)?;
+        proto_packet::io::check_tail_ends(bytes, 0, 1, 5)?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 4, 0) } {
+            proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
+                bytes, 0, 0, 2, 5, 1,
+            )?)?;
         }
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 8, 1) } {
-            crate::names::prelude::OptionRef::new(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 0, 0, 12)
-            })?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 4, 1) } {
+            crate::names::prelude::OptionRef::new(proto_packet::io::check_tail_entry(
+                bytes, 0, 1, 2, 5, 4,
+            )?)?;
         }
         Ok(Self { bytes })
     }
@@ -55,8 +55,8 @@ impl<'a> OptionRef<'a> {
     /// Gets the field: `text`.
     #[must_use]
     pub fn text(&self) -> Option<&'a str> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 8, 0) } {
-            Some(unsafe { proto_packet::io::read_str_unchecked(self.bytes, 0, 1, 12) })
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 4, 0) } {
+            Some(unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 0, 0, 2, 5) })
         } else {
             None
         }
@@ -65,10 +65,10 @@ impl<'a> OptionRef<'a> {
     /// Gets the field: `next`.
     #[must_use]
     pub fn next(&self) -> Option<crate::names::prelude::OptionRef<'a>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 8, 1) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 4, 1) } {
             Some(unsafe {
                 crate::names::prelude::OptionRef::new_unchecked(
-                    proto_packet::io::read_entry_unchecked(self.bytes, 0, 0, 12),
+                    proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 2, 5, 4),
                 )
             })
         } else {

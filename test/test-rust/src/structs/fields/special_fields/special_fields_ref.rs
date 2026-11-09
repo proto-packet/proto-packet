@@ -14,11 +14,8 @@ impl<'a> SpecialFieldsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 20)?;
-        proto_packet::io::check_ends(bytes, 16, 1, 20)?;
-        proto_packet::io::check_utf8(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 16, 0, 20)
-        })?;
+        proto_packet::io::check_len(bytes, 16)?;
+        proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 16, 1)?)?;
         Ok(Self { bytes })
     }
 
@@ -56,7 +53,7 @@ impl<'a> SpecialFieldsRef<'a> {
     /// Gets the field: `text`.
     #[must_use]
     pub fn text(&self) -> &'a str {
-        unsafe { proto_packet::io::read_str_unchecked(self.bytes, 16, 0, 20) }
+        unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 0, 0, 1, 16) }
     }
 }
 

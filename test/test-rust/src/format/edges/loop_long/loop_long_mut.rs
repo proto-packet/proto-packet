@@ -55,10 +55,10 @@ impl LoopLongMut<'_> {
     /// Gets the mut of the field: `next`.
     #[must_use]
     pub fn next_mut(&mut self) -> Option<crate::format::edges::LoopByteMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 12, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 8, 0) } {
             Some(unsafe {
                 crate::format::edges::LoopByteMut::new_unchecked(
-                    proto_packet::io::read_entry_mut_unchecked(self.bytes, 8, 0, 16),
+                    proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 0, 1, 9, 8),
                 )
             })
         } else {

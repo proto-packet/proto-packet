@@ -49,16 +49,16 @@ impl LoopByteMut<'_> {
 
     /// Sets the field: `value`.
     pub fn set_value(&mut self, value: u8) {
-        unsafe { proto_packet::io::write_u8_unchecked(self.bytes, 4, value) };
+        unsafe { proto_packet::io::write_u8_unchecked(self.bytes, 0, value) };
     }
 
     /// Gets the mut of the field: `next`.
     #[must_use]
     pub fn next_mut(&mut self) -> Option<crate::format::edges::LoopLongMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 5, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 1, 0) } {
             Some(unsafe {
                 crate::format::edges::LoopLongMut::new_unchecked(
-                    proto_packet::io::read_entry_mut_unchecked(self.bytes, 0, 0, 8),
+                    proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 0, 1, 2, 8),
                 )
             })
         } else {

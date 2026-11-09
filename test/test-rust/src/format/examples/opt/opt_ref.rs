@@ -14,15 +14,14 @@ impl<'a> OptRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 11)?;
-        proto_packet::io::check_ends(bytes, 4, 1, 11)?;
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 10, 4) } {
-            proto_packet::io::check_utf8(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 4, 0, 11)
-            })?;
+        proto_packet::io::check_len(bytes, 7)?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 6, 4) } {
+            proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
+                bytes, 0, 0, 1, 7, 1,
+            )?)?;
         }
         proto_packet::io::check_optional_tag_number(unsafe {
-            proto_packet::io::read_u16_unchecked(bytes, 8)
+            proto_packet::io::read_u16_unchecked(bytes, 4)
         })?;
         Ok(Self { bytes })
     }
@@ -53,13 +52,13 @@ impl<'a> OptRef<'a> {
     /// Gets the field: `a`.
     #[must_use]
     pub fn a(&self) -> bool {
-        unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 10, 0) }
+        unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 6, 0) }
     }
 
     /// Gets the field: `b`.
     #[must_use]
     pub fn b(&self) -> Option<u32> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 10, 1) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 6, 1) } {
             Some(unsafe { proto_packet::io::read_u32_unchecked(self.bytes, 0) })
         } else {
             None
@@ -69,8 +68,8 @@ impl<'a> OptRef<'a> {
     /// Gets the field: `c`.
     #[must_use]
     pub fn c(&self) -> Option<bool> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 10, 2) } {
-            Some(unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 10, 3) })
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 6, 2) } {
+            Some(unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 6, 3) })
         } else {
             None
         }
@@ -79,8 +78,8 @@ impl<'a> OptRef<'a> {
     /// Gets the field: `d`.
     #[must_use]
     pub fn d(&self) -> Option<&'a str> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 10, 4) } {
-            Some(unsafe { proto_packet::io::read_str_unchecked(self.bytes, 4, 0, 11) })
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 6, 4) } {
+            Some(unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 0, 0, 1, 7) })
         } else {
             None
         }
@@ -90,7 +89,7 @@ impl<'a> OptRef<'a> {
     #[must_use]
     pub fn e(&self) -> Option<crate::format::examples::Color> {
         crate::format::examples::Color::from_tag_number_optional(u32::from(unsafe {
-            proto_packet::io::read_u16_unchecked(self.bytes, 8)
+            proto_packet::io::read_u16_unchecked(self.bytes, 4)
         }))
     }
 }

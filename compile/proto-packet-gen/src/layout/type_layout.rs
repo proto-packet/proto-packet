@@ -141,17 +141,18 @@ impl LayoutCache<'_> {
     /// Gets the alignment of the `structure`: the largest of it & every struct it contains.
     ///
     /// A message or variant has alignment 1, whatever it contains, so its fields & cases can
-    /// change.
+    /// change. A struct with two or more variable-size fields has an end table, of alignment 4.
     pub(crate) fn alignment(&mut self, structure: &Struct) -> usize {
         let project: &Project = self.project;
         let mut structs: Vec<&Struct> = vec![structure];
         let mut visited: Vec<&QualifiedName> = Vec::default();
         let mut result: usize = 1;
         while let Some(structure) = structs.pop() {
+            let mut variable: usize = 0;
             for field in structure.fields() {
                 let tag: &TypeTag = field.type_tag();
                 if !self.is_fixed(tag, &mut Vec::default()) {
-                    result = result.max(4);
+                    variable += 1;
                 }
                 match tag {
                     TypeTag::Named(name) => match linked_type(project, name) {
@@ -168,6 +169,9 @@ impl LayoutCache<'_> {
                         }
                     }
                 }
+            }
+            if variable >= 2 {
+                result = result.max(4);
             }
         }
         result

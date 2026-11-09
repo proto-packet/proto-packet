@@ -72,7 +72,14 @@ impl StringsBuf {
     pub fn entry_mut(&mut self) -> crate::format::examples::EntryMut<'_> {
         unsafe {
             crate::format::examples::EntryMut::new_unchecked(
-                proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 0, 0, 24),
+                proto_packet::io::read_tail_entry_mut_unchecked(
+                    self.bytes.as_mut_slice(),
+                    0,
+                    1,
+                    4,
+                    14,
+                    8,
+                ),
             )
         }
     }

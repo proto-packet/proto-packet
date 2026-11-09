@@ -72,7 +72,14 @@ impl SumBuf {
     pub fn left_mut(&mut self) -> crate::variants::boxed::ExprMut<'_> {
         unsafe {
             crate::variants::boxed::ExprMut::new_unchecked(
-                proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 0, 0, 8),
+                proto_packet::io::read_tail_entry_mut_unchecked(
+                    self.bytes.as_mut_slice(),
+                    0,
+                    0,
+                    2,
+                    4,
+                    1,
+                ),
             )
         }
     }
@@ -82,7 +89,14 @@ impl SumBuf {
     pub fn right_mut(&mut self) -> crate::variants::boxed::ExprMut<'_> {
         unsafe {
             crate::variants::boxed::ExprMut::new_unchecked(
-                proto_packet::io::read_entry_mut_unchecked(self.bytes.as_mut_slice(), 0, 1, 8),
+                proto_packet::io::read_tail_entry_mut_unchecked(
+                    self.bytes.as_mut_slice(),
+                    0,
+                    1,
+                    2,
+                    4,
+                    1,
+                ),
             )
         }
     }

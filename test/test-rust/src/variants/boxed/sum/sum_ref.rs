@@ -14,14 +14,14 @@ impl<'a> SumRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 8)?;
-        proto_packet::io::check_ends(bytes, 0, 2, 8)?;
-        crate::variants::boxed::ExprRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 0, 8)
-        })?;
-        crate::variants::boxed::ExprRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 1, 8)
-        })?;
+        proto_packet::io::check_len(bytes, 4)?;
+        proto_packet::io::check_tail_ends(bytes, 0, 1, 4)?;
+        crate::variants::boxed::ExprRef::new(proto_packet::io::check_tail_entry(
+            bytes, 0, 0, 2, 4, 1,
+        )?)?;
+        crate::variants::boxed::ExprRef::new(proto_packet::io::check_tail_entry(
+            bytes, 0, 1, 2, 4, 1,
+        )?)?;
         Ok(Self { bytes })
     }
 
@@ -52,9 +52,9 @@ impl<'a> SumRef<'a> {
     #[must_use]
     pub fn left(&self) -> crate::variants::boxed::ExprRef<'a> {
         unsafe {
-            crate::variants::boxed::ExprRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 0, 0, 8,
-            ))
+            crate::variants::boxed::ExprRef::new_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 2, 4, 1),
+            )
         }
     }
 
@@ -62,9 +62,9 @@ impl<'a> SumRef<'a> {
     #[must_use]
     pub fn right(&self) -> crate::variants::boxed::ExprRef<'a> {
         unsafe {
-            crate::variants::boxed::ExprRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 0, 1, 8,
-            ))
+            crate::variants::boxed::ExprRef::new_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 2, 4, 1),
+            )
         }
     }
 }

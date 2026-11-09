@@ -14,33 +14,33 @@ impl<'a> OptionalFieldsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 48)?;
-        proto_packet::io::check_ends(bytes, 20, 4, 48)?;
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 46, 2) } {
-            proto_packet::io::check_utf8(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 20, 3, 48)
-            })?;
+        proto_packet::io::check_len(bytes, 43)?;
+        proto_packet::io::check_tail_ends(bytes, 20, 3, 43)?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 2) } {
+            proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
+                bytes, 20, 0, 4, 43, 1,
+            )?)?;
         }
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 46, 3) } {
-            crate::types::PointRef::new(unsafe { bytes.get_unchecked(36..44) })?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 3) } {
+            crate::types::PointRef::new(unsafe { bytes.get_unchecked(32..40) })?;
         }
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 46, 4) } {
-            crate::types::PersonRef::new(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 20, 0, 48)
-            })?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 4) } {
+            crate::types::PersonRef::new(proto_packet::io::check_tail_entry(
+                bytes, 20, 1, 4, 43, 1,
+            )?)?;
         }
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 46, 5) } {
-            crate::types::LabelRef::new(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 20, 1, 48)
-            })?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 5) } {
+            crate::types::LabelRef::new(proto_packet::io::check_tail_entry(
+                bytes, 20, 2, 4, 43, 1,
+            )?)?;
         }
         proto_packet::io::check_optional_tag_number(unsafe {
-            proto_packet::io::read_u16_unchecked(bytes, 44)
+            proto_packet::io::read_u16_unchecked(bytes, 40)
         })?;
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 46, 6) } {
-            crate::types::ShapeRef::new(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 20, 2, 48)
-            })?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 42, 6) } {
+            crate::types::ShapeRef::new(proto_packet::io::check_tail_entry(
+                bytes, 20, 3, 4, 43, 1,
+            )?)?;
         }
         Ok(Self { bytes })
     }
@@ -71,7 +71,7 @@ impl<'a> OptionalFieldsRef<'a> {
     /// Gets the field: `count`.
     #[must_use]
     pub fn count(&self) -> Option<u32> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 42, 0) } {
             Some(unsafe { proto_packet::io::read_u32_unchecked(self.bytes, 16) })
         } else {
             None
@@ -81,7 +81,7 @@ impl<'a> OptionalFieldsRef<'a> {
     /// Gets the field: `id`.
     #[must_use]
     pub fn id(&self) -> Option<proto_packet::types::Uuid> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 1) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 42, 1) } {
             Some(proto_packet::types::Uuid::from_bytes(unsafe {
                 proto_packet::io::read_bytes_unchecked(self.bytes, 0)
             }))
@@ -93,8 +93,8 @@ impl<'a> OptionalFieldsRef<'a> {
     /// Gets the field: `text`.
     #[must_use]
     pub fn text(&self) -> Option<&'a str> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 2) } {
-            Some(unsafe { proto_packet::io::read_str_unchecked(self.bytes, 20, 3, 48) })
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 42, 2) } {
+            Some(unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 20, 0, 4, 43) })
         } else {
             None
         }
@@ -103,8 +103,8 @@ impl<'a> OptionalFieldsRef<'a> {
     /// Gets the field: `point`.
     #[must_use]
     pub fn point(&self) -> Option<crate::types::PointRef<'a>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 3) } {
-            Some(unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(36..44)) })
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 42, 3) } {
+            Some(unsafe { crate::types::PointRef::new_unchecked(self.bytes.get_unchecked(32..40)) })
         } else {
             None
         }
@@ -113,10 +113,10 @@ impl<'a> OptionalFieldsRef<'a> {
     /// Gets the field: `person`.
     #[must_use]
     pub fn person(&self) -> Option<crate::types::PersonRef<'a>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 4) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 42, 4) } {
             Some(unsafe {
-                crate::types::PersonRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                    self.bytes, 20, 0, 48,
+                crate::types::PersonRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
+                    self.bytes, 20, 1, 4, 43, 1,
                 ))
             })
         } else {
@@ -127,10 +127,10 @@ impl<'a> OptionalFieldsRef<'a> {
     /// Gets the field: `label`.
     #[must_use]
     pub fn label(&self) -> Option<crate::types::LabelRef<'a>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 5) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 42, 5) } {
             Some(unsafe {
-                crate::types::LabelRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                    self.bytes, 20, 1, 48,
+                crate::types::LabelRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
+                    self.bytes, 20, 2, 4, 43, 1,
                 ))
             })
         } else {
@@ -142,17 +142,17 @@ impl<'a> OptionalFieldsRef<'a> {
     #[must_use]
     pub fn color(&self) -> Option<crate::types::Color> {
         crate::types::Color::from_tag_number_optional(u32::from(unsafe {
-            proto_packet::io::read_u16_unchecked(self.bytes, 44)
+            proto_packet::io::read_u16_unchecked(self.bytes, 40)
         }))
     }
 
     /// Gets the field: `shape`.
     #[must_use]
     pub fn shape(&self) -> Option<crate::types::ShapeRef<'a>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 46, 6) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 42, 6) } {
             Some(unsafe {
-                crate::types::ShapeRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                    self.bytes, 20, 2, 48,
+                crate::types::ShapeRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
+                    self.bytes, 20, 3, 4, 43, 1,
                 ))
             })
         } else {

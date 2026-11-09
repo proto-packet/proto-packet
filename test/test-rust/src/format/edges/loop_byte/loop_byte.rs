@@ -104,11 +104,12 @@ impl LoopByte {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
+        let mut len: usize = 2;
         if let Some(value) = &self.next {
-            tail += value.encoded_len();
+            len = proto_packet::io::align_up(len, 8);
+            len += value.encoded_len();
         }
-        8 + tail
+        len
     }
 
     /// Encodes the struct.
@@ -122,15 +123,12 @@ impl LoopByte {
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
-        proto_packet::io::write_zeros(out, 4);
         out.extend_from_slice(&self.value.to_le_bytes());
         out.push(u8::from(self.next.is_some()));
-        proto_packet::io::write_zeros(out, 2);
-        let tail: usize = out.len();
         if let Some(value) = &self.next {
+            proto_packet::io::write_padding(out, start, 8);
             value.encode_to(out);
         }
-        proto_packet::io::write_end(out, start, tail);
     }
 }
 

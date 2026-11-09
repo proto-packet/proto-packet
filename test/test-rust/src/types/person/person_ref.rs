@@ -14,11 +14,8 @@ impl<'a> PersonRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 5)?;
-        proto_packet::io::check_ends(bytes, 0, 1, 5)?;
-        proto_packet::io::check_utf8(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 0, 5)
-        })?;
+        proto_packet::io::check_len(bytes, 1)?;
+        proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 1, 1)?)?;
         Ok(Self { bytes })
     }
 
@@ -48,13 +45,13 @@ impl<'a> PersonRef<'a> {
     /// Gets the field: `name`.
     #[must_use]
     pub fn name(&self) -> &'a str {
-        unsafe { proto_packet::io::read_str_unchecked(self.bytes, 0, 0, 5) }
+        unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 0, 0, 1, 1) }
     }
 
     /// Gets the field: `age`.
     #[must_use]
     pub fn age(&self) -> u8 {
-        unsafe { proto_packet::io::read_u8_unchecked(self.bytes, 4) }
+        unsafe { proto_packet::io::read_u8_unchecked(self.bytes, 0) }
     }
 }
 

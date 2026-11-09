@@ -51,8 +51,8 @@ impl NonCopyStructMut<'_> {
     #[must_use]
     pub fn person_mut(&mut self) -> crate::types::PersonMut<'_> {
         unsafe {
-            crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                self.bytes, 0, 0, 4,
+            crate::types::PersonMut::new_unchecked(proto_packet::io::read_tail_entry_mut_unchecked(
+                self.bytes, 0, 0, 1, 0, 1,
             ))
         }
     }

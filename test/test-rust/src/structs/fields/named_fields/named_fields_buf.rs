@@ -72,7 +72,7 @@ impl NamedFieldsBuf {
     pub fn point_mut(&mut self) -> crate::types::PointMut<'_> {
         unsafe {
             crate::types::PointMut::new_unchecked(
-                self.bytes.as_mut_slice().get_unchecked_mut(12..20),
+                self.bytes.as_mut_slice().get_unchecked_mut(8..16),
             )
         }
     }
@@ -81,11 +81,13 @@ impl NamedFieldsBuf {
     #[must_use]
     pub fn person_mut(&mut self) -> crate::types::PersonMut<'_> {
         unsafe {
-            crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
+            crate::types::PersonMut::new_unchecked(proto_packet::io::read_tail_entry_mut_unchecked(
                 self.bytes.as_mut_slice(),
                 0,
                 0,
-                24,
+                3,
+                18,
+                1,
             ))
         }
     }
@@ -94,11 +96,13 @@ impl NamedFieldsBuf {
     #[must_use]
     pub fn label_mut(&mut self) -> crate::types::LabelMut<'_> {
         unsafe {
-            crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
+            crate::types::LabelMut::new_unchecked(proto_packet::io::read_tail_entry_mut_unchecked(
                 self.bytes.as_mut_slice(),
                 0,
                 1,
-                24,
+                3,
+                18,
+                1,
             ))
         }
     }
@@ -107,11 +111,13 @@ impl NamedFieldsBuf {
     #[must_use]
     pub fn shape_mut(&mut self) -> crate::types::ShapeMut<'_> {
         unsafe {
-            crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
+            crate::types::ShapeMut::new_unchecked(proto_packet::io::read_tail_entry_mut_unchecked(
                 self.bytes.as_mut_slice(),
                 0,
                 2,
-                24,
+                3,
+                18,
+                1,
             ))
         }
     }

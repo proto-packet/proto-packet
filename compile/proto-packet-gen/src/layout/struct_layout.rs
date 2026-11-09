@@ -3,7 +3,6 @@ use crate::layout::{
 };
 use proto_packet::io::align_up;
 use proto_packet_tree::{Project, Struct, StructField, TypeTag, WithTypeTag};
-use std::cmp::Reverse;
 
 /// The layout of a struct's encoding. (see `format/binary.md`)
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
@@ -14,7 +13,7 @@ pub struct StructLayout {
     /// The size of the fixed block. (the size of a fixed struct)
     pub fixed_size: usize,
 
-    /// The offset of the end table in the fixed block. (0 without entries)
+    /// The offset of the end table in the fixed block. (0 without an end table)
     pub table_offset: usize,
 
     /// The fields, in declaration order.
@@ -23,7 +22,7 @@ pub struct StructLayout {
     /// The units of the fixed block, in order.
     pub units: Vec<UnitLayout>,
 
-    /// The entries of the tail, in order.
+    /// The entries of the tail, in declaration order.
     pub entries: Vec<EntryLayout>,
 }
 
@@ -43,7 +42,8 @@ impl StructLayout {
             .iter()
             .map(|field| cache.type_layout(field.type_tag()))
             .collect();
-        let entries: Vec<EntryLayout> = entries(fields, &types);
+        let entries: Vec<EntryLayout> = entries(&types);
+        let ends: usize = entries.len().saturating_sub(1);
 
         let is_struct: Vec<bool> = fields
             .iter()
@@ -59,11 +59,11 @@ impl StructLayout {
         let mut table_offset: usize = 0;
         for group in [8, 4, 2, 1] {
             for structs in [false, true] {
-                if structs && group == 4 && !entries.is_empty() {
+                if structs && group == 4 && ends > 0 {
                     offset = pad(&mut units, offset, 4);
                     units.push(UnitLayout::EndTable);
                     table_offset = offset;
-                    offset += entries.len() * 4;
+                    offset += ends * 4;
                 }
                 for (index, layout) in types.iter().enumerate() {
                     if let TypeLayout::Fixed { size, alignment } = *layout
@@ -120,12 +120,9 @@ impl StructLayout {
             offset += size;
         }
 
-        let tail_alignment: usize = entries.first().map_or(1, |entry| entry.alignment);
-        let fixed_size: usize = pad(&mut units, offset, tail_alignment);
-
         Self {
             alignment,
-            fixed_size,
+            fixed_size: offset,
             table_offset,
             fields,
             units,
@@ -140,6 +137,14 @@ impl StructLayout {
     /// Checks if the struct is fixed.
     pub fn is_fixed(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    /// Gets the count of the ends in the end table.
+    ///
+    /// # Note
+    /// - The last entry has none, since it ends where the struct ends.
+    pub fn ends(&self) -> usize {
+        self.entries.len().saturating_sub(1)
     }
 }
 
@@ -157,26 +162,17 @@ fn pad(units: &mut Vec<UnitLayout>, offset: usize, alignment: usize) -> usize {
     aligned
 }
 
-/// Gets the entries of the `fields` with the `types`: the variable structs, messages & variants by
-/// descending alignment, followed by the strings.
-fn entries(fields: &[StructField], types: &[TypeLayout]) -> Vec<EntryLayout> {
-    let mut variable: Vec<(usize, usize, bool)> = fields
+/// Gets the entries of the fields with the `types`, in declaration order.
+fn entries(types: &[TypeLayout]) -> Vec<EntryLayout> {
+    types
         .iter()
-        .zip(types)
         .enumerate()
-        .filter_map(|(index, (field, layout))| match layout {
-            TypeLayout::Variable { alignment } => {
-                Some((index, *alignment, field.type_tag().is_string()))
-            }
+        .filter_map(|(field, layout)| match layout {
+            TypeLayout::Variable { alignment } => Some(EntryLayout {
+                field,
+                alignment: *alignment,
+            }),
             _ => None,
-        })
-        .collect();
-    variable.sort_by_key(|(_, alignment, is_string)| (*is_string, Reverse(*alignment)));
-    (0..variable.len())
-        .map(|index| EntryLayout {
-            field: variable[index].0,
-            alignment: variable[index].1,
-            padded_alignment: variable.get(index + 1).map_or(1, |next| next.1),
         })
         .collect()
 }

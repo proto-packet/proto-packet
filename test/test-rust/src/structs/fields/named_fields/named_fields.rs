@@ -201,11 +201,11 @@ impl NamedFields {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
-        tail += self.person.encoded_len();
-        tail += self.label.encoded_len();
-        tail += self.shape.encoded_len();
-        24 + tail
+        let mut len: usize = 18;
+        len += self.person.encoded_len();
+        len += self.label.encoded_len();
+        len += self.shape.encoded_len();
+        len
     }
 
     /// Encodes the struct.
@@ -219,17 +219,14 @@ impl NamedFields {
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
-        proto_packet::io::write_zeros(out, 12);
+        proto_packet::io::write_zeros(out, 8);
         self.point.encode_to(out);
         out.extend_from_slice(&self.color.tag_number().to_le_bytes());
-        proto_packet::io::write_zeros(out, 2);
-        let tail: usize = out.len();
         self.person.encode_to(out);
-        proto_packet::io::write_end(out, start, tail);
+        proto_packet::io::write_end(out, start, start);
         self.label.encode_to(out);
-        proto_packet::io::write_end(out, start + 4, tail);
+        proto_packet::io::write_end(out, start + 4, start);
         self.shape.encode_to(out);
-        proto_packet::io::write_end(out, start + 8, tail);
     }
 }
 

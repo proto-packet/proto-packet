@@ -70,10 +70,10 @@ impl OptionalFieldsBuf {
     /// Gets the mut of the field: `point`.
     #[must_use]
     pub fn point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 46, 3) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 42, 3) } {
             Some(unsafe {
                 crate::types::PointMut::new_unchecked(
-                    self.bytes.as_mut_slice().get_unchecked_mut(36..44),
+                    self.bytes.as_mut_slice().get_unchecked_mut(32..40),
                 )
             })
         } else {
@@ -84,14 +84,18 @@ impl OptionalFieldsBuf {
     /// Gets the mut of the field: `person`.
     #[must_use]
     pub fn person_mut(&mut self) -> Option<crate::types::PersonMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 46, 4) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 42, 4) } {
             Some(unsafe {
-                crate::types::PersonMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes.as_mut_slice(),
-                    20,
-                    0,
-                    48,
-                ))
+                crate::types::PersonMut::new_unchecked(
+                    proto_packet::io::read_tail_entry_mut_unchecked(
+                        self.bytes.as_mut_slice(),
+                        20,
+                        1,
+                        4,
+                        43,
+                        1,
+                    ),
+                )
             })
         } else {
             None
@@ -101,14 +105,18 @@ impl OptionalFieldsBuf {
     /// Gets the mut of the field: `label`.
     #[must_use]
     pub fn label_mut(&mut self) -> Option<crate::types::LabelMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 46, 5) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 42, 5) } {
             Some(unsafe {
-                crate::types::LabelMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes.as_mut_slice(),
-                    20,
-                    1,
-                    48,
-                ))
+                crate::types::LabelMut::new_unchecked(
+                    proto_packet::io::read_tail_entry_mut_unchecked(
+                        self.bytes.as_mut_slice(),
+                        20,
+                        2,
+                        4,
+                        43,
+                        1,
+                    ),
+                )
             })
         } else {
             None
@@ -118,14 +126,18 @@ impl OptionalFieldsBuf {
     /// Gets the mut of the field: `shape`.
     #[must_use]
     pub fn shape_mut(&mut self) -> Option<crate::types::ShapeMut<'_>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 46, 6) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes.as_slice(), 42, 6) } {
             Some(unsafe {
-                crate::types::ShapeMut::new_unchecked(proto_packet::io::read_entry_mut_unchecked(
-                    self.bytes.as_mut_slice(),
-                    20,
-                    2,
-                    48,
-                ))
+                crate::types::ShapeMut::new_unchecked(
+                    proto_packet::io::read_tail_entry_mut_unchecked(
+                        self.bytes.as_mut_slice(),
+                        20,
+                        3,
+                        4,
+                        43,
+                        1,
+                    ),
+                )
             })
         } else {
             None

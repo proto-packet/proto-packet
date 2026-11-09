@@ -6,7 +6,4 @@ pub struct EntryLayout {
 
     /// The alignment of the entry.
     pub alignment: usize,
-
-    /// The alignment to pad the entry to. (the next entry's alignment, 1 for the last entry)
-    pub padded_alignment: usize,
 }

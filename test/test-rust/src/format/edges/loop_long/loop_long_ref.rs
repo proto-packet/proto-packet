@@ -14,12 +14,11 @@ impl<'a> LoopLongRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 16)?;
-        proto_packet::io::check_ends(bytes, 8, 1, 16)?;
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 12, 0) } {
-            crate::format::edges::LoopByteRef::new(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 8, 0, 16)
-            })?;
+        proto_packet::io::check_len(bytes, 9)?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 8, 0) } {
+            crate::format::edges::LoopByteRef::new(proto_packet::io::check_tail_entry(
+                bytes, 0, 0, 1, 9, 8,
+            )?)?;
         }
         Ok(Self { bytes })
     }
@@ -56,10 +55,10 @@ impl<'a> LoopLongRef<'a> {
     /// Gets the field: `next`.
     #[must_use]
     pub fn next(&self) -> Option<crate::format::edges::LoopByteRef<'a>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 12, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 8, 0) } {
             Some(unsafe {
                 crate::format::edges::LoopByteRef::new_unchecked(
-                    proto_packet::io::read_entry_unchecked(self.bytes, 8, 0, 16),
+                    proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 1, 9, 8),
                 )
             })
         } else {

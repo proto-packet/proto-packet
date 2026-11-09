@@ -14,18 +14,16 @@ impl<'a> WithMessagesRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 21)?;
-        proto_packet::io::check_ends(bytes, 8, 3, 21)?;
-        proto_packet::io::check_utf8(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 8, 2, 21)
-        })?;
-        crate::format::messages::ItemRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 8, 0, 21)
-        })?;
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 20, 0) } {
-            crate::format::messages::ItemRef::new(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 8, 1, 21)
-            })?;
+        proto_packet::io::check_len(bytes, 17)?;
+        proto_packet::io::check_tail_ends(bytes, 8, 2, 17)?;
+        proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 8, 0, 3, 17, 1)?)?;
+        crate::format::messages::ItemRef::new(proto_packet::io::check_tail_entry(
+            bytes, 8, 1, 3, 17, 1,
+        )?)?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 16, 0) } {
+            crate::format::messages::ItemRef::new(proto_packet::io::check_tail_entry(
+                bytes, 8, 2, 3, 17, 1,
+            )?)?;
         }
         Ok(Self { bytes })
     }
@@ -56,16 +54,16 @@ impl<'a> WithMessagesRef<'a> {
     /// Gets the field: `before`.
     #[must_use]
     pub fn before(&self) -> &'a str {
-        unsafe { proto_packet::io::read_str_unchecked(self.bytes, 8, 2, 21) }
+        unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 8, 0, 3, 17) }
     }
 
     /// Gets the field: `item`.
     #[must_use]
     pub fn item(&self) -> crate::format::messages::ItemRef<'a> {
         unsafe {
-            crate::format::messages::ItemRef::new_unchecked(proto_packet::io::read_entry_unchecked(
-                self.bytes, 8, 0, 21,
-            ))
+            crate::format::messages::ItemRef::new_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 8, 1, 3, 17, 1),
+            )
         }
     }
 
@@ -78,10 +76,10 @@ impl<'a> WithMessagesRef<'a> {
     /// Gets the field: `maybe`.
     #[must_use]
     pub fn maybe(&self) -> Option<crate::format::messages::ItemRef<'a>> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 20, 0) } {
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 16, 0) } {
             Some(unsafe {
                 crate::format::messages::ItemRef::new_unchecked(
-                    proto_packet::io::read_entry_unchecked(self.bytes, 8, 1, 21),
+                    proto_packet::io::read_tail_entry_unchecked(self.bytes, 8, 2, 3, 17, 1),
                 )
             })
         } else {

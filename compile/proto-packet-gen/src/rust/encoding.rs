@@ -39,24 +39,23 @@ fn gen_encoded_len(fields: &[Field<'_>], layout: &StructLayout) -> Function {
     if layout.is_fixed() {
         return function.with_literal(layout.fixed_size.to_string());
     }
-    function.add_semi("let mut tail: usize = 0");
+    function.add_semi(format!("let mut len: usize = {}", layout.fixed_size));
     for entry in &layout.entries {
         let field: Field<'_> = fields[entry.field];
+        let padding: String = if entry.alignment > 1 {
+            format!("len = {}::align_up(len, {}); ", IO, entry.alignment)
+        } else {
+            String::default()
+        };
         function.add_literal(gen_entry(field, |value: &str| {
             if field.tag.is_string() {
-                format!("tail += {}.len();", value)
+                format!("{}len += {}.len();", padding, value)
             } else {
-                format!("tail += {}.encoded_len();", value)
+                format!("{}len += {}.encoded_len();", padding, value)
             }
         }));
-        if entry.padded_alignment > 1 {
-            function.add_semi(format!(
-                "tail = {}::align_up(tail, {})",
-                IO, entry.padded_alignment
-            ));
-        }
     }
-    function.with_literal(format!("{} + tail", layout.fixed_size))
+    function.with_literal("len")
 }
 
 /// Generates the function encoding the `kind` of type. (ex: a `struct`)
@@ -82,37 +81,43 @@ pub(crate) fn gen_encode(typing: Typing<'_>, kind: &str) -> Function {
 ///
 /// The end table is zeros until each entry is written, since writing an entry finds its length.
 /// Getting the lengths first would walk each nested struct once for each struct it is nested in.
+///
+/// # Note
+/// - An entry is padded to its alignment only when it's present.
+/// - The last entry has no end, since it ends where the struct ends.
 fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout) -> Function {
     let mut statements: Vec<String> = layout
         .units
         .iter()
         .flat_map(|unit| gen_unit(typing, fields, layout, *unit))
         .collect();
-    if !layout.is_fixed() {
+    let uses_start: bool =
+        layout.ends() > 0 || layout.entries.iter().any(|entry| entry.alignment > 1);
+    if uses_start {
         statements.insert(0, "let start: usize = out.len();".to_string());
-        statements.push("let tail: usize = out.len();".to_string());
-        for (index, entry) in layout.entries.iter().enumerate() {
-            let field: Field<'_> = fields[entry.field];
-            statements.push(gen_entry(field, |value: &str| {
-                if field.tag.is_string() {
-                    format!("out.extend_from_slice({}.as_bytes());", value)
-                } else {
-                    format!("{}.encode_to(out);", value)
-                }
-            }));
-            if entry.padded_alignment > 1 {
-                statements.push(format!(
-                    "{}::write_padding(out, tail, {});",
-                    IO, entry.padded_alignment
-                ));
+    }
+    for (index, entry) in layout.entries.iter().enumerate() {
+        let field: Field<'_> = fields[entry.field];
+        let padding: String = if entry.alignment > 1 {
+            format!("{}::write_padding(out, start, {}); ", IO, entry.alignment)
+        } else {
+            String::default()
+        };
+        statements.push(gen_entry(field, |value: &str| {
+            if field.tag.is_string() {
+                format!("{}out.extend_from_slice({}.as_bytes());", padding, value)
+            } else {
+                format!("{}{}.encode_to(out);", padding, value)
             }
+        }));
+        if index < layout.ends() {
             let offset: usize = layout.table_offset + index * 4;
             let item: String = if offset == 0 {
                 "start".to_string()
             } else {
                 format!("start + {}", offset)
             };
-            statements.push(format!("{}::write_end(out, {}, tail);", IO, item));
+            statements.push(format!("{}::write_end(out, {}, start);", IO, item));
         }
     }
     let out: &str = if statements.is_empty() { "_out" } else { "out" };
@@ -139,11 +144,7 @@ fn gen_unit(
         UnitLayout::Field { index } => {
             vec![gen_fixed_field(typing, fields[index], layout.fields[index])]
         }
-        UnitLayout::EndTable => vec![format!(
-            "{}::write_zeros(out, {});",
-            IO,
-            layout.entries.len() * 4
-        )],
+        UnitLayout::EndTable => vec![format!("{}::write_zeros(out, {});", IO, layout.ends() * 4)],
         UnitLayout::Bits { offset, size } => (offset..offset + size)
             .map(|offset| gen_bits(fields, layout, offset))
             .collect(),

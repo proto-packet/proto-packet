@@ -139,12 +139,13 @@ impl Pair {
     /// Gets the length of the encoding, in bytes.
     #[must_use]
     pub fn encoded_len(&self) -> usize {
-        let mut tail: usize = 0;
-        tail += self.first.encoded_len();
-        tail = proto_packet::io::align_up(tail, 8);
-        tail += self.second.encoded_len();
-        tail += self.note.len();
-        16 + tail
+        let mut len: usize = 8;
+        len = proto_packet::io::align_up(len, 8);
+        len += self.first.encoded_len();
+        len = proto_packet::io::align_up(len, 8);
+        len += self.second.encoded_len();
+        len += self.note.len();
+        len
     }
 
     /// Encodes the struct.
@@ -158,16 +159,14 @@ impl Pair {
     /// Appends the encoding of the struct to the `out` bytes.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
-        proto_packet::io::write_zeros(out, 12);
-        proto_packet::io::write_zeros(out, 4);
-        let tail: usize = out.len();
+        proto_packet::io::write_zeros(out, 8);
+        proto_packet::io::write_padding(out, start, 8);
         self.first.encode_to(out);
-        proto_packet::io::write_padding(out, tail, 8);
-        proto_packet::io::write_end(out, start, tail);
+        proto_packet::io::write_end(out, start, start);
+        proto_packet::io::write_padding(out, start, 8);
         self.second.encode_to(out);
-        proto_packet::io::write_end(out, start + 4, tail);
+        proto_packet::io::write_end(out, start + 4, start);
         out.extend_from_slice(self.note.as_bytes());
-        proto_packet::io::write_end(out, start + 8, tail);
     }
 }
 

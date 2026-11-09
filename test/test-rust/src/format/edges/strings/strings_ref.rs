@@ -14,22 +14,18 @@ impl<'a> StringsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 24)?;
-        proto_packet::io::check_ends(bytes, 0, 4, 24)?;
-        proto_packet::io::check_utf8(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 1, 24)
-        })?;
-        crate::format::examples::EntryRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 0, 24)
-        })?;
-        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 17, 0) } {
-            proto_packet::io::check_utf8(unsafe {
-                proto_packet::io::read_entry_unchecked(bytes, 0, 2, 24)
-            })?;
+        proto_packet::io::check_len(bytes, 14)?;
+        proto_packet::io::check_tail_ends(bytes, 0, 3, 14)?;
+        proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 0, 0, 4, 14, 1)?)?;
+        crate::format::examples::EntryRef::new(proto_packet::io::check_tail_entry(
+            bytes, 0, 1, 4, 14, 8,
+        )?)?;
+        if unsafe { proto_packet::io::read_bit_unchecked(bytes, 13, 0) } {
+            proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
+                bytes, 0, 2, 4, 14, 1,
+            )?)?;
         }
-        proto_packet::io::check_utf8(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 3, 24)
-        })?;
+        proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 0, 3, 4, 14, 1)?)?;
         Ok(Self { bytes })
     }
 
@@ -59,13 +55,13 @@ impl<'a> StringsRef<'a> {
     /// Gets the field: `number`.
     #[must_use]
     pub fn number(&self) -> u8 {
-        unsafe { proto_packet::io::read_u8_unchecked(self.bytes, 16) }
+        unsafe { proto_packet::io::read_u8_unchecked(self.bytes, 12) }
     }
 
     /// Gets the field: `first`.
     #[must_use]
     pub fn first(&self) -> &'a str {
-        unsafe { proto_packet::io::read_str_unchecked(self.bytes, 0, 1, 24) }
+        unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 0, 0, 4, 14) }
     }
 
     /// Gets the field: `entry`.
@@ -73,7 +69,7 @@ impl<'a> StringsRef<'a> {
     pub fn entry(&self) -> crate::format::examples::EntryRef<'a> {
         unsafe {
             crate::format::examples::EntryRef::new_unchecked(
-                proto_packet::io::read_entry_unchecked(self.bytes, 0, 0, 24),
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 4, 14, 8),
             )
         }
     }
@@ -81,8 +77,8 @@ impl<'a> StringsRef<'a> {
     /// Gets the field: `second`.
     #[must_use]
     pub fn second(&self) -> Option<&'a str> {
-        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 17, 0) } {
-            Some(unsafe { proto_packet::io::read_str_unchecked(self.bytes, 0, 2, 24) })
+        if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 13, 0) } {
+            Some(unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 0, 2, 4, 14) })
         } else {
             None
         }
@@ -91,7 +87,7 @@ impl<'a> StringsRef<'a> {
     /// Gets the field: `third`.
     #[must_use]
     pub fn third(&self) -> &'a str {
-        unsafe { proto_packet::io::read_str_unchecked(self.bytes, 0, 3, 24) }
+        unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 0, 3, 4, 14) }
     }
 }
 

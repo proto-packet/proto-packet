@@ -189,7 +189,7 @@ pub(crate) fn gen_child(
             )
         }
         ValueLayout::Entry { index } => {
-            read_entry("read_entry_mut_unchecked", layout, index, bytes_mut)
+            read_entry("read_tail_entry_mut_unchecked", layout, index, bytes_mut)
         }
         ValueLayout::Bit(_) => unreachable!("a struct is not a bit"),
     };
@@ -246,8 +246,8 @@ pub(crate) fn gen_setter_signature(field: Field<'_>, is_fallible: bool) -> Signa
 
 /// Generates the setter of the string `field`.
 ///
-/// Strings are the last entries of the tail, so the entries it moves are strings, & it never moves
-/// a nested struct.
+/// # Note
+/// - Nothing moves in place, so the value must be the length of the one it replaces.
 fn gen_string_setter(
     field: Field<'_>,
     field_layout: FieldLayout,
@@ -260,16 +260,16 @@ fn gen_string_setter(
         .with_comment(format!(" Sets the field: `{}`.", field.name))
         .with_comment("")
         .with_comment(" # Errors")
-        .with_comment(" Returns an error, leaving the struct unchanged, if the value doesn't fit.")
+        .with_comment(
+            " Returns an error, leaving the struct unchanged, if the value isn't the length",
+        )
+        .with_comment(" of the one it replaces.")
         .with_access(Access::Public);
     let replace = |value: &str| -> String {
         format!(
-            "{}::replace_entry(self.bytes, {}, {}, {}, {}, {})",
+            "{}::replace_str(unsafe {{ {} }}, {})",
             IO,
-            layout.table_offset,
-            layout.entries.len(),
-            index,
-            layout.fixed_size,
+            read_entry("read_tail_entry_mut_unchecked", layout, index, "self.bytes"),
             value
         )
     };

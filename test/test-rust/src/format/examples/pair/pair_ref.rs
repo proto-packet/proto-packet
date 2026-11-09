@@ -14,17 +14,15 @@ impl<'a> PairRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 16)?;
-        proto_packet::io::check_ends(bytes, 0, 3, 16)?;
-        crate::format::examples::EntryRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 0, 16)
-        })?;
-        crate::format::examples::EntryRef::new(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 1, 16)
-        })?;
-        proto_packet::io::check_utf8(unsafe {
-            proto_packet::io::read_entry_unchecked(bytes, 0, 2, 16)
-        })?;
+        proto_packet::io::check_len(bytes, 8)?;
+        proto_packet::io::check_tail_ends(bytes, 0, 2, 8)?;
+        crate::format::examples::EntryRef::new(proto_packet::io::check_tail_entry(
+            bytes, 0, 0, 3, 8, 8,
+        )?)?;
+        crate::format::examples::EntryRef::new(proto_packet::io::check_tail_entry(
+            bytes, 0, 1, 3, 8, 8,
+        )?)?;
+        proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 0, 2, 3, 8, 1)?)?;
         Ok(Self { bytes })
     }
 
@@ -56,7 +54,7 @@ impl<'a> PairRef<'a> {
     pub fn first(&self) -> crate::format::examples::EntryRef<'a> {
         unsafe {
             crate::format::examples::EntryRef::new_unchecked(
-                proto_packet::io::read_entry_unchecked(self.bytes, 0, 0, 16),
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 3, 8, 8),
             )
         }
     }
@@ -66,7 +64,7 @@ impl<'a> PairRef<'a> {
     pub fn second(&self) -> crate::format::examples::EntryRef<'a> {
         unsafe {
             crate::format::examples::EntryRef::new_unchecked(
-                proto_packet::io::read_entry_unchecked(self.bytes, 0, 1, 16),
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 3, 8, 8),
             )
         }
     }
@@ -74,7 +72,7 @@ impl<'a> PairRef<'a> {
     /// Gets the field: `note`.
     #[must_use]
     pub fn note(&self) -> &'a str {
-        unsafe { proto_packet::io::read_str_unchecked(self.bytes, 0, 2, 16) }
+        unsafe { proto_packet::io::read_tail_str_unchecked(self.bytes, 0, 2, 3, 8) }
     }
 }
 
