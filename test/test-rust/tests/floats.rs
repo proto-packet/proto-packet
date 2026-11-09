@@ -94,22 +94,22 @@ fn generated_types_have_an_identity() {
 }
 
 #[test]
-fn floats_are_numbers_in_json() {
+fn floats_are_text_in_json() {
     assert_json(
         &FloatFields::new(Float32::new(1.5), Float64::new(-2.0)),
-        r#"{"float32":1.5,"float64":-2.0}"#,
+        r#"{"float32":"1.5","float64":"-2.0"}"#,
     );
     assert_json(
         &FloatFields::new(Float32::new(0.1), Float64::new(-0.0)),
-        r#"{"float32":0.1,"float64":-0.0}"#,
+        r#"{"float32":"0.1","float64":"-0.0"}"#,
+    );
+    assert_json(
+        &FloatFields::new(Float32::new(1e-7), Float64::new(1e300)),
+        r#"{"float32":"1e-7","float64":"1e300"}"#,
     );
     assert_json(
         &FloatMessage::default().with_float64(Float64::new(0.25)),
-        r#"{"float64":0.25}"#,
-    );
-    assert_eq!(
-        serde_json::from_str::<FloatFields>(r#"{"float32":1,"float64":-2}"#).unwrap(),
-        FloatFields::new(Float32::new(1.0), Float64::new(-2.0))
+        r#"{"float64":"0.25"}"#,
     );
 }
 
@@ -126,12 +126,41 @@ fn floats_that_are_not_finite_are_names_in_json() {
 }
 
 #[test]
+fn json_reads_back_the_exact_float() {
+    // Read as a plain number, each of these comes back as another float from some JSON parser.
+    let single: Float32 = Float32::from_bits(0x15AE_43FD).unwrap();
+    let double: Float64 = Float64::from_bits(0x0000_4EED_BBB9_694A).unwrap();
+    let value: FloatFields = FloatFields::new(single, double);
+    let json: String = serde_json::to_string(&value).unwrap();
+    assert_eq!(
+        json,
+        r#"{"float32":"7.038531e-26","float64":"4.2876481011514e-310"}"#
+    );
+    let read: FloatFields = serde_json::from_str(&json).unwrap();
+    assert_eq!(read.float32().to_bits(), 0x15AE_43FD);
+    assert_eq!(read.float64().to_bits(), 0x0000_4EED_BBB9_694A);
+}
+
+#[test]
+fn json_also_reads_plain_numbers() {
+    assert_eq!(
+        serde_json::from_str::<FloatFields>(r#"{"float32":1,"float64":-2.5}"#).unwrap(),
+        FloatFields::new(Float32::new(1.0), Float64::new(-2.5))
+    );
+}
+
+#[test]
 fn json_rejects_invalid_floats() {
     for json in [
-        r#"{"float32":1e100,"float64":0}"#, // out of the range of an `f32`
+        r#"{"float32":1e100,"float64":0}"#, // a number out of the range of an `f32`
+        r#"{"float32":"1e100","float64":0}"#, // text out of the range of an `f32`
+        r#"{"float32":0,"float64":"1e999"}"#, // text out of the range of an `f64`
         r#"{"float32":"nan","float64":0}"#, // not one of the names
+        r#"{"float32":"inf","float64":0}"#, // another name the standard parser takes
+        r#"{"float32":"","float64":0}"#,    // empty text
+        r#"{"float32":" 1.5","float64":0}"#, // text around the number
+        r#"{"float32":"0x10","float64":0}"#, // not a decimal number
         r#"{"float32":true,"float64":0}"#,  // not a number
-        r#"{"float32":0,"float64":"1.5"}"#, // a number as text
     ] {
         assert!(
             serde_json::from_str::<FloatFields>(json).is_err(),

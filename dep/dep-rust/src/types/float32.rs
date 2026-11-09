@@ -11,7 +11,7 @@ pub struct Float32 {
     value: f32,
 }
 
-impl_float!(Float32, f32, u32, 0x7FC0_0000, serialize_f32, narrow);
+impl_float!(Float32, f32, u32, 0x7FC0_0000, narrow);
 
 /// Narrows the `value` to an `f32`.
 ///

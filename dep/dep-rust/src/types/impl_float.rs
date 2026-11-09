@@ -1,7 +1,3 @@
-use serde::Deserializer;
-use serde::de::{Error, Unexpected, Visitor};
-use std::fmt::Formatter;
-
 /// The JSON of the NaN.
 pub(crate) const NAN: &str = "NaN";
 
@@ -11,60 +7,23 @@ pub(crate) const INFINITY: &str = "Infinity";
 /// The JSON of the negative infinity.
 pub(crate) const NEGATIVE_INFINITY: &str = "-Infinity";
 
-/// Deserializes a float from a number, or from the name of a value that isn't finite.
-pub(crate) fn deserialize_float<'de, D>(deserializer: D) -> Result<f64, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_any(FloatVisitor)
-}
-
-/// Visits a number, or the name of a float that isn't finite.
-struct FloatVisitor;
-
-impl Visitor<'_> for FloatVisitor {
-    type Value = f64;
-
-    fn expecting(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "a number, `{}`, `{}` or `{}`",
-            NAN, INFINITY, NEGATIVE_INFINITY
-        )
-    }
-
-    fn visit_i64<E>(self, value: i64) -> Result<f64, E> {
-        Ok(value as f64)
-    }
-
-    fn visit_u64<E>(self, value: u64) -> Result<f64, E> {
-        Ok(value as f64)
-    }
-
-    fn visit_f64<E>(self, value: f64) -> Result<f64, E> {
-        Ok(value)
-    }
-
-    fn visit_str<E>(self, name: &str) -> Result<f64, E>
-    where
-        E: Error,
-    {
-        match name {
-            NAN => Ok(f64::NAN),
-            INFINITY => Ok(f64::INFINITY),
-            NEGATIVE_INFINITY => Ok(f64::NEG_INFINITY),
-            _ => Err(E::invalid_value(Unexpected::Str(name), &self)),
-        }
-    }
+/// Checks if the `text` has only the characters of a decimal number.
+///
+/// # Note
+/// - This leaves out the other names the standard float parser takes. (ex: `inf`)
+pub(crate) fn is_decimal(text: &str) -> bool {
+    !text.is_empty()
+        && text
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'+' | b'-' | b'.' | b'e' | b'E'))
 }
 
 /// Implements a float type that has one NaN.
 ///
 /// The type holds the `$float` in a `value` field, with the `$bits` as its bits & the `$nan` as the
-/// bits of its one NaN. It serializes with the `$serialize` function, & deserializes from an `f64`
-/// with the `$narrow` function.
+/// bits of its one NaN. A JSON number is narrowed from an `f64` with the `$narrow` function.
 macro_rules! impl_float {
-    ($name:ident, $float:ty, $bits:ty, $nan:expr, $serialize:ident, $narrow:expr) => {
+    ($name:ident, $float:ty, $bits:ty, $nan:expr, $narrow:expr) => {
         impl $name {
             //! Constants
 
@@ -203,12 +162,16 @@ macro_rules! impl_float {
         }
 
         impl serde::Serialize for $name {
+            /// Serializes the float as text.
+            ///
+            /// # Note
+            /// - A JSON parser can round a plain number to another float, so the text is quoted.
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
             {
                 if self.value.is_finite() {
-                    serializer.$serialize(self.value)
+                    serializer.collect_str(&format_args!("{:?}", self.value))
                 } else if self.value.is_nan() {
                     serializer.serialize_str($crate::types::impl_float::NAN)
                 } else if self.value > 0.0 {
@@ -220,15 +183,81 @@ macro_rules! impl_float {
         }
 
         impl<'de> serde::Deserialize<'de> for $name {
+            /// Deserializes the float from its text, or from a plain number.
+            ///
+            /// # Note
+            /// - The text is parsed here, so it reads back the exact float that was written.
+            /// - A plain number is only as exact as the parser that read it.
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::Deserializer<'de>,
             {
-                let value: f64 = $crate::types::impl_float::deserialize_float(deserializer)?;
-                let narrow: fn(f64) -> Option<$float> = $narrow;
-                narrow(value).map(Self::new).ok_or_else(|| {
-                    <D::Error as serde::de::Error>::custom("the number is out of range")
-                })
+                struct FloatVisitor;
+
+                impl FloatVisitor {
+                    /// Narrows the `value` of a plain number.
+                    fn narrow<E>(&self, value: f64) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        let narrow: fn(f64) -> Option<$float> = $narrow;
+                        narrow(value)
+                            .map($name::new)
+                            .ok_or_else(|| E::custom("the number is out of range"))
+                    }
+                }
+
+                impl serde::de::Visitor<'_> for FloatVisitor {
+                    type Value = $name;
+
+                    fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        f.write_str("a float")
+                    }
+
+                    fn visit_i64<E>(self, value: i64) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        self.narrow(value as f64)
+                    }
+
+                    fn visit_u64<E>(self, value: u64) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        self.narrow(value as f64)
+                    }
+
+                    fn visit_f64<E>(self, value: f64) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        self.narrow(value)
+                    }
+
+                    fn visit_str<E>(self, text: &str) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        let value: Option<$float> = match text {
+                            $crate::types::impl_float::NAN => Some(<$float>::NAN),
+                            $crate::types::impl_float::INFINITY => Some(<$float>::INFINITY),
+                            $crate::types::impl_float::NEGATIVE_INFINITY => {
+                                Some(<$float>::NEG_INFINITY)
+                            }
+                            _ if $crate::types::impl_float::is_decimal(text) => text
+                                .parse::<$float>()
+                                .ok()
+                                .filter(|value| value.is_finite()),
+                            _ => None,
+                        };
+                        value.map($name::new).ok_or_else(|| {
+                            E::invalid_value(serde::de::Unexpected::Str(text), &self)
+                        })
+                    }
+                }
+
+                deserializer.deserialize_any(FloatVisitor)
             }
         }
     };
