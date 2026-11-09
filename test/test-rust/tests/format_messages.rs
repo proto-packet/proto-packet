@@ -198,7 +198,7 @@ fn rejects_extra_bytes() {
 }
 
 #[test]
-fn strings_are_their_whole_extent() {
+fn strings_are_their_whole_value() {
     let bytes: [u8; 7] = [1, 0, 1, 0, b'h', b'i', b'!'];
     assert_eq!(ItemRef::new(&bytes).unwrap().text(), Some("hi!"));
 }
