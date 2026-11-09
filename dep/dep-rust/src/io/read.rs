@@ -139,6 +139,7 @@ macro_rules! read_float {
         ///
         /// # Safety
         /// The value must be within the `bytes`, & must not be a NaN that isn't the one NaN.
+        #[must_use]
         pub unsafe fn $read(bytes: &[u8], offset: usize) -> crate::types::$float {
             unsafe { crate::types::$float::from_bits_unchecked($read_bits(bytes, offset)) }
         }

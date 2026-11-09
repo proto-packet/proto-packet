@@ -94,6 +94,7 @@ macro_rules! impl_float {
             ///
             /// # Note
             /// - Any NaN becomes the one NaN.
+            #[must_use]
             pub const fn new(value: $float) -> Self {
                 if value.is_nan() {
                     Self::NAN
@@ -118,6 +119,7 @@ macro_rules! impl_float {
             ///
             /// # Safety
             /// The `bits` must not be a NaN that isn't the one NaN.
+            #[must_use]
             pub const unsafe fn from_bits_unchecked(bits: $bits) -> Self {
                 Self {
                     value: <$float>::from_bits(bits),
