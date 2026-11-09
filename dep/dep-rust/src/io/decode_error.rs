@@ -29,6 +29,9 @@ pub enum DecodeError {
 
     /// A `bool` byte is not 0 or 1.
     InvalidBool { value: u8 },
+
+    /// A float is a NaN that is not the one NaN.
+    InvalidFloat,
 }
 
 impl Display for DecodeError {
@@ -47,6 +50,7 @@ impl Display for DecodeError {
             Self::InvalidPadding => f.write_str("invalid padding"),
             Self::InvalidAbsentField => f.write_str("invalid absent field"),
             Self::InvalidBool { value } => write!(f, "invalid bool: {}", value),
+            Self::InvalidFloat => f.write_str("invalid float"),
         }
     }
 }

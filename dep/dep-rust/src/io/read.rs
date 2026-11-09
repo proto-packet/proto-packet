@@ -130,3 +130,22 @@ pub unsafe fn read_tail_str_unchecked(
     let entry: &[u8] = unsafe { read_tail_entry_unchecked(bytes, table, index, count, header, 1) };
     unsafe { std::str::from_utf8_unchecked(entry) }
 }
+
+/// Defines the little-endian read of a float type.
+#[cfg(feature = "types")]
+macro_rules! read_float {
+    ($read:ident, $read_bits:ident, $float:ident, $name:literal) => {
+        #[doc = concat!("Reads the little-endian `", $name, "` at the `offset`.")]
+        ///
+        /// # Safety
+        /// The value must be within the `bytes`, & must not be a NaN that isn't the one NaN.
+        pub unsafe fn $read(bytes: &[u8], offset: usize) -> crate::types::$float {
+            unsafe { crate::types::$float::from_bits_unchecked($read_bits(bytes, offset)) }
+        }
+    };
+}
+
+#[cfg(feature = "types")]
+read_float!(read_f32_unchecked, read_u32_unchecked, Float32, "f32");
+#[cfg(feature = "types")]
+read_float!(read_f64_unchecked, read_u64_unchecked, Float64, "f64");

@@ -232,3 +232,29 @@ pub const fn check_bool(byte: u8) -> Result<(), DecodeError> {
         Err(DecodeError::InvalidBool { value: byte })
     }
 }
+
+/// Checks the `bits` of an `f32` are not a NaN that isn't the one NaN.
+///
+/// # Errors
+/// Returns an error if the `bits` are another NaN.
+#[cfg(feature = "types")]
+pub const fn check_f32(bits: u32) -> Result<(), DecodeError> {
+    if crate::types::Float32::is_valid_bits(bits) {
+        Ok(())
+    } else {
+        Err(DecodeError::InvalidFloat)
+    }
+}
+
+/// Checks the `bits` of an `f64` are not a NaN that isn't the one NaN.
+///
+/// # Errors
+/// Returns an error if the `bits` are another NaN.
+#[cfg(feature = "types")]
+pub const fn check_f64(bits: u64) -> Result<(), DecodeError> {
+    if crate::types::Float64::is_valid_bits(bits) {
+        Ok(())
+    } else {
+        Err(DecodeError::InvalidFloat)
+    }
+}

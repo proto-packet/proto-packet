@@ -69,3 +69,22 @@ pub unsafe fn write_bit_unchecked(bytes: &mut [u8], offset: usize, bit: u8, valu
     let byte: &mut u8 = unsafe { bytes.get_unchecked_mut(offset) };
     *byte = (*byte & !(1 << bit)) | (u8::from(value) << bit);
 }
+
+/// Defines the little-endian write of a float type.
+#[cfg(feature = "types")]
+macro_rules! write_float {
+    ($write:ident, $float:ident, $name:literal) => {
+        #[doc = concat!("Writes the little-endian `", $name, "` at the `offset`.")]
+        ///
+        /// # Safety
+        /// The value must be within the `bytes`.
+        pub unsafe fn $write(bytes: &mut [u8], offset: usize, value: crate::types::$float) {
+            unsafe { write_bytes_unchecked(bytes, offset, value.to_le_bytes()) }
+        }
+    };
+}
+
+#[cfg(feature = "types")]
+write_float!(write_f32_unchecked, Float32, "f32");
+#[cfg(feature = "types")]
+write_float!(write_f64_unchecked, Float64, "f64");
