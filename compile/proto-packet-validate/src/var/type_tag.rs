@@ -14,7 +14,7 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
 /// Validates the type `name` as a primitive, special or named type.
 ///
 /// A single lowercase name that is not a primitive or special type is unknown, since type names
-/// start with an uppercase letter. (ex: `f32`)
+/// start with an uppercase letter. (ex: `f16`)
 fn validate_named_type(name: &NameTree, source: &str) -> Result<TypeTag, ValidateError> {
     let text: String = join_idents(&name.idents, source);
     if let Some(primitive) = PrimitiveType::from_name(&text) {
