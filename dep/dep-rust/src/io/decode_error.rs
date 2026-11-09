@@ -32,6 +32,9 @@ pub enum DecodeError {
 
     /// A float is a NaN that is not the one NaN.
     InvalidFloat,
+
+    /// A list's length does not fit its elements, or its count is 0.
+    InvalidList,
 }
 
 impl Display for DecodeError {
@@ -51,6 +54,7 @@ impl Display for DecodeError {
             Self::InvalidAbsentField => f.write_str("invalid absent field"),
             Self::InvalidBool { value } => write!(f, "invalid bool: {}", value),
             Self::InvalidFloat => f.write_str("invalid float"),
+            Self::InvalidList => f.write_str("invalid list"),
         }
     }
 }
