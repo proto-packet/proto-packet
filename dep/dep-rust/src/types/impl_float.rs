@@ -21,9 +21,9 @@ pub(crate) fn is_decimal(text: &str) -> bool {
 /// Implements a float type that has one NaN.
 ///
 /// The type holds the `$float` in a `value` field, with the `$bits` as its bits & the `$nan` as the
-/// bits of its one NaN. A JSON number is narrowed from an `f64` with the `$narrow` function.
+/// bits of its one NaN.
 macro_rules! impl_float {
-    ($name:ident, $float:ty, $bits:ty, $nan:expr, $narrow:expr) => {
+    ($name:ident, $float:ty, $bits:ty, $nan:expr) => {
         impl $name {
             //! Constants
 
@@ -183,56 +183,22 @@ macro_rules! impl_float {
         }
 
         impl<'de> serde::Deserialize<'de> for $name {
-            /// Deserializes the float from its text, or from a plain number.
+            /// Deserializes the float from its text.
             ///
             /// # Note
             /// - The text is parsed here, so it reads back the exact float that was written.
-            /// - A plain number is only as exact as the parser that read it.
+            /// - A plain number is rejected, since it is only as exact as the parser that read it.
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::Deserializer<'de>,
             {
                 struct FloatVisitor;
 
-                impl FloatVisitor {
-                    /// Narrows the `value` of a plain number.
-                    fn narrow<E>(&self, value: f64) -> Result<$name, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        let narrow: fn(f64) -> Option<$float> = $narrow;
-                        narrow(value)
-                            .map($name::new)
-                            .ok_or_else(|| E::custom("the number is out of range"))
-                    }
-                }
-
                 impl serde::de::Visitor<'_> for FloatVisitor {
                     type Value = $name;
 
                     fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        f.write_str("a float")
-                    }
-
-                    fn visit_i64<E>(self, value: i64) -> Result<$name, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        self.narrow(value as f64)
-                    }
-
-                    fn visit_u64<E>(self, value: u64) -> Result<$name, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        self.narrow(value as f64)
-                    }
-
-                    fn visit_f64<E>(self, value: f64) -> Result<$name, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        self.narrow(value)
+                        f.write_str("a float as text")
                     }
 
                     fn visit_str<E>(self, text: &str) -> Result<$name, E>
@@ -257,7 +223,7 @@ macro_rules! impl_float {
                     }
                 }
 
-                deserializer.deserialize_any(FloatVisitor)
+                deserializer.deserialize_str(FloatVisitor)
             }
         }
     };

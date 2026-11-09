@@ -142,25 +142,18 @@ fn json_reads_back_the_exact_float() {
 }
 
 #[test]
-fn json_also_reads_plain_numbers() {
-    assert_eq!(
-        serde_json::from_str::<FloatFields>(r#"{"float32":1,"float64":-2.5}"#).unwrap(),
-        FloatFields::new(Float32::new(1.0), Float64::new(-2.5))
-    );
-}
-
-#[test]
 fn json_rejects_invalid_floats() {
     for json in [
-        r#"{"float32":1e100,"float64":0}"#, // a number out of the range of an `f32`
-        r#"{"float32":"1e100","float64":0}"#, // text out of the range of an `f32`
-        r#"{"float32":0,"float64":"1e999"}"#, // text out of the range of an `f64`
-        r#"{"float32":"nan","float64":0}"#, // not one of the names
-        r#"{"float32":"inf","float64":0}"#, // another name the standard parser takes
-        r#"{"float32":"","float64":0}"#,    // empty text
-        r#"{"float32":" 1.5","float64":0}"#, // text around the number
-        r#"{"float32":"0x10","float64":0}"#, // not a decimal number
-        r#"{"float32":true,"float64":0}"#,  // not a number
+        r#"{"float32":1.5,"float64":"0"}"#,     // a plain number
+        r#"{"float32":"0","float64":2}"#,       // a plain whole number
+        r#"{"float32":"1e100","float64":"0"}"#, // out of the range of an `f32`
+        r#"{"float32":"0","float64":"1e999"}"#, // out of the range of an `f64`
+        r#"{"float32":"nan","float64":"0"}"#,   // not one of the names
+        r#"{"float32":"inf","float64":"0"}"#,   // another name the standard parser takes
+        r#"{"float32":"","float64":"0"}"#,      // empty text
+        r#"{"float32":" 1.5","float64":"0"}"#,  // text around the number
+        r#"{"float32":"0x10","float64":"0"}"#,  // not a decimal number
+        r#"{"float32":true,"float64":"0"}"#,    // not text
     ] {
         assert!(
             serde_json::from_str::<FloatFields>(json).is_err(),

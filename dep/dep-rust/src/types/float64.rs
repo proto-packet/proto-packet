@@ -11,4 +11,4 @@ pub struct Float64 {
     value: f64,
 }
 
-impl_float!(Float64, f64, u64, 0x7FF8_0000_0000_0000, Some);
+impl_float!(Float64, f64, u64, 0x7FF8_0000_0000_0000);
