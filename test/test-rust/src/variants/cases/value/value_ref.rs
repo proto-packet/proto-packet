@@ -20,13 +20,13 @@ impl<'a> ValueRef<'a> {
         let value: &'a [u8] = unsafe { bytes.get_unchecked(2..) };
         match tag_number {
             1 => {
-                proto_packet::io::check_len(value, 1)?;
+                proto_packet::io::check_exact_len(value, 1)?;
             }
             2 => {
-                proto_packet::io::check_len(value, 8)?;
+                proto_packet::io::check_exact_len(value, 8)?;
             }
             3 => {
-                proto_packet::io::check_len(value, 16)?;
+                proto_packet::io::check_exact_len(value, 16)?;
             }
             4 => {
                 proto_packet::io::check_utf8(value)?;
@@ -41,7 +41,7 @@ impl<'a> ValueRef<'a> {
                 crate::types::LabelRef::new(value)?;
             }
             8 => {
-                proto_packet::io::check_len(value, 2)?;
+                proto_packet::io::check_exact_len(value, 2)?;
                 proto_packet::io::check_tag_number(unsafe {
                     proto_packet::io::read_u16_unchecked(value, 0)
                 })?;

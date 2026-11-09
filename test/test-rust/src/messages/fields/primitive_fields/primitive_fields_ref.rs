@@ -18,22 +18,22 @@ impl<'a> PrimitiveFieldsRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
                 1 => {
-                    proto_packet::io::check_len(value, 1)?;
+                    proto_packet::io::check_exact_len(value, 1)?;
                 }
                 2 => {
-                    proto_packet::io::check_len(value, 1)?;
+                    proto_packet::io::check_exact_len(value, 1)?;
                 }
                 3 => {
-                    proto_packet::io::check_len(value, 2)?;
+                    proto_packet::io::check_exact_len(value, 2)?;
                 }
                 4 => {
-                    proto_packet::io::check_len(value, 4)?;
+                    proto_packet::io::check_exact_len(value, 4)?;
                 }
                 5 => {
-                    proto_packet::io::check_len(value, 8)?;
+                    proto_packet::io::check_exact_len(value, 8)?;
                 }
                 6 => {
-                    proto_packet::io::check_len(value, 16)?;
+                    proto_packet::io::check_exact_len(value, 16)?;
                 }
                 _ => {}
             }

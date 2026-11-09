@@ -20,7 +20,7 @@ impl<'a> NewerCasesRef<'a> {
         let value: &'a [u8] = unsafe { bytes.get_unchecked(2..) };
         match tag_number {
             1 => {
-                proto_packet::io::check_len(value, 8)?;
+                proto_packet::io::check_exact_len(value, 8)?;
             }
             2 => {
                 proto_packet::io::check_utf8(value)?;

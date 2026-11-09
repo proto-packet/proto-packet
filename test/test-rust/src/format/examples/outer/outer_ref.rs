@@ -14,7 +14,7 @@ impl<'a> OuterRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 17)?;
+        proto_packet::io::check_exact_len(bytes, 17)?;
         crate::format::examples::MixedRef::new(unsafe { bytes.get_unchecked(0..12) })?;
         Ok(Self { bytes })
     }

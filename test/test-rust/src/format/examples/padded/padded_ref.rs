@@ -14,7 +14,7 @@ impl<'a> PaddedRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 41)?;
+        proto_packet::io::check_exact_len(bytes, 41)?;
         crate::format::examples::LineRef::new(unsafe { bytes.get_unchecked(4..21) })?;
         crate::format::examples::LineRef::new(unsafe { bytes.get_unchecked(24..41) })?;
         Ok(Self { bytes })

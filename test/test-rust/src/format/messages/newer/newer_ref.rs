@@ -18,7 +18,7 @@ impl<'a> NewerRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
                 1 => {
-                    proto_packet::io::check_len(value, 8)?;
+                    proto_packet::io::check_exact_len(value, 8)?;
                 }
                 2 => {
                     proto_packet::io::check_utf8(value)?;
@@ -27,7 +27,7 @@ impl<'a> NewerRef<'a> {
                     proto_packet::io::check_utf8(value)?;
                 }
                 4 => {
-                    proto_packet::io::check_len(value, 4)?;
+                    proto_packet::io::check_exact_len(value, 4)?;
                 }
                 5 => {
                     crate::format::examples::EntryRef::new(value)?;

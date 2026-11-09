@@ -50,8 +50,9 @@ impl KeywordVariantMut<'_> {
     /// Sets the case: `Self`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_self(&mut self, value: u32) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 1, &value.to_le_bytes(), false)
+        proto_packet::io::replace_variant(self.bytes, 1, &value.to_le_bytes())
     }
 }

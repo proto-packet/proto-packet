@@ -14,7 +14,7 @@ impl<'a> NestedCopyRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 30)?;
+        proto_packet::io::check_exact_len(bytes, 30)?;
         crate::structs::copy::CopyFieldsRef::new(unsafe { bytes.get_unchecked(0..30) })?;
         Ok(Self { bytes })
     }

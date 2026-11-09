@@ -12,7 +12,7 @@ use code_gen::rust::{
     WithComments, WithFunctions, WithReceiver, WithResult, WithVarParams,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::{SpecialType, TypeTag};
+use proto_packet_tree::TypeTag;
 
 /// Generates the `Mut` type of the variant with the `schema_name` & the Rust `type_name`.
 ///
@@ -105,19 +105,21 @@ pub(crate) fn gen_setter_signature(case: Case<'_>) -> Signature {
 
 /// Generates the setter of the scalar or string `case`.
 fn gen_setter(typing: Typing<'_>, case: Case<'_>) -> Function {
-    let (bytes, exact): (String, bool) = match case.tag {
-        TypeTag::Special(SpecialType::String) => ("value.as_bytes()".to_string(), true),
-        TypeTag::Special(SpecialType::Uuid) => ("value.as_bytes()".to_string(), false),
-        _ => (format!("&{}", gen_bytes(typing, case.tag)), false),
+    let bytes: String = match case.tag {
+        TypeTag::Special(_) => "value.as_bytes()".to_string(),
+        _ => format!("&{}", gen_bytes(typing, case.tag)),
     };
     Function::from(gen_setter_signature(case))
         .with_comment(format!(" Sets the case: `{}`.", case.name))
         .with_comment("")
         .with_comment(" # Errors")
-        .with_comment(" Returns an error, leaving the variant unchanged, if the value doesn't fit.")
+        .with_comment(
+            " Returns an error, leaving the variant unchanged, if the variant would change its",
+        )
+        .with_comment(" length.")
         .with_access(Access::Public)
         .with_literal(format!(
-            "{}::replace_case(self.bytes, {}, {}, {})",
-            IO, case.number, bytes, exact
+            "{}::replace_variant(self.bytes, {}, {})",
+            IO, case.number, bytes
         ))
 }

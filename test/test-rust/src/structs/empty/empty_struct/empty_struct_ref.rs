@@ -14,7 +14,7 @@ impl<'a> EmptyStructRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 0)?;
+        proto_packet::io::check_exact_len(bytes, 0)?;
         Ok(Self { bytes })
     }
 

@@ -27,7 +27,7 @@ impl<'a> NamedFieldsRef<'a> {
                     crate::types::LabelRef::new(value)?;
                 }
                 4 => {
-                    proto_packet::io::check_len(value, 2)?;
+                    proto_packet::io::check_exact_len(value, 2)?;
                     proto_packet::io::check_tag_number(unsafe {
                         proto_packet::io::read_u16_unchecked(value, 0)
                     })?;

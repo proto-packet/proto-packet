@@ -14,7 +14,7 @@ impl<'a> QualifiedFieldsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 24)?;
+        proto_packet::io::check_exact_len(bytes, 24)?;
         crate::types::PointRef::new(unsafe { bytes.get_unchecked(0..8) })?;
         crate::mods::parent::child::ChildRef::new(unsafe { bytes.get_unchecked(8..12) })?;
         crate::names::r#move::MoveStructRef::new(unsafe { bytes.get_unchecked(12..16) })?;

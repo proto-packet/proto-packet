@@ -88,10 +88,10 @@ pub(crate) fn gen_value_check(typing: Typing<'_>, tag: &TypeTag, size: Option<us
     match (tag, size) {
         (TypeTag::Special(SpecialType::String), _) => format!("{}::check_utf8(value)?;", IO),
         (TypeTag::Named(_), Some(size)) if typing.is_enum(tag) => format!(
-            "{}::check_len(value, {})?; {}::check_tag_number(unsafe {{ {}::read_u16_unchecked(value, 0) }})?;",
+            "{}::check_exact_len(value, {})?; {}::check_tag_number(unsafe {{ {}::read_u16_unchecked(value, 0) }})?;",
             IO, size, IO, IO
         ),
-        (_, Some(size)) => format!("{}::check_len(value, {})?;", IO, size),
+        (_, Some(size)) => format!("{}::check_exact_len(value, {})?;", IO, size),
         (_, None) => format!("{}::new(value)?;", generated_path(tag, "Ref")),
     }
 }

@@ -166,9 +166,15 @@ fn bufs_own_the_encoding() {
 }
 
 #[test]
-fn slack_is_ignored() {
+fn rejects_extra_bytes() {
     let bytes: [u8; 10] = [1, 0, 0, 0, 2, 0, 0, 0, 0xFF, 0xFF];
-    assert_eq!(Point::decode(&bytes), Ok(Point::new(1, 2)));
+    assert_eq!(
+        Point::decode(&bytes),
+        Err(DecodeError::TooLong {
+            expected: 8,
+            actual: 10,
+        })
+    );
 }
 
 #[test]

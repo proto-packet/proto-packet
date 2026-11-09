@@ -178,16 +178,16 @@ fn newer_readers_see_older_fields_as_absent() {
 }
 
 #[test]
-fn slack_is_ignored() {
+fn rejects_extra_bytes() {
     let mut bytes: Vec<u8> = item_bytes();
-    bytes.extend_from_slice(&[0xFF; 5]);
-    assert_eq!(Item::decode(&bytes), Ok(item()));
-}
-
-#[test]
-fn extents_can_be_longer_than_their_values() {
-    let bytes: [u8; 12] = [1, 0, 5, 0, 7, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF];
-    assert_eq!(ItemRef::new(&bytes).unwrap().id(), Some(7));
+    bytes.push(0xFF);
+    assert_eq!(
+        Item::decode(&bytes),
+        Err(DecodeError::TooLong {
+            expected: 4,
+            actual: 5,
+        })
+    );
 }
 
 #[test]

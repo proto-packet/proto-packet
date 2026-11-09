@@ -18,7 +18,7 @@ impl<'a> SpecialFieldsRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
                 1 => {
-                    proto_packet::io::check_len(value, 16)?;
+                    proto_packet::io::check_exact_len(value, 16)?;
                 }
                 2 => {
                     proto_packet::io::check_utf8(value)?;

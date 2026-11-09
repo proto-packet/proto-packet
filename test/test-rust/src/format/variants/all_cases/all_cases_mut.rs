@@ -50,55 +50,61 @@ impl AllCasesMut<'_> {
     /// Sets the case: `Flag`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_flag(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 1, &[u8::from(value)], false)
+        proto_packet::io::replace_variant(self.bytes, 1, &[u8::from(value)])
     }
 
     /// Sets the case: `Byte`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_byte(&mut self, value: u8) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 2, &value.to_le_bytes(), false)
+        proto_packet::io::replace_variant(self.bytes, 2, &value.to_le_bytes())
     }
 
     /// Sets the case: `Large`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_large(&mut self, value: u128) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 3, &value.to_le_bytes(), false)
+        proto_packet::io::replace_variant(self.bytes, 3, &value.to_le_bytes())
     }
 
     /// Sets the case: `Id`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_id(
         &mut self,
         value: proto_packet::types::Uuid,
     ) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 4, value.as_bytes(), false)
+        proto_packet::io::replace_variant(self.bytes, 4, value.as_bytes())
     }
 
     /// Sets the case: `Color`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_color(
         &mut self,
         value: crate::format::examples::Color,
     ) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 5, &value.tag_number().to_le_bytes(), false)
+        proto_packet::io::replace_variant(self.bytes, 5, &value.tag_number().to_le_bytes())
     }
 
     /// Sets the case: `Text`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 6, value.as_bytes(), true)
+        proto_packet::io::replace_variant(self.bytes, 6, value.as_bytes())
     }
 
     /// Gets the mut of the case: `Point`.
@@ -148,11 +154,12 @@ impl AllCasesMut<'_> {
     /// Sets the case: `BoxedColor`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_boxed_color(
         &mut self,
         value: crate::format::examples::Color,
     ) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 11, &value.tag_number().to_le_bytes(), false)
+        proto_packet::io::replace_variant(self.bytes, 11, &value.tag_number().to_le_bytes())
     }
 }

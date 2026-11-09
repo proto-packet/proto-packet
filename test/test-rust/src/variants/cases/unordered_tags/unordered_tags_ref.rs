@@ -20,13 +20,13 @@ impl<'a> UnorderedTagsRef<'a> {
         let value: &'a [u8] = unsafe { bytes.get_unchecked(2..) };
         match tag_number {
             3 => {
-                proto_packet::io::check_len(value, 4)?;
+                proto_packet::io::check_exact_len(value, 4)?;
             }
             1 => {
-                proto_packet::io::check_len(value, 4)?;
+                proto_packet::io::check_exact_len(value, 4)?;
             }
             2 => {
-                proto_packet::io::check_len(value, 4)?;
+                proto_packet::io::check_exact_len(value, 4)?;
             }
             _ => {}
         }

@@ -95,8 +95,13 @@ fn gen_construction(
     layout: &StructLayout,
     ref_type: &RustType,
 ) -> ImplBlock {
+    let check: &str = if layout.is_fixed() {
+        "check_exact_len"
+    } else {
+        "check_len"
+    };
     let mut new: Function = gen_new("ref", "&'a [u8]")
-        .with_semi(format!("{}::check_len(bytes, {})?", IO, layout.fixed_size));
+        .with_semi(format!("{}::{}(bytes, {})?", IO, check, layout.fixed_size));
     if layout.ends() > 0 {
         new.add_semi(format!(
             "{}::check_tail_ends(bytes, {}, {}, {})?",

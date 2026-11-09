@@ -14,7 +14,7 @@ impl<'a> PrimitiveFieldsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
-        proto_packet::io::check_len(bytes, 32)?;
+        proto_packet::io::check_exact_len(bytes, 32)?;
         Ok(Self { bytes })
     }
 

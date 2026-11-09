@@ -147,15 +147,30 @@ fn empty_variants_only_hold_unknown_cases() {
 }
 
 #[test]
-fn slack_is_ignored_except_by_strings() {
+fn rejects_extra_bytes() {
     let mut bytes: Vec<u8> = Shape::Circle(5).encode();
     bytes.extend_from_slice(&[0xFF; 3]);
-    assert_eq!(Shape::decode(&bytes), Ok(Shape::Circle(5)));
+    assert_eq!(
+        Shape::decode(&bytes),
+        Err(DecodeError::TooLong {
+            expected: 4,
+            actual: 7,
+        })
+    );
 
     let mut bytes: Vec<u8> = Shape::Square(Point::new(1, 2)).encode();
     bytes.push(0xFF);
-    assert_eq!(Shape::decode(&bytes), Ok(Shape::Square(Point::new(1, 2))));
+    assert_eq!(
+        Shape::decode(&bytes),
+        Err(DecodeError::TooLong {
+            expected: 8,
+            actual: 9,
+        })
+    );
+}
 
+#[test]
+fn strings_are_the_rest_of_the_variant() {
     let mut bytes: Vec<u8> = OlderCases::Text("hi".to_string()).encode();
     bytes.push(b'!');
     assert_eq!(
@@ -220,17 +235,16 @@ fn mut_replaces_values_that_fit() {
 }
 
 #[test]
-fn mut_switches_to_cases_that_fit() {
-    let mut bytes: Vec<u8> = AllCases::Large(2).encode();
+fn mut_switches_to_cases_of_the_same_length() {
+    let mut bytes: Vec<u8> = AllCases::Flag(true).encode();
     let mut value: AllCasesMut = AllCasesMut::new(&mut bytes).unwrap();
     value.set_byte(7).unwrap();
     assert_eq!(value.as_ref().as_byte(), Some(7));
-    assert!(bytes[3..].iter().all(|byte| *byte == 0));
     assert_eq!(AllCases::decode(&bytes), Ok(AllCases::Byte(7)));
 }
 
 #[test]
-fn mut_rejects_values_that_do_not_fit() {
+fn mut_rejects_cases_of_another_length() {
     let original: Vec<u8> = AllCases::Byte(1).encode();
     let mut bytes: Vec<u8> = original.clone();
     let mut value: AllCasesMut = AllCasesMut::new(&mut bytes).unwrap();
@@ -239,6 +253,18 @@ fn mut_rejects_values_that_do_not_fit() {
         Err(CapacityError {
             required: 18,
             capacity: 3,
+        })
+    );
+    assert_eq!(bytes, original);
+
+    let original: Vec<u8> = AllCases::Large(2).encode();
+    let mut bytes: Vec<u8> = original.clone();
+    let mut value: AllCasesMut = AllCasesMut::new(&mut bytes).unwrap();
+    assert_eq!(
+        value.set_byte(7),
+        Err(CapacityError {
+            required: 3,
+            capacity: 18,
         })
     );
     assert_eq!(bytes, original);
@@ -335,8 +361,8 @@ fn view_muts_edit_every_form() {
     let mut buf: ShapeBuf = ShapeBuf::from(&value);
     edit_shape(&mut buf).unwrap();
     assert_eq!(buf.decode(), expected);
-    make_circle(&mut buf).unwrap();
-    assert_eq!(buf.decode(), Shape::Circle(4));
+    assert!(make_circle(&mut buf).is_err());
+    assert_eq!(buf.decode(), expected);
 
     let mut bytes: Vec<u8> = value.encode();
     let mut edit: ShapeMut = ShapeMut::new(&mut bytes).unwrap();

@@ -18,7 +18,7 @@ impl<'a> LoopMessageRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
                 1 => {
-                    proto_packet::io::check_len(value, 4)?;
+                    proto_packet::io::check_exact_len(value, 4)?;
                 }
                 2 => {
                     crate::format::messages::LoopStructRef::new(value)?;

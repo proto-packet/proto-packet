@@ -21,7 +21,7 @@ impl<'a> ItemRef<'a> {
                     proto_packet::io::check_utf8(value)?;
                 }
                 5 => {
-                    proto_packet::io::check_len(value, 4)?;
+                    proto_packet::io::check_exact_len(value, 4)?;
                 }
                 _ => {}
             }

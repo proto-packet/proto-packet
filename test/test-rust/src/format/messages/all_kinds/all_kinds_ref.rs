@@ -18,19 +18,19 @@ impl<'a> AllKindsRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
                 1 => {
-                    proto_packet::io::check_len(value, 1)?;
+                    proto_packet::io::check_exact_len(value, 1)?;
                 }
                 2 => {
-                    proto_packet::io::check_len(value, 1)?;
+                    proto_packet::io::check_exact_len(value, 1)?;
                 }
                 3 => {
-                    proto_packet::io::check_len(value, 16)?;
+                    proto_packet::io::check_exact_len(value, 16)?;
                 }
                 4 => {
-                    proto_packet::io::check_len(value, 16)?;
+                    proto_packet::io::check_exact_len(value, 16)?;
                 }
                 5 => {
-                    proto_packet::io::check_len(value, 2)?;
+                    proto_packet::io::check_exact_len(value, 2)?;
                     proto_packet::io::check_tag_number(unsafe {
                         proto_packet::io::read_u16_unchecked(value, 0)
                     })?;
@@ -48,7 +48,7 @@ impl<'a> AllKindsRef<'a> {
                     crate::format::messages::ItemRef::new(value)?;
                 }
                 10 => {
-                    proto_packet::io::check_len(value, 2)?;
+                    proto_packet::io::check_exact_len(value, 2)?;
                     proto_packet::io::check_tag_number(unsafe {
                         proto_packet::io::read_u16_unchecked(value, 0)
                     })?;

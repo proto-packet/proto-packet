@@ -50,17 +50,19 @@ impl NewerCasesMut<'_> {
     /// Sets the case: `Number`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 1, &value.to_le_bytes(), false)
+        proto_packet::io::replace_variant(self.bytes, 1, &value.to_le_bytes())
     }
 
     /// Sets the case: `Text`.
     ///
     /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the value doesn't fit.
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
     pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_case(self.bytes, 2, value.as_bytes(), true)
+        proto_packet::io::replace_variant(self.bytes, 2, value.as_bytes())
     }
 
     /// Gets the mut of the case: `Point`.
