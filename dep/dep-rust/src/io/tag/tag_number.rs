@@ -12,12 +12,12 @@ impl TagNumber {
     /// The minimum valid tag number. (1)
     pub const MIN: u16 = 1;
 
-    /// The maximum valid tag number. (8,191, 13-bits)
-    pub const MAX: u16 = 0x1FFF;
+    /// The maximum valid tag number. (65,535)
+    pub const MAX: u16 = u16::MAX;
 
     /// Checks if the `value` is valid.
     pub const fn is_valid(value: u16) -> bool {
-        value >= Self::MIN && value <= Self::MAX
+        value >= Self::MIN
     }
 }
 

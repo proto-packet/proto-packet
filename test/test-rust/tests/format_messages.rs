@@ -232,10 +232,9 @@ fn rejects_invalid_tags() {
         bytes
     };
     for (first, second) in [
-        ([5, 0], [1, 0]),       // decreasing
-        ([5, 0], [5, 0]),       // duplicate
-        ([0, 0], [5, 0]),       // zero
-        ([1, 0], [0x00, 0x20]), // above 8,191
+        ([5, 0], [1, 0]), // decreasing
+        ([5, 0], [5, 0]), // duplicate
+        ([0, 0], [5, 0]), // zero
     ] {
         assert_eq!(
             Item::decode(&with_tags(first, second)),
@@ -639,7 +638,7 @@ fn nested_unknown_fields_round_trip_through_json() {
 fn json_rejects_invalid_messages() {
     for json in [
         r#"{"0":""}"#,                 // an invalid tag number
-        r#"{"8192":""}"#,              // a tag number above 8,191
+        r#"{"65536":""}"#,             // a tag number above 65,535
         r#"{"7":"!!!!"}"#,             // invalid base-64
         r#"{"7":5}"#,                  // a value that isn't base-64 text
         r#"{"5":"AQ=="}"#,             // a known field too short for its type

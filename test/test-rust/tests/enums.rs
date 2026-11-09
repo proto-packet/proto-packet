@@ -42,7 +42,7 @@ fn from_tag_numbers_optional() {
         EdgeTags::from_tag_number_optional(2),
         Some(EdgeTags::Unrecognized(_))
     ));
-    for tag_number in [0, 8192, 65536, u32::MAX] {
+    for tag_number in [0, 65536, u32::MAX] {
         assert_eq!(EdgeTags::from_tag_number_optional(tag_number), None);
     }
 }
@@ -120,7 +120,7 @@ fn json_tag_numbers() {
     assert_eq!(case, UnorderedTags::Three);
     assert_eq!(serde_json::to_string(&case).unwrap(), r#""Three""#);
 
-    for json in [r#""Four""#, "0", "8192", "65536", "-1", "true"] {
+    for json in [r#""Four""#, "0", "65536", "-1", "true"] {
         assert!(
             serde_json::from_str::<UnorderedTags>(json).is_err(),
             "{}",
@@ -136,7 +136,7 @@ fn signed_tag_numbers() {
     };
     assert_eq!(read(3).unwrap(), UnorderedTags::Three);
     assert_eq!(read(4).unwrap(), unrecognized(4));
-    for tag_number in [-1, 0, 8192, i64::MAX] {
+    for tag_number in [-1, 0, 65536, i64::MAX] {
         assert!(read(tag_number).is_err(), "{}", tag_number);
     }
 }

@@ -37,7 +37,7 @@ impl MessageWriter<'_> {
 
     /// Starts the field with the `tag`, & gets the bytes to append its value to.
     pub fn field(&mut self, tag: u16) -> &mut Vec<u8> {
-        self.write_unknown_before(tag);
+        self.write_unknown_before(u32::from(tag));
         self.write_tag(tag);
         self.out
     }
@@ -50,13 +50,13 @@ impl MessageWriter<'_> {
 
     /// Finishes the message.
     pub fn finish(mut self) {
-        self.write_unknown_before(u16::MAX);
+        self.write_unknown_before(u32::MAX);
     }
 
     /// Writes the unknown fields with tags below the `tag`.
-    fn write_unknown_before(&mut self, tag: u16) {
+    fn write_unknown_before(&mut self, tag: u32) {
         while let Some((field, rest)) = self.unknown.split_first()
-            && field.tag_number().value() < tag
+            && u32::from(field.tag_number().value()) < tag
         {
             self.write_tag(field.tag_number().value());
             self.out.extend_from_slice(field.bytes());

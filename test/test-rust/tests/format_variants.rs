@@ -188,10 +188,6 @@ fn rejects_invalid_tags() {
         Shape::decode(&[0, 0, 5, 0, 0, 0]),
         Err(DecodeError::InvalidTagNumber { value: 0 })
     );
-    assert_eq!(
-        Shape::decode(&[0x00, 0x20, 5, 0, 0, 0]),
-        Err(DecodeError::InvalidTagNumber { value: 0x2000 })
-    );
 }
 
 #[test]
@@ -559,7 +555,7 @@ fn json_rejects_invalid_variants() {
     for json in [
         r#"{"var":"Nope","val":1}"#,                // an unknown name
         r#"{"var":0,"val":""}"#,                    // an invalid tag number
-        r#"{"var":8192,"val":""}"#,                 // a tag number above 8,191
+        r#"{"var":65536,"val":""}"#,                // a tag number above 65,535
         r#"{"var":-1,"val":""}"#,                   // a negative tag number
         r#"{"var":3,"val":"!!!!"}"#,                // invalid base-64
         r#"{"var":3,"val":5}"#,                     // a value that isn't base-64 text

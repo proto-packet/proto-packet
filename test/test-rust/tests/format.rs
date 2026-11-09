@@ -160,13 +160,6 @@ fn rejects_invalid_tag_numbers() {
         FixedKinds::decode(&bytes),
         Err(DecodeError::InvalidTagNumber { value: 0 })
     );
-    bytes[32] = 1;
-    bytes[34] = 0xFF;
-    bytes[35] = 0xFF;
-    assert_eq!(
-        FixedKinds::decode(&bytes),
-        Err(DecodeError::InvalidTagNumber { value: 0xFFFF })
-    );
 }
 
 #[test]
