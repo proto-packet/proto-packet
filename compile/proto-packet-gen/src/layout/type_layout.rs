@@ -95,6 +95,7 @@ impl LayoutCache<'_> {
                 },
                 TypeDec::Service(_) => unreachable!("the linker rejects services as types"),
             },
+            TypeTag::List(_) => todo!(),
         }
     }
 
@@ -135,6 +136,7 @@ impl LayoutCache<'_> {
                 }
                 _ => false,
             },
+            TypeTag::List(_) => todo!(),
         }
     }
 

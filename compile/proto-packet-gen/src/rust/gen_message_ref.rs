@@ -171,6 +171,7 @@ pub(crate) fn gen_read(typing: Typing<'_>, tag: &TypeTag) -> String {
             "unsafe {{ {}::new_unchecked(value) }}",
             generated_path(tag, "Ref")
         ),
+        TypeTag::List(_) => todo!(),
     }
 }
 

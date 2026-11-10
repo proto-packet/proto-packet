@@ -37,6 +37,7 @@ pub(crate) fn ref_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
         TypeTag::Special(SpecialType::String) => "&'a str".to_string(),
         TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
         TypeTag::Named(_) => format!("{}<'a>", generated_path(tag, "Ref")),
+        TypeTag::List(_) => todo!(),
     }
 }
 
@@ -47,6 +48,7 @@ pub(crate) fn setter_value_type(tag: &TypeTag) -> String {
         TypeTag::Special(SpecialType::Uuid) => UUID.to_string(),
         TypeTag::Special(SpecialType::String) => "&str".to_string(),
         TypeTag::Named(name) => type_path(name.to_ref()),
+        TypeTag::List(_) => todo!(),
     }
 }
 

@@ -12,6 +12,9 @@ pub enum TypeTag {
 
     /// A named type.
     Named(QualifiedName),
+
+    /// A list of the element type.
+    List(Box<TypeTag>),
 }
 
 impl TypeTag {
@@ -20,6 +23,11 @@ impl TypeTag {
     /// Checks if the type is a string.
     pub fn is_string(&self) -> bool {
         matches!(self, Self::Special(SpecialType::String))
+    }
+
+    /// Checks if the type is a list.
+    pub fn is_list(&self) -> bool {
+        matches!(self, Self::List(_))
     }
 }
 
@@ -47,6 +55,7 @@ impl Display for TypeTag {
             Self::Primitive(primitive) => write!(f, "{}", primitive),
             Self::Special(special) => write!(f, "{}", special),
             Self::Named(name) => write!(f, "{}", name),
+            Self::List(element) => write!(f, "[]{}", element),
         }
     }
 }

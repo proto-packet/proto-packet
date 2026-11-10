@@ -43,6 +43,7 @@ impl Typing<'_> {
                 RustType::from(self.prelude(PreludeName::String))
             }
             TypeTag::Named(name) => RustType::from(type_path(name.to_ref())),
+            TypeTag::List(_) => todo!(),
         }
     }
 }
@@ -94,6 +95,7 @@ impl Typing<'_> {
                 }
                 _ => false,
             },
+            TypeTag::List(_) => todo!(),
         }
     }
 
