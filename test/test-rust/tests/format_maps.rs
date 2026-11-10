@@ -5,9 +5,10 @@ use proto_packet::io::{DecodeError, MapRef, MapView};
 use proto_packet::types::{Bytes, Float64};
 use proto_packet_test::format::examples::{Color, Entry, EntryView, Point, PointView};
 use proto_packet_test::format::maps::{
-    MapCases, MapCasesRef, MapCasesView, MapKinds, MapKindsBuf, MapKindsRef, MapKindsView,
-    NestedKeys, NestedKeysRef, NewerKey, NewerKeyRef, NewerKeys, NewerKeysRef, OlderKeys, Scores,
-    ScoresBuf, ScoresMut, ScoresRef, ScoresView, Tagged, WithMaps, WithMapsRef,
+    KeyedCases, KeyedMessage, KeyedStruct, MapCases, MapCasesRef, MapCasesView, MapKinds,
+    MapKindsBuf, MapKindsRef, MapKindsView, NestedKeys, NestedKeysRef, NewerKey, NewerKeyRef,
+    NewerKeys, NewerKeysRef, OlderKeys, Scores, ScoresBuf, ScoresMut, ScoresRef, ScoresView,
+    Tagged, WithMaps, WithMapsRef,
 };
 use proto_packet_test::format::variants::NewerCases;
 use std::collections::BTreeMap;
@@ -248,9 +249,89 @@ fn simple_keys_are_text_in_json() {
     assert_eq!(serde_json::from_str::<MapKinds>(&json).unwrap(), value);
 }
 
+/// Gets a map with keys that aren't text in JSON.
+fn points() -> BTreeMap<Point, u8> {
+    BTreeMap::from([(Point::new(1, 2), 3), (Point::new(4, 5), 6)])
+}
+
+/// The JSON of the points.
+const POINTS_JSON: &str = r#"[[{"x":1,"y":2},3],[{"x":4,"y":5},6]]"#;
+
 #[test]
-fn struct_keys_are_not_json() {
-    assert!(serde_json::to_string(&map_kinds()).is_err());
+fn keys_that_are_not_text_are_entries_in_json() {
+    let value: MapKinds = map_kinds();
+    let json: String = serde_json::to_string(&value).unwrap();
+    let by_point: &str = concat!(
+        r#""by_point":[[{"x":1,"y":2},{"id":3,"text":"three"}],"#,
+        r#"[{"x":1,"y":3},{"id":4,"text":""}]]"#
+    );
+    assert!(json.contains(by_point), "{}", json);
+    assert_eq!(serde_json::from_str::<MapKinds>(&json).unwrap(), value);
+
+    assert_json(
+        &KeyedStruct::new(points(), None),
+        &format!(r#"{{"by_point":{}}}"#, POINTS_JSON),
+    );
+    assert_json(
+        &KeyedStruct::new(BTreeMap::default(), Some(points())),
+        &format!(r#"{{"by_point":[],"maybe":{}}}"#, POINTS_JSON),
+    );
+}
+
+#[test]
+fn messages_and_variants_hold_entries_in_json() {
+    let message: KeyedMessage = KeyedMessage::default()
+        .with_by_point(points())
+        .with_rounds(vec![points(), BTreeMap::default()])
+        .with_nested(BTreeMap::from([(7, points())]));
+    assert_json(
+        &message,
+        &format!(
+            r#"{{"by_point":{0},"rounds":[{0},[]],"nested":{{"7":{0}}}}}"#,
+            POINTS_JSON
+        ),
+    );
+    assert_json(
+        &KeyedCases::ByPoint(points()),
+        &format!(r#"{{"var":"ByPoint","val":{}}}"#, POINTS_JSON),
+    );
+    assert_json(&KeyedCases::Number(1), r#"{"var":"Number","val":1}"#);
+}
+
+#[test]
+fn keys_with_a_message_inside_are_entries_in_json() {
+    let value: NestedKeys = NestedKeys::new(
+        BTreeMap::from([(
+            Tagged::new(1, newer_key(1, 2, 3)),
+            Entry::new(1, "a".to_string()),
+        )]),
+        BTreeMap::from([(vec![newer_key(1, 2, 3)], 4)]),
+    );
+    assert_json(
+        &value,
+        concat!(
+            r#"{"by_struct":[[{"id":1,"key":{"a":1,"b":2,"c":3}},{"id":1,"text":"a"}]],"#,
+            r#""by_list":[[[{"a":1,"b":2,"c":3}],4]]}"#
+        ),
+    );
+}
+
+#[test]
+fn json_rejects_invalid_entries() {
+    for json in [
+        r#"{"by_point":{}}"#,                                    // an object
+        r#"{"by_point":[[{"x":1,"y":2},3],[{"x":1,"y":2},4]]}"#, // a repeated key
+        r#"{"by_point":[[{"x":1,"y":2}]]}"#,                     // an entry with no value
+        r#"{"by_point":[[{"x":1,"y":2},3,4]]}"#,                 // an entry with two values
+        r#"{"by_point":[{"x":1,"y":2},3]}"#,                     // an entry that isn't a list
+    ] {
+        assert!(
+            serde_json::from_str::<KeyedStruct>(json).is_err(),
+            "{}",
+            json
+        );
+    }
+    assert!(serde_json::from_str::<Scores>(r#"{"scores":[["a",1]]}"#).is_err());
 }
 
 /// Gets the score of the `name` & the entries of any form of the scores.

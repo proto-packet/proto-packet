@@ -115,3 +115,36 @@ struct NestedKeys {
     // A map with list keys.
     by_list: map<[]NewerKey, u8>;
 }
+
+// A struct with maps that have keys that aren't text in JSON.
+struct KeyedStruct {
+
+    // A map with struct keys.
+    by_point: map<Point, u8>;
+
+    // An optional map with struct keys.
+    maybe: optional map<Point, u8>;
+}
+
+// A message with maps that have keys that aren't text in JSON.
+message KeyedMessage {
+
+    // A map with struct keys.
+    by_point: map<Point, u8> = 1;
+
+    // A list of such maps.
+    rounds: []map<Point, u8> = 2;
+
+    // A map of such maps.
+    nested: map<u8, map<Point, u8>> = 3;
+}
+
+// A variant with a map that has keys that aren't text in JSON.
+variant KeyedCases {
+
+    // A map with struct keys.
+    ByPoint: map<Point, u8> = 1;
+
+    // A number.
+    Number: u32 = 2;
+}
