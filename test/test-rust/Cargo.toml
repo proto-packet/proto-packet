@@ -16,3 +16,7 @@ proto-packet = { path = "../../dep/dep-rust", features = ["service"] }
 serde_json = "1.0.154"
 tokio = { version = "1.54.1", features = ["macros", "rt"] }
 tower = { version = "0.5.3", features = ["util"] }
+
+[[bench]]
+name = "codec"
+harness = false
