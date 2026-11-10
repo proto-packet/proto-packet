@@ -5,8 +5,10 @@ This document specifies the JSON form of ProtoPacket values.
 | Type            | JSON                                                           |
 |-----------------|----------------------------------------------------------------|
 | `bool`          | A boolean.                                                     |
-| `u8` to `u128`  | A number.                                                      |
-| `i8` to `i128`  | A number.                                                      |
+| `u8` to `u32`   | A number.                                                      |
+| `i8` to `i32`   | A number.                                                      |
+| `u64`, `u128`   | A string of the number.                                        |
+| `i64`, `i128`   | A string of the number.                                        |
 | `f32`, `f64`    | A string of the number, or of a name if it isn't finite.       |
 | time types      | A string of the integer the time is stored as.                 |
 | `decimal<S>`    | A string of the number, with all `S` of its fraction digits.   |
@@ -20,19 +22,31 @@ This document specifies the JSON form of ProtoPacket values.
 | variant         | `{"var": <case name>, "val": <value>}`                         |
 
 A renamed field or case keeps its schema name. Keys can be in any order, & other keys are ignored.
+A `null` is read as an absent field, & writers leave an absent field out.
 
-A float is a string, so that it reads back as the exact float that was written. (ex: `"1.5"`) A
-JSON parser can round a plain number to another float, so readers reject one. A float that isn't
-finite is `"NaN"`, `"Infinity"` or `"-Infinity"`.
+## Numbers In Strings
 
-A time is a string because many JSON parsers read a plain number as a float, which can't hold every
-integer. (ex: `"1700000000000000000"`)
+Many JSON parsers read a plain number as a float, which can't hold every number. So these types are
+strings, & readers reject a plain number for one.
 
-A decimal is a string for the same reason as a float. (ex: `"1.50"`) A reader takes fewer fraction
-digits than its scale, but not more, & no exponent. (ex: `"1.5"`)
+- A `u64`, `i64`, `u128` or `i128` is its digits. (ex: `"18446744073709551615"`)
+- A time is the integer it is stored as. (ex: `"1700000000000"` for a `timestamp`)
+- A float is the shortest number that reads back as the same float. (ex: `"1.5"`) A float that
+  isn't finite is `"NaN"`, `"Infinity"` or `"-Infinity"`.
+- A decimal has all `S` of its fraction digits. (ex: `"1.50"`) A reader takes fewer fraction digits
+  than its scale, but not more. (ex: `"1.5"`)
+
+The number in the string is written as JSON writes a number. It has no `+` before it, no leading
+zeros, no space & a digit on each side of a `.`. Only a float can have an exponent. (ex: `"1e-7"`)
+
+## Bytes
+
+Base-64 has the standard alphabet, with `+` & `/`, & its `=` padding. (ex: `"CQg="`)
+
+## Maps
 
 A map's key is the text of its JSON, so a number or a `bool` is quoted. (ex: `{"1": true}`) A
-`[]u8` key is its base-64.
+`[]u8` key is its base-64. A map can't repeat a key.
 
 A key that is a struct, message, variant, list or map isn't text. Its map is an array of the
 entries, each an array of the key & the value:
@@ -73,8 +87,9 @@ Readers reject JSON when:
 - A field, tag number, `var` or `val` is repeated.
 - A field is given by name & by tag number.
 - A key is an invalid tag number.
-- A tag-numbered value isn't valid base-64, or isn't valid for a field or case the reader knows.
-- A float isn't a string of a decimal number or of one of its names, or is out of the range of its
-  type.
+- A tag-numbered value isn't valid for a field or case the reader knows.
+- Base-64 isn't valid, or doesn't have its padding.
+- A number in a string isn't written as JSON writes a number, or is out of the range of its type.
+- A type that is a number in a string is a plain number.
 - A map is an object where its key isn't text, or an array where it is.
-- An array of entries repeats a key, or an entry isn't a key & a value.
+- A map repeats a key, or an entry of an array isn't a key & a value.
