@@ -70,7 +70,6 @@ The lists & the maps are missing from some of the generated code.
   it) (`gen_struct.rs`, `gen_struct_mut.rs`, `gen_message_mut.rs` & `gen_variant_mut.rs`)
 - An array has no setter in place, though its length never changes. (ex: a setter of the whole
   array, or of one element) (`gen_struct_mut.rs`)
-- An array of bytes is read in place as a list of `u8`, not as a `&[u8; N]`. (`values.rs`)
 - A native array is inline, so a large one is a large value on the stack. (ex: box an array over a
   size) (`typing.rs`)
 - The `MapView` trait looks up a value by the key's own type, so a `string` key is a `&String`. (ex:
