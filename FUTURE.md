@@ -74,6 +74,18 @@ The lists & the maps are missing from some of the generated code.
 - A writer encodes each key that is ordered by its bytes twice, once to sort the keys & once to
   write them. (ex: write the keys from the sorted bytes) (`dep/dep-rust/src/io/list/map_ref.rs`)
 
+### Views
+
+A `View` trait encodes any type that has its getters, with these limits. (`gen_view_encoding.rs`)
+
+- A map of a view is a `BTreeMap` or a `MapRef`, since a writer trusts the order of its keys. So a
+  map can't be written from borrowed entries. (ex: a map view that checks the order of its keys)
+- A view has no unknown fields or cases, so only the generated forms keep theirs.
+- An encoded form inside a view is validated again when it is written, to check its depth. (ex: skip
+  the check for a type that can't nest deeper than the levels left)
+- The encoding of a view isn't a `Buf` until it is validated, since a view can give another value
+  each time it is read. (ex: a `Buf` from a view that validates its encoding)
+
 ### Decimals
 
 A `decimal<S>` is an `i64` of units, so it holds about 18 digits. (`dep/dep-rust/src/types/decimal.rs`)
