@@ -56,6 +56,10 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
                 "if {}.is_some() {{ count += 1; values += {}; }}",
                 name, size
             ),
+            None if tagged.field.tag.is_list() => format!(
+                "if let Some(value) = &{} {{ count += 1; values += {}::list_encoded_len(value); }}",
+                name, IO
+            ),
             None => {
                 let len: &str = if tagged.field.tag.is_string() {
                     "len"

@@ -6,6 +6,7 @@ use proto_packet::types::Float64;
 use proto_packet_test::format::examples::{Color, Entry, Line, Point};
 use proto_packet_test::format::lists::{
     Lines, ListKinds, ListKindsRef, Nested, NestedRef, Numbers, NumbersRef, Texts, TextsRef,
+    WithLists, WithListsRef,
 };
 use proto_packet_test::format::messages::Item;
 use proto_packet_test::format::variants::Shape;
@@ -262,6 +263,63 @@ fn rejects_invalid_elements() {
         ListKinds::decode(&flags(2)),
         Err(DecodeError::InvalidBool { value: 2 })
     );
+}
+
+#[test]
+fn messages_hold_lists() {
+    let bytes: [u8; 20] = [
+        2, 0, // count
+        1, 0, 2, 0, // tags
+        2, 0, 0, 0, // ends
+        9, 8, // bytes
+        7, 0, 0, 0, 6, 0, 0, 0, // numbers
+    ];
+    let value: WithLists = WithLists::default()
+        .with_bytes(vec![9, 8])
+        .with_numbers(vec![7, 6]);
+    assert_encoding!(WithLists, value, &bytes);
+
+    let view: WithListsRef = WithListsRef::new(&bytes).unwrap();
+    assert_eq!(view.bytes().unwrap().as_bytes(), [9, 8]);
+    assert_eq!(view.numbers().unwrap().decode(), [7, 6]);
+    assert!(view.texts().is_none());
+}
+
+#[test]
+fn messages_tell_absent_lists_from_empty_lists() {
+    let empty: WithLists = WithLists::default().with_texts(Vec::default());
+    assert_encoding!(WithLists, empty.clone(), &[1, 0, 3, 0]);
+    assert_eq!(empty.texts(), Some(&[][..]));
+    assert_eq!(WithLists::default().texts(), None);
+}
+
+#[test]
+fn messages_hold_lists_of_every_kind() {
+    let child: WithLists = WithLists::default().with_texts(vec!["child".to_string()]);
+    let value: WithLists = WithLists::default()
+        .with_bytes(vec![1])
+        .with_texts(vec!["a".to_string(), "bc".to_string()])
+        .with_points(vec![Point::new(1, 2), Point::new(3, 4)])
+        .with_entries(vec![Entry::new(5, "five".to_string())])
+        .with_children(vec![child.clone(), WithLists::default()]);
+    let bytes: Vec<u8> = value.encode();
+    assert_encoding!(WithLists, value.clone(), &bytes);
+
+    let view: WithListsRef = WithListsRef::new(&bytes).unwrap();
+    assert_eq!(view.points().unwrap().get(1).unwrap().x(), 3);
+    assert_eq!(view.entries().unwrap().get(0).unwrap().text(), "five");
+    let children: ListRef<WithLists> = view.children().unwrap();
+    assert_eq!(children.len(), 2);
+    assert_eq!(children.get(0).unwrap().decode(), child);
+
+    let json: String = serde_json::to_string(&value).unwrap();
+    assert_eq!(serde_json::from_str::<WithLists>(&json).unwrap(), value);
+}
+
+#[test]
+fn messages_reject_invalid_lists() {
+    let bytes: [u8; 7] = [1, 0, 2, 0, 7, 0, 0];
+    assert_eq!(WithLists::decode(&bytes), Err(DecodeError::InvalidList));
 }
 
 #[test]

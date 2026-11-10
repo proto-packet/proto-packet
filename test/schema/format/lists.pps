@@ -36,6 +36,28 @@ struct Nested {
     rows: [][]u8;
 }
 
+// A message with lists.
+message WithLists {
+
+    // The bytes.
+    bytes: []u8 = 1;
+
+    // The numbers.
+    numbers: []u32 = 2;
+
+    // The strings.
+    texts: []string = 3;
+
+    // The fixed structs.
+    points: []Point = 4;
+
+    // The variable structs.
+    entries: []Entry = 5;
+
+    // The messages, of its own type.
+    children: []WithLists = 6;
+}
+
 // A struct with a list of each kind of element.
 struct ListKinds {
 

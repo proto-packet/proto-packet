@@ -34,7 +34,7 @@ pub(crate) fn gen_message_mut(
         .with_statement(gen_mut_construction(&name, &ref_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_mut_properties(&any_lifetime, &ref_name));
-    if !fields.is_empty() {
+    if fields.iter().any(|tagged| !tagged.field.tag.is_list()) {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_fields(typing, fields, &any_lifetime));
     }
@@ -45,6 +45,9 @@ pub(crate) fn gen_message_mut(
 fn gen_fields(typing: Typing<'_>, fields: &[TaggedField<'_>], mut_type: &RustType) -> ImplBlock {
     let mut result: ImplBlock = ImplBlock::from(mut_type.clone()).with_comment(" Fields");
     for tagged in fields {
+        if tagged.field.tag.is_list() {
+            continue;
+        }
         let mut function: Function = if is_struct(typing, tagged.field) {
             gen_message_child(*tagged, "self.bytes")
         } else {

@@ -107,6 +107,11 @@ pub(crate) fn gen_value_check(typing: Typing<'_>, tag: &TypeTag, size: Option<us
             )
         }
         (_, Some(size)) => format!("{}::check_exact_len(value, {})?;", IO, size),
+        (TypeTag::List(element), None) => format!(
+            "{}::<{}>::new(value)?;",
+            LIST_REF,
+            typing.rust_type(element)
+        ),
         (_, None) => format!("{}::new(value)?;", generated_path(tag, "Ref")),
     }
 }
@@ -241,6 +246,7 @@ fn gen_decoded_field(typing: Typing<'_>, tagged: TaggedField<'_>) -> String {
     match tagged.field.tag {
         TypeTag::Special(SpecialType::String) => format!("{}.to_string()", read),
         TypeTag::Named(_) if !typing.is_enum(tagged.field.tag) => format!("{}.decode()", read),
+        TypeTag::List(_) => format!("{}.decode()", read),
         _ => read,
     }
 }

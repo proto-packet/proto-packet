@@ -10,7 +10,9 @@ use crate::rust::gen_element::gen_element;
 use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
 use crate::rust::gen_message_mut::{gen_message_buf_accessors, gen_message_mut};
 use crate::rust::gen_message_ref::gen_message_ref;
-use crate::rust::gen_struct::{check_type_name, gen_accessor, gen_decoding};
+use crate::rust::gen_struct::{
+    check_list_elements, check_type_name, gen_accessor, gen_decoding, view_fields,
+};
 use crate::rust::gen_struct_mut::{check_mut_names, is_struct, mut_name};
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::gen_view::{gen_view, view_name};
@@ -76,6 +78,11 @@ pub fn gen_message(
             is_boxed: field.is_boxed(),
         })
         .collect();
+    check_list_elements(
+        project,
+        &format!("{}.{}", mod_path, message.type_name()),
+        fields.iter().map(|field| (field.name.value(), field.tag)),
+    )?;
     let layout: MessageLayout = MessageLayout::new(project, message);
     let accessors: Vec<String> = fields
         .iter()
@@ -163,11 +170,11 @@ pub fn gen_message(
         },
         TypeFile {
             suffix: "_view",
-            code: gen_view(typing, schema_name, &fields, &type_name),
+            code: gen_view(typing, schema_name, &view_fields(&fields), &type_name),
         },
         TypeFile {
             suffix: "_view_mut",
-            code: gen_view_mut(typing, schema_name, &fields, &type_name, true),
+            code: gen_view_mut(typing, schema_name, &view_fields(&fields), &type_name, true),
         },
     ])
 }
