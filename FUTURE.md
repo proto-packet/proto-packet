@@ -86,11 +86,10 @@ A `decimal<S>` is an `i64` of units, so it holds about 18 digits. (`dep/dep-rust
 
 ### Recursive Types
 
-A `Ref` type validates its nested values by recursion, so a struct, message or variant that contains
-itself recurses once for each level in its bytes. Nothing limits the depth, so crafted bytes
-overflow the stack & abort the process. (ex: 200,000 levels of `ListNode`, 2.4 MB, overflow an 8 MB
-stack) Decoding & dropping the decoded value recurse the same way. (ex: a depth limit with a
-`DecodeError`) (`gen_struct_ref.rs`, `gen_message_ref.rs` & `gen_variant_ref.rs`)
+A reader rejects a value that nests more than 64 levels, but a writer doesn't check the depth. A
+native value that nests deeper encodes to bytes that readers reject, & encoding or dropping it
+recurses once for each level. (ex: a value read from JSON that nests 100 levels) (ex: a depth check
+when encoding) (`gen_struct.rs`, `gen_message.rs` & `gen_variant.rs`)
 
 ## Compile
 
