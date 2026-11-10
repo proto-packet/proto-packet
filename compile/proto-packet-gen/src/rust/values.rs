@@ -19,17 +19,22 @@ pub(crate) const MAP_REF: &str = "proto_packet::io::MapRef";
 /// # Note
 /// - A float is the runtime's type with one NaN, so the generated types have `Eq`, `Ord` & `Hash`.
 /// - A time is the runtime's type for it, so its unit can't be mixed up.
-pub(crate) const fn primitive_type(primitive: PrimitiveType) -> &'static str {
-    match primitive {
-        PrimitiveType::Float32 => "proto_packet::types::Float32",
-        PrimitiveType::Float64 => "proto_packet::types::Float64",
-        PrimitiveType::Timestamp => "proto_packet::types::Timestamp",
-        PrimitiveType::Microtime => "proto_packet::types::Microtime",
-        PrimitiveType::Nanotime => "proto_packet::types::Nanotime",
-        PrimitiveType::Date => "proto_packet::types::Date",
-        PrimitiveType::Duration => "proto_packet::types::Duration",
-        _ => primitive.name(),
-    }
+/// - A decimal is the runtime's type with its scale, so two scales can't be mixed up.
+pub(crate) fn primitive_type(primitive: PrimitiveType) -> String {
+    let runtime: &str = match primitive {
+        PrimitiveType::Float32 => "Float32",
+        PrimitiveType::Float64 => "Float64",
+        PrimitiveType::Timestamp => "Timestamp",
+        PrimitiveType::Microtime => "Microtime",
+        PrimitiveType::Nanotime => "Nanotime",
+        PrimitiveType::Date => "Date",
+        PrimitiveType::Duration => "Duration",
+        PrimitiveType::Decimal { scale } => {
+            return format!("proto_packet::types::Decimal<{}>", scale);
+        }
+        _ => return primitive.name().to_string(),
+    };
+    format!("proto_packet::types::{}", runtime)
 }
 
 /// Gets the integer type of the bits of the `primitive`, if it's a float. (ex: `u32` for `f32`)
@@ -44,7 +49,7 @@ pub(crate) const fn float_bits(primitive: PrimitiveType) -> Option<&'static str>
 /// Gets the type of a value of the `tag`, read from a `Ref` type.
 pub(crate) fn ref_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
     match tag {
-        TypeTag::Primitive(primitive) => primitive_type(*primitive).to_string(),
+        TypeTag::Primitive(primitive) => primitive_type(*primitive),
         TypeTag::Special(SpecialType::Uuid) => UUID.to_string(),
         TypeTag::Special(SpecialType::String) => "&'a str".to_string(),
         TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
@@ -62,7 +67,7 @@ pub(crate) fn ref_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
 /// Gets the type of a value of the scalar or string `tag`, given to a setter.
 pub(crate) fn setter_value_type(tag: &TypeTag) -> String {
     match tag {
-        TypeTag::Primitive(primitive) => primitive_type(*primitive).to_string(),
+        TypeTag::Primitive(primitive) => primitive_type(*primitive),
         TypeTag::Special(SpecialType::Uuid) => UUID.to_string(),
         TypeTag::Special(SpecialType::String) => "&str".to_string(),
         TypeTag::Named(name) => type_path(name.to_ref()),

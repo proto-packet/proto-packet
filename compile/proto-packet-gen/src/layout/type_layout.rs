@@ -41,7 +41,7 @@ pub(crate) const fn primitive_size(primitive: PrimitiveType) -> usize {
         | PrimitiveType::Nanotime
         | PrimitiveType::Duration => 8,
         PrimitiveType::UnsignedInt128 | PrimitiveType::SignedInt128 => 16,
-        PrimitiveType::Decimal { .. } => todo!(),
+        PrimitiveType::Decimal { .. } => 8,
     }
 }
 
