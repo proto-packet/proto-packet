@@ -69,8 +69,6 @@ The lists & the maps are missing from some of the generated code.
   `gen_variant_mut.rs`)
 - The `MapView` trait looks up a value by the key's own type, so a `string` key is a `&String`. (ex:
   look up by the borrowed key, like `&str`) (`dep/dep-rust/src/io/list/map_view.rs`)
-- A map with a key that is a struct, message, variant, list or map fails to write as JSON, since a
-  JSON key is text. (ex: an array of the entries)
 - A reader checks the order of the keys of a map by decoding them, unless the key is a number, a
   `bool`, a `uuid`, a `string` or ordered by its bytes. (`dep/dep-rust/src/io/list/element.rs`)
 - A writer encodes each key that is ordered by its bytes twice, once to sort the keys & once to
