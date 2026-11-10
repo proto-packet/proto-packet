@@ -2,7 +2,7 @@ mod common;
 
 use common::{ID, assert_json};
 use proto_packet::io::{DecodeError, ListRef};
-use proto_packet::types::Float64;
+use proto_packet::types::{Bytes, Float64};
 use proto_packet_test::format::examples::{Color, Entry, Line, Point};
 use proto_packet_test::format::lists::{
     Lines, ListCases, ListCasesCase, ListCasesRef, ListKinds, ListKindsRef, Nested, NestedRef,
@@ -51,7 +51,7 @@ fn texts() -> Texts {
 /// Gets a struct with a list of each kind of element.
 fn list_kinds() -> ListKinds {
     ListKinds::new(
-        vec![1, 2, 3],
+        Bytes::from([1, 2, 3]),
         vec![true, false],
         vec![-1, i64::MIN],
         vec![Float64::new(1.5), Float64::NAN],
@@ -148,11 +148,15 @@ fn lists_nest() {
         &[3],
     ]
     .concat();
-    let value: Nested = Nested::new(vec![vec![1, 2], Vec::default(), vec![3]]);
+    let value: Nested = Nested::new(vec![
+        Bytes::from([1, 2]),
+        Bytes::default(),
+        Bytes::from([3]),
+    ]);
     assert_encoding!(Nested, value, &bytes);
 
     let nested: NestedRef = NestedRef::new(&bytes).unwrap();
-    let rows: Vec<&[u8]> = nested.rows().iter().map(ListRef::as_bytes).collect();
+    let rows: Vec<&[u8]> = nested.rows().iter().collect();
     assert_eq!(rows, [&[1_u8, 2][..], &[], &[3]]);
 }
 
@@ -163,7 +167,7 @@ fn every_kind_round_trips() {
     assert_encoding!(ListKinds, value.clone(), &bytes);
 
     let kinds: ListKindsRef = ListKindsRef::new(&bytes).unwrap();
-    assert_eq!(kinds.bytes().as_bytes(), [1, 2, 3]);
+    assert_eq!(kinds.bytes(), [1, 2, 3]);
     assert_eq!(kinds.flags().iter().collect::<Vec<bool>>(), [true, false]);
     assert_eq!(kinds.signed().get(1), Some(i64::MIN));
     assert_eq!(kinds.floats().get(1), Some(Float64::NAN));
@@ -275,12 +279,12 @@ fn messages_hold_lists() {
         7, 0, 0, 0, 6, 0, 0, 0, // numbers
     ];
     let value: WithLists = WithLists::default()
-        .with_bytes(vec![9, 8])
+        .with_bytes(Bytes::from([9, 8]))
         .with_numbers(vec![7, 6]);
     assert_encoding!(WithLists, value, &bytes);
 
     let view: WithListsRef = WithListsRef::new(&bytes).unwrap();
-    assert_eq!(view.bytes().unwrap().as_bytes(), [9, 8]);
+    assert_eq!(view.bytes().unwrap(), [9, 8]);
     assert_eq!(view.numbers().unwrap().decode(), [7, 6]);
     assert!(view.texts().is_none());
 }
@@ -297,7 +301,7 @@ fn messages_tell_absent_lists_from_empty_lists() {
 fn messages_hold_lists_of_every_kind() {
     let child: WithLists = WithLists::default().with_texts(vec!["child".to_string()]);
     let value: WithLists = WithLists::default()
-        .with_bytes(vec![1])
+        .with_bytes(Bytes::from([1]))
         .with_texts(vec!["a".to_string(), "bc".to_string()])
         .with_points(vec![Point::new(1, 2), Point::new(3, 4)])
         .with_entries(vec![Entry::new(5, "five".to_string())])
@@ -329,7 +333,7 @@ fn variants_hold_lists() {
         ListCases::Numbers(vec![7, 6]),
         &[2, 0, 7, 0, 0, 0, 6, 0, 0, 0]
     );
-    assert_encoding!(ListCases, ListCases::Blob(Vec::default()), &[1, 0]);
+    assert_encoding!(ListCases, ListCases::Blob(Bytes::default()), &[1, 0]);
     assert_encoding!(
         ListCases,
         ListCases::Texts(vec!["hi".to_string()]),
@@ -378,6 +382,39 @@ fn variant_lists_are_arrays_in_json() {
 }
 
 #[test]
+fn bytes_are_base_64_in_json() {
+    assert_json(
+        &WithLists::default().with_bytes(Bytes::from([9, 8])),
+        r#"{"bytes":"CQg="}"#,
+    );
+    assert_json(
+        &ListCases::Blob(Bytes::from([1, 2, 3])),
+        r#"{"var":"Blob","val":"AQID"}"#,
+    );
+    assert_json(
+        &ListCases::Blob(Bytes::default()),
+        r#"{"var":"Blob","val":""}"#,
+    );
+    for json in [
+        r#"{"bytes":[9,8]}"#,  // a list of numbers
+        r#"{"bytes":"!!!!"}"#, // invalid base-64
+        r#"{"bytes":9}"#,      // a number
+    ] {
+        assert!(serde_json::from_str::<WithLists>(json).is_err(), "{}", json);
+    }
+}
+
+#[test]
+fn bytes_read_as_slices() {
+    let value: WithLists = WithLists::default().with_bytes(Bytes::from([9, 8]));
+    assert_eq!(value.bytes(), Some(&[9_u8, 8][..]));
+    let bytes: Bytes = vec![1, 2].into();
+    assert_eq!(bytes.len(), 2);
+    assert_eq!(bytes.as_bytes(), [1, 2]);
+    assert_eq!(Vec::from(bytes), [1, 2]);
+}
+
+#[test]
 fn lists_are_arrays_in_json() {
     assert_json(
         &Numbers::new(7, vec![1, 2]),
@@ -385,8 +422,8 @@ fn lists_are_arrays_in_json() {
     );
     assert_json(&texts(), r#"{"texts":["hi","","yo!"]}"#);
     assert_json(
-        &Nested::new(vec![vec![1, 2], Vec::default()]),
-        r#"{"rows":[[1,2],[]]}"#,
+        &Nested::new(vec![Bytes::from([1, 2]), Bytes::default()]),
+        r#"{"rows":["AQI=",""]}"#,
     );
     let value: ListKinds = list_kinds();
     let json: String = serde_json::to_string(&value).unwrap();

@@ -2,7 +2,7 @@ mod common;
 
 use common::assert_json;
 use proto_packet::io::{DecodeError, MapRef};
-use proto_packet::types::Float64;
+use proto_packet::types::{Bytes, Float64};
 use proto_packet_test::format::examples::{Color, Entry, Point};
 use proto_packet_test::format::maps::{
     MapCases, MapCasesRef, MapKinds, MapKindsRef, Scores, ScoresRef, WithMaps, WithMapsRef,
@@ -49,8 +49,8 @@ fn map_kinds() -> MapKinds {
             (Point::new(1, 3), Entry::new(4, String::default())),
         ]),
         BTreeMap::from([
-            ("a".to_string(), vec![1, 2]),
-            ("b".to_string(), Vec::default()),
+            ("a".to_string(), Bytes::from([1, 2])),
+            ("b".to_string(), Bytes::default()),
         ]),
         BTreeMap::from([(1, BTreeMap::from([(2, 3)])), (4, BTreeMap::default())]),
         Some(BTreeMap::from([(-1, Float64::new(1.5)), (5, Float64::NAN)])),
@@ -97,7 +97,7 @@ fn every_kind_round_trips() {
     assert_eq!(kinds.by_number().get(7), Some(false));
     assert_eq!(kinds.by_color().get(Color::Red), Some("red"));
     assert_eq!(kinds.by_point().len(), 2);
-    assert_eq!(kinds.lists().get("a").unwrap().as_bytes(), [1, 2]);
+    assert_eq!(kinds.lists().get("a").unwrap(), [1, 2]);
     assert_eq!(kinds.maps().get(1).unwrap().get(2), Some(3));
     assert!(kinds.maps().get(4).unwrap().is_empty());
     assert_eq!(kinds.maybe().unwrap().get(5), Some(Float64::NAN));

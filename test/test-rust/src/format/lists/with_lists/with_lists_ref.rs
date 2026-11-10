@@ -17,9 +17,7 @@ impl<'a> WithListsRef<'a> {
         proto_packet::io::check_message(bytes)?;
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
-                1 => {
-                    proto_packet::io::ListRef::<u8>::new(value)?;
-                }
+                1 => {}
                 2 => {
                     proto_packet::io::ListRef::<u32>::new(value)?;
                 }
@@ -66,9 +64,9 @@ impl<'a> WithListsRef<'a> {
 
     /// Gets the field: `bytes`.
     #[must_use]
-    pub fn bytes(&self) -> Option<proto_packet::io::ListRef<'a, u8>> {
+    pub fn bytes(&self) -> Option<&'a [u8]> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 1) }?;
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(value)
     }
 
     /// Gets the field: `numbers`.
@@ -120,9 +118,7 @@ impl<'a> WithListsRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
             match tag {
                 1 => {
-                    result.set_bytes(
-                        unsafe { proto_packet::io::ListRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_bytes(proto_packet::types::Bytes::from(value));
                 }
                 2 => {
                     result.set_numbers(

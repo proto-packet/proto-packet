@@ -258,6 +258,8 @@ fn gen_decoding(
 fn gen_decoded_value(typing: Typing<'_>, case: Case<'_>) -> String {
     let value: &str = if case.tag.is_string() {
         "value.to_string()"
+    } else if case.tag.is_bytes() {
+        "proto_packet::types::Bytes::from(value)"
     } else if case.is_nested(typing) || case.tag.is_collection() {
         "value.decode()"
     } else {

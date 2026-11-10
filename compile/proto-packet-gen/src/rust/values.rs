@@ -8,6 +8,9 @@ use proto_packet_tree::{PrimitiveType, SpecialType, TypeTag};
 /// The type of a UUID.
 const UUID: &str = "proto_packet::types::Uuid";
 
+/// The type of the bytes of a `[]u8`.
+pub(crate) const BYTES: &str = "proto_packet::types::Bytes";
+
 /// The type of a list read from its bytes.
 pub(crate) const LIST_REF: &str = "proto_packet::io::ListRef";
 
@@ -54,6 +57,7 @@ pub(crate) fn ref_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
         TypeTag::Special(SpecialType::String) => "&'a str".to_string(),
         TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
         TypeTag::Named(_) => format!("{}<'a>", generated_path(tag, "Ref")),
+        TypeTag::List(_) if tag.is_bytes() => "&'a [u8]".to_string(),
         TypeTag::List(element) => format!("{}<'a, {}>", LIST_REF, typing.rust_type(element)),
         TypeTag::Map { key, value } => format!(
             "{}<'a, {}, {}>",

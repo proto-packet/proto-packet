@@ -19,9 +19,7 @@ impl<'a> ListCasesRef<'a> {
         proto_packet::io::check_tag_number(tag_number)?;
         let value: &'a [u8] = unsafe { bytes.get_unchecked(2..) };
         match tag_number {
-            1 => {
-                proto_packet::io::ListRef::<u8>::new(value)?;
-            }
+            1 => {}
             2 => {
                 proto_packet::io::ListRef::<u32>::new(value)?;
             }
@@ -73,9 +71,7 @@ impl<'a> ListCasesRef<'a> {
     pub fn case(&self) -> super::ListCasesCase<'a> {
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
         match self.tag_number() {
-            1 => super::ListCasesCase::Blob(unsafe {
-                proto_packet::io::ListRef::new_unchecked(value)
-            }),
+            1 => super::ListCasesCase::Blob(value),
             2 => super::ListCasesCase::Numbers(unsafe {
                 proto_packet::io::ListRef::new_unchecked(value)
             }),
@@ -97,12 +93,12 @@ impl<'a> ListCasesRef<'a> {
 
     /// Gets the value of the case: `Blob`.
     #[must_use]
-    pub fn as_blob(&self) -> Option<proto_packet::io::ListRef<'a, u8>> {
+    pub fn as_blob(&self) -> Option<&'a [u8]> {
         if self.tag_number() != 1 {
             return None;
         }
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(value)
     }
 
     /// Gets the value of the case: `Numbers`.
@@ -158,7 +154,9 @@ impl<'a> ListCasesRef<'a> {
             super::ListCasesCase::Unrecognized { tag_number, bytes } => {
                 super::ListCases::from_unknown(tag_number, bytes.to_vec())
             }
-            super::ListCasesCase::Blob(value) => super::ListCases::Blob(value.decode()),
+            super::ListCasesCase::Blob(value) => {
+                super::ListCases::Blob(proto_packet::types::Bytes::from(value))
+            }
             super::ListCasesCase::Numbers(value) => super::ListCases::Numbers(value.decode()),
             super::ListCasesCase::Texts(value) => super::ListCases::Texts(value.decode()),
             super::ListCasesCase::Points(value) => super::ListCases::Points(value.decode()),

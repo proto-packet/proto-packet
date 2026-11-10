@@ -257,6 +257,10 @@ fn gen_present_check(
             IO,
             read_entry("check_tail_entry", layout, index, "bytes")
         ),
+        (ValueLayout::Entry { index }, tag) if tag.is_bytes() => format!(
+            "{}?;",
+            read_entry("check_tail_entry", layout, index, "bytes")
+        ),
         (ValueLayout::Entry { index }, TypeTag::List(element)) => format!(
             "{}::<{}>::new({}?)?;",
             LIST_REF,
@@ -394,6 +398,10 @@ fn gen_read(
             layout.entries.len(),
             layout.fixed_size
         ),
+        (ValueLayout::Entry { index }, tag) if tag.is_bytes() => format!(
+            "unsafe {{ {} }}",
+            read_entry("read_tail_entry_unchecked", layout, index, BYTES)
+        ),
         (ValueLayout::Entry { index }, TypeTag::List(_)) => format!(
             "unsafe {{ {}::new_unchecked({}) }}",
             LIST_REF,
@@ -498,6 +506,12 @@ fn gen_decoded_field(typing: Typing<'_>, field: Field<'_>) -> String {
         }
         TypeTag::Special(SpecialType::String) => format!("{}.to_string()", getter),
         TypeTag::Named(_) if typing.is_enum(field.tag) => getter,
+        TypeTag::List(_) if field.tag.is_bytes() && field.is_optional => {
+            format!("{}.map({}::from)", getter, crate::rust::values::BYTES)
+        }
+        TypeTag::List(_) if field.tag.is_bytes() => {
+            format!("{}::from({})", crate::rust::values::BYTES, getter)
+        }
         TypeTag::Named(_) | TypeTag::List(_) | TypeTag::Map { .. } if field.is_optional => {
             format!("{}.map(|value| value.decode())", getter)
         }

@@ -17,9 +17,7 @@ impl<'a> ListKindsRef<'a> {
         proto_packet::io::check_len(bytes, 45)?;
         proto_packet::io::check_tail_ends(bytes, 0, 11, 45)?;
         proto_packet::io::check_unused_bits(bytes[44], 1)?;
-        proto_packet::io::ListRef::<u8>::new(proto_packet::io::check_tail_entry(
-            bytes, 0, 0, 12, 45, 1,
-        )?)?;
+        proto_packet::io::check_tail_entry(bytes, 0, 0, 12, 45, 1)?;
         proto_packet::io::ListRef::<bool>::new(proto_packet::io::check_tail_entry(
             bytes, 0, 1, 12, 45, 1,
         )?)?;
@@ -85,12 +83,8 @@ impl<'a> ListKindsRef<'a> {
 
     /// Gets the field: `bytes`.
     #[must_use]
-    pub fn bytes(&self) -> proto_packet::io::ListRef<'a, u8> {
-        unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 12, 45, 1,
-            ))
-        }
+    pub fn bytes(&self) -> &'a [u8] {
+        unsafe { proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 12, 45, 1) }
     }
 
     /// Gets the field: `flags`.
@@ -215,7 +209,7 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn decode(&self) -> super::ListKinds {
         super::ListKinds::new(
-            self.bytes().decode(),
+            proto_packet::types::Bytes::from(self.bytes()),
             self.flags().decode(),
             self.signed().decode(),
             self.floats().decode(),

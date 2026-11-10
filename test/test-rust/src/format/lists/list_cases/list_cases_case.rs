@@ -7,7 +7,7 @@ pub enum ListCasesCase<'a> {
     Unrecognized { tag_number: u16, bytes: &'a [u8] },
 
     /// The case: `Blob`.
-    Blob(proto_packet::io::ListRef<'a, u8>),
+    Blob(&'a [u8]),
 
     /// The case: `Numbers`.
     Numbers(proto_packet::io::ListRef<'a, u32>),

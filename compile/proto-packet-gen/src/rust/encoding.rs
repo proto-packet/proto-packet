@@ -44,7 +44,7 @@ fn gen_encoded_len(fields: &[Field<'_>], layout: &StructLayout) -> Function {
     for entry in &layout.entries {
         let field: Field<'_> = fields[entry.field];
         function.add_literal(gen_entry(field, |value: &str| {
-            let size: String = if field.tag.is_string() {
+            let size: String = if field.tag.is_string() || field.tag.is_bytes() {
                 format!("{}.len()", value)
             } else if field.tag.is_collection() {
                 format!(
@@ -110,7 +110,7 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout
     for (index, entry) in layout.entries.iter().enumerate() {
         let field: Field<'_> = fields[entry.field];
         statements.push(gen_entry(field, |value: &str| {
-            let write: String = if field.tag.is_string() {
+            let write: String = if field.tag.is_string() || field.tag.is_bytes() {
                 format!("out.extend_from_slice({}.as_bytes());", value)
             } else if field.tag.is_collection() {
                 format!(

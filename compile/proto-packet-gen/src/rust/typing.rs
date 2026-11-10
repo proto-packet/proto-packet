@@ -1,6 +1,6 @@
 use crate::rust::naming::type_path;
 use crate::rust::prelude::{Prelude, PreludeName};
-use crate::rust::values::primitive_type;
+use crate::rust::values::{BYTES, primitive_type};
 use code_gen::rust::{Reference, RustType};
 use proto_packet_tree::{
     Project, QualifiedName, SpecialType, Struct, TypeDec, TypeTag, WithTypeTag,
@@ -43,6 +43,7 @@ impl Typing<'_> {
                 RustType::from(self.prelude(PreludeName::String))
             }
             TypeTag::Named(name) => RustType::from(type_path(name.to_ref())),
+            TypeTag::List(_) if tag.is_bytes() => RustType::from(BYTES),
             TypeTag::List(element) => {
                 RustType::from(self.prelude(PreludeName::Vec)).with_generic(self.rust_type(element))
             }
@@ -135,7 +136,11 @@ impl Typing<'_> {
                 )
             }
             TypeTag::List(element) => {
-                let method: &str = if is_optional { "as_deref" } else { "as_slice" };
+                let method: &str = match (is_optional, tag.is_bytes()) {
+                    (true, _) => "as_deref",
+                    (false, true) => "as_bytes",
+                    (false, false) => "as_slice",
+                };
                 (
                     reference(RustType::from(format!("[{}]", self.rust_type(element)))),
                     format!("{}.{}()", field, method),

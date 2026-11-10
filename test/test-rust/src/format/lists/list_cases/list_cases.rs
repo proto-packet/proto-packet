@@ -7,7 +7,7 @@ pub enum ListCases {
     Unrecognized(unrecognized::UnrecognizedCase),
 
     /// The bytes.
-    Blob(Vec<u8>),
+    Blob(proto_packet::types::Bytes),
 
     /// The numbers.
     Numbers(Vec<u32>),
@@ -73,7 +73,7 @@ impl ListCases {
     #[must_use]
     pub fn as_blob(&self) -> Option<&[u8]> {
         match self {
-            Self::Blob(value) => Some(value.as_slice()),
+            Self::Blob(value) => Some(value.as_bytes()),
             _ => None,
         }
     }
@@ -123,7 +123,7 @@ impl ListCases {
     pub fn encoded_len(&self) -> usize {
         match self {
             Self::Unrecognized(case) => 2 + case.bytes.len(),
-            Self::Blob(value) => 2 + proto_packet::io::list_encoded_len(value),
+            Self::Blob(value) => 2 + value.len(),
             Self::Numbers(value) => 2 + proto_packet::io::list_encoded_len(value),
             Self::Texts(value) => 2 + proto_packet::io::list_encoded_len(value),
             Self::Points(value) => 2 + proto_packet::io::list_encoded_len(value),
@@ -148,7 +148,7 @@ impl ListCases {
             }
             Self::Blob(value) => {
                 out.extend_from_slice(&1_u16.to_le_bytes());
-                proto_packet::io::encode_list(value, out);
+                out.extend_from_slice(value.as_bytes());
             }
             Self::Numbers(value) => {
                 out.extend_from_slice(&2_u16.to_le_bytes());

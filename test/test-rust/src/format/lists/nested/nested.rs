@@ -21,14 +21,14 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct Nested {
-    rows: Vec<Vec<u8>>,
+    rows: Vec<proto_packet::types::Bytes>,
 }
 
 impl Nested {
     //! Construction
 
     /// Creates a new [Nested].
-    pub const fn new(rows: Vec<Vec<u8>>) -> Self {
+    pub const fn new(rows: Vec<proto_packet::types::Bytes>) -> Self {
         Self { rows }
     }
 }
@@ -38,18 +38,21 @@ impl Nested {
 
     /// Gets the field: `rows`.
     #[must_use]
-    pub fn rows(&self) -> &[Vec<u8>] {
+    pub fn rows(&self) -> &[proto_packet::types::Bytes] {
         self.rows.as_slice()
     }
 
     /// Sets the field: `rows`. Returns the previous value.
-    pub fn set_rows(&mut self, rows: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    pub fn set_rows(
+        &mut self,
+        rows: Vec<proto_packet::types::Bytes>,
+    ) -> Vec<proto_packet::types::Bytes> {
         std::mem::replace(&mut self.rows, rows)
     }
 
     /// Sets the field: `rows`. (builder pattern)
     #[must_use]
-    pub fn with_rows(mut self, rows: Vec<Vec<u8>>) -> Self {
+    pub fn with_rows(mut self, rows: Vec<proto_packet::types::Bytes>) -> Self {
         self.set_rows(rows);
         self
     }

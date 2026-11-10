@@ -354,9 +354,14 @@ fn gen_getter(typing: Typing<'_>, case: Case<'_>) -> Function {
     let (result, value): (String, String) = if case.tag.is_string() {
         ("&str".to_string(), "value.as_str()".to_string())
     } else if let TypeTag::List(element) = case.tag {
+        let method: &str = if case.tag.is_bytes() {
+            "as_bytes"
+        } else {
+            "as_slice"
+        };
         (
             format!("&[{}]", typing.rust_type(element)),
-            "value.as_slice()".to_string(),
+            format!("value.{}()", method),
         )
     } else if case.is_nested(typing) || case.tag.is_map() {
         let value: &str = if case.is_boxed { "&**value" } else { "value" };
@@ -431,7 +436,7 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
     for case in cases {
         arms.push(match case.size {
             Some(size) => format!("Self::{}(_) => {},", case.ident(), 2 + size),
-            None if case.tag.is_string() => {
+            None if case.tag.is_string() || case.tag.is_bytes() => {
                 format!("Self::{}(value) => 2 + value.len(),", case.ident())
             }
             None if case.tag.is_collection() => format!(

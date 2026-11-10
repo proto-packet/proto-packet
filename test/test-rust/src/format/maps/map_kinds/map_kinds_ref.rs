@@ -24,9 +24,9 @@ impl<'a> MapKindsRef<'a> {
             proto_packet::io::check_tail_entry(bytes, 0, 1, 6, 21, 4)?,
         )?;
         proto_packet::io::MapRef::<crate::format::examples::Point, crate::format::examples::Entry>::new(proto_packet::io::check_tail_entry(bytes, 0, 2, 6, 21, 8)?)?;
-        proto_packet::io::MapRef::<String, Vec<u8>>::new(proto_packet::io::check_tail_entry(
-            bytes, 0, 3, 6, 21, 4,
-        )?)?;
+        proto_packet::io::MapRef::<String, proto_packet::types::Bytes>::new(
+            proto_packet::io::check_tail_entry(bytes, 0, 3, 6, 21, 4)?,
+        )?;
         proto_packet::io::MapRef::<u8, std::collections::BTreeMap<u8, u8>>::new(
             proto_packet::io::check_tail_entry(bytes, 0, 4, 6, 21, 4)?,
         )?;
@@ -98,7 +98,7 @@ impl<'a> MapKindsRef<'a> {
 
     /// Gets the field: `lists`.
     #[must_use]
-    pub fn lists(&self) -> proto_packet::io::MapRef<'a, String, Vec<u8>> {
+    pub fn lists(&self) -> proto_packet::io::MapRef<'a, String, proto_packet::types::Bytes> {
         unsafe {
             proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
                 self.bytes, 0, 3, 6, 21, 4,

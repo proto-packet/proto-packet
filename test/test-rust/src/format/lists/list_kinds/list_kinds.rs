@@ -54,7 +54,7 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct ListKinds {
-    bytes: Vec<u8>,
+    bytes: proto_packet::types::Bytes,
     flags: Vec<bool>,
     signed: Vec<i64>,
     floats: Vec<proto_packet::types::Float64>,
@@ -75,7 +75,7 @@ impl ListKinds {
     /// Creates a new [ListKinds].
     #[allow(clippy::too_many_arguments)]
     pub const fn new(
-        bytes: Vec<u8>,
+        bytes: proto_packet::types::Bytes,
         flags: Vec<bool>,
         signed: Vec<i64>,
         floats: Vec<proto_packet::types::Float64>,
@@ -111,17 +111,17 @@ impl ListKinds {
     /// Gets the field: `bytes`.
     #[must_use]
     pub fn bytes(&self) -> &[u8] {
-        self.bytes.as_slice()
+        self.bytes.as_bytes()
     }
 
     /// Sets the field: `bytes`. Returns the previous value.
-    pub fn set_bytes(&mut self, bytes: Vec<u8>) -> Vec<u8> {
+    pub fn set_bytes(&mut self, bytes: proto_packet::types::Bytes) -> proto_packet::types::Bytes {
         std::mem::replace(&mut self.bytes, bytes)
     }
 
     /// Sets the field: `bytes`. (builder pattern)
     #[must_use]
-    pub fn with_bytes(mut self, bytes: Vec<u8>) -> Self {
+    pub fn with_bytes(mut self, bytes: proto_packet::types::Bytes) -> Self {
         self.set_bytes(bytes);
         self
     }
@@ -404,7 +404,7 @@ impl ListKinds {
     #[must_use]
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 45;
-        len += proto_packet::io::list_encoded_len(&self.bytes);
+        len += self.bytes.len();
         len += proto_packet::io::list_encoded_len(&self.flags);
         {
             let size: usize = proto_packet::io::list_encoded_len(&self.signed);
@@ -484,7 +484,7 @@ impl ListKinds {
         let start: usize = out.len();
         proto_packet::io::write_zeros(out, 44);
         out.push(u8::from(self.maybe.is_some()));
-        proto_packet::io::encode_list(&self.bytes, out);
+        out.extend_from_slice(self.bytes.as_bytes());
         proto_packet::io::write_end(out, start, start);
         proto_packet::io::encode_list(&self.flags, out);
         proto_packet::io::write_end(out, start + 4, start);

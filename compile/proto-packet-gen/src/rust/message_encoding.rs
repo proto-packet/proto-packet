@@ -56,6 +56,10 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
                 "if {}.is_some() {{ count += 1; values += {}; }}",
                 name, size
             ),
+            None if tagged.field.tag.is_bytes() => format!(
+                "if let Some(value) = &{} {{ count += 1; values += value.len(); }}",
+                name
+            ),
             None if tagged.field.tag.is_collection() => format!(
                 "if let Some(value) = &{} {{ count += 1; values += {}::{}_encoded_len(value); }}",
                 name,
@@ -137,6 +141,9 @@ pub(crate) fn gen_value_write(typing: Typing<'_>, tag: &TypeTag, out: &str) -> S
             out
         ),
         TypeTag::Named(_) => format!("value.encode_to({});", out),
+        TypeTag::List(_) if tag.is_bytes() => {
+            format!("{}.extend_from_slice(value.as_bytes());", out)
+        }
         TypeTag::List(_) => format!("{}::encode_list(value, {});", IO, out),
         TypeTag::Map { .. } => format!("{}::encode_map(value, {});", IO, out),
     }

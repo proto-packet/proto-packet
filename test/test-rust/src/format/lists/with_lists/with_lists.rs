@@ -25,7 +25,7 @@
 /// ```
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WithLists {
-    bytes: Option<Vec<u8>>,
+    bytes: Option<proto_packet::types::Bytes>,
     numbers: Option<Vec<u32>>,
     texts: Option<Vec<String>>,
     points: Option<Vec<crate::format::examples::Point>>,
@@ -44,11 +44,11 @@ impl WithLists {
     }
 
     /// Sets the field: `bytes`. Returns the previous value.
-    pub fn set_bytes<F>(&mut self, bytes: F) -> Option<Vec<u8>>
+    pub fn set_bytes<F>(&mut self, bytes: F) -> Option<proto_packet::types::Bytes>
     where
-        F: Into<Option<Vec<u8>>>,
+        F: Into<Option<proto_packet::types::Bytes>>,
     {
-        let bytes: Option<Vec<u8>> = bytes.into();
+        let bytes: Option<proto_packet::types::Bytes> = bytes.into();
         std::mem::replace(&mut self.bytes, bytes)
     }
 
@@ -56,7 +56,7 @@ impl WithLists {
     #[must_use]
     pub fn with_bytes<F>(mut self, bytes: F) -> Self
     where
-        F: Into<Option<Vec<u8>>>,
+        F: Into<Option<proto_packet::types::Bytes>>,
     {
         self.set_bytes(bytes);
         self
@@ -238,7 +238,7 @@ impl WithLists {
         let mut values: usize = proto_packet::io::unknown_fields_len(&self.unknown_fields);
         if let Some(value) = &self.bytes {
             count += 1;
-            values += proto_packet::io::list_encoded_len(value);
+            values += value.len();
         }
         if let Some(value) = &self.numbers {
             count += 1;
@@ -282,7 +282,7 @@ impl WithLists {
         let mut writer: proto_packet::io::MessageWriter =
             proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
         if let Some(value) = &self.bytes {
-            proto_packet::io::encode_list(value, writer.field(1));
+            writer.field(1).extend_from_slice(value.as_bytes());
             writer.end_field();
         }
         if let Some(value) = &self.numbers {

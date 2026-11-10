@@ -40,7 +40,7 @@ pub struct MapKinds {
     by_color: std::collections::BTreeMap<crate::format::examples::Color, String>,
     by_point:
         std::collections::BTreeMap<crate::format::examples::Point, crate::format::examples::Entry>,
-    lists: std::collections::BTreeMap<String, Vec<u8>>,
+    lists: std::collections::BTreeMap<String, proto_packet::types::Bytes>,
     maps: std::collections::BTreeMap<u8, std::collections::BTreeMap<u8, u8>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     maybe: Option<std::collections::BTreeMap<i64, proto_packet::types::Float64>>,
@@ -57,7 +57,7 @@ impl MapKinds {
             crate::format::examples::Point,
             crate::format::examples::Entry,
         >,
-        lists: std::collections::BTreeMap<String, Vec<u8>>,
+        lists: std::collections::BTreeMap<String, proto_packet::types::Bytes>,
         maps: std::collections::BTreeMap<u8, std::collections::BTreeMap<u8, u8>>,
         maybe: Option<std::collections::BTreeMap<i64, proto_packet::types::Float64>>,
     ) -> Self {
@@ -168,21 +168,24 @@ impl MapKinds {
 
     /// Gets the field: `lists`.
     #[must_use]
-    pub fn lists(&self) -> &std::collections::BTreeMap<String, Vec<u8>> {
+    pub fn lists(&self) -> &std::collections::BTreeMap<String, proto_packet::types::Bytes> {
         &self.lists
     }
 
     /// Sets the field: `lists`. Returns the previous value.
     pub fn set_lists(
         &mut self,
-        lists: std::collections::BTreeMap<String, Vec<u8>>,
-    ) -> std::collections::BTreeMap<String, Vec<u8>> {
+        lists: std::collections::BTreeMap<String, proto_packet::types::Bytes>,
+    ) -> std::collections::BTreeMap<String, proto_packet::types::Bytes> {
         std::mem::replace(&mut self.lists, lists)
     }
 
     /// Sets the field: `lists`. (builder pattern)
     #[must_use]
-    pub fn with_lists(mut self, lists: std::collections::BTreeMap<String, Vec<u8>>) -> Self {
+    pub fn with_lists(
+        mut self,
+        lists: std::collections::BTreeMap<String, proto_packet::types::Bytes>,
+    ) -> Self {
         self.set_lists(lists);
         self
     }

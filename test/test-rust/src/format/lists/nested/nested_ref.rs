@@ -15,9 +15,9 @@ impl<'a> NestedRef<'a> {
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_len(bytes, 0)?;
-        proto_packet::io::ListRef::<Vec<u8>>::new(proto_packet::io::check_tail_entry(
-            bytes, 0, 0, 1, 0, 4,
-        )?)?;
+        proto_packet::io::ListRef::<proto_packet::types::Bytes>::new(
+            proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 0, 4)?,
+        )?;
         Ok(Self { bytes })
     }
 
@@ -46,7 +46,7 @@ impl<'a> NestedRef<'a> {
 
     /// Gets the field: `rows`.
     #[must_use]
-    pub fn rows(&self) -> proto_packet::io::ListRef<'a, Vec<u8>> {
+    pub fn rows(&self) -> proto_packet::io::ListRef<'a, proto_packet::types::Bytes> {
         unsafe {
             proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
                 self.bytes, 0, 0, 1, 0, 4,
