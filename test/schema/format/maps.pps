@@ -1,6 +1,8 @@
 import format.examples.Color;
 import format.examples.Entry;
 import format.examples.Point;
+import format.variants.NewerCases;
+import format.variants.OlderCases;
 
 // The `Scores` example of `format/binary.md`.
 struct Scores {
@@ -49,4 +51,67 @@ variant MapCases {
 
     // A number, so a case has a setter in place.
     Number: u32 = 2;
+}
+
+// An older version of a key.
+message OlderKey {
+
+    // The first number.
+    a: u32 = 1;
+
+    // The last number.
+    c: u32 = 3;
+}
+
+// A newer version of a key, with a field between the older version's.
+message NewerKey {
+
+    // The first number.
+    a: u32 = 1;
+
+    // A new number.
+    b: u32 = 2;
+
+    // The last number.
+    c: u32 = 3;
+}
+
+// The maps of an older reader, with keys that are ordered by their bytes.
+struct OlderKeys {
+
+    // A map with message keys.
+    by_message: map<OlderKey, u8>;
+
+    // A map with variant keys.
+    by_variant: map<OlderCases, u8>;
+}
+
+// The maps of a newer writer, with keys that are ordered by their bytes.
+struct NewerKeys {
+
+    // A map with message keys.
+    by_message: map<NewerKey, u8>;
+
+    // A map with variant keys.
+    by_variant: map<NewerCases, u8>;
+}
+
+// A struct with a message inside it, so a key of it is ordered by its bytes.
+struct Tagged {
+
+    // A number, so the struct has an alignment of 8.
+    id: u64;
+
+    // A message.
+    key: NewerKey;
+}
+
+// A struct with keys that have a message inside them.
+struct NestedKeys {
+
+    // A map with struct keys & padded values.
+    by_struct: map<Tagged, Entry>;
+
+    // A map with list keys.
+    by_list: map<[]NewerKey, u8>;
 }

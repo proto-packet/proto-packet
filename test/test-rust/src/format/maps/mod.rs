@@ -2,10 +2,22 @@
 
 pub use map_cases::*;
 pub use map_kinds::*;
+pub use nested_keys::*;
+pub use newer_key::*;
+pub use newer_keys::*;
+pub use older_key::*;
+pub use older_keys::*;
 pub use scores::*;
+pub use tagged::*;
 pub use with_maps::*;
 
 mod map_cases;
 mod map_kinds;
+mod nested_keys;
+mod newer_key;
+mod newer_keys;
+mod older_key;
+mod older_keys;
 mod scores;
+mod tagged;
 mod with_maps;

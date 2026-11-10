@@ -5,9 +5,11 @@ use proto_packet::io::{DecodeError, MapRef, MapView};
 use proto_packet::types::{Bytes, Float64};
 use proto_packet_test::format::examples::{Color, Entry, EntryView, Point, PointView};
 use proto_packet_test::format::maps::{
-    MapCases, MapCasesRef, MapCasesView, MapKinds, MapKindsBuf, MapKindsRef, MapKindsView, Scores,
-    ScoresBuf, ScoresMut, ScoresRef, ScoresView, WithMaps, WithMapsRef,
+    MapCases, MapCasesRef, MapCasesView, MapKinds, MapKindsBuf, MapKindsRef, MapKindsView,
+    NestedKeys, NestedKeysRef, NewerKey, NewerKeyRef, NewerKeys, NewerKeysRef, OlderKeys, Scores,
+    ScoresBuf, ScoresMut, ScoresRef, ScoresView, Tagged, WithMaps, WithMapsRef,
 };
+use proto_packet_test::format::variants::NewerCases;
 use std::collections::BTreeMap;
 
 /// Asserts the `value` of the `type` encodes to the `bytes`, & decodes back from them.
@@ -323,4 +325,163 @@ fn views_read_the_maps_of_variants() {
     assert_eq!(scores_len(&value), Some(2));
     assert_eq!(scores_len(&MapCasesRef::new(&bytes).unwrap()), Some(2));
     assert_eq!(scores_len(&MapCases::Number(1)), None);
+}
+
+/// Gets a newer key with each of its fields.
+fn newer_key(a: u32, b: u32, c: u32) -> NewerKey {
+    NewerKey::default().with_a(a).with_b(b).with_c(c)
+}
+
+/// Gets the bytes of a map with the message keys `{ a: 1 }` & `{ a: 256 }`.
+fn message_keys_bytes() -> Vec<u8> {
+    [
+        &[34, 0, 0, 0][..],         // the end of the map
+        &[28, 0, 0, 0],             // the end of the keys
+        &[2, 0, 0, 0, 16, 0, 0, 0], // the keys: the count & the end of the first
+        &[1, 0, 1, 0, 0, 1, 0, 0],  // { a: 256 }
+        &[1, 0, 1, 0, 1, 0, 0, 0],  // { a: 1 }
+        &[2, 1],                    // the values
+    ]
+    .concat()
+}
+
+#[test]
+fn message_keys_are_ordered_by_their_bytes() {
+    let one: NewerKey = NewerKey::default().with_a(1);
+    let big: NewerKey = NewerKey::default().with_a(256);
+    assert!(one < big);
+    assert!(one.encode() > big.encode());
+    assert_encoding!(
+        NewerKeys,
+        NewerKeys::new(BTreeMap::from([(one, 1), (big, 2)]), BTreeMap::default()),
+        &message_keys_bytes()
+    );
+}
+
+#[test]
+fn rejects_byte_ordered_keys_that_are_not_strictly_increasing() {
+    let mut by_value: Vec<u8> = message_keys_bytes();
+    by_value[21] = 0;
+    by_value[20] = 1;
+    by_value[29] = 1;
+    by_value[28] = 0;
+    by_value[32..].copy_from_slice(&[1, 2]);
+    assert_eq!(NewerKeys::decode(&by_value), Err(DecodeError::InvalidMap));
+
+    let mut equal: Vec<u8> = message_keys_bytes();
+    equal[28] = 0;
+    equal[29] = 1;
+    assert_eq!(NewerKeys::decode(&equal), Err(DecodeError::InvalidMap));
+}
+
+/// Gets the maps of a newer writer, with keys an older reader orders another way by their values.
+fn newer_keys() -> NewerKeys {
+    NewerKeys::new(
+        BTreeMap::from([
+            (newer_key(1, 1, 2), 1),
+            (newer_key(1, 2, 1), 2),
+            (newer_key(1, 256, 1), 3),
+            (NewerKey::default(), 4),
+        ]),
+        BTreeMap::from([
+            (NewerCases::Number(1), 1),
+            (NewerCases::Number(256), 2),
+            (NewerCases::Text("a".to_string()), 3),
+            (NewerCases::Point(Point::new(1, 2)), 4),
+            (NewerCases::Point(Point::new(256, 0)), 5),
+        ]),
+    )
+}
+
+#[test]
+fn older_readers_take_the_keys_of_newer_writers() {
+    let newer: NewerKeys = newer_keys();
+    let bytes: Vec<u8> = newer.encode();
+    assert_eq!(newer.encoded_len(), bytes.len());
+    assert_eq!(NewerKeys::decode(&bytes), Ok(newer));
+
+    let older: OlderKeys = OlderKeys::decode(&bytes).unwrap();
+    assert_eq!(older.by_message().len(), 4);
+    assert_eq!(older.by_variant().len(), 5);
+    assert_eq!(older.encoded_len(), bytes.len());
+    assert_eq!(older.encode(), bytes);
+}
+
+#[test]
+fn byte_ordered_keys_are_found() {
+    let value: NewerKeys = newer_keys();
+    let bytes: Vec<u8> = value.encode();
+    let keys: NewerKeysRef = NewerKeysRef::new(&bytes).unwrap();
+    let map: MapRef<NewerKey, u8> = keys.by_message();
+    for (key, number) in value.by_message() {
+        let encoded: Vec<u8> = key.encode();
+        let key_ref: NewerKeyRef = NewerKeyRef::new(&encoded).unwrap();
+        assert_eq!(map.get(key_ref), Some(*number));
+        assert_eq!(map.get_by_key(key), Some(*number));
+        assert_eq!(MapView::get(&map, key), Some(*number));
+        assert_eq!(MapView::get(&value.by_message(), key), Some(*number));
+    }
+    for (key, number) in value.by_variant() {
+        assert_eq!(keys.by_variant().get_by_key(key), Some(*number));
+    }
+    assert_eq!(map.get_by_key(&newer_key(7, 7, 7)), None);
+    assert_eq!(keys.by_variant().get_by_key(&NewerCases::Number(7)), None);
+}
+
+#[test]
+fn keys_with_a_message_inside_are_ordered_by_their_bytes() {
+    let value: NestedKeys = NestedKeys::new(
+        BTreeMap::from([
+            (
+                Tagged::new(1, newer_key(1, 0, 0)),
+                Entry::new(1, "abc".to_string()),
+            ),
+            (
+                Tagged::new(256, NewerKey::default()),
+                Entry::new(2, "a".to_string()),
+            ),
+            (
+                Tagged::new(2, newer_key(9, 9, 9)),
+                Entry::new(3, String::default()),
+            ),
+        ]),
+        BTreeMap::from([
+            (vec![newer_key(1, 2, 3)], 1),
+            (vec![NewerKey::default(), newer_key(256, 0, 0)], 2),
+            (Vec::default(), 3),
+        ]),
+    );
+    let bytes: Vec<u8> = value.encode();
+    assert_eq!(value.encoded_len(), bytes.len());
+    assert_eq!(NestedKeys::decode(&bytes), Ok(value.clone()));
+
+    let nested: NestedKeysRef = NestedKeysRef::new(&bytes).unwrap();
+    let ids: Vec<u64> = nested
+        .by_struct()
+        .keys()
+        .iter()
+        .map(|key| key.id())
+        .collect();
+    assert_eq!(ids, [256, 1, 2]);
+    let texts: Vec<&str> = nested
+        .by_struct()
+        .values()
+        .iter()
+        .map(|entry| entry.text())
+        .collect();
+    assert_eq!(texts, ["a", "abc", ""]);
+    let lists: Vec<&[u8]> = nested
+        .by_list()
+        .keys()
+        .iter()
+        .map(|list| list.as_bytes())
+        .collect();
+    assert!(lists.windows(2).all(|pair| pair[0] < pair[1]));
+    for (key, entry) in value.by_struct() {
+        let found = nested.by_struct().get_by_key(key).unwrap();
+        assert_eq!(found.id(), entry.id());
+    }
+    for (key, number) in value.by_list() {
+        assert_eq!(nested.by_list().get_by_key(key), Some(*number));
+    }
 }
