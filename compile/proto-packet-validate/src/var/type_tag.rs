@@ -15,7 +15,13 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
             key: Box::new(validate_type_tag(key, source)?),
             value: Box::new(validate_type_tag(value, source)?),
         }),
-        TypeTagTree::Decimal { .. } => todo!(),
+        TypeTagTree::Decimal { scale, .. } => scale
+            .text(source)
+            .parse::<u8>()
+            .ok()
+            .filter(|scale| *scale <= PrimitiveType::MAX_DECIMAL_SCALE)
+            .map(|scale| PrimitiveType::Decimal { scale }.into())
+            .ok_or_else(|| ValidateError::new(*scale, ValidateErrorReason::InvalidDecimalScale)),
     }
 }
 

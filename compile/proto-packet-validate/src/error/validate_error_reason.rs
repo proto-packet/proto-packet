@@ -20,6 +20,9 @@ pub enum ValidateErrorReason {
     /// A boxed type that is not a named type. (ex: `box u8`)
     BoxedNonNamedType,
 
+    /// A decimal with a scale that is too large. (ex: `decimal<19>`)
+    InvalidDecimalScale,
+
     /// An error constructing the tree. (ex: a duplicate field name)
     Tree(TreeError),
 }
@@ -35,6 +38,7 @@ impl ValidateErrorReason {
             Self::ImportWithoutModPath => "V_IMPORT_WITHOUT_MOD_PATH",
             Self::UnknownType { .. } => "V_UNKNOWN_TYPE",
             Self::BoxedNonNamedType => "V_BOXED_NON_NAMED_TYPE",
+            Self::InvalidDecimalScale => "V_INVALID_DECIMAL_SCALE",
             Self::Tree(error) => match error {
                 TreeError::DuplicateFieldName { .. } => "V_DUPLICATE_FIELD_NAME",
                 TreeError::DuplicateCaseName { .. } => "V_DUPLICATE_CASE_NAME",
@@ -59,6 +63,11 @@ impl Display for ValidateErrorReason {
                 TagNumber::MAX
             ),
             Self::ImportWithoutModPath => f.write_str("imports must include a mod path"),
+            Self::InvalidDecimalScale => write!(
+                f,
+                "a decimal's scale must be from 0 to {}",
+                PrimitiveType::MAX_DECIMAL_SCALE
+            ),
             Self::UnknownType { name } => {
                 let names: Vec<&str> = PrimitiveType::ALL
                     .iter()
