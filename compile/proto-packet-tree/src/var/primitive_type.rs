@@ -41,13 +41,28 @@ pub enum PrimitiveType {
 
     /// A 64-bit float.
     Float64,
+
+    /// A time, as the milliseconds since the epoch.
+    Timestamp,
+
+    /// A time, as the microseconds since the epoch.
+    Microtime,
+
+    /// A time, as the nanoseconds since the epoch.
+    Nanotime,
+
+    /// A calendar date, as the days since the epoch.
+    Date,
+
+    /// A span of time, as nanoseconds.
+    Duration,
 }
 
 impl PrimitiveType {
     //! Names
 
     /// The primitive types.
-    pub const ALL: [Self; 13] = [
+    pub const ALL: [Self; 18] = [
         Self::Boolean,
         Self::UnsignedInt8,
         Self::UnsignedInt16,
@@ -61,6 +76,11 @@ impl PrimitiveType {
         Self::SignedInt128,
         Self::Float32,
         Self::Float64,
+        Self::Timestamp,
+        Self::Microtime,
+        Self::Nanotime,
+        Self::Date,
+        Self::Duration,
     ];
 
     /// Gets the name. (ex: `u8`)
@@ -79,6 +99,11 @@ impl PrimitiveType {
             Self::SignedInt128 => "i128",
             Self::Float32 => "f32",
             Self::Float64 => "f64",
+            Self::Timestamp => "timestamp",
+            Self::Microtime => "microtime",
+            Self::Nanotime => "nanotime",
+            Self::Date => "date",
+            Self::Duration => "duration",
         }
     }
 
