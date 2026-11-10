@@ -369,6 +369,7 @@ where
     const ALIGNMENT: usize = map_alignment::<K, V>();
     const CAN_BE_INVALID: bool = true;
     const ORDERED_BY_BYTES: bool = K::ORDERED_BY_BYTES || V::ORDERED_BY_BYTES;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = MapRef<'a, K, V>;
     type View<'a>
         = &'a BTreeMap<K, V>
@@ -409,5 +410,21 @@ where
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         encode_map(self, out, depth);
+    }
+
+    #[cfg(feature = "types")]
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::types::serialize_map(self, serializer)
+    }
+
+    #[cfg(feature = "types")]
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        crate::types::deserialize_map(deserializer)
     }
 }

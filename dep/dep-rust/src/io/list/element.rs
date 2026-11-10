@@ -1,11 +1,11 @@
-use crate::io::DecodeError;
+use crate::io::{DecodeError, JsonValue};
 use std::cmp::Ordering;
 
 /// A type that can be an element of a list.
 ///
 /// # Note
 /// - The bytes of a fixed-size element are exactly its size.
-pub trait Element: Sized {
+pub trait Element: Sized + JsonValue {
     /// The size of every encoded element, or `None` for a variable-size type.
     const SIZE: Option<usize>;
 
@@ -22,6 +22,12 @@ pub trait Element: Sized {
     /// - Two readers can know different fields & cases of one, so its bytes are the only order
     ///   they share.
     const ORDERED_BY_BYTES: bool = false;
+
+    /// If a key of the type is text in JSON, so a map of it is an object.
+    ///
+    /// # Note
+    /// - A map of any other key is a list of its entries.
+    const JSON_TEXT_KEY: bool = true;
 
     /// The element read from its encoded bytes.
     type Ref<'a>: Copy;
@@ -88,6 +94,33 @@ pub trait Element: Sized {
         } else {
             self.cmp(&Self::decode(other))
         }
+    }
+
+    /// Serializes the element as its JSON form.
+    ///
+    /// # Note
+    /// - A list or a map overrides this, since its JSON form is not the one serde gives it.
+    ///
+    /// # Errors
+    /// Returns an error if the `serializer` does.
+    #[cfg(feature = "types")]
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serde::Serialize::serialize(self, serializer)
+    }
+
+    /// Deserializes the element from its JSON form.
+    ///
+    /// # Errors
+    /// Returns an error if the JSON is not the element.
+    #[cfg(feature = "types")]
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        serde::Deserialize::deserialize(deserializer)
     }
 
     /// Appends the encodings of the fixed-size `elements` to the `out` bytes, back to back.

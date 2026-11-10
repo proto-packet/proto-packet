@@ -192,6 +192,7 @@ where
     const ALIGNMENT: usize = list_alignment::<T>();
     const CAN_BE_INVALID: bool = true;
     const ORDERED_BY_BYTES: bool = T::ORDERED_BY_BYTES;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = ListRef<'a, T>;
     type View<'a>
         = &'a [T]
@@ -231,6 +232,22 @@ where
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         encode_list(self, out, depth);
+    }
+
+    #[cfg(feature = "types")]
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::types::serialize_list(self, serializer)
+    }
+
+    #[cfg(feature = "types")]
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        crate::types::deserialize_list(deserializer)
     }
 }
 

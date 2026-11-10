@@ -1,4 +1,5 @@
 pub use element::*;
+pub use json_value::*;
 pub use list_iter::*;
 pub use list_ref::*;
 pub use list_view::*;
@@ -7,6 +8,7 @@ pub use map_ref::*;
 pub use map_view::*;
 
 mod element;
+mod json_value;
 mod list_iter;
 mod list_ref;
 mod list_view;
