@@ -1,5 +1,6 @@
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
+use crate::rust::gen_element::gen_enum_element;
 use crate::rust::naming::{ident, is_upper_camel_case, snake_case};
 use crate::rust::prelude::{Prelude, PreludeName};
 use code_gen::rust::{
@@ -39,11 +40,12 @@ pub fn gen_enum(enumeration: &Enum) -> String {
         ""
     };
     format!(
-        "{}\n{}{}\n{}",
+        "{}\n{}{}\n{}\n{}",
         dec.to_code(),
         inception,
         UNRECOGNIZED_MOD,
-        block.to_code()
+        block.to_code(),
+        gen_enum_element(prelude, &ident(&enumeration.type_name()))
     )
 }
 

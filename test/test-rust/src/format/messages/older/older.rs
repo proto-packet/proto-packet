@@ -161,6 +161,33 @@ impl Older {
     }
 }
 
+impl proto_packet::io::Element for Older {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::OlderRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::OlderRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::OlderRef<'_> {
+        unsafe { super::OlderRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::OlderRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Older::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Older::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for Older {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

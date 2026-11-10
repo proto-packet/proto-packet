@@ -159,3 +159,30 @@ impl KeywordStruct {
         unsafe { super::KeywordStructRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for KeywordStruct {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::KeywordStructRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::KeywordStructRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::KeywordStructRef<'_> {
+        unsafe { super::KeywordStructRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::KeywordStructRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        KeywordStruct::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        KeywordStruct::encode_to(self, out);
+    }
+}

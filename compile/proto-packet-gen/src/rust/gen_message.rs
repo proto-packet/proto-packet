@@ -6,6 +6,7 @@ use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::IO;
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_buf::{buf_name, gen_buf};
+use crate::rust::gen_element::gen_element;
 use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
 use crate::rust::gen_message_mut::{gen_message_buf_accessors, gen_message_mut};
 use crate::rust::gen_message_ref::gen_message_ref;
@@ -121,6 +122,15 @@ pub fn gen_message(
         &type_name,
         &ref_name(schema_name),
         "message",
+    ));
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_element(
+        Prelude::new(&type_name),
+        &type_name,
+        &ref_name(schema_name),
+        None,
+        1,
+        true,
     ));
     block.add_statement(EmptyLine::default());
     block.add_literal(gen_json(typing, schema_name, &type_name, &fields));

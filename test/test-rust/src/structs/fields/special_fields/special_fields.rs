@@ -127,3 +127,30 @@ impl SpecialFields {
         unsafe { super::SpecialFieldsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for SpecialFields {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 8;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::SpecialFieldsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::SpecialFieldsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::SpecialFieldsRef<'_> {
+        unsafe { super::SpecialFieldsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::SpecialFieldsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        SpecialFields::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        SpecialFields::encode_to(self, out);
+    }
+}

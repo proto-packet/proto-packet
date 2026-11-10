@@ -175,3 +175,30 @@ impl Line {
         unsafe { super::LineRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for Line {
+    const SIZE: Option<usize> = Some(17);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::LineRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::LineRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::LineRef<'_> {
+        unsafe { super::LineRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::LineRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Line::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Line::encode_to(self, out);
+    }
+}

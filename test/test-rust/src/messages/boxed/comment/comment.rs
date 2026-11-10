@@ -167,6 +167,33 @@ impl Comment {
     }
 }
 
+impl proto_packet::io::Element for Comment {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::CommentRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::CommentRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::CommentRef<'_> {
+        unsafe { super::CommentRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::CommentRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Comment::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Comment::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for Comment {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

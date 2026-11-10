@@ -62,3 +62,30 @@ impl EmptyStruct {
         unsafe { super::EmptyStructRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for EmptyStruct {
+    const SIZE: Option<usize> = Some(0);
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = false;
+    type Ref<'a> = super::EmptyStructRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::EmptyStructRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::EmptyStructRef<'_> {
+        unsafe { super::EmptyStructRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::EmptyStructRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        EmptyStruct::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        EmptyStruct::encode_to(self, out);
+    }
+}

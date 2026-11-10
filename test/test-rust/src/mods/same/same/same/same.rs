@@ -99,3 +99,30 @@ impl Same {
         unsafe { super::SameRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for Same {
+    const SIZE: Option<usize> = Some(4);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = false;
+    type Ref<'a> = super::SameRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::SameRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::SameRef<'_> {
+        unsafe { super::SameRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::SameRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Same::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Same::encode_to(self, out);
+    }
+}

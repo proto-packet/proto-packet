@@ -196,3 +196,30 @@ impl CopyFields {
         unsafe { super::CopyFieldsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for CopyFields {
+    const SIZE: Option<usize> = Some(30);
+    const ALIGNMENT: usize = 8;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::CopyFieldsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::CopyFieldsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::CopyFieldsRef<'_> {
+        unsafe { super::CopyFieldsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::CopyFieldsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        CopyFields::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        CopyFields::encode_to(self, out);
+    }
+}

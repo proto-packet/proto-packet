@@ -108,3 +108,30 @@ impl NestedCopy {
         unsafe { super::NestedCopyRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for NestedCopy {
+    const SIZE: Option<usize> = Some(30);
+    const ALIGNMENT: usize = 8;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::NestedCopyRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::NestedCopyRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::NestedCopyRef<'_> {
+        unsafe { super::NestedCopyRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::NestedCopyRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        NestedCopy::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        NestedCopy::encode_to(self, out);
+    }
+}

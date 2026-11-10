@@ -261,3 +261,30 @@ impl QualifiedFields {
         unsafe { super::QualifiedFieldsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for QualifiedFields {
+    const SIZE: Option<usize> = Some(24);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::QualifiedFieldsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::QualifiedFieldsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::QualifiedFieldsRef<'_> {
+        unsafe { super::QualifiedFieldsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::QualifiedFieldsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        QualifiedFields::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        QualifiedFields::encode_to(self, out);
+    }
+}

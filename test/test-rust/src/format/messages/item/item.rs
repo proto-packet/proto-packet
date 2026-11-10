@@ -161,6 +161,33 @@ impl Item {
     }
 }
 
+impl proto_packet::io::Element for Item {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::ItemRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::ItemRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::ItemRef<'_> {
+        unsafe { super::ItemRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::ItemRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Item::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Item::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for Item {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

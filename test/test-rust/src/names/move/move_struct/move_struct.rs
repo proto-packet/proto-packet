@@ -99,3 +99,30 @@ impl MoveStruct {
         unsafe { super::MoveStructRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for MoveStruct {
+    const SIZE: Option<usize> = Some(4);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = false;
+    type Ref<'a> = super::MoveStructRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::MoveStructRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::MoveStructRef<'_> {
+        unsafe { super::MoveStructRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::MoveStructRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        MoveStruct::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        MoveStruct::encode_to(self, out);
+    }
+}

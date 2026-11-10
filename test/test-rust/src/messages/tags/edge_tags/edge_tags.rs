@@ -161,6 +161,33 @@ impl EdgeTags {
     }
 }
 
+impl proto_packet::io::Element for EdgeTags {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::EdgeTagsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::EdgeTagsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::EdgeTagsRef<'_> {
+        unsafe { super::EdgeTagsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::EdgeTagsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        EdgeTags::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        EdgeTags::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for EdgeTags {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

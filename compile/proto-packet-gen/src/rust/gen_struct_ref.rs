@@ -130,6 +130,23 @@ fn gen_construction(
         .with_function(gen_new_unchecked("ref", "&'a [u8]"))
 }
 
+/// Checks if the bytes of a struct with the `fields` & the `layout` can be invalid at its length.
+pub(crate) fn can_be_invalid(
+    typing: Typing<'_>,
+    fields: &[Field<'_>],
+    layout: &StructLayout,
+) -> bool {
+    layout.ends() > 0
+        || layout
+            .units
+            .iter()
+            .any(|unit| gen_unit_check(*unit).is_some())
+        || fields
+            .iter()
+            .zip(&layout.fields)
+            .any(|(field, field_layout)| gen_check(typing, *field, *field_layout, layout).is_some())
+}
+
 /// Generates the expression checking the padding or the unused bits of the `unit`, if it has any.
 fn gen_unit_check(unit: UnitLayout) -> Option<String> {
     match unit {

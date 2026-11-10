@@ -106,3 +106,30 @@ impl NonCopyStruct {
         unsafe { super::NonCopyStructRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for NonCopyStruct {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::NonCopyStructRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::NonCopyStructRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::NonCopyStructRef<'_> {
+        unsafe { super::NonCopyStructRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::NonCopyStructRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        NonCopyStruct::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        NonCopyStruct::encode_to(self, out);
+    }
+}

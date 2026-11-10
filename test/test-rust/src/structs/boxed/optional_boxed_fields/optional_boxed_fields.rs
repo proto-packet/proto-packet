@@ -317,3 +317,30 @@ impl OptionalBoxedFields {
         unsafe { super::OptionalBoxedFieldsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for OptionalBoxedFields {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::OptionalBoxedFieldsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::OptionalBoxedFieldsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::OptionalBoxedFieldsRef<'_> {
+        unsafe { super::OptionalBoxedFieldsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::OptionalBoxedFieldsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        OptionalBoxedFields::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        OptionalBoxedFields::encode_to(self, out);
+    }
+}

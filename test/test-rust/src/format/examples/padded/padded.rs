@@ -170,3 +170,30 @@ impl Padded {
         unsafe { super::PaddedRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for Padded {
+    const SIZE: Option<usize> = Some(41);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::PaddedRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::PaddedRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::PaddedRef<'_> {
+        unsafe { super::PaddedRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::PaddedRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Padded::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Padded::encode_to(self, out);
+    }
+}

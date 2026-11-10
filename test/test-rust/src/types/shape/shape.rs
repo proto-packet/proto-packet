@@ -150,6 +150,33 @@ impl Shape {
     }
 }
 
+impl proto_packet::io::Element for Shape {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::ShapeRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::ShapeRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::ShapeRef<'_> {
+        unsafe { super::ShapeRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::ShapeRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Shape::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Shape::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for Shape {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

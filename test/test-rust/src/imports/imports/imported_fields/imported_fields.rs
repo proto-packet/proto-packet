@@ -141,3 +141,30 @@ impl ImportedFields {
         unsafe { super::ImportedFieldsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for ImportedFields {
+    const SIZE: Option<usize> = Some(12);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::ImportedFieldsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::ImportedFieldsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::ImportedFieldsRef<'_> {
+        unsafe { super::ImportedFieldsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::ImportedFieldsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        ImportedFields::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        ImportedFields::encode_to(self, out);
+    }
+}

@@ -252,3 +252,30 @@ impl Strings {
         unsafe { super::StringsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for Strings {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 8;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::StringsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::StringsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::StringsRef<'_> {
+        unsafe { super::StringsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::StringsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Strings::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Strings::encode_to(self, out);
+    }
+}

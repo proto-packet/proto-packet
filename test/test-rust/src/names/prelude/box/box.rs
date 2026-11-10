@@ -150,6 +150,33 @@ impl Box {
     }
 }
 
+impl proto_packet::io::Element for Box {
+    const SIZE: std::option::Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::BoxRef<'a>;
+
+    fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
+        super::BoxRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::BoxRef<'_> {
+        unsafe { super::BoxRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::BoxRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Box::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut std::vec::Vec<u8>) {
+        Box::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for Box {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where

@@ -167,6 +167,33 @@ impl LoopMessage {
     }
 }
 
+impl proto_packet::io::Element for LoopMessage {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::LoopMessageRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::LoopMessageRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::LoopMessageRef<'_> {
+        unsafe { super::LoopMessageRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::LoopMessageRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        LoopMessage::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        LoopMessage::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for LoopMessage {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

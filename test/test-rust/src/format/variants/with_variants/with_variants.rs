@@ -225,3 +225,30 @@ impl WithVariants {
         unsafe { super::WithVariantsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for WithVariants {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 8;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::WithVariantsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::WithVariantsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::WithVariantsRef<'_> {
+        unsafe { super::WithVariantsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::WithVariantsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        WithVariants::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        WithVariants::encode_to(self, out);
+    }
+}

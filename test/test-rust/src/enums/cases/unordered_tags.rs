@@ -106,3 +106,37 @@ impl<'de> proto_packet::serde::Deserialize<'de> for UnorderedTags {
         )
     }
 }
+
+impl proto_packet::io::Element for UnorderedTags {
+    const SIZE: Option<usize> = Some(2);
+    const ALIGNMENT: usize = 2;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = Self;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        proto_packet::io::check_exact_len(bytes, 2)?;
+        proto_packet::io::check_tag_number(unsafe {
+            proto_packet::io::read_u16_unchecked(bytes, 0)
+        })
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> Self {
+        Self::from_tag_number(unsafe {
+            proto_packet::io::TagNumber::new_unchecked(proto_packet::io::read_u16_unchecked(
+                bytes, 0,
+            ))
+        })
+    }
+
+    fn decode(element: Self) -> Self {
+        element
+    }
+
+    fn encoded_len(&self) -> usize {
+        2
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        out.extend_from_slice(&self.tag_number().to_le_bytes());
+    }
+}

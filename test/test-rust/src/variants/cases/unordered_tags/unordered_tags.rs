@@ -155,6 +155,33 @@ impl UnorderedTags {
     }
 }
 
+impl proto_packet::io::Element for UnorderedTags {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::UnorderedTagsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::UnorderedTagsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::UnorderedTagsRef<'_> {
+        unsafe { super::UnorderedTagsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::UnorderedTagsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        UnorderedTags::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        UnorderedTags::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for UnorderedTags {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

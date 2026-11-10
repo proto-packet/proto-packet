@@ -5,10 +5,11 @@ use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::{IO, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_buf::{buf_name, gen_buf};
+use crate::rust::gen_element::gen_element;
 use crate::rust::gen_struct_mut::{
     check_mut_names, gen_buf_accessors, gen_struct_mut, is_struct, mut_name,
 };
-use crate::rust::gen_struct_ref::{gen_struct_ref, ref_name};
+use crate::rust::gen_struct_ref::{can_be_invalid, gen_struct_ref, ref_name};
 use crate::rust::gen_view::{gen_view, view_name};
 use crate::rust::gen_view_mut::{gen_view_mut, view_mut_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
@@ -116,6 +117,15 @@ pub fn gen_struct(
         &type_name,
         &ref_name(schema_name),
         "struct",
+    ));
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_element(
+        Prelude::new(&type_name),
+        &type_name,
+        &ref_name(schema_name),
+        layout.is_fixed().then_some(layout.fixed_size),
+        layout.alignment,
+        can_be_invalid(typing, &fields, &layout),
     ));
     Ok(vec![
         TypeFile {

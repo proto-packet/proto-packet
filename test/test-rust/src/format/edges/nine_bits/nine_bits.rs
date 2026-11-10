@@ -338,3 +338,30 @@ impl NineBits {
         unsafe { super::NineBitsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for NineBits {
+    const SIZE: Option<usize> = Some(2);
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::NineBitsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::NineBitsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::NineBitsRef<'_> {
+        unsafe { super::NineBitsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::NineBitsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        NineBits::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        NineBits::encode_to(self, out);
+    }
+}

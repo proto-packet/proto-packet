@@ -99,3 +99,30 @@ impl Parent {
         unsafe { super::ParentRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for Parent {
+    const SIZE: Option<usize> = Some(4);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = false;
+    type Ref<'a> = super::ParentRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::ParentRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::ParentRef<'_> {
+        unsafe { super::ParentRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::ParentRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Parent::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Parent::encode_to(self, out);
+    }
+}

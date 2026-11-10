@@ -200,3 +200,30 @@ impl AbsentChild {
         unsafe { super::AbsentChildRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for AbsentChild {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 8;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::AbsentChildRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::AbsentChildRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::AbsentChildRef<'_> {
+        unsafe { super::AbsentChildRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::AbsentChildRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        AbsentChild::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        AbsentChild::encode_to(self, out);
+    }
+}

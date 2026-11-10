@@ -303,6 +303,33 @@ impl Value {
     }
 }
 
+impl proto_packet::io::Element for Value {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::ValueRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::ValueRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::ValueRef<'_> {
+        unsafe { super::ValueRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::ValueRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Value::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Value::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for Value {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

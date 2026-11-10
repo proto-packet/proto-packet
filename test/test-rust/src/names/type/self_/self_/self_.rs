@@ -99,3 +99,30 @@ impl Self_ {
         unsafe { super::SelfRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for Self_ {
+    const SIZE: Option<usize> = Some(4);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = false;
+    type Ref<'a> = super::SelfRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::SelfRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::SelfRef<'_> {
+        unsafe { super::SelfRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::SelfRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Self_::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        Self_::encode_to(self, out);
+    }
+}

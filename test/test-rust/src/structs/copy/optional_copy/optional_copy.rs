@@ -152,3 +152,30 @@ impl OptionalCopy {
         unsafe { super::OptionalCopyRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for OptionalCopy {
+    const SIZE: Option<usize> = Some(13);
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::OptionalCopyRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::OptionalCopyRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::OptionalCopyRef<'_> {
+        unsafe { super::OptionalCopyRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::OptionalCopyRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        OptionalCopy::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        OptionalCopy::encode_to(self, out);
+    }
+}

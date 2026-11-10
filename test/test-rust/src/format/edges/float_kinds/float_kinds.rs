@@ -166,3 +166,30 @@ impl FloatKinds {
         unsafe { super::FloatKindsRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for FloatKinds {
+    const SIZE: Option<usize> = Some(17);
+    const ALIGNMENT: usize = 8;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::FloatKindsRef<'a>;
+
+    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+        super::FloatKindsRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::FloatKindsRef<'_> {
+        unsafe { super::FloatKindsRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::FloatKindsRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        FloatKinds::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        FloatKinds::encode_to(self, out);
+    }
+}

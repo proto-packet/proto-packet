@@ -170,3 +170,30 @@ impl Option {
         unsafe { super::OptionRef::new_unchecked(bytes) }.decode()
     }
 }
+
+impl proto_packet::io::Element for Option {
+    const SIZE: std::option::Option<usize> = None;
+    const ALIGNMENT: usize = 4;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::OptionRef<'a>;
+
+    fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
+        super::OptionRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::OptionRef<'_> {
+        unsafe { super::OptionRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::OptionRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        Option::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut std::vec::Vec<u8>) {
+        Option::encode_to(self, out);
+    }
+}

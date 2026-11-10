@@ -120,6 +120,33 @@ impl String {
     }
 }
 
+impl proto_packet::io::Element for String {
+    const SIZE: std::option::Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = true;
+    type Ref<'a> = super::StringRef<'a>;
+
+    fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
+        super::StringRef::new(bytes).map(|_| ())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> super::StringRef<'_> {
+        unsafe { super::StringRef::new_unchecked(bytes) }
+    }
+
+    fn decode(element: super::StringRef<'_>) -> Self {
+        element.decode()
+    }
+
+    fn encoded_len(&self) -> usize {
+        String::encoded_len(self)
+    }
+
+    fn encode_to(&self, out: &mut std::vec::Vec<u8>) {
+        String::encode_to(self, out);
+    }
+}
+
 impl proto_packet::serde::Serialize for String {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
