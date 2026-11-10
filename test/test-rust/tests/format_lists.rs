@@ -560,3 +560,33 @@ fn encoded_lists_are_equal_by_their_bytes() {
     let other: Vec<u8> = Texts::new(vec!["hi".to_string()]).encode();
     assert_ne!(texts.texts(), TextsRef::new(&other).unwrap().texts());
 }
+
+/// Gets the `count` of messages, each in the children of the one before it, around the `inner`.
+fn nested_children(count: usize, inner: WithLists) -> WithLists {
+    (1..count).fold(inner, |child, _| {
+        WithLists::default().with_children(vec![child])
+    })
+}
+
+#[test]
+fn lists_are_not_levels() {
+    let points: WithLists = WithLists::default().with_points(vec![Point::new(1, 2)]);
+    let entries: WithLists =
+        WithLists::default().with_entries(vec![Entry::new(1, "a".to_string())]);
+
+    // the points are fixed-size, so the deepest message can hold them
+    let deepest: WithLists = nested_children(64, points.clone());
+    assert_eq!(WithLists::decode(&deepest.encode()), Ok(deepest));
+    assert_eq!(
+        WithLists::decode(&nested_children(65, points).encode()),
+        Err(DecodeError::TooDeep)
+    );
+
+    // an entry has a variable tail, so it is a level of its own
+    let deepest: WithLists = nested_children(63, entries.clone());
+    assert_eq!(WithLists::decode(&deepest.encode()), Ok(deepest));
+    assert_eq!(
+        WithLists::decode(&nested_children(64, entries).encode()),
+        Err(DecodeError::TooDeep)
+    );
+}

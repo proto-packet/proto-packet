@@ -722,3 +722,23 @@ fn forms_are_equal_across_forms() {
     assert!(item == buf && buf == item && buf == buf.as_ref() && buf.as_ref() == buf);
     assert!(Item::default() != buf);
 }
+
+/// Gets the `count` of comments, each the reply of the one before it.
+fn comments(count: usize) -> Comment {
+    (1..count).fold(Comment::default().with_text("x".to_string()), |reply, _| {
+        Comment::default().with_reply(reply)
+    })
+}
+
+#[test]
+fn messages_nest_at_most_64_levels() {
+    assert_eq!(Comment::decode(&comments(64).encode()), Ok(comments(64)));
+    assert_eq!(
+        Comment::decode(&comments(65).encode()),
+        Err(DecodeError::TooDeep)
+    );
+    assert_eq!(
+        CommentRef::new(&comments(65).encode()),
+        Err(DecodeError::TooDeep)
+    );
+}

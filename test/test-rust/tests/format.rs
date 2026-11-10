@@ -1170,3 +1170,74 @@ fn forms_are_equal_across_forms() {
     assert!(point == PointRef::new(&bytes).unwrap() && point == buf);
     assert!(Point::new(1, 3) != PointRef::new(&bytes).unwrap());
 }
+
+/// Gets the bytes of the `count` of list nodes, each the next node of the one before it.
+fn nodes_bytes(count: usize) -> Vec<u8> {
+    let mut bytes: Vec<u8> = [7, 0, 0, 0, 1, 0, 0, 0].repeat(count - 1);
+    bytes.extend_from_slice(&[7, 0, 0, 0, 0]);
+    bytes
+}
+
+#[test]
+fn values_nest_at_most_64_levels() {
+    let nodes: ListNode = ListNode::new(7, Some(ListNode::new(7, Some(ListNode::new(7, None)))));
+    assert_eq!(nodes.encode(), nodes_bytes(3));
+
+    assert!(ListNode::decode(&nodes_bytes(64)).is_ok());
+    assert_eq!(
+        ListNode::decode(&nodes_bytes(65)),
+        Err(DecodeError::TooDeep)
+    );
+    assert_eq!(
+        ListNodeRef::new(&nodes_bytes(65)),
+        Err(DecodeError::TooDeep)
+    );
+    assert_eq!(
+        ListNodeBuf::new(nodes_bytes(65)).map(|_| ()),
+        Err(DecodeError::TooDeep)
+    );
+    assert_eq!(
+        ListNodeMut::new(&mut nodes_bytes(65)).map(|_| ()),
+        Err(DecodeError::TooDeep)
+    );
+
+    assert!(ListNodeRef::new_with_depth(&nodes_bytes(3), 3).is_ok());
+    assert_eq!(
+        ListNodeRef::new_with_depth(&nodes_bytes(3), 2),
+        Err(DecodeError::TooDeep)
+    );
+}
+
+#[test]
+fn fixed_size_structs_are_not_levels() {
+    use proto_packet::io::Element;
+
+    // a point has no variable tail, so it needs no level
+    let point: Vec<u8> = Point::new(1, 2).encode();
+    assert_eq!(<Point as Element>::check(&point, 0), Ok(()));
+
+    // an entry has a variable tail, so it is a level
+    let entry: Vec<u8> = Entry::new(1, "a".to_string()).encode();
+    assert_eq!(<Entry as Element>::check(&entry, 1), Ok(()));
+    assert_eq!(
+        <Entry as Element>::check(&entry, 0),
+        Err(DecodeError::TooDeep)
+    );
+}
+
+#[test]
+fn deep_bytes_do_not_overflow_the_stack() {
+    assert_eq!(
+        ListNodeRef::new(&nodes_bytes(200_000)),
+        Err(DecodeError::TooDeep)
+    );
+}
+
+#[test]
+fn the_deepest_value_fits_a_small_stack() {
+    let bytes: Vec<u8> = nodes_bytes(64);
+    let thread = std::thread::Builder::new()
+        .stack_size(256 * 1024)
+        .spawn(move || ListNode::decode(&bytes).map(|nodes| nodes.encode().len()));
+    assert_eq!(thread.unwrap().join().unwrap(), Ok(64 * 8 - 3));
+}

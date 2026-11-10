@@ -699,3 +699,28 @@ fn forms_are_equal_across_forms() {
     assert!(older == older_ref && older_ref == older);
     assert!(OlderCases::Text("a".to_string()) != older_ref);
 }
+
+/// Gets a number inside the `count` of negations.
+fn negated(count: usize) -> Expr {
+    (0..count).fold(Expr::Number(1), |expr, _| Expr::Negate(Box::new(expr)))
+}
+
+#[test]
+fn variants_nest_at_most_64_levels() {
+    assert_eq!(Expr::decode(&negated(63).encode()), Ok(negated(63)));
+    assert_eq!(
+        Expr::decode(&negated(64).encode()),
+        Err(DecodeError::TooDeep)
+    );
+
+    // a sum is a struct with a variable tail, so it is a level between its expressions
+    let sum = |inner: Expr| -> Expr { Expr::Add(Sum::new(Expr::Number(1), inner)) };
+    assert_eq!(
+        Expr::decode(&sum(negated(61)).encode()),
+        Ok(sum(negated(61)))
+    );
+    assert_eq!(
+        Expr::decode(&sum(negated(62)).encode()),
+        Err(DecodeError::TooDeep)
+    );
+}
