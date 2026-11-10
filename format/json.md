@@ -9,6 +9,7 @@ This document specifies the JSON form of ProtoPacket values.
 | `i8` to `i128`  | A number.                                                      |
 | `f32`, `f64`    | A string of the number, or of a name if it isn't finite.       |
 | time types      | A number, the integer the time is stored as.                   |
+| `decimal<S>`    | A string of the number, with all `S` of its fraction digits.   |
 | `uuid`          | A string, in its string form.                                  |
 | `string`        | A string.                                                      |
 | enum            | A case name, or a tag number if the writer doesn't know it.    |
@@ -22,6 +23,9 @@ A renamed field or case keeps its schema name. Keys can be in any order, & other
 A float is a string, so that it reads back as the exact float that was written. (ex: `"1.5"`) A
 JSON parser can round a plain number to another float, so readers reject one. A float that isn't
 finite is `"NaN"`, `"Infinity"` or `"-Infinity"`.
+
+A decimal is a string for the same reason as a float. (ex: `"1.50"`) A reader takes fewer fraction
+digits than its scale, but not more, & no exponent. (ex: `"1.5"`)
 
 A map's key is the text of its JSON, so a number or a `bool` is quoted. (ex: `{"1": true}`) A key
 that is a struct, message, variant, list or map can't be written yet.
