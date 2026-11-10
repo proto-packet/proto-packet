@@ -1,3 +1,4 @@
+use crate::io::list::SortedKeys;
 use crate::io::{Element, MapRef};
 use std::collections::BTreeMap;
 
@@ -5,7 +6,8 @@ use std::collections::BTreeMap;
 ///
 /// # Note
 /// - A map of the entries has it, & so does an encoded map.
-pub trait MapView<K>: Copy {
+/// - No other type can have it, since a writer trusts the order of the keys.
+pub trait MapView<K>: Copy + SortedKeys {
     /// A key of the map.
     type Key;
 
