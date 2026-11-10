@@ -11,6 +11,7 @@ This document specifies the JSON form of ProtoPacket values.
 | `uuid`          | A string, in its string form.                                  |
 | `string`        | A string.                                                      |
 | enum            | A case name, or a tag number if the writer doesn't know it.    |
+| list            | An array of the elements.                                      |
 | struct, message | An object of the fields, by name. Absent fields aren't listed. |
 | variant         | `{"var": <case name>, "val": <value>}`                         |
 
