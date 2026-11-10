@@ -65,8 +65,13 @@ declared, except that struct fields go after the others.
 | `u16`, `i16`, `f16`, enums                                            | 2        | 2         |
 | `u8`, `i8`                                                            | 1        | 1         |
 | fixed-size structs                                                    | its size | its own   |
+| arrays                                                                | its size | its own   |
 
 A `bool` isn't in the table because it is stored as a bit.
+
+An array of scalars is with the other fields of its alignment. Any other array is with the struct
+fields, since it can end off a multiple of its alignment. (ex: an array of structs, or of optional
+elements)
 
 The header has these parts, in this order.
 
@@ -421,8 +426,6 @@ A list is its elements in order. An empty list is no bytes.
 A list is always variable-size, so in a struct it is an entry of the tail. Its alignment is the
 alignment of its elements.
 
-todo -- a fixed-length list is `[N]T`, for later.
-
 ### Fixed-Size Elements
 
 The elements are back to back, with no count. A reader gets the count from the length of the list.
@@ -488,6 +491,74 @@ Readers reject a list when any of these is true.
 - The padding before an element reaches or passes its end, or isn't zeros.
 - An element is invalid.
 
+## Arrays
+
+An array is a list with a length that is part of its type. `[N]T` is exactly `N` elements of `T`,
+stored as a list of fixed-size elements. `N` is at least 1.
+
+An array is fixed-size, so in a struct it is in the fixed header. It has no count & no ends.
+
+```text
+struct Mesh { id: u32; origin: [3]f32; tag: [4]u8; }
+
+[id][origin: 3 x f32][tag: 4 x u8]
+
+Mesh(1, [1.0, 2.0, 3.0], [9, 8, 7, 6]) is 20 bytes, alignment 4
+
+offset  0: id
+offset  4: origin = 1.0, 2.0, 3.0
+offset 16: tag
+```
+
+- The elements are fixed-size. An array can't hold a `string`, a list, a map, a message or a
+  variant.
+- A `bool` is one byte, as in a list.
+- The alignment of an array is the alignment of its elements.
+- In a message, a variant or a list, an array is exactly its size. (ex: `[][3]f32` is 12 bytes for
+  each element, with no count)
+
+Readers reject an array that isn't its size, or that has an invalid element.
+
+## Optional Elements
+
+An element of a list or an array, or a value of a map, can be `optional`. A key of a map can't.
+
+The elements are stored as they are without `optional`, followed by their presence bits. There is
+one bit for each element, in order, with the low bit of each byte first. Unused bits are 0.
+
+- An absent fixed-size element is zeros.
+- An absent variable-size element is no bytes.
+- An optional enum has no presence bits, since 0 is absent, as in a struct.
+
+```text
+struct Slots { slots: [3]optional u32; }
+
+[slots: 3 x u32][bits]
+
+Slots([1, absent, 3]) is 13 bytes, alignment 4
+
+offset  0: slots = 1, 0, 3
+offset 12: bits = 0b101
+```
+
+A list of optional fixed-size elements starts with its count, a `u32`, since its length no longer
+gives it. Its elements start at the next multiple of their alignment, & its alignment is at least 4.
+Nothing else gains a count. A list of variable-size elements has one already, an array has its
+length, & a map has the count of its keys.
+
+```text
+[]optional u32             = [count][elements][bits]
+[]optional string          = [count][ends][elements][bits]
+[3]optional u32            = [elements][bits]
+map<string, optional u32>  = [keys end][keys][values][bits]
+```
+
+Readers reject optional elements when any of these is true.
+
+- The presence bits aren't one for each element, or an unused bit is 1.
+- An absent element isn't zeros, or has bytes.
+- A count is 0, or isn't the count of the elements.
+
 ## Maps
 
 A map is its keys as a list, then its values as a list. The `n`th value is the value of the `n`th
@@ -500,6 +571,8 @@ map = [keys end][keys][values]
 - The `keys end` is a `u32`. It is the offset where the keys end, from the start of the map.
 - The `keys` are a list of the key type. (see [Lists](#lists))
 - The `values` are a list of the value type, with one value for each key.
+
+A value can be `optional`, but a key can't. (see [Optional Elements](#optional-elements))
 
 Each list starts at the next multiple of its own alignment, with zeros as padding before it. The
 alignment of a map is the largest of the two lists, & at least 4.
@@ -532,6 +605,7 @@ search. Any type can be a key.
 | enum             | By tag number.                                            |
 | struct           | By the fields, in declaration order.                      |
 | list             | By the elements. A list comes after the lists it extends. |
+| array            | By the elements.                                          |
 | map              | By the entries, each a key then its value.                |
 | message, variant | By its encoded bytes.                                     |
 
@@ -579,12 +653,13 @@ compared without decoding them. Unknown fields & cases are compared as their byt
 - An alignment is 1, 2, 4 or 8.
 - A struct is at most `u32::MAX` bytes, & so are the `values` of a message.
 - A list of variable-size elements is at most `u32::MAX` elements & `u32::MAX` bytes.
+- An array has from 1 to `u32::MAX` elements.
 - A value nests at most 64 levels deep.
 
 ### Depth
 
-A message, a variant & a struct with a variable tail are each a level. A list, a map & a fixed-size
-struct aren't. Readers reject a value with more than 64 levels, & writers don't write one:
+A message, a variant & a struct with a variable tail are each a level. A list, a map, an array & a
+fixed-size struct aren't. Readers reject a value with more than 64 levels, & writers don't write one:
 
 ```text
 message Node { children: []Node = 1; }
