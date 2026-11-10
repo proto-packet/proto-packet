@@ -337,3 +337,35 @@ impl<const S: u8> Element for crate::types::Decimal<S> {
         a.cmp(&b)
     }
 }
+
+#[cfg(feature = "types")]
+impl Element for crate::types::Bytes {
+    const SIZE: Option<usize> = None;
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = false;
+    type Ref<'a> = &'a [u8];
+
+    fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+        Ok(())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> &[u8] {
+        bytes
+    }
+
+    fn decode(element: &[u8]) -> crate::types::Bytes {
+        element.into()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.len()
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        out.extend_from_slice(self.as_bytes());
+    }
+
+    fn cmp_refs(a: &[u8], b: &[u8]) -> Ordering {
+        a.cmp(b)
+    }
+}

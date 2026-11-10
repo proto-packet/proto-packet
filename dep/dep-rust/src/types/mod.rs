@@ -1,3 +1,4 @@
+pub use bytes::*;
 pub use decimal::*;
 pub use deserialize_enum::*;
 pub use float32::*;
@@ -9,6 +10,7 @@ pub use variant_json::*;
 /// A 16-byte universally unique identifier.
 pub use ::uuid::Uuid;
 
+mod bytes;
 mod decimal;
 mod deserialize_enum;
 mod float32;
