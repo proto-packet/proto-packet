@@ -43,6 +43,18 @@ impl NewerKeys {
     }
 }
 
+impl PartialEq<super::NewerKeysRef<'_>> for NewerKeys {
+    fn eq(&self, other: &super::NewerKeysRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NewerKeysBuf> for NewerKeys {
+    fn eq(&self, other: &super::NewerKeysBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl NewerKeys {
     //! Field: `by_message`
 

@@ -57,6 +57,18 @@ impl std::cmp::PartialOrd for String {
     }
 }
 
+impl std::cmp::PartialEq<super::StringRef<'_>> for String {
+    fn eq(&self, other: &super::StringRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl std::cmp::PartialEq<super::StringBuf> for String {
+    fn eq(&self, other: &super::StringBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl String {
     //! Unknown Fields
 

@@ -97,6 +97,18 @@ impl PartialOrd for LoopMessage {
     }
 }
 
+impl PartialEq<super::LoopMessageRef<'_>> for LoopMessage {
+    fn eq(&self, other: &super::LoopMessageRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::LoopMessageBuf> for LoopMessage {
+    fn eq(&self, other: &super::LoopMessageBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl LoopMessage {
     //! Unknown Fields
 

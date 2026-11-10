@@ -56,6 +56,18 @@ impl WithMessages {
     }
 }
 
+impl PartialEq<super::WithMessagesRef<'_>> for WithMessages {
+    fn eq(&self, other: &super::WithMessagesRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::WithMessagesBuf> for WithMessages {
+    fn eq(&self, other: &super::WithMessagesBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl WithMessages {
     //! Field: `before`
 

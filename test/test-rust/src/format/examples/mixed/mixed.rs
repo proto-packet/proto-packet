@@ -46,6 +46,18 @@ impl Mixed {
     }
 }
 
+impl PartialEq<super::MixedRef<'_>> for Mixed {
+    fn eq(&self, other: &super::MixedRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::MixedBuf> for Mixed {
+    fn eq(&self, other: &super::MixedBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Mixed {
     //! Field: `a`
 

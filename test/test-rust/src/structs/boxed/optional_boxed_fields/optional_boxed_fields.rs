@@ -66,6 +66,18 @@ impl OptionalBoxedFields {
     }
 }
 
+impl PartialEq<super::OptionalBoxedFieldsRef<'_>> for OptionalBoxedFields {
+    fn eq(&self, other: &super::OptionalBoxedFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::OptionalBoxedFieldsBuf> for OptionalBoxedFields {
+    fn eq(&self, other: &super::OptionalBoxedFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl OptionalBoxedFields {
     //! Field: `point`
 

@@ -41,6 +41,18 @@ impl LoopLong {
     }
 }
 
+impl PartialEq<super::LoopLongRef<'_>> for LoopLong {
+    fn eq(&self, other: &super::LoopLongRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::LoopLongBuf> for LoopLong {
+    fn eq(&self, other: &super::LoopLongBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl LoopLong {
     //! Field: `value`
 

@@ -87,6 +87,18 @@ impl NineBits {
     }
 }
 
+impl PartialEq<super::NineBitsRef<'_>> for NineBits {
+    fn eq(&self, other: &super::NineBitsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NineBitsBuf> for NineBits {
+    fn eq(&self, other: &super::NineBitsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl NineBits {
     //! Field: `a`
 

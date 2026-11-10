@@ -91,6 +91,18 @@ impl PartialOrd for EdgeTags {
     }
 }
 
+impl PartialEq<super::EdgeTagsRef<'_>> for EdgeTags {
+    fn eq(&self, other: &super::EdgeTagsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::EdgeTagsBuf> for EdgeTags {
+    fn eq(&self, other: &super::EdgeTagsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl EdgeTags {
     //! Unknown Fields
 

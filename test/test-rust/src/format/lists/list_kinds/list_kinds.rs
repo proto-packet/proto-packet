@@ -105,6 +105,18 @@ impl ListKinds {
     }
 }
 
+impl PartialEq<super::ListKindsRef<'_>> for ListKinds {
+    fn eq(&self, other: &super::ListKindsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ListKindsBuf> for ListKinds {
+    fn eq(&self, other: &super::ListKindsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl ListKinds {
     //! Field: `bytes`
 

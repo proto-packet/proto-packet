@@ -120,6 +120,18 @@ impl PartialOrd for NewerCases {
     }
 }
 
+impl PartialEq<super::NewerCasesRef<'_>> for NewerCases {
+    fn eq(&self, other: &super::NewerCasesRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NewerCasesBuf> for NewerCases {
+    fn eq(&self, other: &super::NewerCasesBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl NewerCases {
     //! Encoding
 

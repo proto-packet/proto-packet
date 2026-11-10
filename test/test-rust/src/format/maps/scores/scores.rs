@@ -33,6 +33,18 @@ impl Scores {
     }
 }
 
+impl PartialEq<super::ScoresRef<'_>> for Scores {
+    fn eq(&self, other: &super::ScoresRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ScoresBuf> for Scores {
+    fn eq(&self, other: &super::ScoresBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Scores {
     //! Field: `scores`
 

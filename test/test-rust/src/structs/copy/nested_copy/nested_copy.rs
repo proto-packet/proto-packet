@@ -34,6 +34,18 @@ impl NestedCopy {
     }
 }
 
+impl PartialEq<super::NestedCopyRef<'_>> for NestedCopy {
+    fn eq(&self, other: &super::NestedCopyRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NestedCopyBuf> for NestedCopy {
+    fn eq(&self, other: &super::NestedCopyBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl NestedCopy {
     //! Field: `fields`
 

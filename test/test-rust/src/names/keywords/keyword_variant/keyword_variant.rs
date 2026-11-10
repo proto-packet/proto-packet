@@ -79,6 +79,18 @@ impl PartialOrd for KeywordVariant {
     }
 }
 
+impl PartialEq<super::KeywordVariantRef<'_>> for KeywordVariant {
+    fn eq(&self, other: &super::KeywordVariantRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::KeywordVariantBuf> for KeywordVariant {
+    fn eq(&self, other: &super::KeywordVariantBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl KeywordVariant {
     //! Encoding
 

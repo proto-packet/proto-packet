@@ -1,3 +1,4 @@
+use crate::rust::gen_eq::gen_buf_eq;
 use crate::rust::gen_forms::{gen_new, gen_new_unchecked};
 use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
@@ -34,6 +35,8 @@ pub(crate) fn gen_buf(schema_name: &str, type_name: &str, accessors: Option<Impl
         .with_statement(EmptyLine::default())
         .with_statement(gen_from(&name, type_name))
         .with_statement(EmptyLine::default())
+        .with_literal(gen_buf_eq(type_name, &ref_name, &name))
+        .with_statement(EmptyLine::default())
         .with_statement(gen_properties(&name, &ref_name, &mut_name));
     if let Some(accessors) = accessors {
         block.add_statement(EmptyLine::default());
@@ -52,7 +55,7 @@ fn gen_dec(schema_name: &str, name: &str, type_name: &str) -> RustStruct {
             type_name, type_name
         ))
         .with_field(StructField::from(("bytes", BYTES)));
-    for derive in ["Clone", "Debug"] {
+    for derive in ["Clone", "Eq", "PartialEq", "Hash", "Debug"] {
         result.add_derive(derive);
     }
     if !is_upper_camel_case(schema_name) {

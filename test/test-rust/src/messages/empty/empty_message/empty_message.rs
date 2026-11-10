@@ -22,6 +22,18 @@ impl PartialOrd for EmptyMessage {
     }
 }
 
+impl PartialEq<super::EmptyMessageRef<'_>> for EmptyMessage {
+    fn eq(&self, other: &super::EmptyMessageRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::EmptyMessageBuf> for EmptyMessage {
+    fn eq(&self, other: &super::EmptyMessageBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl EmptyMessage {
     //! Unknown Fields
 

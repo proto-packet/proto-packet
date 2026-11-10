@@ -91,6 +91,18 @@ impl PartialOrd for OlderKey {
     }
 }
 
+impl PartialEq<super::OlderKeyRef<'_>> for OlderKey {
+    fn eq(&self, other: &super::OlderKeyRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::OlderKeyBuf> for OlderKey {
+    fn eq(&self, other: &super::OlderKeyBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl OlderKey {
     //! Unknown Fields
 

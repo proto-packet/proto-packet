@@ -47,6 +47,18 @@ impl FloatKinds {
     }
 }
 
+impl PartialEq<super::FloatKindsRef<'_>> for FloatKinds {
+    fn eq(&self, other: &super::FloatKindsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::FloatKindsBuf> for FloatKinds {
+    fn eq(&self, other: &super::FloatKindsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl FloatKinds {
     //! Field: `a`
 

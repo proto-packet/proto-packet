@@ -106,6 +106,18 @@ impl std::cmp::PartialOrd for Box {
     }
 }
 
+impl std::cmp::PartialEq<super::BoxRef<'_>> for Box {
+    fn eq(&self, other: &super::BoxRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl std::cmp::PartialEq<super::BoxBuf> for Box {
+    fn eq(&self, other: &super::BoxBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Box {
     //! Encoding
 

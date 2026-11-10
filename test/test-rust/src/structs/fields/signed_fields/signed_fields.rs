@@ -62,6 +62,18 @@ impl SignedFields {
     }
 }
 
+impl PartialEq<super::SignedFieldsRef<'_>> for SignedFields {
+    fn eq(&self, other: &super::SignedFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::SignedFieldsBuf> for SignedFields {
+    fn eq(&self, other: &super::SignedFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl SignedFields {
     //! Field: `signed8`
 

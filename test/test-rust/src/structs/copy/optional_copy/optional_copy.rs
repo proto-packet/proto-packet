@@ -40,6 +40,18 @@ impl OptionalCopy {
     }
 }
 
+impl PartialEq<super::OptionalCopyRef<'_>> for OptionalCopy {
+    fn eq(&self, other: &super::OptionalCopyRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::OptionalCopyBuf> for OptionalCopy {
+    fn eq(&self, other: &super::OptionalCopyBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl OptionalCopy {
     //! Field: `count`
 

@@ -37,6 +37,18 @@ impl Entry {
     }
 }
 
+impl PartialEq<super::EntryRef<'_>> for Entry {
+    fn eq(&self, other: &super::EntryRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::EntryBuf> for Entry {
+    fn eq(&self, other: &super::EntryBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Entry {
     //! Field: `id`
 

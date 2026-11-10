@@ -93,6 +93,18 @@ impl PartialOrd for MapCases {
     }
 }
 
+impl PartialEq<super::MapCasesRef<'_>> for MapCases {
+    fn eq(&self, other: &super::MapCasesRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::MapCasesBuf> for MapCases {
+    fn eq(&self, other: &super::MapCasesBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl MapCases {
     //! Encoding
 

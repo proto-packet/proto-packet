@@ -34,6 +34,18 @@ impl After {
     }
 }
 
+impl PartialEq<super::AfterRef<'_>> for After {
+    fn eq(&self, other: &super::AfterRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::AfterBuf> for After {
+    fn eq(&self, other: &super::AfterBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl After {
     //! Field: `value`
 

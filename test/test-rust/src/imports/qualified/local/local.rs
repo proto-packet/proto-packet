@@ -34,6 +34,18 @@ impl Local {
     }
 }
 
+impl PartialEq<super::LocalRef<'_>> for Local {
+    fn eq(&self, other: &super::LocalRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::LocalBuf> for Local {
+    fn eq(&self, other: &super::LocalBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Local {
     //! Field: `value`
 

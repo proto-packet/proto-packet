@@ -33,6 +33,18 @@ impl Texts {
     }
 }
 
+impl PartialEq<super::TextsRef<'_>> for Texts {
+    fn eq(&self, other: &super::TextsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::TextsBuf> for Texts {
+    fn eq(&self, other: &super::TextsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Texts {
     //! Field: `texts`
 

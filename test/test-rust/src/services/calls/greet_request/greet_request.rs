@@ -57,6 +57,18 @@ impl PartialOrd for GreetRequest {
     }
 }
 
+impl PartialEq<super::GreetRequestRef<'_>> for GreetRequest {
+    fn eq(&self, other: &super::GreetRequestRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::GreetRequestBuf> for GreetRequest {
+    fn eq(&self, other: &super::GreetRequestBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl GreetRequest {
     //! Unknown Fields
 

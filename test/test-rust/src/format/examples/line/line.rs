@@ -46,6 +46,18 @@ impl Line {
     }
 }
 
+impl PartialEq<super::LineRef<'_>> for Line {
+    fn eq(&self, other: &super::LineRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::LineBuf> for Line {
+    fn eq(&self, other: &super::LineBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Line {
     //! Field: `start`
 

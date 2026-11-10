@@ -6,6 +6,7 @@ use crate::rust::docs::add_docs;
 use crate::rust::encoding::{IO, gen_encode};
 use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_element::gen_element;
+use crate::rust::gen_eq::gen_native_eq;
 use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
 use crate::rust::gen_ord::gen_variant_ord;
 use crate::rust::gen_struct::{check_list_elements, check_type_name, gen_decoding};
@@ -150,6 +151,13 @@ pub fn gen_variant(
         Prelude::new(&type_name),
         &type_name,
         &idents,
+    ));
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_native_eq(
+        Prelude::new(&type_name),
+        &type_name,
+        &ref_name(schema_name),
+        &buf_name(schema_name),
     ));
     block.add_statement(EmptyLine::default());
     block.add_statement(gen_encoding(typing, &type_name, &cases));

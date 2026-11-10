@@ -33,6 +33,18 @@ impl NonCopyStruct {
     }
 }
 
+impl PartialEq<super::NonCopyStructRef<'_>> for NonCopyStruct {
+    fn eq(&self, other: &super::NonCopyStructRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NonCopyStructBuf> for NonCopyStruct {
+    fn eq(&self, other: &super::NonCopyStructBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl NonCopyStruct {
     //! Field: `person`
 

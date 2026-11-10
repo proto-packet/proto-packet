@@ -88,6 +88,18 @@ impl OptionalFields {
     }
 }
 
+impl PartialEq<super::OptionalFieldsRef<'_>> for OptionalFields {
+    fn eq(&self, other: &super::OptionalFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::OptionalFieldsBuf> for OptionalFields {
+    fn eq(&self, other: &super::OptionalFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl OptionalFields {
     //! Field: `count`
 

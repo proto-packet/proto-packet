@@ -34,6 +34,18 @@ impl Self_ {
     }
 }
 
+impl PartialEq<super::SelfRef<'_>> for Self_ {
+    fn eq(&self, other: &super::SelfRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::SelfBuf> for Self_ {
+    fn eq(&self, other: &super::SelfBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Self_ {
     //! Field: `value`
 

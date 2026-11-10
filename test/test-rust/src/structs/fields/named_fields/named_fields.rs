@@ -61,6 +61,18 @@ impl NamedFields {
     }
 }
 
+impl PartialEq<super::NamedFieldsRef<'_>> for NamedFields {
+    fn eq(&self, other: &super::NamedFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NamedFieldsBuf> for NamedFields {
+    fn eq(&self, other: &super::NamedFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl NamedFields {
     //! Field: `point`
 

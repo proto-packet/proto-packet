@@ -79,6 +79,18 @@ impl PartialOrd for OlderCases {
     }
 }
 
+impl PartialEq<super::OlderCasesRef<'_>> for OlderCases {
+    fn eq(&self, other: &super::OlderCasesRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::OlderCasesBuf> for OlderCases {
+    fn eq(&self, other: &super::OlderCasesBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl OlderCases {
     //! Encoding
 

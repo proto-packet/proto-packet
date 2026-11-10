@@ -61,6 +61,18 @@ impl BoxedFields {
     }
 }
 
+impl PartialEq<super::BoxedFieldsRef<'_>> for BoxedFields {
+    fn eq(&self, other: &super::BoxedFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::BoxedFieldsBuf> for BoxedFields {
+    fn eq(&self, other: &super::BoxedFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl BoxedFields {
     //! Field: `point`
 

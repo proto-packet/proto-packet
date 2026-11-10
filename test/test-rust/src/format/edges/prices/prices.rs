@@ -68,6 +68,18 @@ impl Prices {
     }
 }
 
+impl PartialEq<super::PricesRef<'_>> for Prices {
+    fn eq(&self, other: &super::PricesRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::PricesBuf> for Prices {
+    fn eq(&self, other: &super::PricesBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Prices {
     //! Field: `price`
 

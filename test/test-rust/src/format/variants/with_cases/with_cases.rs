@@ -137,6 +137,18 @@ impl PartialOrd for WithCases {
     }
 }
 
+impl PartialEq<super::WithCasesRef<'_>> for WithCases {
+    fn eq(&self, other: &super::WithCasesRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::WithCasesBuf> for WithCases {
+    fn eq(&self, other: &super::WithCasesBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl WithCases {
     //! Unknown Fields
 

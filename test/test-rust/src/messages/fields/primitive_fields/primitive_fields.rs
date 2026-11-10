@@ -227,6 +227,18 @@ impl PartialOrd for PrimitiveFields {
     }
 }
 
+impl PartialEq<super::PrimitiveFieldsRef<'_>> for PrimitiveFields {
+    fn eq(&self, other: &super::PrimitiveFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::PrimitiveFieldsBuf> for PrimitiveFields {
+    fn eq(&self, other: &super::PrimitiveFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl PrimitiveFields {
     //! Unknown Fields
 

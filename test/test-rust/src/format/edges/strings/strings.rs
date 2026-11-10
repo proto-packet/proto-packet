@@ -62,6 +62,18 @@ impl Strings {
     }
 }
 
+impl PartialEq<super::StringsRef<'_>> for Strings {
+    fn eq(&self, other: &super::StringsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::StringsBuf> for Strings {
+    fn eq(&self, other: &super::StringsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Strings {
     //! Field: `number`
 

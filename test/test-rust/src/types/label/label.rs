@@ -57,6 +57,18 @@ impl PartialOrd for Label {
     }
 }
 
+impl PartialEq<super::LabelRef<'_>> for Label {
+    fn eq(&self, other: &super::LabelRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::LabelBuf> for Label {
+    fn eq(&self, other: &super::LabelBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Label {
     //! Unknown Fields
 

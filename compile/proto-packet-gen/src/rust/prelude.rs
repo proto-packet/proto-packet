@@ -7,6 +7,7 @@ pub(crate) enum PreludeName {
     Into,
     Option,
     Ord,
+    PartialEq,
     PartialOrd,
     Result,
     Send,
@@ -19,11 +20,12 @@ impl PreludeName {
     //! Names
 
     /// The prelude names.
-    const ALL: [Self; 10] = [
+    const ALL: [Self; 11] = [
         Self::Box,
         Self::Into,
         Self::Option,
         Self::Ord,
+        Self::PartialEq,
         Self::PartialOrd,
         Self::Result,
         Self::Send,
@@ -39,6 +41,7 @@ impl PreludeName {
             Self::Into => "std::convert::Into",
             Self::Option => "std::option::Option",
             Self::Ord => "std::cmp::Ord",
+            Self::PartialEq => "std::cmp::PartialEq",
             Self::PartialOrd => "std::cmp::PartialOrd",
             Self::Result => "std::result::Result",
             Self::Send => "std::marker::Send",

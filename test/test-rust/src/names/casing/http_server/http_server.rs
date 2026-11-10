@@ -36,6 +36,18 @@ impl HTTPServer {
     }
 }
 
+impl PartialEq<super::HTTPServerRef<'_>> for HTTPServer {
+    fn eq(&self, other: &super::HTTPServerRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::HTTPServerBuf> for HTTPServer {
+    fn eq(&self, other: &super::HTTPServerBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl HTTPServer {
     //! Field: `maxConnections`
 

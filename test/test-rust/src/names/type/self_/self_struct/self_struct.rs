@@ -34,6 +34,18 @@ impl SelfStruct {
     }
 }
 
+impl PartialEq<super::SelfStructRef<'_>> for SelfStruct {
+    fn eq(&self, other: &super::SelfStructRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::SelfStructBuf> for SelfStruct {
+    fn eq(&self, other: &super::SelfStructBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl SelfStruct {
     //! Field: `value`
 

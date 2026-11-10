@@ -517,6 +517,18 @@ impl PartialOrd for AllKinds {
     }
 }
 
+impl PartialEq<super::AllKindsRef<'_>> for AllKinds {
+    fn eq(&self, other: &super::AllKindsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::AllKindsBuf> for AllKinds {
+    fn eq(&self, other: &super::AllKindsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl AllKinds {
     //! Unknown Fields
 

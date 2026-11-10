@@ -37,6 +37,18 @@ impl Tagged {
     }
 }
 
+impl PartialEq<super::TaggedRef<'_>> for Tagged {
+    fn eq(&self, other: &super::TaggedRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::TaggedBuf> for Tagged {
+    fn eq(&self, other: &super::TaggedBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Tagged {
     //! Field: `id`
 

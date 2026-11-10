@@ -227,6 +227,18 @@ impl PartialOrd for WithLists {
     }
 }
 
+impl PartialEq<super::WithListsRef<'_>> for WithLists {
+    fn eq(&self, other: &super::WithListsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::WithListsBuf> for WithLists {
+    fn eq(&self, other: &super::WithListsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl WithLists {
     //! Unknown Fields
 

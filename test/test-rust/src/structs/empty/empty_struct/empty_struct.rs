@@ -21,6 +21,18 @@
 #[serde(crate = "proto_packet::serde")]
 pub struct EmptyStruct {}
 
+impl PartialEq<super::EmptyStructRef<'_>> for EmptyStruct {
+    fn eq(&self, other: &super::EmptyStructRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::EmptyStructBuf> for EmptyStruct {
+    fn eq(&self, other: &super::EmptyStructBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl EmptyStruct {
     //! Encoding
 

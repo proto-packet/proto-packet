@@ -315,6 +315,18 @@ impl PartialOrd for AllCases {
     }
 }
 
+impl PartialEq<super::AllCasesRef<'_>> for AllCases {
+    fn eq(&self, other: &super::AllCasesRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::AllCasesBuf> for AllCases {
+    fn eq(&self, other: &super::AllCasesBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl AllCases {
     //! Encoding
 

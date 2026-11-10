@@ -129,6 +129,18 @@ impl PartialOrd for Expr {
     }
 }
 
+impl PartialEq<super::ExprRef<'_>> for Expr {
+    fn eq(&self, other: &super::ExprRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ExprBuf> for Expr {
+    fn eq(&self, other: &super::ExprBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Expr {
     //! Encoding
 

@@ -6,6 +6,7 @@ use crate::rust::encoding::{IO, gen_encoding};
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_element::gen_element;
+use crate::rust::gen_eq::gen_native_eq;
 use crate::rust::gen_struct_mut::{
     check_mut_names, gen_buf_accessors, gen_struct_mut, is_struct, mut_name,
 };
@@ -98,6 +99,13 @@ pub fn gen_struct(
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_constructor(typing, &type_name, &fields));
     }
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_native_eq(
+        Prelude::new(&type_name),
+        &type_name,
+        &ref_name(&structure.type_name()),
+        &buf_name(&structure.type_name()),
+    ));
     for field in &fields {
         let mut field_impl: ImplBlock = field.gen_impl(typing, &type_name);
         if is_struct(typing, *field) {

@@ -34,6 +34,18 @@ impl Same {
     }
 }
 
+impl PartialEq<super::SameRef<'_>> for Same {
+    fn eq(&self, other: &super::SameRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::SameBuf> for Same {
+    fn eq(&self, other: &super::SameBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Same {
     //! Field: `value`
 

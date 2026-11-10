@@ -1,5 +1,6 @@
 use crate::rust::encoding::IO;
 use crate::rust::gen_buf::buf_name;
+use crate::rust::gen_eq::gen_ref_eq;
 use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
 use crate::rust::gen_message_ref::{gen_read, gen_value_check};
 use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, ref_name};
@@ -80,6 +81,8 @@ pub(crate) fn gen_variant_ref(
         .with_statement(gen_ref_dec(schema_name, &name, type_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_construction(typing, cases, &ref_type))
+        .with_statement(EmptyLine::default())
+        .with_literal(gen_ref_eq(type_name, &name, &buf_name(schema_name)))
         .with_statement(EmptyLine::default())
         .with_statement(gen_ref_properties(&ref_type))
         .with_statement(EmptyLine::default())

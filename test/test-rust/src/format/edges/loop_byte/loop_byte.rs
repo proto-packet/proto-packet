@@ -41,6 +41,18 @@ impl LoopByte {
     }
 }
 
+impl PartialEq<super::LoopByteRef<'_>> for LoopByte {
+    fn eq(&self, other: &super::LoopByteRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::LoopByteBuf> for LoopByte {
+    fn eq(&self, other: &super::LoopByteBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl LoopByte {
     //! Field: `value`
 

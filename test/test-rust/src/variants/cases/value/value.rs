@@ -231,6 +231,18 @@ impl PartialOrd for Value {
     }
 }
 
+impl PartialEq<super::ValueRef<'_>> for Value {
+    fn eq(&self, other: &super::ValueRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ValueBuf> for Value {
+    fn eq(&self, other: &super::ValueBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Value {
     //! Encoding
 

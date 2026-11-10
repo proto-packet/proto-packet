@@ -49,6 +49,18 @@ impl Pair {
     }
 }
 
+impl PartialEq<super::PairRef<'_>> for Pair {
+    fn eq(&self, other: &super::PairRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::PairBuf> for Pair {
+    fn eq(&self, other: &super::PairBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Pair {
     //! Field: `first`
 

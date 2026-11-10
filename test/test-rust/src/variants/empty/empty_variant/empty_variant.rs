@@ -62,6 +62,18 @@ impl PartialOrd for EmptyVariant {
     }
 }
 
+impl PartialEq<super::EmptyVariantRef<'_>> for EmptyVariant {
+    fn eq(&self, other: &super::EmptyVariantRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::EmptyVariantBuf> for EmptyVariant {
+    fn eq(&self, other: &super::EmptyVariantBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl EmptyVariant {
     //! Encoding
 

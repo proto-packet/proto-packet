@@ -125,6 +125,18 @@ impl PartialOrd for NewerKey {
     }
 }
 
+impl PartialEq<super::NewerKeyRef<'_>> for NewerKey {
+    fn eq(&self, other: &super::NewerKeyRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NewerKeyBuf> for NewerKey {
+    fn eq(&self, other: &super::NewerKeyBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl NewerKey {
     //! Unknown Fields
 

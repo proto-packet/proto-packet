@@ -37,6 +37,18 @@ impl Numbers {
     }
 }
 
+impl PartialEq<super::NumbersRef<'_>> for Numbers {
+    fn eq(&self, other: &super::NumbersRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NumbersBuf> for Numbers {
+    fn eq(&self, other: &super::NumbersBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Numbers {
     //! Field: `count`
 

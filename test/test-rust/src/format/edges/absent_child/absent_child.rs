@@ -50,6 +50,18 @@ impl AbsentChild {
     }
 }
 
+impl PartialEq<super::AbsentChildRef<'_>> for AbsentChild {
+    fn eq(&self, other: &super::AbsentChildRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::AbsentChildBuf> for AbsentChild {
+    fn eq(&self, other: &super::AbsentChildBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl AbsentChild {
     //! Field: `first`
 

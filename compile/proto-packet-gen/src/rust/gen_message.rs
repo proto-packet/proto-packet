@@ -7,6 +7,7 @@ use crate::rust::encoding::IO;
 use crate::rust::fields::{Field, check_field_names};
 use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_element::gen_element;
+use crate::rust::gen_eq::gen_native_eq;
 use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
 use crate::rust::gen_message_mut::{gen_message_buf_accessors, gen_message_mut};
 use crate::rust::gen_message_ref::gen_message_ref;
@@ -129,6 +130,13 @@ pub fn gen_message(
         Prelude::new(&type_name),
         &type_name,
         &ordered,
+    ));
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_native_eq(
+        Prelude::new(&type_name),
+        &type_name,
+        &ref_name(schema_name),
+        &buf_name(schema_name),
     ));
     block.add_statement(EmptyLine::default());
     block.add_statement(gen_unknown_fields(typing, &type_name));

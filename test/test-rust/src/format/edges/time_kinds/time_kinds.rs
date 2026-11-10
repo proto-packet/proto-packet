@@ -81,6 +81,18 @@ impl TimeKinds {
     }
 }
 
+impl PartialEq<super::TimeKindsRef<'_>> for TimeKinds {
+    fn eq(&self, other: &super::TimeKindsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::TimeKindsBuf> for TimeKinds {
+    fn eq(&self, other: &super::TimeKindsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl TimeKinds {
     //! Field: `at`
 

@@ -14,6 +14,7 @@ mod fields;
 mod gen_buf;
 mod gen_element;
 mod gen_enum;
+mod gen_eq;
 mod gen_forms;
 mod gen_json;
 mod gen_message;

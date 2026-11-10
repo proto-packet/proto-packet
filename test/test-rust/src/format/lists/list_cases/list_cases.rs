@@ -135,6 +135,18 @@ impl PartialOrd for ListCases {
     }
 }
 
+impl PartialEq<super::ListCasesRef<'_>> for ListCases {
+    fn eq(&self, other: &super::ListCasesRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ListCasesBuf> for ListCases {
+    fn eq(&self, other: &super::ListCasesBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl ListCases {
     //! Encoding
 

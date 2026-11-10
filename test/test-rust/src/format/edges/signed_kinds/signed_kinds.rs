@@ -55,6 +55,18 @@ impl SignedKinds {
     }
 }
 
+impl PartialEq<super::SignedKindsRef<'_>> for SignedKinds {
+    fn eq(&self, other: &super::SignedKindsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::SignedKindsBuf> for SignedKinds {
+    fn eq(&self, other: &super::SignedKindsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl SignedKinds {
     //! Field: `a`
 

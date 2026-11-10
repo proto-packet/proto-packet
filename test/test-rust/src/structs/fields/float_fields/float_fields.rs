@@ -41,6 +41,18 @@ impl FloatFields {
     }
 }
 
+impl PartialEq<super::FloatFieldsRef<'_>> for FloatFields {
+    fn eq(&self, other: &super::FloatFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::FloatFieldsBuf> for FloatFields {
+    fn eq(&self, other: &super::FloatFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl FloatFields {
     //! Field: `float32`
 

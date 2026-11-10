@@ -91,6 +91,18 @@ impl PartialOrd for WithMaps {
     }
 }
 
+impl PartialEq<super::WithMapsRef<'_>> for WithMaps {
+    fn eq(&self, other: &super::WithMapsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::WithMapsBuf> for WithMaps {
+    fn eq(&self, other: &super::WithMapsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl WithMaps {
     //! Unknown Fields
 

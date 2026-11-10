@@ -62,6 +62,18 @@ impl QualifiedFields {
     }
 }
 
+impl PartialEq<super::QualifiedFieldsRef<'_>> for QualifiedFields {
+    fn eq(&self, other: &super::QualifiedFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::QualifiedFieldsBuf> for QualifiedFields {
+    fn eq(&self, other: &super::QualifiedFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl QualifiedFields {
     //! Field: `point`
 

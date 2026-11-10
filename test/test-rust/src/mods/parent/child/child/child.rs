@@ -34,6 +34,18 @@ impl Child {
     }
 }
 
+impl PartialEq<super::ChildRef<'_>> for Child {
+    fn eq(&self, other: &super::ChildRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ChildBuf> for Child {
+    fn eq(&self, other: &super::ChildBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Child {
     //! Field: `value`
 

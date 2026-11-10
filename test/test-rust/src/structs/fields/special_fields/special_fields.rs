@@ -37,6 +37,18 @@ impl SpecialFields {
     }
 }
 
+impl PartialEq<super::SpecialFieldsRef<'_>> for SpecialFields {
+    fn eq(&self, other: &super::SpecialFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::SpecialFieldsBuf> for SpecialFields {
+    fn eq(&self, other: &super::SpecialFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl SpecialFields {
     //! Field: `id`
 

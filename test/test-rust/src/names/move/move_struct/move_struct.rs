@@ -34,6 +34,18 @@ impl MoveStruct {
     }
 }
 
+impl PartialEq<super::MoveStructRef<'_>> for MoveStruct {
+    fn eq(&self, other: &super::MoveStructRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::MoveStructBuf> for MoveStruct {
+    fn eq(&self, other: &super::MoveStructBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl MoveStruct {
     //! Field: `value`
 

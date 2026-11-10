@@ -33,6 +33,18 @@ impl StringField {
     }
 }
 
+impl PartialEq<super::StringFieldRef<'_>> for StringField {
+    fn eq(&self, other: &super::StringFieldRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::StringFieldBuf> for StringField {
+    fn eq(&self, other: &super::StringFieldBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl StringField {
     //! Field: `text`
 

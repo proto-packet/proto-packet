@@ -125,6 +125,18 @@ impl PartialOrd for UnorderedTags {
     }
 }
 
+impl PartialEq<super::UnorderedTagsRef<'_>> for UnorderedTags {
+    fn eq(&self, other: &super::UnorderedTagsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::UnorderedTagsBuf> for UnorderedTags {
+    fn eq(&self, other: &super::UnorderedTagsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl UnorderedTags {
     //! Unknown Fields
 

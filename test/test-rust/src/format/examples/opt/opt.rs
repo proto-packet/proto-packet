@@ -59,6 +59,18 @@ impl Opt {
     }
 }
 
+impl PartialEq<super::OptRef<'_>> for Opt {
+    fn eq(&self, other: &super::OptRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::OptBuf> for Opt {
+    fn eq(&self, other: &super::OptBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Opt {
     //! Field: `a`
 

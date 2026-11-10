@@ -41,6 +41,18 @@ impl ListNode {
     }
 }
 
+impl PartialEq<super::ListNodeRef<'_>> for ListNode {
+    fn eq(&self, other: &super::ListNodeRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ListNodeBuf> for ListNode {
+    fn eq(&self, other: &super::ListNodeBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl ListNode {
     //! Field: `value`
 

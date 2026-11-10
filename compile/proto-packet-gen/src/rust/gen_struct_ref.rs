@@ -2,6 +2,7 @@ use crate::layout::{BitLayout, FieldLayout, StructLayout, UnitLayout, ValueLayou
 use crate::rust::encoding::IO;
 use crate::rust::fields::Field;
 use crate::rust::gen_buf::buf_name;
+use crate::rust::gen_eq::gen_ref_eq;
 use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
 use crate::rust::naming::{ident, is_upper_camel_case, type_path};
 use crate::rust::typing::Typing;
@@ -53,6 +54,12 @@ pub(crate) fn gen_struct_ref(
         .with_statement(EmptyLine::default())
         .with_statement(gen_construction(typing, fields, layout, &ref_type))
         .with_statement(EmptyLine::default())
+        .with_literal(gen_ref_eq(
+            type_name,
+            &name,
+            &buf_name(&structure.type_name()),
+        ))
+        .with_statement(EmptyLine::default())
         .with_statement(gen_ref_properties(&ref_type));
     if !fields.is_empty() {
         block.add_statement(EmptyLine::default());
@@ -78,7 +85,7 @@ pub(crate) fn gen_ref_dec(schema_name: &str, name: &str, type_name: &str) -> Rus
         ))
         .with_generic("'a")
         .with_field(StructField::from(("bytes", "&'a [u8]")));
-    for derive in ["Copy", "Clone", "Debug"] {
+    for derive in ["Copy", "Clone", "Eq", "PartialEq", "Hash", "Debug"] {
         result.add_derive(derive);
     }
     if !is_upper_camel_case(schema_name) {

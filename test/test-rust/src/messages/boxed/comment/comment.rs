@@ -97,6 +97,18 @@ impl PartialOrd for Comment {
     }
 }
 
+impl PartialEq<super::CommentRef<'_>> for Comment {
+    fn eq(&self, other: &super::CommentRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::CommentBuf> for Comment {
+    fn eq(&self, other: &super::CommentBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Comment {
     //! Unknown Fields
 

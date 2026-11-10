@@ -91,6 +91,18 @@ impl PartialOrd for KeywordMessage {
     }
 }
 
+impl PartialEq<super::KeywordMessageRef<'_>> for KeywordMessage {
+    fn eq(&self, other: &super::KeywordMessageRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::KeywordMessageBuf> for KeywordMessage {
+    fn eq(&self, other: &super::KeywordMessageBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl KeywordMessage {
     //! Unknown Fields
 

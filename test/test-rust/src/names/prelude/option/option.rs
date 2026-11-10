@@ -45,6 +45,18 @@ impl Option {
     }
 }
 
+impl std::cmp::PartialEq<super::OptionRef<'_>> for Option {
+    fn eq(&self, other: &super::OptionRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl std::cmp::PartialEq<super::OptionBuf> for Option {
+    fn eq(&self, other: &super::OptionBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Option {
     //! Field: `text`
 

@@ -44,6 +44,18 @@ impl NestedKeys {
     }
 }
 
+impl PartialEq<super::NestedKeysRef<'_>> for NestedKeys {
+    fn eq(&self, other: &super::NestedKeysRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NestedKeysBuf> for NestedKeys {
+    fn eq(&self, other: &super::NestedKeysBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl NestedKeys {
     //! Field: `by_struct`
 

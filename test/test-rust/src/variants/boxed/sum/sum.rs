@@ -40,6 +40,18 @@ impl Sum {
     }
 }
 
+impl PartialEq<super::SumRef<'_>> for Sum {
+    fn eq(&self, other: &super::SumRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::SumBuf> for Sum {
+    fn eq(&self, other: &super::SumBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Sum {
     //! Field: `left`
 

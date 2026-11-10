@@ -38,6 +38,18 @@ impl ImportedFields {
     }
 }
 
+impl PartialEq<super::ImportedFieldsRef<'_>> for ImportedFields {
+    fn eq(&self, other: &super::ImportedFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ImportedFieldsBuf> for ImportedFields {
+    fn eq(&self, other: &super::ImportedFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl ImportedFields {
     //! Field: `point`
 

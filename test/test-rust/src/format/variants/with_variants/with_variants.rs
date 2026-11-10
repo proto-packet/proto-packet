@@ -56,6 +56,18 @@ impl WithVariants {
     }
 }
 
+impl PartialEq<super::WithVariantsRef<'_>> for WithVariants {
+    fn eq(&self, other: &super::WithVariantsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::WithVariantsBuf> for WithVariants {
+    fn eq(&self, other: &super::WithVariantsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl WithVariants {
     //! Field: `before`
 

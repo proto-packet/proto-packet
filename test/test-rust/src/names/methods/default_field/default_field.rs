@@ -34,6 +34,18 @@ impl DefaultField {
     }
 }
 
+impl PartialEq<super::DefaultFieldRef<'_>> for DefaultField {
+    fn eq(&self, other: &super::DefaultFieldRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::DefaultFieldBuf> for DefaultField {
+    fn eq(&self, other: &super::DefaultFieldBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl DefaultField {
     //! Field: `default`
 

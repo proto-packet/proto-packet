@@ -46,6 +46,18 @@ impl Padded {
     }
 }
 
+impl PartialEq<super::PaddedRef<'_>> for Padded {
+    fn eq(&self, other: &super::PaddedRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::PaddedBuf> for Padded {
+    fn eq(&self, other: &super::PaddedBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Padded {
     //! Field: `a`
 

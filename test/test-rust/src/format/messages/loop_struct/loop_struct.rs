@@ -41,6 +41,18 @@ impl LoopStruct {
     }
 }
 
+impl PartialEq<super::LoopStructRef<'_>> for LoopStruct {
+    fn eq(&self, other: &super::LoopStructRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::LoopStructBuf> for LoopStruct {
+    fn eq(&self, other: &super::LoopStructBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl LoopStruct {
     //! Field: `value`
 

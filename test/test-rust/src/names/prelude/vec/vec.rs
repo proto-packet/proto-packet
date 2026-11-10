@@ -34,6 +34,18 @@ impl Vec {
     }
 }
 
+impl std::cmp::PartialEq<super::VecRef<'_>> for Vec {
+    fn eq(&self, other: &super::VecRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl std::cmp::PartialEq<super::VecBuf> for Vec {
+    fn eq(&self, other: &super::VecBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Vec {
     //! Field: `value`
 

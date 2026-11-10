@@ -63,6 +63,18 @@ impl FixedKinds {
     }
 }
 
+impl PartialEq<super::FixedKindsRef<'_>> for FixedKinds {
+    fn eq(&self, other: &super::FixedKindsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::FixedKindsBuf> for FixedKinds {
+    fn eq(&self, other: &super::FixedKindsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl FixedKinds {
     //! Field: `id`
 

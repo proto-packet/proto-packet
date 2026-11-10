@@ -72,6 +72,18 @@ impl MapKinds {
     }
 }
 
+impl PartialEq<super::MapKindsRef<'_>> for MapKinds {
+    fn eq(&self, other: &super::MapKindsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::MapKindsBuf> for MapKinds {
+    fn eq(&self, other: &super::MapKindsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl MapKinds {
     //! Field: `by_number`
 

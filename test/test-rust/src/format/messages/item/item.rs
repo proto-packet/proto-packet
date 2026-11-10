@@ -91,6 +91,18 @@ impl PartialOrd for Item {
     }
 }
 
+impl PartialEq<super::ItemRef<'_>> for Item {
+    fn eq(&self, other: &super::ItemRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ItemBuf> for Item {
+    fn eq(&self, other: &super::ItemBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Item {
     //! Unknown Fields
 

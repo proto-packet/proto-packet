@@ -46,6 +46,18 @@ impl KeywordStruct {
     }
 }
 
+impl PartialEq<super::KeywordStructRef<'_>> for KeywordStruct {
+    fn eq(&self, other: &super::KeywordStructRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::KeywordStructBuf> for KeywordStruct {
+    fn eq(&self, other: &super::KeywordStructBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl KeywordStruct {
     //! Field: `type`
 

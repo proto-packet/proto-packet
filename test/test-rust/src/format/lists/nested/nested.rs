@@ -33,6 +33,18 @@ impl Nested {
     }
 }
 
+impl PartialEq<super::NestedRef<'_>> for Nested {
+    fn eq(&self, other: &super::NestedRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::NestedBuf> for Nested {
+    fn eq(&self, other: &super::NestedBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Nested {
     //! Field: `rows`
 

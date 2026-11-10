@@ -34,6 +34,18 @@ impl Result {
     }
 }
 
+impl std::cmp::PartialEq<super::ResultRef<'_>> for Result {
+    fn eq(&self, other: &super::ResultRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl std::cmp::PartialEq<super::ResultBuf> for Result {
+    fn eq(&self, other: &super::ResultBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Result {
     //! Field: `value`
 

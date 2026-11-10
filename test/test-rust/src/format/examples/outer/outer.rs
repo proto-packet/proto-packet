@@ -42,6 +42,18 @@ impl Outer {
     }
 }
 
+impl PartialEq<super::OuterRef<'_>> for Outer {
+    fn eq(&self, other: &super::OuterRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::OuterBuf> for Outer {
+    fn eq(&self, other: &super::OuterBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Outer {
     //! Field: `m`
 

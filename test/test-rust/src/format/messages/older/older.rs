@@ -91,6 +91,18 @@ impl PartialOrd for Older {
     }
 }
 
+impl PartialEq<super::OlderRef<'_>> for Older {
+    fn eq(&self, other: &super::OlderRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::OlderBuf> for Older {
+    fn eq(&self, other: &super::OlderBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Older {
     //! Unknown Fields
 

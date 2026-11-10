@@ -56,6 +56,18 @@ impl CopyFields {
     }
 }
 
+impl PartialEq<super::CopyFieldsRef<'_>> for CopyFields {
+    fn eq(&self, other: &super::CopyFieldsRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::CopyFieldsBuf> for CopyFields {
+    fn eq(&self, other: &super::CopyFieldsBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl CopyFields {
     //! Field: `count`
 

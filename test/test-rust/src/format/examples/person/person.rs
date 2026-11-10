@@ -37,6 +37,18 @@ impl Person {
     }
 }
 
+impl PartialEq<super::PersonRef<'_>> for Person {
+    fn eq(&self, other: &super::PersonRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::PersonBuf> for Person {
+    fn eq(&self, other: &super::PersonBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Person {
     //! Field: `name`
 

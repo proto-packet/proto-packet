@@ -34,6 +34,18 @@ impl Type {
     }
 }
 
+impl PartialEq<super::TypeRef<'_>> for Type {
+    fn eq(&self, other: &super::TypeRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::TypeBuf> for Type {
+    fn eq(&self, other: &super::TypeBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Type {
     //! Field: `value`
 

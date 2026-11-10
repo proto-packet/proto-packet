@@ -106,6 +106,18 @@ impl PartialOrd for Shape {
     }
 }
 
+impl PartialEq<super::ShapeRef<'_>> for Shape {
+    fn eq(&self, other: &super::ShapeRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::ShapeBuf> for Shape {
+    fn eq(&self, other: &super::ShapeBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Shape {
     //! Encoding
 

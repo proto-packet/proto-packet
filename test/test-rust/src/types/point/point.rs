@@ -38,6 +38,18 @@ impl Point {
     }
 }
 
+impl PartialEq<super::PointRef<'_>> for Point {
+    fn eq(&self, other: &super::PointRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::PointBuf> for Point {
+    fn eq(&self, other: &super::PointBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl Point {
     //! Field: `x`
 

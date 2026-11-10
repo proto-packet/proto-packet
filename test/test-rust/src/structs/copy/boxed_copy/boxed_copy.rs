@@ -35,6 +35,18 @@ impl BoxedCopy {
     }
 }
 
+impl PartialEq<super::BoxedCopyRef<'_>> for BoxedCopy {
+    fn eq(&self, other: &super::BoxedCopyRef<'_>) -> bool {
+        self.encoded_len() == other.as_bytes().len() && self.encode() == other.as_bytes()
+    }
+}
+
+impl PartialEq<super::BoxedCopyBuf> for BoxedCopy {
+    fn eq(&self, other: &super::BoxedCopyBuf) -> bool {
+        *self == other.as_ref()
+    }
+}
+
 impl BoxedCopy {
     //! Field: `point`
 
