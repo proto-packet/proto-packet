@@ -6,6 +6,7 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
+use std::ops::Range;
 
 /// A read-only view of an encoded map.
 ///
@@ -184,6 +185,11 @@ where
     /// Returns `None` if the map does not have the `key`.
     #[must_use]
     pub fn get_by_key(self, key: &K) -> Option<V::Ref<'a>> {
+        if K::ORDERED_BY_BYTES {
+            let mut bytes: Vec<u8> = Vec::with_capacity(key.encoded_len());
+            key.encode_to(&mut bytes);
+            return self.get(unsafe { K::read_unchecked(&bytes) });
+        }
         let keys: ListRef<'a, K> = self.keys();
         let (mut low, mut high): (usize, usize) = (0, keys.len());
         while low < high {
@@ -197,7 +203,7 @@ where
         None
     }
 
-    /// Gets the iterator of the entries, in the order of their keys.
+    /// Gets the iterator of the entries, in the order of their encoded keys.
     pub fn iter(self) -> impl ExactSizeIterator<Item = (K::Ref<'a>, V::Ref<'a>)> {
         self.keys().iter().zip(self.values().iter())
     }
@@ -220,6 +226,9 @@ impl<K, V> Debug for MapRef<'_, K, V> {
 }
 
 /// Gets the length of the encoding of the `map`, in bytes.
+///
+/// # Note
+/// - The entries are sorted first if their order changes the padding between them.
 #[must_use]
 pub fn map_encoded_len<K, V>(map: &BTreeMap<K, V>) -> usize
 where
@@ -229,14 +238,20 @@ where
     if map.is_empty() {
         return 0;
     }
-    let keys_end: usize = align_up(4, list_alignment::<K>()) + elements_encoded_len(map.keys());
-    align_up(keys_end, list_alignment::<V>()) + elements_encoded_len(map.values())
+    if K::ORDERED_BY_BYTES && (is_len_ordered::<K>() || is_len_ordered::<V>()) {
+        let entries: Vec<(&K, &V)> = entries_by_key_bytes(map);
+        let keys = entries.iter().map(|entry| entry.0);
+        let values = entries.iter().map(|entry| entry.1);
+        return entries_encoded_len(keys, values);
+    }
+    entries_encoded_len(map.keys(), map.values())
 }
 
 /// Appends the encoding of the `map` to the `out` bytes.
 ///
 /// # Note
 /// - A map has its keys in increasing order, so its entries are written as they are.
+/// - Keys that are ordered by their bytes are sorted first, since the map has another order.
 ///
 /// # Panics
 /// Panics if a count or an end offset does not fit in a `u32`.
@@ -248,13 +263,73 @@ where
     if map.is_empty() {
         return;
     }
+    if K::ORDERED_BY_BYTES {
+        let entries: Vec<(&K, &V)> = entries_by_key_bytes(map);
+        let keys = entries.iter().map(|entry| entry.0);
+        let values = entries.iter().map(|entry| entry.1);
+        encode_entries(keys, values, out);
+    } else {
+        encode_entries(map.keys(), map.values(), out);
+    }
+}
+
+/// Checks if the length of a list of the element `T` depends on the order of its elements.
+///
+/// # Note
+/// - A variable-size element is padded by the length of the elements before it.
+const fn is_len_ordered<T>() -> bool
+where
+    T: Element,
+{
+    T::SIZE.is_none() && T::ALIGNMENT > 1
+}
+
+/// Gets the entries of the `map`, in the order of the encoded bytes of their keys.
+fn entries_by_key_bytes<K, V>(map: &BTreeMap<K, V>) -> Vec<(&K, &V)>
+where
+    K: Element,
+{
+    let mut bytes: Vec<u8> = Vec::default();
+    let mut entries: Vec<(Range<usize>, &K, &V)> = Vec::with_capacity(map.len());
+    for (key, value) in map {
+        let start: usize = bytes.len();
+        key.encode_to(&mut bytes);
+        entries.push((start..bytes.len(), key, value));
+    }
+    entries.sort_unstable_by(|a, b| bytes[a.0.clone()].cmp(&bytes[b.0.clone()]));
+    entries
+        .into_iter()
+        .map(|(_, key, value)| (key, value))
+        .collect()
+}
+
+/// Gets the length of the encoding of a map of the `keys` & their `values`, in bytes.
+fn entries_encoded_len<'m, K, V, KI, VI>(keys: KI, values: VI) -> usize
+where
+    K: Element + 'm,
+    V: Element + 'm,
+    KI: ExactSizeIterator<Item = &'m K>,
+    VI: ExactSizeIterator<Item = &'m V>,
+{
+    let keys_end: usize = align_up(4, list_alignment::<K>()) + elements_encoded_len(keys);
+    align_up(keys_end, list_alignment::<V>()) + elements_encoded_len(values)
+}
+
+/// Appends the encoding of a map of the `keys` & their `values` to the `out` bytes.
+fn encode_entries<'m, K, V, KI, VI>(keys: KI, values: VI, out: &mut Vec<u8>)
+where
+    K: Element + 'm,
+    V: Element + 'm,
+    KI: ExactSizeIterator<Item = &'m K>,
+    VI: ExactSizeIterator<Item = &'m V>,
+{
     let start: usize = out.len();
     write_zeros(out, 4);
     write_padding(out, start, list_alignment::<K>());
-    encode_elements(map.keys(), out);
+    encode_elements(keys, out);
     write_end(out, start, start);
     write_padding(out, start, list_alignment::<V>());
-    encode_elements(map.values(), out);
+    encode_elements(values, out);
 }
 
 impl<K, V> Element for BTreeMap<K, V>
@@ -265,6 +340,7 @@ where
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = map_alignment::<K, V>();
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = K::ORDERED_BY_BYTES || V::ORDERED_BY_BYTES;
     type Ref<'a> = MapRef<'a, K, V>;
     type View<'a>
         = &'a BTreeMap<K, V>
@@ -286,6 +362,17 @@ where
 
     fn view(&self) -> &BTreeMap<K, V> {
         self
+    }
+
+    fn cmp_refs(a: MapRef<'_, K, V>, b: MapRef<'_, K, V>) -> Ordering
+    where
+        Self: Ord,
+    {
+        if Self::ORDERED_BY_BYTES {
+            a.as_bytes().cmp(b.as_bytes())
+        } else {
+            Self::decode(a).cmp(&Self::decode(b))
+        }
     }
 
     fn encoded_len(&self) -> usize {

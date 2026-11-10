@@ -191,6 +191,7 @@ where
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = list_alignment::<T>();
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = T::ORDERED_BY_BYTES;
     type Ref<'a> = ListRef<'a, T>;
     type View<'a>
         = &'a [T]
@@ -211,6 +212,17 @@ where
 
     fn view(&self) -> &[T] {
         self
+    }
+
+    fn cmp_refs(a: ListRef<'_, T>, b: ListRef<'_, T>) -> Ordering
+    where
+        Self: Ord,
+    {
+        if T::ORDERED_BY_BYTES {
+            a.as_bytes().cmp(b.as_bytes())
+        } else {
+            Self::decode(a).cmp(&Self::decode(b))
+        }
     }
 
     fn encoded_len(&self) -> usize {

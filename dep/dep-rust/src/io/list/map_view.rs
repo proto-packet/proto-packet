@@ -26,6 +26,10 @@ pub trait MapView<K>: Copy {
     fn get(&self, key: &K) -> Option<Self::Value>;
 
     /// Gets the iterator of the entries, in the order of their keys.
+    ///
+    /// # Note
+    /// - An encoded map orders some keys by their bytes, so two forms of a map can differ in
+    ///   their order. (see [Element::ORDERED_BY_BYTES])
     fn iter(&self) -> impl Iterator<Item = (Self::Key, Self::Value)>;
 }
 

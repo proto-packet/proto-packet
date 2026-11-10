@@ -15,6 +15,14 @@ pub trait Element: Sized {
     /// If the bytes of an element can be invalid. (ex: false for an integer of the right size)
     const CAN_BE_INVALID: bool;
 
+    /// If a key of the type is ordered by its encoded bytes in a map.
+    ///
+    /// # Note
+    /// - A message or a variant is, & so is a type with one inside it.
+    /// - Two readers can know different fields & cases of one, so its bytes are the only order
+    ///   they share.
+    const ORDERED_BY_BYTES: bool = false;
+
     /// The element read from its encoded bytes.
     type Ref<'a>: Copy;
 
@@ -54,6 +62,7 @@ pub trait Element: Sized {
     ///
     /// # Note
     /// - A type overrides this when it can compare the elements without decoding them.
+    /// - A type that is ordered by its bytes overrides this to compare them.
     fn cmp_refs(a: Self::Ref<'_>, b: Self::Ref<'_>) -> Ordering
     where
         Self: Ord,
@@ -69,7 +78,13 @@ pub trait Element: Sized {
     where
         Self: Ord,
     {
-        self.cmp(&Self::decode(other))
+        if Self::ORDERED_BY_BYTES {
+            let mut bytes: Vec<u8> = Vec::with_capacity(self.encoded_len());
+            self.encode_to(&mut bytes);
+            Self::cmp_refs(unsafe { Self::read_unchecked(&bytes) }, other)
+        } else {
+            self.cmp(&Self::decode(other))
+        }
     }
 
     /// Appends the encodings of the fixed-size `elements` to the `out` bytes, back to back.
