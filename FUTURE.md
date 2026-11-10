@@ -86,10 +86,9 @@ A `decimal<S>` is an `i64` of units, so it holds about 18 digits. (`dep/dep-rust
 
 ### Recursive Types
 
-A reader rejects a value that nests more than 64 levels, but a writer doesn't check the depth. A
-native value that nests deeper encodes to bytes that readers reject, & encoding or dropping it
-recurses once for each level. (ex: a value read from JSON that nests 100 levels) (ex: a depth check
-when encoding) (`gen_struct.rs`, `gen_message.rs` & `gen_variant.rs`)
+A native value that nests more than 64 levels panics when it is encoded, but getting its encoded
+length & dropping it recurse once for each level, with no limit. (ex: 200,000 levels built by hand
+overflow the stack) (`gen_struct.rs`, `gen_message.rs` & `gen_variant.rs`)
 
 ## Compile
 
