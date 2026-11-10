@@ -48,20 +48,52 @@ macro_rules! impl_time {
         }
 
         impl serde::Serialize for $name {
+            /// Serializes the time as the text of its integer.
+            ///
+            /// # Note
+            /// - Many JSON parsers read a plain number as a float, which can't hold every integer.
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
             {
-                serde::Serialize::serialize(&self.$field, serializer)
+                serializer.collect_str(&self.$field)
             }
         }
 
         impl<'de> serde::Deserialize<'de> for $name {
+            /// Deserializes the time from the text of its integer.
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::Deserializer<'de>,
             {
-                <$int as serde::Deserialize>::deserialize(deserializer).map(Self::new)
+                struct TimeVisitor;
+
+                impl serde::de::Visitor<'_> for TimeVisitor {
+                    type Value = $name;
+
+                    fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        f.write_str("an integer as text")
+                    }
+
+                    fn visit_str<E>(self, text: &str) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        let is_integer: bool = !text.strip_prefix('-').unwrap_or(text).is_empty()
+                            && text.bytes().enumerate().all(|(at, byte)| {
+                                byte.is_ascii_digit() || (at == 0 && byte == b'-')
+                            });
+                        text.parse::<$int>()
+                            .ok()
+                            .filter(|_| is_integer)
+                            .map($name::new)
+                            .ok_or_else(|| {
+                                E::invalid_value(serde::de::Unexpected::Str(text), &self)
+                            })
+                    }
+                }
+
+                deserializer.deserialize_str(TimeVisitor)
             }
         }
     };

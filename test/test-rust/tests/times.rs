@@ -104,15 +104,37 @@ fn messages_and_variants_hold_times() {
 }
 
 #[test]
-fn times_are_numbers_in_json() {
+fn times_are_text_in_json() {
     let mut value: TimeKinds = time_kinds();
     value.set_days(vec![Date::new(6)]);
     value.set_spans(BTreeMap::from([(Date::new(7), Duration::new(8))]));
     assert_json(
         &value,
-        r#"{"at":1,"micro":2,"nano":3,"day":-4,"span":-5,"days":[6],"spans":{"7":8}}"#,
+        r#"{"at":"1","micro":"2","nano":"3","day":"-4","span":"-5","days":["6"],"spans":{"7":"8"}}"#,
     );
-    assert_json(&AllCases::At(Timestamp::new(7)), r#"{"var":"At","val":7}"#);
+    assert_json(
+        &AllCases::At(Timestamp::new(7)),
+        r#"{"var":"At","val":"7"}"#,
+    );
+    assert_json(
+        &AllCases::At(Timestamp::new(i64::MIN)),
+        r#"{"var":"At","val":"-9223372036854775808"}"#,
+    );
+}
+
+#[test]
+fn json_rejects_invalid_times() {
+    for json in [
+        r#"{"var":"At","val":7}"#,                     // a plain number
+        r#"{"var":"At","val":"7.0"}"#,                 // not an integer
+        r#"{"var":"At","val":"+7"}"#,                  // a plus sign
+        r#"{"var":"At","val":" 7"}"#,                  // text around the integer
+        r#"{"var":"At","val":""}"#,                    // empty text
+        r#"{"var":"At","val":"-"}"#,                   // no digits
+        r#"{"var":"At","val":"9223372036854775808"}"#, // out of range
+    ] {
+        assert!(serde_json::from_str::<AllCases>(json).is_err(), "{}", json);
+    }
 }
 
 #[test]
