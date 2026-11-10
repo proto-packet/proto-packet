@@ -154,5 +154,6 @@ pub(crate) fn gen_bytes(typing: Typing<'_>, tag: &TypeTag) -> &'static str {
         TypeTag::Named(_) if typing.is_enum(tag) => "value.tag_number().to_le_bytes()",
         TypeTag::Named(_) => unreachable!("a nested type has an accessor"),
         TypeTag::List(_) => unreachable!("a list has no setter in place"),
+        TypeTag::Map { .. } => todo!(),
     }
 }

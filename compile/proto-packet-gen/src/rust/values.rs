@@ -41,6 +41,7 @@ pub(crate) fn ref_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
         TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
         TypeTag::Named(_) => format!("{}<'a>", generated_path(tag, "Ref")),
         TypeTag::List(element) => format!("{}<'a, {}>", LIST_REF, typing.rust_type(element)),
+        TypeTag::Map { .. } => todo!(),
     }
 }
 
@@ -52,6 +53,7 @@ pub(crate) fn setter_value_type(tag: &TypeTag) -> String {
         TypeTag::Special(SpecialType::String) => "&str".to_string(),
         TypeTag::Named(name) => type_path(name.to_ref()),
         TypeTag::List(_) => unreachable!("a list has no setter in place"),
+        TypeTag::Map { .. } => todo!(),
     }
 }
 

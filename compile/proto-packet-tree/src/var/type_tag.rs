@@ -15,6 +15,12 @@ pub enum TypeTag {
 
     /// A list of the element type.
     List(Box<TypeTag>),
+
+    /// A map of the `key` type to the `value` type.
+    Map {
+        key: Box<TypeTag>,
+        value: Box<TypeTag>,
+    },
 }
 
 impl TypeTag {
@@ -28,6 +34,16 @@ impl TypeTag {
     /// Checks if the type is a list.
     pub fn is_list(&self) -> bool {
         matches!(self, Self::List(_))
+    }
+
+    /// Checks if the type is a map.
+    pub fn is_map(&self) -> bool {
+        matches!(self, Self::Map { .. })
+    }
+
+    /// Checks if the type is a list or a map.
+    pub fn is_collection(&self) -> bool {
+        self.is_list() || self.is_map()
     }
 }
 
@@ -56,6 +72,7 @@ impl Display for TypeTag {
             Self::Special(special) => write!(f, "{}", special),
             Self::Named(name) => write!(f, "{}", name),
             Self::List(element) => write!(f, "[]{}", element),
+            Self::Map { key, value } => write!(f, "map<{}, {}>", key, value),
         }
     }
 }

@@ -98,6 +98,7 @@ impl LayoutCache<'_> {
             TypeTag::List(element) => TypeLayout::Variable {
                 alignment: self.list_alignment(element),
             },
+            TypeTag::Map { .. } => todo!(),
         }
     }
 
@@ -165,6 +166,7 @@ impl LayoutCache<'_> {
                 _ => false,
             },
             TypeTag::List(_) => false,
+            TypeTag::Map { .. } => todo!(),
         }
     }
 

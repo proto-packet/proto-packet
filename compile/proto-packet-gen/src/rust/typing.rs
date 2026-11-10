@@ -46,6 +46,7 @@ impl Typing<'_> {
             TypeTag::List(element) => {
                 RustType::from(self.prelude(PreludeName::Vec)).with_generic(self.rust_type(element))
             }
+            TypeTag::Map { .. } => todo!(),
         }
     }
 }
@@ -98,6 +99,7 @@ impl Typing<'_> {
                 _ => false,
             },
             TypeTag::List(_) => false,
+            TypeTag::Map { .. } => todo!(),
         }
     }
 

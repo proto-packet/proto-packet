@@ -70,6 +70,7 @@ impl NameResolver<'_> {
             TypeTag::List(element) => self
                 .link_type_tag(element, location)
                 .map(|element| TypeTag::List(Box::new(element))),
+            TypeTag::Map { .. } => todo!(),
         }
     }
 
