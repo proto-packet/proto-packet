@@ -15,14 +15,16 @@ This document specifies the JSON form of ProtoPacket values.
 | `uuid`          | A string, in its string form.                                  |
 | `string`        | A string.                                                      |
 | enum            | A case name, or a tag number if the writer doesn't know it.    |
-| `[]u8`          | A string of the bytes, as base-64.                             |
+| `[]u8`, `[N]u8` | A string of the bytes, as base-64.                             |
 | list            | An array of the elements.                                      |
+| array           | An array of exactly `N` of the elements.                       |
 | map             | An object of the entries, or an array if a key isn't text.     |
 | struct, message | An object of the fields, by name. Absent fields aren't listed. |
 | variant         | `{"var": <case name>, "val": <value>}`                         |
 
 A renamed field or case keeps its schema name. Keys can be in any order, & other keys are ignored.
-A `null` is read as an absent field, & writers leave an absent field out.
+A `null` is read as an absent field, & writers leave an absent field out. An absent optional
+element of a list or an array is `null`, & so is an absent value of a map. (ex: `[1, null, 3]`)
 
 ## Numbers In Strings
 
@@ -93,3 +95,4 @@ Readers reject JSON when:
 - A type that is a number in a string is a plain number.
 - A map is an object where its key isn't text, or an array where it is.
 - A map repeats a key, or an entry of an array isn't a key & a value.
+- An array doesn't have exactly its length of elements, or of bytes.
