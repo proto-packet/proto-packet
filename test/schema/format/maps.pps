@@ -1,0 +1,52 @@
+import format.examples.Color;
+import format.examples.Entry;
+import format.examples.Point;
+
+// The `Scores` example of `format/binary.md`.
+struct Scores {
+
+    // The score of each name.
+    scores: map<string, u32>;
+}
+
+// A struct with a map of each kind.
+struct MapKinds {
+
+    // A map with fixed-size keys & values.
+    by_number: map<u32, bool>;
+
+    // A map with enum keys.
+    by_color: map<Color, string>;
+
+    // A map with struct keys & values.
+    by_point: map<Point, Entry>;
+
+    // A map of lists.
+    lists: map<string, []u8>;
+
+    // A map of maps.
+    maps: map<u8, map<u8, u8>>;
+
+    // An optional map.
+    maybe: optional map<i64, f64>;
+}
+
+// A message with a map.
+message WithMaps {
+
+    // The score of each name.
+    scores: map<string, u32> = 1;
+
+    // A list of maps.
+    rounds: []map<u8, u8> = 2;
+}
+
+// A variant with a map.
+variant MapCases {
+
+    // The score of each name.
+    Scores: map<string, u32> = 1;
+
+    // A number, so a case has a setter in place.
+    Number: u32 = 2;
+}

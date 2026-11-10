@@ -33,9 +33,9 @@ pub(crate) fn gen_variant_mut(
         .with_statement(gen_mut_construction(&name, &ref_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_mut_properties(&any_lifetime, &ref_name));
-    if cases.iter().any(|case| !case.tag.is_list()) {
+    if cases.iter().any(|case| !case.tag.is_collection()) {
         let mut fields: ImplBlock = ImplBlock::from(any_lifetime).with_comment(" Cases");
-        for case in cases.iter().filter(|case| !case.tag.is_list()) {
+        for case in cases.iter().filter(|case| !case.tag.is_collection()) {
             fields.add_function(if case.is_nested(typing) {
                 gen_child(*case, "self.bytes", "self.bytes")
             } else {

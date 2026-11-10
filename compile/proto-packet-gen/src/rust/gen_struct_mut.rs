@@ -33,7 +33,7 @@ pub(crate) fn check_mut_names(
     fields: &[Field<'_>],
 ) -> Result<(), GenError> {
     let mut names: BTreeSet<String> = BTreeSet::from(["as_mut".to_string()]);
-    for field in fields.iter().filter(|field| !field.tag.is_list()) {
+    for field in fields.iter().filter(|field| !field.tag.is_collection()) {
         if !names.insert(method_name(typing, *field)) {
             return Err(GenError::FieldNameConflict {
                 type_name: type_name.to_string(),
@@ -78,7 +78,7 @@ pub(crate) fn gen_struct_mut(
         .with_statement(gen_mut_construction(&name, &ref_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_mut_properties(&any_lifetime, &ref_name));
-    if fields.iter().any(|field| !field.tag.is_list()) {
+    if fields.iter().any(|field| !field.tag.is_collection()) {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_fields(typing, fields, layout, &any_lifetime));
     }
@@ -153,7 +153,7 @@ fn gen_fields(
 ) -> ImplBlock {
     let mut result: ImplBlock = ImplBlock::from(mut_type.clone()).with_comment(" Fields");
     for (field, field_layout) in fields.iter().zip(&layout.fields) {
-        if field.tag.is_list() {
+        if field.tag.is_collection() {
             continue;
         }
         let mut function: Function = if is_struct(typing, *field) {

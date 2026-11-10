@@ -46,7 +46,9 @@ impl Typing<'_> {
             TypeTag::List(element) => {
                 RustType::from(self.prelude(PreludeName::Vec)).with_generic(self.rust_type(element))
             }
-            TypeTag::Map { .. } => todo!(),
+            TypeTag::Map { key, value } => RustType::from("std::collections::BTreeMap")
+                .with_generic(self.rust_type(key))
+                .with_generic(self.rust_type(value)),
         }
     }
 }
@@ -98,8 +100,7 @@ impl Typing<'_> {
                 }
                 _ => false,
             },
-            TypeTag::List(_) => false,
-            TypeTag::Map { .. } => todo!(),
+            TypeTag::List(_) | TypeTag::Map { .. } => false,
         }
     }
 

@@ -5,7 +5,7 @@ use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
 use crate::rust::naming::{ident, is_upper_camel_case, type_path};
 use crate::rust::typing::Typing;
-use crate::rust::values::{LIST_REF, float_bits, ref_value_type};
+use crate::rust::values::{LIST_REF, MAP_REF, float_bits, ref_value_type};
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, Struct as RustStruct, StructField,
     WithAccess, WithAttributes, WithComments, WithDerives, WithFunctions, WithGenerics,
@@ -263,6 +263,13 @@ fn gen_present_check(
             typing.rust_type(element),
             read_entry("check_tail_entry", layout, index, "bytes")
         ),
+        (ValueLayout::Entry { index }, TypeTag::Map { key, value }) => format!(
+            "{}::<{}, {}>::new({}?)?;",
+            MAP_REF,
+            typing.rust_type(key),
+            typing.rust_type(value),
+            read_entry("check_tail_entry", layout, index, "bytes")
+        ),
         (ValueLayout::Entry { index }, _) => format!(
             "{}::new({}?)?;",
             generated_path(field.tag, "Ref"),
@@ -392,6 +399,11 @@ fn gen_read(
             LIST_REF,
             read_entry("read_tail_entry_unchecked", layout, index, BYTES)
         ),
+        (ValueLayout::Entry { index }, TypeTag::Map { .. }) => format!(
+            "unsafe {{ {}::new_unchecked({}) }}",
+            MAP_REF,
+            read_entry("read_tail_entry_unchecked", layout, index, BYTES)
+        ),
         (ValueLayout::Entry { index }, _) => format!(
             "unsafe {{ {}::new_unchecked({}) }}",
             generated_path(field.tag, "Ref"),
@@ -486,10 +498,12 @@ fn gen_decoded_field(typing: Typing<'_>, field: Field<'_>) -> String {
         }
         TypeTag::Special(SpecialType::String) => format!("{}.to_string()", getter),
         TypeTag::Named(_) if typing.is_enum(field.tag) => getter,
-        TypeTag::Named(_) | TypeTag::List(_) if field.is_optional => {
+        TypeTag::Named(_) | TypeTag::List(_) | TypeTag::Map { .. } if field.is_optional => {
             format!("{}.map(|value| value.decode())", getter)
         }
-        TypeTag::Named(_) | TypeTag::List(_) => format!("{}.decode()", getter),
+        TypeTag::Named(_) | TypeTag::List(_) | TypeTag::Map { .. } => {
+            format!("{}.decode()", getter)
+        }
         _ => getter,
     }
 }

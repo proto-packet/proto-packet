@@ -196,7 +196,7 @@ pub(crate) fn view_fields<'a>(fields: &[Field<'a>]) -> Vec<Field<'a>> {
     fields
         .iter()
         .copied()
-        .filter(|field| !field.tag.is_list())
+        .filter(|field| !field.tag.is_collection())
         .collect()
 }
 

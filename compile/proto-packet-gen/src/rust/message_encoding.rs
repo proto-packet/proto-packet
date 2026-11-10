@@ -56,9 +56,11 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
                 "if {}.is_some() {{ count += 1; values += {}; }}",
                 name, size
             ),
-            None if tagged.field.tag.is_list() => format!(
-                "if let Some(value) = &{} {{ count += 1; values += {}::list_encoded_len(value); }}",
-                name, IO
+            None if tagged.field.tag.is_collection() => format!(
+                "if let Some(value) = &{} {{ count += 1; values += {}::{}_encoded_len(value); }}",
+                name,
+                IO,
+                collection(tagged.field.tag)
             ),
             None => {
                 let len: &str = if tagged.field.tag.is_string() {
@@ -74,6 +76,11 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
         });
     }
     function.with_literal(format!("{}::message_index_len(count) + values", IO))
+}
+
+/// Gets the name of the runtime's functions for the list or map `tag`. (ex: `list`)
+pub(crate) fn collection(tag: &TypeTag) -> &'static str {
+    if tag.is_map() { "map" } else { "list" }
 }
 
 /// Generates the function appending the encoding to the `out` bytes.
@@ -131,6 +138,6 @@ pub(crate) fn gen_value_write(typing: Typing<'_>, tag: &TypeTag, out: &str) -> S
         ),
         TypeTag::Named(_) => format!("value.encode_to({});", out),
         TypeTag::List(_) => format!("{}::encode_list(value, {});", IO, out),
-        TypeTag::Map { .. } => todo!(),
+        TypeTag::Map { .. } => format!("{}::encode_map(value, {});", IO, out),
     }
 }

@@ -1,5 +1,6 @@
 use crate::layout::{FieldLayout, StructLayout, UnitLayout, ValueLayout};
 use crate::rust::fields::Field;
+use crate::rust::message_encoding::collection;
 use crate::rust::naming::ident;
 use crate::rust::prelude::PreludeName;
 use crate::rust::typing::Typing;
@@ -45,8 +46,13 @@ fn gen_encoded_len(fields: &[Field<'_>], layout: &StructLayout) -> Function {
         function.add_literal(gen_entry(field, |value: &str| {
             let size: String = if field.tag.is_string() {
                 format!("{}.len()", value)
-            } else if field.tag.is_list() {
-                format!("{}::list_encoded_len({})", IO, gen_list(field, value))
+            } else if field.tag.is_collection() {
+                format!(
+                    "{}::{}_encoded_len({})",
+                    IO,
+                    collection(field.tag),
+                    gen_list(field, value)
+                )
             } else {
                 format!("{}.encoded_len()", value)
             };
@@ -106,8 +112,13 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout
         statements.push(gen_entry(field, |value: &str| {
             let write: String = if field.tag.is_string() {
                 format!("out.extend_from_slice({}.as_bytes());", value)
-            } else if field.tag.is_list() {
-                format!("{}::encode_list({}, out);", IO, gen_list(field, value))
+            } else if field.tag.is_collection() {
+                format!(
+                    "{}::encode_{}({}, out);",
+                    IO,
+                    collection(field.tag),
+                    gen_list(field, value)
+                )
             } else {
                 format!("{}.encode_to(out);", value)
             };
@@ -200,7 +211,7 @@ fn gen_fixed_field(typing: Typing<'_>, field: Field<'_>, layout: FieldLayout) ->
     }
 }
 
-/// Generates the expression of the slice of the list `field` with the `value` expression.
+/// Generates the expression of the reference to the list or map `field` with the `value` expression.
 ///
 /// # Note
 /// - The value of an optional field is already a reference.

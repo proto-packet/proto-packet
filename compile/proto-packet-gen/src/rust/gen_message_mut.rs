@@ -34,7 +34,10 @@ pub(crate) fn gen_message_mut(
         .with_statement(gen_mut_construction(&name, &ref_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_mut_properties(&any_lifetime, &ref_name));
-    if fields.iter().any(|tagged| !tagged.field.tag.is_list()) {
+    if fields
+        .iter()
+        .any(|tagged| !tagged.field.tag.is_collection())
+    {
         block.add_statement(EmptyLine::default());
         block.add_statement(gen_fields(typing, fields, &any_lifetime));
     }
@@ -45,7 +48,7 @@ pub(crate) fn gen_message_mut(
 fn gen_fields(typing: Typing<'_>, fields: &[TaggedField<'_>], mut_type: &RustType) -> ImplBlock {
     let mut result: ImplBlock = ImplBlock::from(mut_type.clone()).with_comment(" Fields");
     for tagged in fields {
-        if tagged.field.tag.is_list() {
+        if tagged.field.tag.is_collection() {
             continue;
         }
         let mut function: Function = if is_struct(typing, tagged.field) {
@@ -153,7 +156,8 @@ pub(crate) fn gen_bytes(typing: Typing<'_>, tag: &TypeTag) -> &'static str {
         TypeTag::Special(_) => "*value.as_bytes()",
         TypeTag::Named(_) if typing.is_enum(tag) => "value.tag_number().to_le_bytes()",
         TypeTag::Named(_) => unreachable!("a nested type has an accessor"),
-        TypeTag::List(_) => unreachable!("a list has no setter in place"),
-        TypeTag::Map { .. } => todo!(),
+        TypeTag::List(_) | TypeTag::Map { .. } => {
+            unreachable!("a list or a map has no setter in place")
+        }
     }
 }

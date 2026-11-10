@@ -3,5 +3,6 @@
 pub mod edges;
 pub mod examples;
 pub mod lists;
+pub mod maps;
 pub mod messages;
 pub mod variants;

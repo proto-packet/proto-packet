@@ -11,6 +11,9 @@ const UUID: &str = "proto_packet::types::Uuid";
 /// The type of a list read from its bytes.
 pub(crate) const LIST_REF: &str = "proto_packet::io::ListRef";
 
+/// The type of a map read from its bytes.
+pub(crate) const MAP_REF: &str = "proto_packet::io::MapRef";
+
 /// Gets the Rust type of the `primitive`.
 ///
 /// # Note
@@ -41,7 +44,12 @@ pub(crate) fn ref_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
         TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
         TypeTag::Named(_) => format!("{}<'a>", generated_path(tag, "Ref")),
         TypeTag::List(element) => format!("{}<'a, {}>", LIST_REF, typing.rust_type(element)),
-        TypeTag::Map { .. } => todo!(),
+        TypeTag::Map { key, value } => format!(
+            "{}<'a, {}, {}>",
+            MAP_REF,
+            typing.rust_type(key),
+            typing.rust_type(value)
+        ),
     }
 }
 
@@ -52,8 +60,9 @@ pub(crate) fn setter_value_type(tag: &TypeTag) -> String {
         TypeTag::Special(SpecialType::Uuid) => UUID.to_string(),
         TypeTag::Special(SpecialType::String) => "&str".to_string(),
         TypeTag::Named(name) => type_path(name.to_ref()),
-        TypeTag::List(_) => unreachable!("a list has no setter in place"),
-        TypeTag::Map { .. } => todo!(),
+        TypeTag::List(_) | TypeTag::Map { .. } => {
+            unreachable!("a list or a map has no setter in place")
+        }
     }
 }
 

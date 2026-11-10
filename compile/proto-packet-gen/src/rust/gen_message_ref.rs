@@ -5,7 +5,7 @@ use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, generated_pat
 use crate::rust::message_encoding::TaggedField;
 use crate::rust::naming::{ident, type_path};
 use crate::rust::typing::Typing;
-use crate::rust::values::{LIST_REF, float_bits, ref_value_type};
+use crate::rust::values::{LIST_REF, MAP_REF, float_bits, ref_value_type};
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, RustType, Signature, WithAccess, WithAttributes,
     WithComments, WithFunctions, WithGenerics, WithReceiver, WithResult,
@@ -112,6 +112,12 @@ pub(crate) fn gen_value_check(typing: Typing<'_>, tag: &TypeTag, size: Option<us
             LIST_REF,
             typing.rust_type(element)
         ),
+        (TypeTag::Map { key, value }, None) => format!(
+            "{}::<{}, {}>::new(value)?;",
+            MAP_REF,
+            typing.rust_type(key),
+            typing.rust_type(value)
+        ),
         (_, None) => format!("{}::new(value)?;", generated_path(tag, "Ref")),
     }
 }
@@ -177,7 +183,7 @@ pub(crate) fn gen_read(typing: Typing<'_>, tag: &TypeTag) -> String {
             generated_path(tag, "Ref")
         ),
         TypeTag::List(_) => format!("unsafe {{ {}::new_unchecked(value) }}", LIST_REF),
-        TypeTag::Map { .. } => todo!(),
+        TypeTag::Map { .. } => format!("unsafe {{ {}::new_unchecked(value) }}", MAP_REF),
     }
 }
 
@@ -247,7 +253,7 @@ fn gen_decoded_field(typing: Typing<'_>, tagged: TaggedField<'_>) -> String {
     match tagged.field.tag {
         TypeTag::Special(SpecialType::String) => format!("{}.to_string()", read),
         TypeTag::Named(_) if !typing.is_enum(tagged.field.tag) => format!("{}.decode()", read),
-        TypeTag::List(_) => format!("{}.decode()", read),
+        TypeTag::List(_) | TypeTag::Map { .. } => format!("{}.decode()", read),
         _ => read,
     }
 }

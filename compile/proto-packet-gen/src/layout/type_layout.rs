@@ -98,7 +98,12 @@ impl LayoutCache<'_> {
             TypeTag::List(element) => TypeLayout::Variable {
                 alignment: self.list_alignment(element),
             },
-            TypeTag::Map { .. } => todo!(),
+            TypeTag::Map { key, value } => TypeLayout::Variable {
+                alignment: self
+                    .list_alignment(key)
+                    .max(self.list_alignment(value))
+                    .max(4),
+            },
         }
     }
 
@@ -124,6 +129,10 @@ impl LayoutCache<'_> {
                 matches!(self.type_layout(element), TypeLayout::Fixed { size: 0, .. })
                     || self.has_empty_element(element)
             }
+            TypeTag::Map { key, value } => [key, value].into_iter().any(|element| {
+                matches!(self.type_layout(element), TypeLayout::Fixed { size: 0, .. })
+                    || self.has_empty_element(element)
+            }),
             _ => false,
         }
     }
@@ -165,8 +174,7 @@ impl LayoutCache<'_> {
                 }
                 _ => false,
             },
-            TypeTag::List(_) => false,
-            TypeTag::Map { .. } => todo!(),
+            TypeTag::List(_) | TypeTag::Map { .. } => false,
         }
     }
 
@@ -182,28 +190,34 @@ impl LayoutCache<'_> {
         while let Some(structure) = structs.pop() {
             let mut variable: usize = 0;
             for field in structure.fields() {
-                let mut tag: &TypeTag = field.type_tag();
-                if !self.is_fixed(tag, &mut Vec::default()) {
+                if !self.is_fixed(field.type_tag(), &mut Vec::default()) {
                     variable += 1;
                 }
-                while let TypeTag::List(element) = tag {
-                    if !self.is_fixed(element, &mut Vec::default()) {
-                        result = result.max(4);
-                    }
-                    tag = element;
-                }
-                match tag {
-                    TypeTag::Named(name) => match linked_type(project, name) {
-                        TypeDec::Enum(_) => result = result.max(2),
-                        TypeDec::Struct(child) if !visited.contains(&name) => {
-                            visited.push(name);
-                            structs.push(child);
+                let mut tags: Vec<&TypeTag> = vec![field.type_tag()];
+                while let Some(tag) = tags.pop() {
+                    match tag {
+                        TypeTag::List(element) => {
+                            if !self.is_fixed(element, &mut Vec::default()) {
+                                result = result.max(4);
+                            }
+                            tags.push(element);
                         }
-                        _ => {}
-                    },
-                    _ => {
-                        if let TypeLayout::Fixed { alignment, .. } = self.type_layout(tag) {
-                            result = result.max(alignment);
+                        TypeTag::Map { key, value } => {
+                            result = result.max(4);
+                            tags.extend([key.as_ref(), value.as_ref()]);
+                        }
+                        TypeTag::Named(name) => match linked_type(project, name) {
+                            TypeDec::Enum(_) => result = result.max(2),
+                            TypeDec::Struct(child) if !visited.contains(&name) => {
+                                visited.push(name);
+                                structs.push(child);
+                            }
+                            _ => {}
+                        },
+                        _ => {
+                            if let TypeLayout::Fixed { alignment, .. } = self.type_layout(tag) {
+                                result = result.max(alignment);
+                            }
                         }
                     }
                 }

@@ -15,6 +15,7 @@ use crate::rust::gen_variant_ref::{case_name, gen_variant_case, gen_variant_ref}
 use crate::rust::gen_variant_view::{gen_variant_view, gen_variant_view_mut};
 use crate::rust::gen_view::view_name;
 use crate::rust::gen_view_mut::view_mut_name;
+use crate::rust::message_encoding::collection;
 use crate::rust::message_encoding::gen_value_write;
 use crate::rust::naming::{ident, is_upper_camel_case, snake_case};
 use crate::rust::prelude::{Prelude, PreludeName};
@@ -175,7 +176,7 @@ pub fn gen_variant(
     let view_cases: Vec<Case> = cases
         .iter()
         .copied()
-        .filter(|case| !case.tag.is_list())
+        .filter(|case| !case.tag.is_collection())
         .collect();
     Ok(vec![
         TypeFile {
@@ -357,7 +358,7 @@ fn gen_getter(typing: Typing<'_>, case: Case<'_>) -> Function {
             format!("&[{}]", typing.rust_type(element)),
             "value.as_slice()".to_string(),
         )
-    } else if case.is_nested(typing) {
+    } else if case.is_nested(typing) || case.tag.is_map() {
         let value: &str = if case.is_boxed { "&**value" } else { "value" };
         (format!("&{}", value_type), value.to_string())
     } else {
@@ -433,10 +434,11 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
             None if case.tag.is_string() => {
                 format!("Self::{}(value) => 2 + value.len(),", case.ident())
             }
-            None if case.tag.is_list() => format!(
-                "Self::{}(value) => 2 + {}::list_encoded_len(value),",
+            None if case.tag.is_collection() => format!(
+                "Self::{}(value) => 2 + {}::{}_encoded_len(value),",
                 case.ident(),
-                IO
+                IO,
+                collection(case.tag)
             ),
             None => format!("Self::{}(value) => 2 + value.encoded_len(),", case.ident()),
         });

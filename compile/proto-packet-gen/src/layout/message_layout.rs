@@ -53,6 +53,6 @@ pub fn scalar_size(project: &Project, tag: &TypeTag) -> Option<usize> {
             _ => None,
         },
         TypeTag::List(_) => None,
-        TypeTag::Map { .. } => todo!(),
+        TypeTag::Map { .. } => None,
     }
 }
