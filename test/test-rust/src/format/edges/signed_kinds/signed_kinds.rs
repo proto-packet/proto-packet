@@ -40,7 +40,15 @@ pub struct SignedKinds {
     a: i8,
     b: i16,
     c: i32,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     d: i64,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     e: i128,
     #[serde(skip_serializing_if = "Option::is_none")]
     f: Option<i16>,

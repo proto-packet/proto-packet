@@ -511,7 +511,7 @@ fn gen_json(typing: Typing<'_>, schema_name: &str, type_name: &str, cases: &[Cas
     )];
     let mut from_case: Vec<String> = Vec::default();
     for case in cases {
-        let (written, read): (String, String) = if typing.has_entries_map(case.tag) {
+        let (written, read): (String, String) = if typing.has_json_form(case.tag) {
             (
                 format!("&{}::JsonRef::new(value)", TYPES),
                 format!(

@@ -7,17 +7,6 @@ pub(crate) const INFINITY: &str = "Infinity";
 /// The JSON of the negative infinity.
 pub(crate) const NEGATIVE_INFINITY: &str = "-Infinity";
 
-/// Checks if the `text` has only the characters of a decimal number.
-///
-/// # Note
-/// - This leaves out the other names the standard float parser takes. (ex: `inf`)
-pub(crate) fn is_decimal(text: &str) -> bool {
-    !text.is_empty()
-        && text
-            .bytes()
-            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'+' | b'-' | b'.' | b'e' | b'E'))
-}
-
 /// Implements a float type that has one NaN.
 ///
 /// The type holds the `$float` in a `value` field, with the `$bits` as its bits & the `$nan` as the
@@ -211,7 +200,7 @@ macro_rules! impl_float {
                             $crate::types::impl_float::NEGATIVE_INFINITY => {
                                 Some(<$float>::NEG_INFINITY)
                             }
-                            _ if $crate::types::impl_float::is_decimal(text) => text
+                            _ if $crate::types::is_json_number(text) => text
                                 .parse::<$float>()
                                 .ok()
                                 .filter(|value| value.is_finite()),

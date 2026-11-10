@@ -803,7 +803,11 @@ impl proto_packet::serde::Serialize for AllKinds {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "byte", value)?;
         }
         if let Some(value) = &self.large {
-            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "large", value)?;
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "large",
+                &proto_packet::types::JsonRef::new(value),
+            )?;
         }
         if let Some(value) = &self.id {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "id", value)?;
@@ -831,7 +835,11 @@ impl proto_packet::serde::Serialize for AllKinds {
             )?;
         }
         if let Some(value) = &self.signed {
-            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "signed", value)?;
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "signed",
+                &proto_packet::types::JsonRef::new(value),
+            )?;
         }
         if let Some(value) = &self.float {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "float", value)?;
@@ -873,7 +881,9 @@ impl proto_packet::types::JsonMessage for AllKinds {
                 Ok(true)
             }
             "large" => {
-                self.large = map.next_value()?;
+                self.large = map
+                    .next_value::<Option<proto_packet::types::JsonOwned<u128>>>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             "id" => {
@@ -905,7 +915,9 @@ impl proto_packet::types::JsonMessage for AllKinds {
                 Ok(true)
             }
             "signed" => {
-                self.signed = map.next_value()?;
+                self.signed = map
+                    .next_value::<Option<proto_packet::types::JsonOwned<i64>>>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             "float" => {

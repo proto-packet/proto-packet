@@ -25,7 +25,7 @@ fn fields_json() {
             .with_unsigned8(1)
             .with_unsigned128(u128::MAX),
         &format!(
-            r#"{{"boolean":false,"unsigned8":1,"unsigned128":{}}}"#,
+            r#"{{"boolean":false,"unsigned8":1,"unsigned128":"{}"}}"#,
             u128::MAX
         ),
     );
@@ -35,7 +35,7 @@ fn fields_json() {
             .with_signed64(-4)
             .with_signed128(i128::MAX),
         &format!(
-            r#"{{"signed8":-128,"signed64":-4,"signed128":{}}}"#,
+            r#"{{"signed8":-128,"signed64":"-4","signed128":"{}"}}"#,
             i128::MAX
         ),
     );

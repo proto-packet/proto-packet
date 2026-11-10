@@ -388,10 +388,18 @@ impl proto_packet::serde::Serialize for SignedFields {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "signed32", value)?;
         }
         if let Some(value) = &self.signed64 {
-            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "signed64", value)?;
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "signed64",
+                &proto_packet::types::JsonRef::new(value),
+            )?;
         }
         if let Some(value) = &self.signed128 {
-            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "signed128", value)?;
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "signed128",
+                &proto_packet::types::JsonRef::new(value),
+            )?;
         }
         proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
         proto_packet::serde::ser::SerializeMap::end(map)
@@ -428,11 +436,15 @@ impl proto_packet::types::JsonMessage for SignedFields {
                 Ok(true)
             }
             "signed64" => {
-                self.signed64 = map.next_value()?;
+                self.signed64 = map
+                    .next_value::<Option<proto_packet::types::JsonOwned<i64>>>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             "signed128" => {
-                self.signed128 = map.next_value()?;
+                self.signed128 = map
+                    .next_value::<Option<proto_packet::types::JsonOwned<i128>>>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             _ => Ok(false),

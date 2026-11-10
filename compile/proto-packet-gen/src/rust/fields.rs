@@ -128,7 +128,7 @@ impl Field<'_> {
                 typing.prelude(PreludeName::Option)
             ));
         }
-        if typing.has_entries_map(self.tag) {
+        if typing.has_json_form(self.tag) {
             let (default, kind): (&str, &str) = if self.is_optional {
                 ("default, ", "option")
             } else {

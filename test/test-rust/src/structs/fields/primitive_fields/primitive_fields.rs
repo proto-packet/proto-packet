@@ -41,7 +41,15 @@ pub struct PrimitiveFields {
     unsigned8: u8,
     unsigned16: u16,
     unsigned32: u32,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     unsigned64: u64,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     unsigned128: u128,
 }
 

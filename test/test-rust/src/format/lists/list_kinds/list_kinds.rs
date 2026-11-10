@@ -56,6 +56,10 @@
 pub struct ListKinds {
     bytes: proto_packet::types::Bytes,
     flags: Vec<bool>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     signed: Vec<i64>,
     floats: Vec<proto_packet::types::Float64>,
     ids: Vec<proto_packet::types::Uuid>,

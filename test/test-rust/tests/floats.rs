@@ -162,3 +162,22 @@ fn json_rejects_invalid_floats() {
         );
     }
 }
+
+#[test]
+fn float_text_is_a_json_number() {
+    let read = |text: &str| -> Option<f64> {
+        serde_json::from_str::<Float64>(&format!("\"{}\"", text))
+            .map(Float64::get)
+            .ok()
+    };
+    assert_eq!(read("1.5"), Some(1.5));
+    assert_eq!(read("-0.5"), Some(-0.5));
+    assert_eq!(read("1e5"), Some(100_000.0));
+    assert_eq!(read("1.5E-3"), Some(0.0015));
+    assert_eq!(read("0"), Some(0.0));
+    for text in [
+        "+1.5", ".5", "5.", "01.5", "1.5e", "1e+", " 1.5", "1.5 ", "--1", "1.5.2", "", "-",
+    ] {
+        assert_eq!(read(text), None, "{}", text);
+    }
+}

@@ -32,6 +32,10 @@
 #[serde(crate = "proto_packet::serde")]
 pub struct Mixed {
     a: u8,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     b: u64,
     c: u16,
     d: bool,

@@ -107,7 +107,7 @@ impl<const S: u8> FromStr for Decimal<S> {
     /// Parses the number from its digits, with up to `S` fraction digits.
     ///
     /// # Note
-    /// - There is no exponent, no `+` & no space.
+    /// - There is no exponent, no `+`, no leading zeros & no space.
     fn from_str(text: &str) -> Result<Self, DecimalParseError> {
         let (is_negative, digits): (bool, &str) = match text.strip_prefix('-') {
             Some(digits) => (true, digits),
@@ -119,11 +119,7 @@ impl<const S: u8> FromStr for Decimal<S> {
             None => (digits, ""),
         };
         let is_digits = |part: &str| part.bytes().all(|byte| byte.is_ascii_digit());
-        if whole.is_empty()
-            || !is_digits(whole)
-            || !is_digits(fraction)
-            || fraction.len() > S as usize
-        {
+        if !crate::types::is_whole(whole) || !is_digits(fraction) || fraction.len() > S as usize {
             return Err(DecimalParseError::default());
         }
         let mut units: u128 = 0;

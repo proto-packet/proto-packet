@@ -204,6 +204,7 @@ fn json_rejects_invalid_times() {
         r#"{"var":"At","val":" 7"}"#,                  // text around the integer
         r#"{"var":"At","val":""}"#,                    // empty text
         r#"{"var":"At","val":"-"}"#,                   // no digits
+        r#"{"var":"At","val":"007"}"#,                 // leading zeros
         r#"{"var":"At","val":"9223372036854775808"}"#, // out of range
     ] {
         assert!(serde_json::from_str::<AllCases>(json).is_err(), "{}", json);

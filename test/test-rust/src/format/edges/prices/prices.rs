@@ -42,6 +42,10 @@ pub struct Prices {
     #[serde(skip_serializing_if = "Option::is_none")]
     maybe: Option<proto_packet::types::Decimal<2>>,
     list: Vec<proto_packet::types::Decimal<2>>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     named: std::collections::BTreeMap<String, proto_packet::types::Decimal<2>>,
 }
 

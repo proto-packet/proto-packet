@@ -330,8 +330,8 @@ fn keys_that_are_not_text_are_entries_in_json() {
     let value: MapKinds = map_kinds();
     let json: String = serde_json::to_string(&value).unwrap();
     let by_point: &str = concat!(
-        r#""by_point":[[{"x":1,"y":2},{"id":3,"text":"three"}],"#,
-        r#"[{"x":1,"y":3},{"id":4,"text":""}]]"#
+        r#""by_point":[[{"x":1,"y":2},{"id":"3","text":"three"}],"#,
+        r#"[{"x":1,"y":3},{"id":"4","text":""}]]"#
     );
     assert!(json.contains(by_point), "{}", json);
     assert_eq!(serde_json::from_str::<MapKinds>(&json).unwrap(), value);
@@ -378,7 +378,7 @@ fn keys_with_a_message_inside_are_entries_in_json() {
     assert_json(
         &value,
         concat!(
-            r#"{"by_struct":[[{"id":1,"key":{"a":1,"b":2,"c":3}},{"id":1,"text":"a"}]],"#,
+            r#"{"by_struct":[[{"id":"1","key":{"a":1,"b":2,"c":3}},{"id":"1","text":"a"}]],"#,
             r#""by_list":[[[{"a":1,"b":2,"c":3}],4]]}"#
         ),
     );
@@ -666,4 +666,15 @@ fn encoded_maps_are_equal_by_their_bytes() {
     assert_eq!(scores.scores(), same.scores());
     let other: Vec<u8> = Scores::new(BTreeMap::from([("a".to_string(), 2)])).encode();
     assert_ne!(scores.scores(), ScoresRef::new(&other).unwrap().scores());
+}
+
+#[test]
+fn json_rejects_repeated_keys() {
+    assert_eq!(
+        serde_json::from_str::<Scores>(r#"{"scores":{"a":1,"b":2}}"#).unwrap(),
+        Scores::new(BTreeMap::from([("a".to_string(), 1), ("b".to_string(), 2)]))
+    );
+    assert!(serde_json::from_str::<Scores>(r#"{"scores":{"a":1,"a":2}}"#).is_err());
+    assert!(serde_json::from_str::<WithMaps>(r#"{"scores":{"a":1,"a":1}}"#).is_err());
+    assert!(serde_json::from_str::<MapCases>(r#"{"var":"Scores","val":{"a":1,"a":2}}"#).is_err());
 }

@@ -79,13 +79,9 @@ macro_rules! impl_time {
                     where
                         E: serde::de::Error,
                     {
-                        let is_integer: bool = !text.strip_prefix('-').unwrap_or(text).is_empty()
-                            && text.bytes().enumerate().all(|(at, byte)| {
-                                byte.is_ascii_digit() || (at == 0 && byte == b'-')
-                            });
                         text.parse::<$int>()
                             .ok()
-                            .filter(|_| is_integer)
+                            .filter(|_| $crate::types::is_json_integer(text))
                             .map($name::new)
                             .ok_or_else(|| {
                                 E::invalid_value(serde::de::Unexpected::Str(text), &self)

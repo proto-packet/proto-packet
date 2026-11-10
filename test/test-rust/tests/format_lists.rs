@@ -498,6 +498,8 @@ fn bytes_are_base_64_in_json() {
     for json in [
         r#"{"bytes":[9,8]}"#,  // a list of numbers
         r#"{"bytes":"!!!!"}"#, // invalid base-64
+        r#"{"bytes":"CQg"}"#,  // no padding
+        r#"{"bytes":"CQ-_"}"#, // the URL alphabet
         r#"{"bytes":9}"#,      // a number
     ] {
         assert!(serde_json::from_str::<WithLists>(json).is_err(), "{}", json);
@@ -696,4 +698,18 @@ fn writers_refuse_list_elements_that_nest_too_deep() {
     let entries: WithLists =
         WithLists::default().with_entries(vec![Entry::new(1, "a".to_string())]);
     let _ = nested_children(64, entries).encode();
+}
+
+#[test]
+fn lists_of_large_integers_are_text_in_json() {
+    let json: String = serde_json::to_string(&list_kinds()).unwrap();
+    assert!(
+        json.contains(r#""signed":["-1","-9223372036854775808"]"#),
+        "{}",
+        json
+    );
+    assert_eq!(
+        serde_json::from_str::<ListKinds>(&json).unwrap(),
+        list_kinds()
+    );
 }

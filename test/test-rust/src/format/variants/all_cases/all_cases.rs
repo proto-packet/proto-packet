@@ -537,9 +537,12 @@ impl proto_packet::serde::Serialize for AllCases {
             Self::Byte(value) => {
                 proto_packet::types::serialize_case(serializer, "AllCases", "Byte", value)
             }
-            Self::Large(value) => {
-                proto_packet::types::serialize_case(serializer, "AllCases", "Large", value)
-            }
+            Self::Large(value) => proto_packet::types::serialize_case(
+                serializer,
+                "AllCases",
+                "Large",
+                &proto_packet::types::JsonRef::new(value),
+            ),
             Self::Id(value) => {
                 proto_packet::types::serialize_case(serializer, "AllCases", "Id", value)
             }
@@ -564,9 +567,12 @@ impl proto_packet::serde::Serialize for AllCases {
             Self::BoxedColor(value) => {
                 proto_packet::types::serialize_case(serializer, "AllCases", "BoxedColor", value)
             }
-            Self::Signed(value) => {
-                proto_packet::types::serialize_case(serializer, "AllCases", "Signed", value)
-            }
+            Self::Signed(value) => proto_packet::types::serialize_case(
+                serializer,
+                "AllCases",
+                "Signed",
+                &proto_packet::types::JsonRef::new(value),
+            ),
             Self::Float(value) => {
                 proto_packet::types::serialize_case(serializer, "AllCases", "Float", value)
             }
@@ -596,73 +602,7 @@ impl proto_packet::types::JsonVariant for AllCases {
     where
         D: proto_packet::serde::Deserializer<'de>,
     {
-        match name {
-            "Flag" => Ok(Self::Flag(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Byte" => Ok(Self::Byte(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Large" => Ok(Self::Large(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Id" => Ok(Self::Id(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Color" => Ok(Self::Color(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Text" => Ok(Self::Text(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Point" => Ok(Self::Point(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Entry" => Ok(Self::Entry(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Item" => Ok(Self::Item(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Shape" => Ok(Self::Shape(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "BoxedColor" => Ok(Self::BoxedColor(
-                proto_packet::serde::Deserialize::deserialize(value)?,
-            )),
-            "Signed" => Ok(Self::Signed(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Float" => Ok(Self::Float(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "At" => Ok(Self::At(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Price" => Ok(Self::Price(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            _ => Err(proto_packet::serde::de::Error::unknown_variant(
-                name,
-                &[
-                    "Flag",
-                    "Byte",
-                    "Large",
-                    "Id",
-                    "Color",
-                    "Text",
-                    "Point",
-                    "Entry",
-                    "Item",
-                    "Shape",
-                    "BoxedColor",
-                    "Signed",
-                    "Float",
-                    "At",
-                    "Price",
-                ],
-            )),
-        }
+        match name { "Flag" => Ok(Self::Flag(proto_packet::serde::Deserialize::deserialize(value)?)), "Byte" => Ok(Self::Byte(proto_packet::serde::Deserialize::deserialize(value)?)), "Large" => Ok(Self::Large(<proto_packet::types::JsonOwned<u128> as proto_packet::serde::Deserialize>::deserialize(value)?.into_value())), "Id" => Ok(Self::Id(proto_packet::serde::Deserialize::deserialize(value)?)), "Color" => Ok(Self::Color(proto_packet::serde::Deserialize::deserialize(value)?)), "Text" => Ok(Self::Text(proto_packet::serde::Deserialize::deserialize(value)?)), "Point" => Ok(Self::Point(proto_packet::serde::Deserialize::deserialize(value)?)), "Entry" => Ok(Self::Entry(proto_packet::serde::Deserialize::deserialize(value)?)), "Item" => Ok(Self::Item(proto_packet::serde::Deserialize::deserialize(value)?)), "Shape" => Ok(Self::Shape(proto_packet::serde::Deserialize::deserialize(value)?)), "BoxedColor" => Ok(Self::BoxedColor(proto_packet::serde::Deserialize::deserialize(value)?)), "Signed" => Ok(Self::Signed(<proto_packet::types::JsonOwned<i64> as proto_packet::serde::Deserialize>::deserialize(value)?.into_value())), "Float" => Ok(Self::Float(proto_packet::serde::Deserialize::deserialize(value)?)), "At" => Ok(Self::At(proto_packet::serde::Deserialize::deserialize(value)?)), "Price" => Ok(Self::Price(proto_packet::serde::Deserialize::deserialize(value)?)), _ => Err(proto_packet::serde::de::Error::unknown_variant(name, &["Flag", "Byte", "Large", "Id", "Color", "Text", "Point", "Entry", "Item", "Shape", "BoxedColor", "Signed", "Float", "At", "Price"])), }
     }
 
     fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {

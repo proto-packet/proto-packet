@@ -24,6 +24,10 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct Entry {
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     id: u64,
     text: String,
 }

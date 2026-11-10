@@ -37,7 +37,15 @@ pub struct SignedFields {
     signed8: i8,
     signed16: i16,
     signed32: i32,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     signed64: i64,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     signed128: i128,
 }
 

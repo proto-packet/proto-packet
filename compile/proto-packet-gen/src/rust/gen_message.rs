@@ -299,7 +299,7 @@ fn gen_json(
     let mut merge: Vec<String> = Vec::default();
     for field in fields {
         let name: String = ident(&field.name);
-        let (value, read): (String, String) = if typing.has_entries_map(field.tag) {
+        let (value, read): (String, String) = if typing.has_json_form(field.tag) {
             (
                 "&proto_packet::types::JsonRef::new(value)".to_string(),
                 format!(

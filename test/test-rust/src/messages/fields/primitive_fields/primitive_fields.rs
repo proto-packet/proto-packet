@@ -434,13 +434,17 @@ impl proto_packet::serde::Serialize for PrimitiveFields {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "unsigned32", value)?;
         }
         if let Some(value) = &self.unsigned64 {
-            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "unsigned64", value)?;
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "unsigned64",
+                &proto_packet::types::JsonRef::new(value),
+            )?;
         }
         if let Some(value) = &self.unsigned128 {
             proto_packet::serde::ser::SerializeMap::serialize_entry(
                 &mut map,
                 "unsigned128",
-                value,
+                &proto_packet::types::JsonRef::new(value),
             )?;
         }
         proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
@@ -482,11 +486,15 @@ impl proto_packet::types::JsonMessage for PrimitiveFields {
                 Ok(true)
             }
             "unsigned64" => {
-                self.unsigned64 = map.next_value()?;
+                self.unsigned64 = map
+                    .next_value::<Option<proto_packet::types::JsonOwned<u64>>>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             "unsigned128" => {
-                self.unsigned128 = map.next_value()?;
+                self.unsigned128 = map
+                    .next_value::<Option<proto_packet::types::JsonOwned<u128>>>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             _ => Ok(false),

@@ -228,9 +228,12 @@ impl proto_packet::serde::Serialize for MapCases {
                 case.tag_number,
                 &case.bytes,
             ),
-            Self::Scores(value) => {
-                proto_packet::types::serialize_case(serializer, "MapCases", "Scores", value)
-            }
+            Self::Scores(value) => proto_packet::types::serialize_case(
+                serializer,
+                "MapCases",
+                "Scores",
+                &proto_packet::types::JsonRef::new(value),
+            ),
             Self::Number(value) => {
                 proto_packet::types::serialize_case(serializer, "MapCases", "Number", value)
             }
@@ -254,18 +257,7 @@ impl proto_packet::types::JsonVariant for MapCases {
     where
         D: proto_packet::serde::Deserializer<'de>,
     {
-        match name {
-            "Scores" => Ok(Self::Scores(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Number" => Ok(Self::Number(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            _ => Err(proto_packet::serde::de::Error::unknown_variant(
-                name,
-                &["Scores", "Number"],
-            )),
-        }
+        match name { "Scores" => Ok(Self::Scores(<proto_packet::types::JsonOwned<std::collections::BTreeMap<String, u32>> as proto_packet::serde::Deserialize>::deserialize(value)?.into_value())), "Number" => Ok(Self::Number(proto_packet::serde::Deserialize::deserialize(value)?)), _ => Err(proto_packet::serde::de::Error::unknown_variant(name, &["Scores", "Number"])), }
     }
 
     fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {

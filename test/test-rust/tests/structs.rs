@@ -31,14 +31,14 @@ fn fields_json() {
     assert_json(
         &PrimitiveFields::new(true, 1, 2, 3, 4, u128::MAX),
         &format!(
-            r#"{{"boolean":true,"unsigned8":1,"unsigned16":2,"unsigned32":3,"unsigned64":4,"unsigned128":{}}}"#,
+            r#"{{"boolean":true,"unsigned8":1,"unsigned16":2,"unsigned32":3,"unsigned64":"4","unsigned128":"{}"}}"#,
             u128::MAX
         ),
     );
     assert_json(
         &SignedFields::new(-1, -2, -3, i64::MIN, i128::MIN),
         &format!(
-            r#"{{"signed8":-1,"signed16":-2,"signed32":-3,"signed64":{},"signed128":{}}}"#,
+            r#"{{"signed8":-1,"signed16":-2,"signed32":-3,"signed64":"{}","signed128":"{}"}}"#,
             i64::MIN,
             i128::MIN
         ),

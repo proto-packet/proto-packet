@@ -32,6 +32,10 @@
 pub struct WithVariants {
     before: String,
     shape: crate::format::variants::Shape,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     number: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     maybe: Option<crate::format::variants::Shape>,

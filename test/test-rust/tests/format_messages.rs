@@ -728,3 +728,16 @@ fn messages_nest_at_most_64_levels() {
 fn writers_refuse_messages_that_nest_too_deep() {
     let _ = comments(65).encode();
 }
+
+#[test]
+fn null_is_an_absent_field_in_json() {
+    assert_eq!(
+        serde_json::from_str::<Newer>(r#"{"id":null,"name":"Ada","entry":null}"#).unwrap(),
+        Newer::default().with_name("Ada".to_string())
+    );
+    assert_eq!(
+        serde_json::from_str::<Newer>(r#"{"id":"7"}"#).unwrap(),
+        Newer::default().with_id(7)
+    );
+    assert!(serde_json::from_str::<Newer>(r#"{"id":7}"#).is_err());
+}

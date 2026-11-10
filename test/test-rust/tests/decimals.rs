@@ -172,7 +172,9 @@ fn decimals_parse_their_text() {
     assert_eq!(parse("1"), Ok(100));
     assert_eq!(parse("-0.05"), Ok(-5));
     assert_eq!(parse("-0"), Ok(0));
-    assert_eq!(parse("007.10"), Ok(710));
+    assert_eq!(parse("7.10"), Ok(710));
+    assert!(parse("007.10").is_err());
+    assert!(parse("00").is_err());
     assert_eq!(parse("92233720368547758.07"), Ok(i64::MAX));
     assert_eq!(parse("-92233720368547758.08"), Ok(i64::MIN));
     assert_eq!("42".parse::<Decimal<0>>().map(Decimal::units), Ok(42));

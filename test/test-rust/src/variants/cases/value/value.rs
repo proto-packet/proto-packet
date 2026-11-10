@@ -420,9 +420,12 @@ impl proto_packet::serde::Serialize for Value {
             Self::Boolean(value) => {
                 proto_packet::types::serialize_case(serializer, "Value", "Boolean", value)
             }
-            Self::Unsigned64(value) => {
-                proto_packet::types::serialize_case(serializer, "Value", "Unsigned64", value)
-            }
+            Self::Unsigned64(value) => proto_packet::types::serialize_case(
+                serializer,
+                "Value",
+                "Unsigned64",
+                &proto_packet::types::JsonRef::new(value),
+            ),
             Self::Id(value) => {
                 proto_packet::types::serialize_case(serializer, "Value", "Id", value)
             }
@@ -464,49 +467,7 @@ impl proto_packet::types::JsonVariant for Value {
     where
         D: proto_packet::serde::Deserializer<'de>,
     {
-        match name {
-            "Boolean" => Ok(Self::Boolean(
-                proto_packet::serde::Deserialize::deserialize(value)?,
-            )),
-            "Unsigned64" => Ok(Self::Unsigned64(
-                proto_packet::serde::Deserialize::deserialize(value)?,
-            )),
-            "Id" => Ok(Self::Id(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Text" => Ok(Self::Text(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Point" => Ok(Self::Point(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Person" => Ok(Self::Person(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Label" => Ok(Self::Label(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Color" => Ok(Self::Color(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Shape" => Ok(Self::Shape(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            _ => Err(proto_packet::serde::de::Error::unknown_variant(
-                name,
-                &[
-                    "Boolean",
-                    "Unsigned64",
-                    "Id",
-                    "Text",
-                    "Point",
-                    "Person",
-                    "Label",
-                    "Color",
-                    "Shape",
-                ],
-            )),
-        }
+        match name { "Boolean" => Ok(Self::Boolean(proto_packet::serde::Deserialize::deserialize(value)?)), "Unsigned64" => Ok(Self::Unsigned64(<proto_packet::types::JsonOwned<u64> as proto_packet::serde::Deserialize>::deserialize(value)?.into_value())), "Id" => Ok(Self::Id(proto_packet::serde::Deserialize::deserialize(value)?)), "Text" => Ok(Self::Text(proto_packet::serde::Deserialize::deserialize(value)?)), "Point" => Ok(Self::Point(proto_packet::serde::Deserialize::deserialize(value)?)), "Person" => Ok(Self::Person(proto_packet::serde::Deserialize::deserialize(value)?)), "Label" => Ok(Self::Label(proto_packet::serde::Deserialize::deserialize(value)?)), "Color" => Ok(Self::Color(proto_packet::serde::Deserialize::deserialize(value)?)), "Shape" => Ok(Self::Shape(proto_packet::serde::Deserialize::deserialize(value)?)), _ => Err(proto_packet::serde::de::Error::unknown_variant(name, &["Boolean", "Unsigned64", "Id", "Text", "Point", "Person", "Label", "Color", "Shape"])), }
     }
 
     fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {

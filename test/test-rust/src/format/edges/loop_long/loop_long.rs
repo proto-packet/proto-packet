@@ -24,6 +24,10 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct LoopLong {
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     value: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     next: Option<Box<crate::format::edges::LoopByte>>,

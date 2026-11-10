@@ -32,6 +32,10 @@
 pub struct WithMessages {
     before: String,
     item: crate::format::messages::Item,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     number: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     maybe: Option<crate::format::messages::Item>,

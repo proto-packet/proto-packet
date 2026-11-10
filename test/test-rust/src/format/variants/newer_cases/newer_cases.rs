@@ -264,9 +264,12 @@ impl proto_packet::serde::Serialize for NewerCases {
                 case.tag_number,
                 &case.bytes,
             ),
-            Self::Number(value) => {
-                proto_packet::types::serialize_case(serializer, "NewerCases", "Number", value)
-            }
+            Self::Number(value) => proto_packet::types::serialize_case(
+                serializer,
+                "NewerCases",
+                "Number",
+                &proto_packet::types::JsonRef::new(value),
+            ),
             Self::Text(value) => {
                 proto_packet::types::serialize_case(serializer, "NewerCases", "Text", value)
             }
@@ -293,21 +296,7 @@ impl proto_packet::types::JsonVariant for NewerCases {
     where
         D: proto_packet::serde::Deserializer<'de>,
     {
-        match name {
-            "Number" => Ok(Self::Number(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Text" => Ok(Self::Text(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Point" => Ok(Self::Point(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            _ => Err(proto_packet::serde::de::Error::unknown_variant(
-                name,
-                &["Number", "Text", "Point"],
-            )),
-        }
+        match name { "Number" => Ok(Self::Number(<proto_packet::types::JsonOwned<u64> as proto_packet::serde::Deserialize>::deserialize(value)?.into_value())), "Text" => Ok(Self::Text(proto_packet::serde::Deserialize::deserialize(value)?)), "Point" => Ok(Self::Point(proto_packet::serde::Deserialize::deserialize(value)?)), _ => Err(proto_packet::serde::de::Error::unknown_variant(name, &["Number", "Text", "Point"])), }
     }
 
     fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {

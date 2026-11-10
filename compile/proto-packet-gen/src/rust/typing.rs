@@ -3,7 +3,7 @@ use crate::rust::prelude::{Prelude, PreludeName};
 use crate::rust::values::{BYTES, primitive_type};
 use code_gen::rust::{Reference, RustType};
 use proto_packet_tree::{
-    Project, QualifiedName, SpecialType, Struct, TypeDec, TypeTag, WithTypeTag,
+    PrimitiveType, Project, QualifiedName, SpecialType, Struct, TypeDec, TypeTag, WithTypeTag,
 };
 
 /// Responsible for the Rust types of schema type tags.
@@ -68,27 +68,23 @@ impl Typing<'_> {
         }
     }
 
-    /// Checks if the `tag` is a list or a map that holds a map with a key that isn't text in JSON.
+    /// Checks if a value of the `tag` has a JSON form that isn't the one serde gives it.
     ///
     /// # Note
-    /// - Such a map is a list of its entries in JSON, which a map of serde can't write.
-    pub(crate) fn has_entries_map(self, tag: &TypeTag) -> bool {
+    /// - A large integer is text, since many JSON parsers read a number as a float.
+    /// - A map can't repeat a key, & a map with a key that isn't text is a list of its entries.
+    pub(crate) fn has_json_form(self, tag: &TypeTag) -> bool {
         match tag {
-            TypeTag::List(element) => self.has_entries_map(element),
-            TypeTag::Map { key, value } => {
-                !self.is_json_text_key(key) || self.has_entries_map(value)
-            }
+            TypeTag::Primitive(primitive) => matches!(
+                primitive,
+                PrimitiveType::UnsignedInt64
+                    | PrimitiveType::SignedInt64
+                    | PrimitiveType::UnsignedInt128
+                    | PrimitiveType::SignedInt128
+            ),
+            TypeTag::List(element) => self.has_json_form(element),
+            TypeTag::Map { .. } => true,
             _ => false,
-        }
-    }
-
-    /// Checks if a key of the `tag` is text in JSON.
-    fn is_json_text_key(self, tag: &TypeTag) -> bool {
-        match tag {
-            TypeTag::Primitive(_) | TypeTag::Special(_) => true,
-            TypeTag::Named(_) => self.is_enum(tag),
-            TypeTag::List(_) => tag.is_bytes(),
-            TypeTag::Map { .. } => false,
         }
     }
 

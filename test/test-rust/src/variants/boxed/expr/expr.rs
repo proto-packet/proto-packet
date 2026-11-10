@@ -277,9 +277,12 @@ impl proto_packet::serde::Serialize for Expr {
                 case.tag_number,
                 &case.bytes,
             ),
-            Self::Number(value) => {
-                proto_packet::types::serialize_case(serializer, "Expr", "Number", value)
-            }
+            Self::Number(value) => proto_packet::types::serialize_case(
+                serializer,
+                "Expr",
+                "Number",
+                &proto_packet::types::JsonRef::new(value),
+            ),
             Self::Negate(value) => {
                 proto_packet::types::serialize_case(serializer, "Expr", "Negate", value)
             }
@@ -306,21 +309,7 @@ impl proto_packet::types::JsonVariant for Expr {
     where
         D: proto_packet::serde::Deserializer<'de>,
     {
-        match name {
-            "Number" => Ok(Self::Number(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Negate" => Ok(Self::Negate(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            "Add" => Ok(Self::Add(proto_packet::serde::Deserialize::deserialize(
-                value,
-            )?)),
-            _ => Err(proto_packet::serde::de::Error::unknown_variant(
-                name,
-                &["Number", "Negate", "Add"],
-            )),
-        }
+        match name { "Number" => Ok(Self::Number(<proto_packet::types::JsonOwned<u64> as proto_packet::serde::Deserialize>::deserialize(value)?.into_value())), "Negate" => Ok(Self::Negate(proto_packet::serde::Deserialize::deserialize(value)?)), "Add" => Ok(Self::Add(proto_packet::serde::Deserialize::deserialize(value)?)), _ => Err(proto_packet::serde::de::Error::unknown_variant(name, &["Number", "Negate", "Add"])), }
     }
 
     fn from_encoded(bytes: &[u8]) -> Result<Self, proto_packet::io::DecodeError> {

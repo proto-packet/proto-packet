@@ -78,7 +78,7 @@ where
 /// Deserializes a map from its JSON form.
 ///
 /// # Note
-/// - A list of entries can't repeat a key.
+/// - A map can't repeat a key, in either form.
 pub(crate) fn deserialize_map<'de, K, V, D>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
 where
     K: Element + Ord,
@@ -114,7 +114,12 @@ where
             }
             let mut result: BTreeMap<K, V> = BTreeMap::default();
             while let Some((key, value)) = map.next_entry::<JsonOwned<K>, JsonOwned<V>>()? {
-                result.insert(key.into_value(), value.into_value());
+                if result
+                    .insert(key.into_value(), value.into_value())
+                    .is_some()
+                {
+                    return Err(A::Error::custom("a repeated key"));
+                }
             }
             Ok(result)
         }

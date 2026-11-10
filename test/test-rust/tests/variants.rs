@@ -8,7 +8,7 @@ use proto_packet_test::variants::cases::Value;
 #[test]
 fn cases_json() {
     assert_json(&Value::Boolean(true), r#"{"var":"Boolean","val":true}"#);
-    assert_json(&Value::Unsigned64(1), r#"{"var":"Unsigned64","val":1}"#);
+    assert_json(&Value::Unsigned64(1), r#"{"var":"Unsigned64","val":"1"}"#);
     assert_json(
         &Value::Id(ID),
         &format!(r#"{{"var":"Id","val":{}}}"#, ID_JSON),
@@ -44,7 +44,7 @@ fn boxed_json() {
     ));
     assert_json(
         &expr,
-        r#"{"var":"Add","val":{"left":{"var":"Number","val":1},"right":{"var":"Negate","val":{"var":"Number","val":2}}}}"#,
+        r#"{"var":"Add","val":{"left":{"var":"Number","val":"1"},"right":{"var":"Negate","val":{"var":"Number","val":"2"}}}}"#,
     );
 }
 

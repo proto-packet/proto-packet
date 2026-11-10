@@ -36,7 +36,15 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct MapKinds {
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     by_number: std::collections::BTreeMap<u32, bool>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     by_color: std::collections::BTreeMap<crate::format::examples::Color, String>,
     #[serde(
         serialize_with = "proto_packet::types::JsonRef::serialize_value",
@@ -44,9 +52,22 @@ pub struct MapKinds {
     )]
     by_point:
         std::collections::BTreeMap<crate::format::examples::Point, crate::format::examples::Entry>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     lists: std::collections::BTreeMap<String, proto_packet::types::Bytes>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     maps: std::collections::BTreeMap<u8, std::collections::BTreeMap<u8, u8>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        serialize_with = "proto_packet::types::JsonRef::serialize_option",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_option"
+    )]
     maybe: Option<std::collections::BTreeMap<i64, proto_packet::types::Float64>>,
 }
 

@@ -1,6 +1,6 @@
 mod common;
 
-use common::ID;
+use common::{ID, assert_json};
 use proto_packet::io::DecodeError;
 use proto_packet::types::{Float32, Float64, Uuid};
 use proto_packet_test::format::edges::{
@@ -1257,4 +1257,40 @@ fn writers_take_the_deepest_value() {
 #[should_panic(expected = "the value nests deeper than 64 levels")]
 fn writers_refuse_structs_that_nest_too_deep() {
     let _ = nodes(65).encode();
+}
+
+#[test]
+fn large_integers_are_text_in_json() {
+    assert_json(
+        &Entry::new(7, "hi".to_string()),
+        r#"{"id":"7","text":"hi"}"#,
+    );
+    assert_json(
+        &Entry::new(u64::MAX, String::default()),
+        r#"{"id":"18446744073709551615","text":""}"#,
+    );
+    assert_json(&Point::new(1, 2), r#"{"x":1,"y":2}"#);
+    for json in [
+        r#"{"id":7,"text":"hi"}"#,                      // a plain number
+        r#"{"id":"+7","text":"hi"}"#,                   // a plus sign
+        r#"{"id":"07","text":"hi"}"#,                   // leading zeros
+        r#"{"id":" 7","text":"hi"}"#,                   // text around the integer
+        r#"{"id":"7.0","text":"hi"}"#,                  // not an integer
+        r#"{"id":"-1","text":"hi"}"#,                   // out of range
+        r#"{"id":"18446744073709551616","text":"hi"}"#, // out of range
+        r#"{"id":"","text":"hi"}"#,                     // empty text
+    ] {
+        assert!(serde_json::from_str::<Entry>(json).is_err(), "{}", json);
+    }
+}
+
+#[test]
+fn null_is_an_absent_field_in_json() {
+    let absent: Opt = Opt::new(true, None, None, None, None);
+    assert_eq!(
+        serde_json::from_str::<Opt>(r#"{"a":true,"b":null,"c":null,"d":null,"e":null}"#).unwrap(),
+        absent
+    );
+    assert_eq!(serde_json::to_string(&absent).unwrap(), r#"{"a":true}"#);
+    assert!(serde_json::from_str::<Opt>(r#"{"a":null}"#).is_err());
 }

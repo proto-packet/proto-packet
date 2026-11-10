@@ -50,6 +50,10 @@ pub struct TimeKinds {
     #[serde(skip_serializing_if = "Option::is_none")]
     maybe: Option<proto_packet::types::Timestamp>,
     days: Vec<proto_packet::types::Date>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     spans: std::collections::BTreeMap<proto_packet::types::Date, proto_packet::types::Duration>,
 }
 

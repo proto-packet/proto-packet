@@ -132,7 +132,7 @@ fn signed_integers_are_twos_complement() {
     assert_encoding!(AllCases, AllCases::Signed(-2), &bytes);
     assert_eq!(
         serde_json::to_string(&AllCases::Signed(-2)).unwrap(),
-        r#"{"var":"Signed","val":-2}"#
+        r#"{"var":"Signed","val":"-2"}"#
     );
 }
 
@@ -557,10 +557,14 @@ fn every_case_round_trips_through_json() {
 
 #[test]
 fn large_integers_read_from_json() {
-    let json: &str = r#"{"var":"Large","val":340282366920938463463374607431768211455}"#;
+    let json: &str = r#"{"var":"Large","val":"340282366920938463463374607431768211455"}"#;
     assert_eq!(
         serde_json::from_str::<AllCases>(json).unwrap(),
         AllCases::Large(u128::MAX)
+    );
+    assert_eq!(
+        serde_json::to_string(&AllCases::Large(u128::MAX)).unwrap(),
+        json
     );
 }
 

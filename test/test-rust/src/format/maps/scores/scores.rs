@@ -21,6 +21,10 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct Scores {
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     scores: std::collections::BTreeMap<String, u32>,
 }
 

@@ -246,10 +246,18 @@ impl proto_packet::serde::Serialize for WithMaps {
         let mut map: S::SerializeMap =
             proto_packet::serde::Serializer::serialize_map(serializer, None)?;
         if let Some(value) = &self.scores {
-            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "scores", value)?;
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "scores",
+                &proto_packet::types::JsonRef::new(value),
+            )?;
         }
         if let Some(value) = &self.rounds {
-            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "rounds", value)?;
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "rounds",
+                &proto_packet::types::JsonRef::new(value),
+            )?;
         }
         proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
         proto_packet::serde::ser::SerializeMap::end(map)
@@ -274,11 +282,19 @@ impl proto_packet::types::JsonMessage for WithMaps {
     {
         match name {
             "scores" => {
-                self.scores = map.next_value()?;
+                self.scores =
+                    map.next_value::<Option<
+                        proto_packet::types::JsonOwned<std::collections::BTreeMap<String, u32>>,
+                    >>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             "rounds" => {
-                self.rounds = map.next_value()?;
+                self.rounds =
+                    map.next_value::<Option<
+                        proto_packet::types::JsonOwned<Vec<std::collections::BTreeMap<u8, u8>>>,
+                    >>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             _ => Ok(false),

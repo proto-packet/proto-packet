@@ -386,7 +386,11 @@ impl proto_packet::serde::Serialize for Newer {
         let mut map: S::SerializeMap =
             proto_packet::serde::Serializer::serialize_map(serializer, None)?;
         if let Some(value) = &self.id {
-            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "id", value)?;
+            proto_packet::serde::ser::SerializeMap::serialize_entry(
+                &mut map,
+                "id",
+                &proto_packet::types::JsonRef::new(value),
+            )?;
         }
         if let Some(value) = &self.name {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "name", value)?;
@@ -423,7 +427,9 @@ impl proto_packet::types::JsonMessage for Newer {
     {
         match name {
             "id" => {
-                self.id = map.next_value()?;
+                self.id = map
+                    .next_value::<Option<proto_packet::types::JsonOwned<u64>>>()?
+                    .map(proto_packet::types::JsonOwned::into_value);
                 Ok(true)
             }
             "name" => {

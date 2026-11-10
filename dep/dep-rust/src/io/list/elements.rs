@@ -5,9 +5,9 @@ use crate::io::{DecodeError, Element, ListRef, check_bool, check_utf8, encode_li
 use crate::io::{list_encoded_len, read_bytes_unchecked};
 use std::cmp::Ordering;
 
-/// Implements an integer type as an element, with its alignment.
+/// Implements an integer type as an element, with its alignment & its JSON functions.
 macro_rules! impl_integer {
-    ($type:ty, $alignment:expr) => {
+    ($type:ty, $alignment:expr, { $($json:tt)* }) => {
         impl Element for $type {
             const SIZE: Option<usize> = Some(size_of::<$type>());
             const ALIGNMENT: usize = $alignment;
@@ -46,19 +46,54 @@ macro_rules! impl_integer {
             fn cmp_refs(a: $type, b: $type) -> Ordering {
                 a.cmp(&b)
             }
+
+            $($json)*
         }
     };
 }
 
-impl_integer!(u16, 2);
-impl_integer!(u32, 4);
-impl_integer!(u64, 8);
-impl_integer!(u128, 8);
-impl_integer!(i8, 1);
-impl_integer!(i16, 2);
-impl_integer!(i32, 4);
-impl_integer!(i64, 8);
-impl_integer!(i128, 8);
+/// Implements a small integer type as an element, which is a number in JSON.
+macro_rules! impl_small_integer {
+    ($type:ty, $alignment:expr) => {
+        impl_integer!($type, $alignment, {});
+    };
+}
+
+/// Implements a large integer type as an element, which is text in JSON.
+///
+/// # Note
+/// - Many JSON parsers read a number as a float, which can't hold every large integer.
+macro_rules! impl_large_integer {
+    ($type:ty) => {
+        impl_integer!($type, 8, {
+            #[cfg(feature = "types")]
+            fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                serializer.collect_str(self)
+            }
+
+            #[cfg(feature = "types")]
+            fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                crate::types::deserialize_integer(deserializer)
+            }
+        });
+    };
+}
+
+impl_small_integer!(u16, 2);
+impl_small_integer!(u32, 4);
+impl_small_integer!(i8, 1);
+impl_small_integer!(i16, 2);
+impl_small_integer!(i32, 4);
+impl_large_integer!(u64);
+impl_large_integer!(u128);
+impl_large_integer!(i64);
+impl_large_integer!(i128);
 
 impl Element for u8 {
     const SIZE: Option<usize> = Some(1);
