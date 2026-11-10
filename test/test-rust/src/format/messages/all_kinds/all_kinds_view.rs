@@ -40,6 +40,9 @@ pub trait AllKindsView {
 
     /// Gets the field: `at`.
     fn at(&self) -> Option<proto_packet::types::Timestamp>;
+
+    /// Gets the field: `price`.
+    fn price(&self) -> Option<proto_packet::types::Decimal<2>>;
 }
 
 impl<V: AllKindsView> AllKindsView for &V {
@@ -93,6 +96,10 @@ impl<V: AllKindsView> AllKindsView for &V {
 
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
         (**self).at()
+    }
+
+    fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        (**self).price()
     }
 }
 
@@ -148,6 +155,10 @@ impl<V: AllKindsView> AllKindsView for &mut V {
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
         (**self).at()
     }
+
+    fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        (**self).price()
+    }
 }
 
 impl AllKindsView for super::AllKinds {
@@ -201,6 +212,10 @@ impl AllKindsView for super::AllKinds {
 
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
         self.at()
+    }
+
+    fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.price()
     }
 }
 
@@ -256,6 +271,10 @@ impl AllKindsView for super::AllKindsRef<'_> {
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
         self.at()
     }
+
+    fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.price()
+    }
 }
 
 impl AllKindsView for super::AllKindsBuf {
@@ -310,6 +329,10 @@ impl AllKindsView for super::AllKindsBuf {
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
         self.as_ref().at()
     }
+
+    fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.as_ref().price()
+    }
 }
 
 impl AllKindsView for super::AllKindsMut<'_> {
@@ -363,5 +386,9 @@ impl AllKindsView for super::AllKindsMut<'_> {
 
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
         self.as_ref().at()
+    }
+
+    fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.as_ref().price()
     }
 }

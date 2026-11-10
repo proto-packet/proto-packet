@@ -96,6 +96,28 @@ struct TimeKinds {
     spans: map<date, duration>;
 }
 
+// A struct with decimals.
+struct Prices {
+
+    // A price, with 2 fraction digits.
+    price: decimal<2>;
+
+    // A rate, with 6 fraction digits.
+    rate: decimal<6>;
+
+    // A whole number.
+    count: decimal<0>;
+
+    // An optional price.
+    maybe: optional decimal<2>;
+
+    // The prices.
+    list: []decimal<2>;
+
+    // The price of each name.
+    named: map<string, decimal<2>>;
+}
+
 // A fixed struct of the other fixed-size types, with optional fields.
 struct FixedKinds {
 

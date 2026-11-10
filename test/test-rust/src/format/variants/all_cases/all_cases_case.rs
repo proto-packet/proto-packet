@@ -47,4 +47,7 @@ pub enum AllCasesCase<'a> {
 
     /// The case: `At`.
     At(proto_packet::types::Timestamp),
+
+    /// The case: `Price`.
+    Price(proto_packet::types::Decimal<2>),
 }

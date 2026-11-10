@@ -47,6 +47,9 @@ pub enum AllCases {
 
     /// A time.
     At(proto_packet::types::Timestamp),
+
+    /// A decimal.
+    Price(proto_packet::types::Decimal<2>),
 }
 
 mod unrecognized {
@@ -89,6 +92,7 @@ impl AllCases {
             Self::Signed(_) => 12,
             Self::Float(_) => 13,
             Self::At(_) => 14,
+            Self::Price(_) => 15,
         }
     }
 
@@ -230,6 +234,15 @@ impl AllCases {
             _ => None,
         }
     }
+
+    /// Gets the value of the case: `Price`.
+    #[must_use]
+    pub fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        match self {
+            Self::Price(value) => Some(*value),
+            _ => None,
+        }
+    }
 }
 
 impl AllCases {
@@ -294,6 +307,7 @@ impl AllCases {
             Self::Signed(_) => 10,
             Self::Float(_) => 10,
             Self::At(_) => 10,
+            Self::Price(_) => 10,
         }
     }
 
@@ -366,6 +380,10 @@ impl AllCases {
             }
             Self::At(value) => {
                 out.extend_from_slice(&14_u16.to_le_bytes());
+                out.extend_from_slice(&value.to_le_bytes());
+            }
+            Self::Price(value) => {
+                out.extend_from_slice(&15_u16.to_le_bytes());
                 out.extend_from_slice(&value.to_le_bytes());
             }
         }
@@ -474,6 +492,9 @@ impl proto_packet::serde::Serialize for AllCases {
             Self::At(value) => {
                 proto_packet::types::serialize_case(serializer, "AllCases", "At", value)
             }
+            Self::Price(value) => {
+                proto_packet::types::serialize_case(serializer, "AllCases", "Price", value)
+            }
         }
     }
 }
@@ -537,6 +558,9 @@ impl proto_packet::types::JsonVariant for AllCases {
             "At" => Ok(Self::At(proto_packet::serde::Deserialize::deserialize(
                 value,
             )?)),
+            "Price" => Ok(Self::Price(proto_packet::serde::Deserialize::deserialize(
+                value,
+            )?)),
             _ => Err(proto_packet::serde::de::Error::unknown_variant(
                 name,
                 &[
@@ -554,6 +578,7 @@ impl proto_packet::types::JsonVariant for AllCases {
                     "Signed",
                     "Float",
                     "At",
+                    "Price",
                 ],
             )),
         }

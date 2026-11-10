@@ -57,6 +57,9 @@ variant AllCases {
 
     // A time.
     At: timestamp = 14;
+
+    // A decimal.
+    Price: decimal<2> = 15;
 }
 
 // An older version of a variant.

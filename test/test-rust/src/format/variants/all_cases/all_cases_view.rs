@@ -46,6 +46,9 @@ pub trait AllCasesView {
 
     /// Gets the value of the case: `At`.
     fn as_at(&self) -> Option<proto_packet::types::Timestamp>;
+
+    /// Gets the value of the case: `Price`.
+    fn as_price(&self) -> Option<proto_packet::types::Decimal<2>>;
 }
 
 impl<V: AllCasesView> AllCasesView for &V {
@@ -107,6 +110,10 @@ impl<V: AllCasesView> AllCasesView for &V {
 
     fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
         (**self).as_at()
+    }
+
+    fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        (**self).as_price()
     }
 }
 
@@ -170,6 +177,10 @@ impl<V: AllCasesView> AllCasesView for &mut V {
     fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
         (**self).as_at()
     }
+
+    fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        (**self).as_price()
+    }
 }
 
 impl AllCasesView for super::AllCases {
@@ -231,6 +242,10 @@ impl AllCasesView for super::AllCases {
 
     fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
         self.as_at()
+    }
+
+    fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.as_price()
     }
 }
 
@@ -294,6 +309,10 @@ impl AllCasesView for super::AllCasesRef<'_> {
     fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
         self.as_at()
     }
+
+    fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.as_price()
+    }
 }
 
 impl AllCasesView for super::AllCasesBuf {
@@ -356,6 +375,10 @@ impl AllCasesView for super::AllCasesBuf {
     fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
         self.as_ref().as_at()
     }
+
+    fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.as_ref().as_price()
+    }
 }
 
 impl AllCasesView for super::AllCasesMut<'_> {
@@ -417,5 +440,9 @@ impl AllCasesView for super::AllCasesMut<'_> {
 
     fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
         self.as_ref().as_at()
+    }
+
+    fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.as_ref().as_price()
     }
 }

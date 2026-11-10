@@ -68,6 +68,9 @@ impl<'a> AllKindsRef<'a> {
                 13 => {
                     proto_packet::io::check_exact_len(value, 8)?;
                 }
+                14 => {
+                    proto_packet::io::check_exact_len(value, 8)?;
+                }
                 _ => {}
             }
         }
@@ -197,6 +200,13 @@ impl<'a> AllKindsRef<'a> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 13) }?;
         Some(unsafe { proto_packet::io::read_timestamp_unchecked(value, 0) })
     }
+
+    /// Gets the field: `price`.
+    #[must_use]
+    pub fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 14) }?;
+        Some(unsafe { proto_packet::io::read_decimal_unchecked(value, 0) })
+    }
 }
 
 impl<'a> AllKindsRef<'a> {
@@ -265,6 +275,9 @@ impl<'a> AllKindsRef<'a> {
                 }
                 13 => {
                     result.set_at(unsafe { proto_packet::io::read_timestamp_unchecked(value, 0) });
+                }
+                14 => {
+                    result.set_price(unsafe { proto_packet::io::read_decimal_unchecked(value, 0) });
                 }
                 _ => unknown_fields.push(proto_packet::io::UnknownField::new(
                     unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },

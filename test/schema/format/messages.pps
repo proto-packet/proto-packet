@@ -53,6 +53,9 @@ message AllKinds {
 
     // A time.
     at: timestamp = 13;
+
+    // A decimal.
+    price: decimal<2> = 14;
 }
 
 // An older version of a message.

@@ -195,4 +195,16 @@ impl AllCasesMut<'_> {
     ) -> Result<(), proto_packet::io::CapacityError> {
         proto_packet::io::replace_variant(self.bytes, 14, &value.to_le_bytes())
     }
+
+    /// Sets the case: `Price`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
+    pub fn set_price(
+        &mut self,
+        value: proto_packet::types::Decimal<2>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        proto_packet::io::replace_variant(self.bytes, 15, &value.to_le_bytes())
+    }
 }

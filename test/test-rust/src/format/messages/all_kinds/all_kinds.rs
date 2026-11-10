@@ -42,6 +42,9 @@
 ///
 ///     // A time.
 ///     at: timestamp = 13;
+///
+///     // A decimal.
+///     price: decimal<2> = 14;
 /// }
 /// ```
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
@@ -59,6 +62,7 @@ pub struct AllKinds {
     signed: Option<i64>,
     float: Option<proto_packet::types::Float64>,
     at: Option<proto_packet::types::Timestamp>,
+    price: Option<proto_packet::types::Decimal<2>>,
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -458,6 +462,35 @@ impl AllKinds {
 }
 
 impl AllKinds {
+    //! Field: `price`
+
+    /// Gets the field: `price`.
+    #[must_use]
+    pub fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
+        self.price
+    }
+
+    /// Sets the field: `price`. Returns the previous value.
+    pub fn set_price<F>(&mut self, price: F) -> Option<proto_packet::types::Decimal<2>>
+    where
+        F: Into<Option<proto_packet::types::Decimal<2>>>,
+    {
+        let price: Option<proto_packet::types::Decimal<2>> = price.into();
+        std::mem::replace(&mut self.price, price)
+    }
+
+    /// Sets the field: `price`. (builder pattern)
+    #[must_use]
+    pub fn with_price<F>(mut self, price: F) -> Self
+    where
+        F: Into<Option<proto_packet::types::Decimal<2>>>,
+    {
+        self.set_price(price);
+        self
+    }
+}
+
+impl AllKinds {
     //! Unknown Fields
 
     /// Gets the fields the message doesn't know, in tag order.
@@ -537,6 +570,10 @@ impl AllKinds {
             count += 1;
             values += 8;
         }
+        if self.price.is_some() {
+            count += 1;
+            values += 8;
+        }
         proto_packet::io::message_index_len(count) + values
     }
 
@@ -562,7 +599,8 @@ impl AllKinds {
             + usize::from(self.boxed_color.is_some())
             + usize::from(self.signed.is_some())
             + usize::from(self.float.is_some())
-            + usize::from(self.at.is_some());
+            + usize::from(self.at.is_some())
+            + usize::from(self.price.is_some());
         let mut writer: proto_packet::io::MessageWriter =
             proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
         if let Some(value) = &self.flag {
@@ -619,6 +657,10 @@ impl AllKinds {
         }
         if let Some(value) = &self.at {
             writer.field(13).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = &self.price {
+            writer.field(14).extend_from_slice(&value.to_le_bytes());
             writer.end_field();
         }
         writer.finish();
@@ -723,6 +765,9 @@ impl proto_packet::serde::Serialize for AllKinds {
         if let Some(value) = &self.at {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "at", value)?;
         }
+        if let Some(value) = &self.price {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "price", value)?;
+        }
         proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
         proto_packet::serde::ser::SerializeMap::end(map)
     }
@@ -795,6 +840,10 @@ impl proto_packet::types::JsonMessage for AllKinds {
             }
             "at" => {
                 self.at = map.next_value()?;
+                Ok(true)
+            }
+            "price" => {
+                self.price = map.next_value()?;
                 Ok(true)
             }
             _ => Ok(false),
@@ -883,6 +932,12 @@ impl proto_packet::types::JsonMessage for AllKinds {
                 return Err("at");
             }
             self.at = other.at;
+        }
+        if other.price.is_some() {
+            if self.price.is_some() {
+                return Err("price");
+            }
+            self.price = other.price;
         }
         self.unknown_fields = other.unknown_fields;
         Ok(())

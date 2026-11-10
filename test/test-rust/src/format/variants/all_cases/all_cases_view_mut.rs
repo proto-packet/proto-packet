@@ -58,6 +58,12 @@ pub trait AllCasesViewMut: super::AllCasesView {
         &mut self,
         value: proto_packet::types::Timestamp,
     ) -> Result<(), proto_packet::io::CapacityError>;
+
+    /// Sets the case: `Price`.
+    fn set_price(
+        &mut self,
+        value: proto_packet::types::Decimal<2>,
+    ) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
@@ -130,6 +136,13 @@ impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
         value: proto_packet::types::Timestamp,
     ) -> Result<(), proto_packet::io::CapacityError> {
         (**self).set_at(value)
+    }
+
+    fn set_price(
+        &mut self,
+        value: proto_packet::types::Decimal<2>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        (**self).set_price(value)
     }
 }
 
@@ -214,6 +227,14 @@ impl AllCasesViewMut for super::AllCases {
         *self = super::AllCases::At(value);
         Ok(())
     }
+
+    fn set_price(
+        &mut self,
+        value: proto_packet::types::Decimal<2>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        *self = super::AllCases::Price(value);
+        Ok(())
+    }
 }
 
 impl AllCasesViewMut for super::AllCasesMut<'_> {
@@ -287,6 +308,13 @@ impl AllCasesViewMut for super::AllCasesMut<'_> {
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.set_at(value)
     }
+
+    fn set_price(
+        &mut self,
+        value: proto_packet::types::Decimal<2>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.set_price(value)
+    }
 }
 
 impl AllCasesViewMut for super::AllCasesBuf {
@@ -359,5 +387,12 @@ impl AllCasesViewMut for super::AllCasesBuf {
         value: proto_packet::types::Timestamp,
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.as_mut().set_at(value)
+    }
+
+    fn set_price(
+        &mut self,
+        value: proto_packet::types::Decimal<2>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.as_mut().set_price(value)
     }
 }

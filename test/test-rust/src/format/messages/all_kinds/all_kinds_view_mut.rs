@@ -70,6 +70,12 @@ pub trait AllKindsViewMut: super::AllKindsView {
         &mut self,
         value: impl Into<Option<proto_packet::types::Timestamp>>,
     ) -> Result<(), proto_packet::io::CapacityError>;
+
+    /// Sets the field: `price`.
+    fn set_price(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
+    ) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AllKindsViewMut> AllKindsViewMut for &mut V {
@@ -153,6 +159,13 @@ impl<V: AllKindsViewMut> AllKindsViewMut for &mut V {
         value: impl Into<Option<proto_packet::types::Timestamp>>,
     ) -> Result<(), proto_packet::io::CapacityError> {
         (**self).set_at(value)
+    }
+
+    fn set_price(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        (**self).set_price(value)
     }
 }
 
@@ -249,6 +262,14 @@ impl AllKindsViewMut for super::AllKinds {
         self.set_at(value);
         Ok(())
     }
+
+    fn set_price(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.set_price(value);
+        Ok(())
+    }
 }
 
 impl AllKindsViewMut for super::AllKindsMut<'_> {
@@ -333,6 +354,13 @@ impl AllKindsViewMut for super::AllKindsMut<'_> {
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.set_at(value)
     }
+
+    fn set_price(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.set_price(value)
+    }
 }
 
 impl AllKindsViewMut for super::AllKindsBuf {
@@ -416,5 +444,12 @@ impl AllKindsViewMut for super::AllKindsBuf {
         value: impl Into<Option<proto_packet::types::Timestamp>>,
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.as_mut().set_at(value)
+    }
+
+    fn set_price(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.as_mut().set_price(value)
     }
 }

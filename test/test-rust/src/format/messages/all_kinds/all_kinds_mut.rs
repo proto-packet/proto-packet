@@ -225,4 +225,22 @@ impl AllKindsMut<'_> {
             bytes.as_ref().map(|bytes| bytes.as_slice()),
         )
     }
+
+    /// Sets the field: `price`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the message unchanged, if the message would change its
+    /// length.
+    pub fn set_price(
+        &mut self,
+        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        let value: Option<proto_packet::types::Decimal<2>> = value.into();
+        let bytes: Option<[u8; 8]> = value.map(|value| value.to_le_bytes());
+        proto_packet::io::replace_field(
+            self.bytes,
+            14,
+            bytes.as_ref().map(|bytes| bytes.as_slice()),
+        )
+    }
 }
