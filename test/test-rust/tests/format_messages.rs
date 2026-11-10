@@ -22,6 +22,11 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        common::assert_one_encoding(bytes, |changed| {
+            let value: $type = <$type>::decode(changed).ok()?;
+            assert_eq!(value.encoded_len(), changed.len());
+            Some(value.encode())
+        });
     }};
 }
 
@@ -687,4 +692,13 @@ fn json_rejects_invalid_messages() {
     ] {
         assert!(serde_json::from_str::<Item>(json).is_err(), "{}", json);
     }
+}
+
+#[test]
+fn older_readers_have_one_encoding_of_newer_bytes() {
+    common::assert_one_encoding(&newer().encode(), |changed| {
+        let older: Older = Older::decode(changed).ok()?;
+        assert_eq!(older.encoded_len(), changed.len());
+        Some(older.encode())
+    });
 }

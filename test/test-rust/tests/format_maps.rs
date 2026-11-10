@@ -21,6 +21,11 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        common::assert_one_encoding(bytes, |changed| {
+            let value: $type = <$type>::decode(changed).ok()?;
+            assert_eq!(value.encoded_len(), changed.len());
+            Some(value.encode())
+        });
     }};
 }
 
@@ -405,6 +410,17 @@ fn older_readers_take_the_keys_of_newer_writers() {
     assert_eq!(older.by_variant().len(), 5);
     assert_eq!(older.encoded_len(), bytes.len());
     assert_eq!(older.encode(), bytes);
+
+    common::assert_one_encoding(&bytes, |changed| {
+        let older: OlderKeys = OlderKeys::decode(changed).ok()?;
+        assert_eq!(older.encoded_len(), changed.len());
+        Some(older.encode())
+    });
+    common::assert_one_encoding(&bytes, |changed| {
+        let newer: NewerKeys = NewerKeys::decode(changed).ok()?;
+        assert_eq!(newer.encoded_len(), changed.len());
+        Some(newer.encode())
+    });
 }
 
 #[test]
@@ -454,6 +470,11 @@ fn keys_with_a_message_inside_are_ordered_by_their_bytes() {
     let bytes: Vec<u8> = value.encode();
     assert_eq!(value.encoded_len(), bytes.len());
     assert_eq!(NestedKeys::decode(&bytes), Ok(value.clone()));
+    common::assert_one_encoding(&bytes, |changed| {
+        let nested: NestedKeys = NestedKeys::decode(changed).ok()?;
+        assert_eq!(nested.encoded_len(), changed.len());
+        Some(nested.encode())
+    });
 
     let nested: NestedKeysRef = NestedKeysRef::new(&bytes).unwrap();
     let ids: Vec<u64> = nested

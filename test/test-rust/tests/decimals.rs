@@ -16,6 +16,11 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        common::assert_one_encoding(bytes, |changed| {
+            let value: $type = <$type>::decode(changed).ok()?;
+            assert_eq!(value.encoded_len(), changed.len());
+            Some(value.encode())
+        });
     }};
 }
 

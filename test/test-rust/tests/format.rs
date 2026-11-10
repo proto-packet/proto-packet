@@ -29,6 +29,11 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        common::assert_one_encoding(bytes, |changed| {
+            let value: $type = <$type>::decode(changed).ok()?;
+            assert_eq!(value.encoded_len(), changed.len());
+            Some(value.encode())
+        });
     }};
 }
 
@@ -1107,4 +1112,14 @@ fn view_muts_edit_recursive_structs() {
     let mut bytes: Vec<u8> = list(1).encode();
     increment(&mut ListNodeMut::new(&mut bytes).unwrap());
     assert_eq!(ListNode::decode(&bytes), Ok(list(2)));
+}
+
+#[test]
+#[should_panic(expected = "the changed bytes decode")]
+fn the_encoding_check_finds_a_second_encoding() {
+    // a reader that takes any last byte, like padding it doesn't check
+    common::assert_one_encoding(&[7, 0], |bytes| match bytes {
+        [value, _] => Some(vec![*value, 0]),
+        _ => None,
+    });
 }

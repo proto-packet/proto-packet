@@ -24,6 +24,11 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        common::assert_one_encoding(bytes, |changed| {
+            let value: $type = <$type>::decode(changed).ok()?;
+            assert_eq!(value.encoded_len(), changed.len());
+            Some(value.encode())
+        });
     }};
 }
 
@@ -664,4 +669,15 @@ fn unknown_fields_in_cases_round_trip_through_json() {
         value.encode(),
         serde_json::from_str::<AllCases>(&json).unwrap().encode()
     );
+}
+
+#[test]
+fn older_readers_have_one_encoding_of_newer_bytes() {
+    for bytes in [unknown_bytes(), NewerCases::Number(5).encode()] {
+        common::assert_one_encoding(&bytes, |changed| {
+            let older: OlderCases = OlderCases::decode(changed).ok()?;
+            assert_eq!(older.encoded_len(), changed.len());
+            Some(older.encode())
+        });
+    }
 }
