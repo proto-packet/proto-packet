@@ -30,7 +30,8 @@ enum Command {
 
     /// Checks the project in the source folder for errors.
     ///
-    /// Nothing is written. Generating code has its own errors, which only compiling finds.
+    /// Nothing is written. The code of each language is generated in memory, so every error that
+    /// compiling would find is found.
     Check {
         /// The project's source folder.
         source: PathBuf,
