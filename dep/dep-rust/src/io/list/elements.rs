@@ -254,3 +254,52 @@ impl Element for crate::types::Uuid {
         a.cmp(&b)
     }
 }
+
+/// Implements a time type as an element, with the integer type it holds.
+#[cfg(feature = "types")]
+macro_rules! impl_time {
+    ($type:ident, $int:ty) => {
+        impl Element for crate::types::$type {
+            const SIZE: Option<usize> = Some(size_of::<$int>());
+            const ALIGNMENT: usize = size_of::<$int>();
+            const CAN_BE_INVALID: bool = false;
+            type Ref<'a> = crate::types::$type;
+
+            fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+                Ok(())
+            }
+
+            unsafe fn read_unchecked(bytes: &[u8]) -> crate::types::$type {
+                let value: $int = <$int>::from_le_bytes(unsafe { read_bytes_unchecked(bytes, 0) });
+                crate::types::$type::new(value)
+            }
+
+            fn decode(element: crate::types::$type) -> crate::types::$type {
+                element
+            }
+
+            fn encoded_len(&self) -> usize {
+                size_of::<$int>()
+            }
+
+            fn encode_to(&self, out: &mut Vec<u8>) {
+                out.extend_from_slice(&self.to_le_bytes());
+            }
+
+            fn cmp_refs(a: crate::types::$type, b: crate::types::$type) -> Ordering {
+                a.cmp(&b)
+            }
+        }
+    };
+}
+
+#[cfg(feature = "types")]
+impl_time!(Timestamp, i64);
+#[cfg(feature = "types")]
+impl_time!(Microtime, i64);
+#[cfg(feature = "types")]
+impl_time!(Nanotime, i64);
+#[cfg(feature = "types")]
+impl_time!(Date, i32);
+#[cfg(feature = "types")]
+impl_time!(Duration, i64);

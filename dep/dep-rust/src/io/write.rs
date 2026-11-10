@@ -82,7 +82,7 @@ pub unsafe fn write_bit_unchecked(bytes: &mut [u8], offset: usize, bit: u8, valu
     *byte = (*byte & !(1 << bit)) | (u8::from(value) << bit);
 }
 
-/// Defines the little-endian write of a float type.
+/// Defines the little-endian write of a float or time type of the runtime.
 #[cfg(feature = "types")]
 macro_rules! write_float {
     ($write:ident, $float:ident, $name:literal) => {
@@ -100,3 +100,14 @@ macro_rules! write_float {
 write_float!(write_f32_unchecked, Float32, "f32");
 #[cfg(feature = "types")]
 write_float!(write_f64_unchecked, Float64, "f64");
+
+#[cfg(feature = "types")]
+write_float!(write_timestamp_unchecked, Timestamp, "timestamp");
+#[cfg(feature = "types")]
+write_float!(write_microtime_unchecked, Microtime, "microtime");
+#[cfg(feature = "types")]
+write_float!(write_nanotime_unchecked, Nanotime, "nanotime");
+#[cfg(feature = "types")]
+write_float!(write_date_unchecked, Date, "date");
+#[cfg(feature = "types")]
+write_float!(write_duration_unchecked, Duration, "duration");

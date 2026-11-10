@@ -155,3 +155,49 @@ macro_rules! read_float {
 read_float!(read_f32_unchecked, read_u32_unchecked, Float32, "f32");
 #[cfg(feature = "types")]
 read_float!(read_f64_unchecked, read_u64_unchecked, Float64, "f64");
+
+/// Defines the little-endian read of a time type.
+#[cfg(feature = "types")]
+macro_rules! read_time {
+    ($read:ident, $read_int:ident, $time:ident, $name:literal) => {
+        #[doc = concat!("Reads the little-endian `", $name, "` at the `offset`.")]
+        ///
+        /// # Safety
+        /// The value must be within the `bytes`.
+        #[must_use]
+        pub unsafe fn $read(bytes: &[u8], offset: usize) -> crate::types::$time {
+            crate::types::$time::new(unsafe { $read_int(bytes, offset) })
+        }
+    };
+}
+
+#[cfg(feature = "types")]
+read_time!(
+    read_timestamp_unchecked,
+    read_i64_unchecked,
+    Timestamp,
+    "timestamp"
+);
+#[cfg(feature = "types")]
+read_time!(
+    read_microtime_unchecked,
+    read_i64_unchecked,
+    Microtime,
+    "microtime"
+);
+#[cfg(feature = "types")]
+read_time!(
+    read_nanotime_unchecked,
+    read_i64_unchecked,
+    Nanotime,
+    "nanotime"
+);
+#[cfg(feature = "types")]
+read_time!(read_date_unchecked, read_i32_unchecked, Date, "date");
+#[cfg(feature = "types")]
+read_time!(
+    read_duration_unchecked,
+    read_i64_unchecked,
+    Duration,
+    "duration"
+);
