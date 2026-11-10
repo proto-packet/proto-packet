@@ -196,7 +196,8 @@ the start of the struct.
 
 An entry starts at the next multiple of its own alignment after the entry before it ends. The first
 entry does the same after the header ends. Zeros fill any gap as padding, the same as in the header.
-Only a variable-size struct has an alignment above 1, so only it can have padding before it.
+An empty entry has no padding before it. Only a variable-size struct or a list can have an alignment
+above 1, so only they can have padding before them.
 
 Both `Entry` fields here have alignment 8. The header ends at 8, so `first` starts there. It ends at
 21, so `second` starts at 24. The `note` is last, so it ends where the struct ends.
@@ -221,7 +222,7 @@ offset 34: "ok"
 An optional field has a presence bit in the bits. It is 1 when the field is present.
 
 - An absent fixed-size field keeps its place in the header, as zeros.
-- An absent variable-size field has an empty entry in the tail, with no padding before it.
+- An absent variable-size field has an empty entry in the tail.
 - An optional enum has no presence bit. It is 0 when absent, since 0 is never a tag number.
 
 A struct whose optional fields are all fixed-size is still fixed-size.
@@ -248,7 +249,7 @@ Readers reject a struct when any of these is true.
 
 - A fixed-size struct isn't exactly its size, or a variable-size struct is shorter than its header.
 - The end table starts before the end of the header, goes down, or ends past the end of the struct.
-- An entry starts after it ends, once its padding is counted.
+- The padding before an entry reaches or passes its end.
 - Padding or an unused bit isn't 0.
 - An absent field isn't all zeros in the header, or isn't empty in the tail.
 - A required enum is 0.
@@ -411,8 +412,77 @@ Cases the reader doesn't know aren't checked.
 
 ## Lists
 
-todo -- design the encoding. A list is `[]T`. Bytes are `[]u8`, which gets its own encoding. A
-fixed-length list is `[N]T`, for later.
+A list is its elements in order. An empty list is no bytes.
+
+A list is always variable-size, so in a struct it is an entry of the tail. Its alignment is the
+alignment of its elements.
+
+todo -- a fixed-length list is `[N]T`, for later.
+
+### Fixed-Size Elements
+
+The elements are back to back, with no count. A reader gets the count from the length of the list.
+
+- A `bool` is one byte, 1 for true & 0 for false.
+- A `[]u8` is just the bytes.
+- Each element starts at the next multiple of its alignment. Only a struct can end off one, so only
+  structs are padded apart. Nothing is padded after the last element.
+
+```text
+struct Numbers { count: u8; values: []u32; }
+
+[count: u8][padding: 3][values]
+
+Numbers(7, [1, 2]) is 12 bytes, alignment 4
+
+offset 0: count
+offset 4: values = 1, 2
+
+Numbers(7, []) is 1 byte. The empty list has no bytes, so it has no padding.
+```
+
+A list can't hold elements of no size, such as a struct without fields. Its count couldn't be read
+from its length.
+
+### Variable-Size Elements
+
+```text
+list = [count][ends][elements]
+```
+
+- The `count` is a `u32`. It is the number of elements, & it is never 0.
+- The `ends` are a `u32` for each element except the last, holding the offset where the element
+  ends. Offsets count from the start of the list.
+- The `elements` come next. Each one starts at the next multiple of its alignment after the one
+  before it ends, & an empty element has no padding before it. The last element ends where the list
+  ends.
+
+The alignment of such a list is at least 4, for its count & ends.
+
+```text
+struct Texts { texts: []string; }
+
+[count][ends: 14, 14]["hi"]["yo!"]
+
+Texts(["hi", "", "yo!"]) is 17 bytes, alignment 4
+
+offset  0: count = 3
+offset  4: ends = 14, 14
+offset 12: "hi"
+offset 14: "yo!"
+```
+
+A list of lists is a list of variable-size elements. (ex: `[][]u8`)
+
+### Validation
+
+Readers reject a list when any of these is true.
+
+- Its length doesn't fit a whole number of fixed-size elements.
+- Its count is 0, or it is shorter than its count & ends.
+- Its ends start before the elements, go down, or end past the end of the list.
+- The padding before an element reaches or passes its end, or isn't zeros.
+- An element is invalid.
 
 ## Maps
 
@@ -440,5 +510,6 @@ compared without decoding them. Unknown fields & cases are compared as their byt
 - A tag number is from 1 to 65,535, so a message has at most 65,535 fields.
 - An alignment is 1, 2, 4 or 8.
 - A struct is at most `u32::MAX` bytes, & so are the `values` of a message.
+- A list of variable-size elements is at most `u32::MAX` elements & `u32::MAX` bytes.
 
 todo -- nothing limits how deep values nest. (see [Recursive Types](../FUTURE.md#recursive-types))
