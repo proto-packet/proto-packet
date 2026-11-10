@@ -73,10 +73,11 @@ without serde. (`dep/dep-rust/src/types/variant_json.rs` & `buffered.rs`)
 
 The lists & the maps are missing from some of the generated code.
 
-- The `View` & `ViewMut` traits leave out the list & map fields & cases, since each form has its
-  own type for one. (ex: a `ListView` trait that `&[T]` & `ListRef` both have) (`gen_struct.rs`)
-- The `Mut` types have no method for a list or map field or case, so one is only read in place.
-  (`gen_struct_mut.rs`, `gen_message_mut.rs` & `gen_variant_mut.rs`)
+- The `ViewMut` traits & the `Mut` types have no setter for a list or map field or case, since one
+  can't change its length in place. (`gen_struct.rs`, `gen_struct_mut.rs`, `gen_message_mut.rs` &
+  `gen_variant_mut.rs`)
+- The `MapView` trait looks up a value by the key's own type, so a `string` key is a `&String`. (ex:
+  look up by the borrowed key, like `&str`) (`dep/dep-rust/src/io/list/map_view.rs`)
 - A map with a key that is a struct, message, variant, list or map fails to write as JSON, since a
   JSON key is text. (ex: an array of the entries)
 - A reader checks the order of the keys of a map by decoding them, unless the key is a number, a
