@@ -29,6 +29,9 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        let (len, encoded): (usize, Vec<u8>) = common::ViewEncode::view_encode(&value);
+        assert_eq!(encoded, bytes);
+        assert_eq!(len, bytes.len());
         common::assert_one_encoding(bytes, |changed| {
             let value: $type = <$type>::decode(changed).ok()?;
             assert_eq!(value.encoded_len(), changed.len());
@@ -36,6 +39,133 @@ macro_rules! assert_encoding {
         });
     }};
 }
+
+common::plain!(
+    proto_packet_test::format::edges::AbsentChildView,
+    AbsentChild,
+    {
+        fn first(&self) -> Option<impl proto_packet_test::format::examples::EntryView>;
+        fn second(&self) -> impl proto_packet_test::format::examples::EntryView;
+        fn text(&self) -> &str;
+    }
+);
+
+common::plain!(
+    proto_packet_test::structs::empty::EmptyStructView,
+    EmptyStruct,
+    {}
+);
+
+common::plain!(
+    proto_packet_test::format::edges::FixedKindsView,
+    FixedKinds,
+    {
+        fn id(&self) -> proto_packet::types::Uuid;
+        fn color(&self) -> proto_packet_test::format::examples::Color;
+        fn point(&self) -> impl proto_packet_test::format::examples::PointView;
+        fn maybe_point(&self) -> Option<impl proto_packet_test::format::examples::PointView>;
+        fn maybe_color(&self) -> Option<proto_packet_test::format::examples::Color>;
+    }
+);
+
+common::plain!(
+    proto_packet_test::format::edges::FloatKindsView,
+    FloatKinds,
+    {
+        fn a(&self) -> proto_packet::types::Float32;
+        fn b(&self) -> proto_packet::types::Float64;
+        fn c(&self) -> Option<proto_packet::types::Float32>;
+    }
+);
+
+common::plain!(proto_packet_test::format::examples::LineView, Line, {
+    fn start(&self) -> impl proto_packet_test::format::examples::PointView;
+    fn end(&self) -> impl proto_packet_test::format::examples::PointView;
+    fn width(&self) -> u8;
+});
+
+common::plain!(proto_packet_test::structs::boxed::ListNodeView, ListNode, {
+    fn value(&self) -> u32;
+    fn next(&self) -> Option<impl proto_packet_test::structs::boxed::ListNodeView>;
+});
+
+common::plain!(proto_packet_test::format::edges::LoopByteView, LoopByte, {
+    fn value(&self) -> u8;
+    fn next(&self) -> Option<impl proto_packet_test::format::edges::LoopLongView>;
+});
+
+common::plain!(proto_packet_test::format::edges::LoopLongView, LoopLong, {
+    fn value(&self) -> u64;
+    fn next(&self) -> Option<impl proto_packet_test::format::edges::LoopByteView>;
+});
+
+common::plain!(proto_packet_test::format::examples::MixedView, Mixed, {
+    fn a(&self) -> u8;
+    fn b(&self) -> u64;
+    fn c(&self) -> u16;
+    fn d(&self) -> bool;
+});
+
+common::plain!(proto_packet_test::format::edges::NineBitsView, NineBits, {
+    fn a(&self) -> bool;
+    fn b(&self) -> bool;
+    fn c(&self) -> bool;
+    fn d(&self) -> bool;
+    fn e(&self) -> bool;
+    fn f(&self) -> bool;
+    fn g(&self) -> bool;
+    fn h(&self) -> bool;
+    fn i(&self) -> bool;
+});
+
+common::plain!(proto_packet_test::format::examples::OptView, Opt, {
+    fn a(&self) -> bool;
+    fn b(&self) -> Option<u32>;
+    fn c(&self) -> Option<bool>;
+    fn d(&self) -> Option<&str>;
+    fn e(&self) -> Option<proto_packet_test::format::examples::Color>;
+});
+
+common::plain!(proto_packet_test::format::examples::OuterView, Outer, {
+    fn m(&self) -> impl proto_packet_test::format::examples::MixedView;
+    fn x(&self) -> u32;
+    fn y(&self) -> u8;
+});
+
+common::plain!(proto_packet_test::format::examples::PaddedView, Padded, {
+    fn a(&self) -> impl proto_packet_test::format::examples::LineView;
+    fn x(&self) -> u32;
+    fn b(&self) -> impl proto_packet_test::format::examples::LineView;
+});
+
+common::plain!(proto_packet_test::format::examples::PairView, Pair, {
+    fn first(&self) -> impl proto_packet_test::format::examples::EntryView;
+    fn second(&self) -> impl proto_packet_test::format::examples::EntryView;
+    fn note(&self) -> &str;
+});
+
+common::plain!(proto_packet_test::format::examples::PersonView, Person, {
+    fn name(&self) -> &str;
+    fn age(&self) -> u8;
+});
+
+common::plain!(proto_packet_test::format::examples::PointView, Point, {
+    fn x(&self) -> u32;
+    fn y(&self) -> u32;
+});
+
+common::plain!(
+    proto_packet_test::format::edges::SignedKindsView,
+    SignedKinds,
+    {
+        fn a(&self) -> i8;
+        fn b(&self) -> i16;
+        fn c(&self) -> i32;
+        fn d(&self) -> i64;
+        fn e(&self) -> i128;
+        fn f(&self) -> Option<i16>;
+    }
+);
 
 #[test]
 fn point_example() {

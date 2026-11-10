@@ -16,6 +16,9 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        let (len, encoded): (usize, Vec<u8>) = common::ViewEncode::view_encode(&value);
+        assert_eq!(encoded, bytes);
+        assert_eq!(len, bytes.len());
         common::assert_one_encoding(bytes, |changed| {
             let value: $type = <$type>::decode(changed).ok()?;
             assert_eq!(value.encoded_len(), changed.len());
@@ -23,6 +26,61 @@ macro_rules! assert_encoding {
         });
     }};
 }
+
+common::plain!(
+    proto_packet_test::format::variants::AllCasesView,
+    AllCases,
+    {
+        fn tag_number(&self) -> u16;
+        fn as_flag(&self) -> Option<bool>;
+        fn as_byte(&self) -> Option<u8>;
+        fn as_large(&self) -> Option<u128>;
+        fn as_id(&self) -> Option<proto_packet::types::Uuid>;
+        fn as_color(&self) -> Option<proto_packet_test::format::examples::Color>;
+        fn as_text(&self) -> Option<&str>;
+        fn as_point(&self) -> Option<impl proto_packet_test::format::examples::PointView>;
+        fn as_entry(&self) -> Option<impl proto_packet_test::format::examples::EntryView>;
+        fn as_item(&self) -> Option<impl proto_packet_test::format::messages::ItemView>;
+        fn as_shape(&self) -> Option<impl proto_packet_test::format::variants::ShapeView>;
+        fn as_boxed_color(&self) -> Option<proto_packet_test::format::examples::Color>;
+        fn as_signed(&self) -> Option<i64>;
+        fn as_float(&self) -> Option<proto_packet::types::Float64>;
+        fn as_at(&self) -> Option<proto_packet::types::Timestamp>;
+        fn as_price(&self) -> Option<proto_packet::types::Decimal<2>>;
+    }
+);
+
+common::plain!(
+    proto_packet_test::format::messages::AllKindsView,
+    AllKinds,
+    {
+        fn flag(&self) -> Option<bool>;
+        fn byte(&self) -> Option<u8>;
+        fn large(&self) -> Option<u128>;
+        fn id(&self) -> Option<proto_packet::types::Uuid>;
+        fn color(&self) -> Option<proto_packet_test::format::examples::Color>;
+        fn text(&self) -> Option<&str>;
+        fn point(&self) -> Option<impl proto_packet_test::format::examples::PointView>;
+        fn entry(&self) -> Option<impl proto_packet_test::format::examples::EntryView>;
+        fn item(&self) -> Option<impl proto_packet_test::format::messages::ItemView>;
+        fn boxed_color(&self) -> Option<proto_packet_test::format::examples::Color>;
+        fn signed(&self) -> Option<i64>;
+        fn float(&self) -> Option<proto_packet::types::Float64>;
+        fn at(&self) -> Option<proto_packet::types::Timestamp>;
+        fn price(&self) -> Option<proto_packet::types::Decimal<2>>;
+    }
+);
+
+common::plain!(proto_packet_test::format::edges::PricesView, Prices, {
+    fn price(&self) -> proto_packet::types::Decimal<2>;
+    fn rate(&self) -> proto_packet::types::Decimal<6>;
+    fn count(&self) -> proto_packet::types::Decimal<0>;
+    fn maybe(&self) -> Option<proto_packet::types::Decimal<2>>;
+    fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>>;
+    fn named(
+        &self,
+    ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>;
+});
 
 /// Gets a struct with decimals.
 fn prices() -> Prices {

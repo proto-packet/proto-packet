@@ -22,6 +22,9 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        let (len, encoded): (usize, Vec<u8>) = common::ViewEncode::view_encode(&value);
+        assert_eq!(encoded, bytes);
+        assert_eq!(len, bytes.len());
         common::assert_one_encoding(bytes, |changed| {
             let value: $type = <$type>::decode(changed).ok()?;
             assert_eq!(value.encoded_len(), changed.len());
@@ -29,6 +32,78 @@ macro_rules! assert_encoding {
         });
     }};
 }
+
+common::plain!(
+    proto_packet_test::format::messages::AllKindsView,
+    AllKinds,
+    {
+        fn flag(&self) -> Option<bool>;
+        fn byte(&self) -> Option<u8>;
+        fn large(&self) -> Option<u128>;
+        fn id(&self) -> Option<proto_packet::types::Uuid>;
+        fn color(&self) -> Option<proto_packet_test::format::examples::Color>;
+        fn text(&self) -> Option<&str>;
+        fn point(&self) -> Option<impl proto_packet_test::format::examples::PointView>;
+        fn entry(&self) -> Option<impl proto_packet_test::format::examples::EntryView>;
+        fn item(&self) -> Option<impl proto_packet_test::format::messages::ItemView>;
+        fn boxed_color(&self) -> Option<proto_packet_test::format::examples::Color>;
+        fn signed(&self) -> Option<i64>;
+        fn float(&self) -> Option<proto_packet::types::Float64>;
+        fn at(&self) -> Option<proto_packet::types::Timestamp>;
+        fn price(&self) -> Option<proto_packet::types::Decimal<2>>;
+    }
+);
+
+common::plain!(proto_packet_test::messages::boxed::CommentView, Comment, {
+    fn text(&self) -> Option<&str>;
+    fn reply(&self) -> Option<impl proto_packet_test::messages::boxed::CommentView>;
+});
+
+common::plain!(proto_packet_test::messages::tags::EdgeTagsView, EdgeTags, {
+    fn min(&self) -> Option<u32>;
+    fn max(&self) -> Option<u32>;
+});
+
+common::plain!(
+    proto_packet_test::messages::empty::EmptyMessageView,
+    EmptyMessage,
+    {}
+);
+
+common::plain!(proto_packet_test::format::messages::ItemView, Item, {
+    fn text(&self) -> Option<&str>;
+    fn id(&self) -> Option<u32>;
+});
+
+common::plain!(
+    proto_packet_test::format::messages::LoopMessageView,
+    LoopMessage,
+    {
+        fn value(&self) -> Option<u32>;
+        fn next(&self) -> Option<impl proto_packet_test::format::messages::LoopStructView>;
+    }
+);
+
+common::plain!(
+    proto_packet_test::messages::tags::UnorderedTagsView,
+    UnorderedTags,
+    {
+        fn three(&self) -> Option<u32>;
+        fn one(&self) -> Option<u32>;
+        fn two(&self) -> Option<u32>;
+    }
+);
+
+common::plain!(
+    proto_packet_test::format::messages::WithMessagesView,
+    WithMessages,
+    {
+        fn before(&self) -> &str;
+        fn item(&self) -> impl proto_packet_test::format::messages::ItemView;
+        fn number(&self) -> u64;
+        fn maybe(&self) -> Option<impl proto_packet_test::format::messages::ItemView>;
+    }
+);
 
 /// Gets the value of the `Item` example of `format/binary.md`.
 fn item() -> Item {

@@ -24,6 +24,9 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        let (len, encoded): (usize, Vec<u8>) = common::ViewEncode::view_encode(&value);
+        assert_eq!(encoded, bytes);
+        assert_eq!(len, bytes.len());
         common::assert_one_encoding(bytes, |changed| {
             let value: $type = <$type>::decode(changed).ok()?;
             assert_eq!(value.encoded_len(), changed.len());
@@ -31,6 +34,63 @@ macro_rules! assert_encoding {
         });
     }};
 }
+
+common::plain!(
+    proto_packet_test::format::variants::AllCasesView,
+    AllCases,
+    {
+        fn tag_number(&self) -> u16;
+        fn as_flag(&self) -> Option<bool>;
+        fn as_byte(&self) -> Option<u8>;
+        fn as_large(&self) -> Option<u128>;
+        fn as_id(&self) -> Option<proto_packet::types::Uuid>;
+        fn as_color(&self) -> Option<proto_packet_test::format::examples::Color>;
+        fn as_text(&self) -> Option<&str>;
+        fn as_point(&self) -> Option<impl proto_packet_test::format::examples::PointView>;
+        fn as_entry(&self) -> Option<impl proto_packet_test::format::examples::EntryView>;
+        fn as_item(&self) -> Option<impl proto_packet_test::format::messages::ItemView>;
+        fn as_shape(&self) -> Option<impl proto_packet_test::format::variants::ShapeView>;
+        fn as_boxed_color(&self) -> Option<proto_packet_test::format::examples::Color>;
+        fn as_signed(&self) -> Option<i64>;
+        fn as_float(&self) -> Option<proto_packet::types::Float64>;
+        fn as_at(&self) -> Option<proto_packet::types::Timestamp>;
+        fn as_price(&self) -> Option<proto_packet::types::Decimal<2>>;
+    }
+);
+
+common::plain!(proto_packet_test::variants::boxed::ExprView, Expr, {
+    fn tag_number(&self) -> u16;
+    fn as_number(&self) -> Option<u64>;
+    fn as_negate(&self) -> Option<impl proto_packet_test::variants::boxed::ExprView>;
+    fn as_add(&self) -> Option<impl proto_packet_test::variants::boxed::SumView>;
+});
+
+common::plain!(proto_packet_test::format::variants::ShapeView, Shape, {
+    fn tag_number(&self) -> u16;
+    fn as_circle(&self) -> Option<u32>;
+    fn as_square(&self) -> Option<impl proto_packet_test::format::examples::PointView>;
+});
+
+common::plain!(
+    proto_packet_test::format::variants::WithCasesView,
+    WithCases,
+    {
+        fn shape(&self) -> Option<impl proto_packet_test::format::variants::ShapeView>;
+        fn older(&self) -> Option<impl proto_packet_test::format::variants::OlderCasesView>;
+        fn id(&self) -> Option<u32>;
+    }
+);
+
+common::plain!(
+    proto_packet_test::format::variants::WithVariantsView,
+    WithVariants,
+    {
+        fn before(&self) -> &str;
+        fn shape(&self) -> impl proto_packet_test::format::variants::ShapeView;
+        fn number(&self) -> u64;
+        fn maybe(&self) -> Option<impl proto_packet_test::format::variants::ShapeView>;
+    }
+);
 
 /// Gets a case of each kind.
 fn all_cases() -> Vec<AllCases> {

@@ -1,6 +1,6 @@
 //! The helpers shared by the tests.
 
-#![allow(dead_code)] // each test crate uses only some of the helpers
+#![allow(dead_code, unused_macros, unused_imports)] // each test crate uses only some of the helpers
 
 use proto_packet::serde::Serialize;
 use proto_packet::serde::de::DeserializeOwned;
@@ -113,3 +113,41 @@ where
         check(&changed);
     }
 }
+
+/// A value with only the getters of its `View` trait.
+///
+/// # Note
+/// - It overrides nothing, so it is encoded by the provided functions of the trait.
+pub struct Plain<'a, T> {
+    pub value: &'a T,
+}
+
+/// A type that is encoded from only the getters of its `View` trait.
+pub trait ViewEncode {
+    /// Gets the encoded length & the encoding, from only the getters.
+    fn view_encode(&self) -> (usize, Vec<u8>);
+}
+
+/// Implements the `View` trait of a type for its [Plain] value, from the getters of the trait.
+macro_rules! plain {
+    ($view:path, $type:ty, { $(fn $getter:ident(&self $(,)?) -> $result:ty;)* }) => {
+        impl $view for common::Plain<'_, $type> {
+            $(
+                fn $getter(&self) -> $result {
+                    self.value.$getter()
+                }
+            )*
+        }
+
+        impl common::ViewEncode for $type {
+            fn view_encode(&self) -> (usize, Vec<u8>) {
+                let plain: common::Plain<'_, $type> = common::Plain { value: self };
+                (
+                    <common::Plain<'_, $type> as $view>::encoded_len(&plain),
+                    <common::Plain<'_, $type> as $view>::encode(&plain),
+                )
+            }
+        }
+    };
+}
+pub(crate) use plain;

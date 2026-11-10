@@ -22,6 +22,9 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        let (len, encoded): (usize, Vec<u8>) = common::ViewEncode::view_encode(&value);
+        assert_eq!(encoded, bytes);
+        assert_eq!(len, bytes.len());
         common::assert_one_encoding(bytes, |changed| {
             let value: $type = <$type>::decode(changed).ok()?;
             assert_eq!(value.encoded_len(), changed.len());
@@ -29,6 +32,71 @@ macro_rules! assert_encoding {
         });
     }};
 }
+
+common::plain!(proto_packet_test::format::maps::MapCasesView, MapCases, {
+    fn tag_number(&self) -> u16;
+    fn as_scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>>;
+    fn as_number(&self) -> Option<u32>;
+});
+
+common::plain!(proto_packet_test::format::maps::MapKindsView, MapKinds, {
+    fn by_number(&self) -> impl proto_packet::io::MapView<u32, Key = u32, Value = bool>;
+    fn by_color(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet_test::format::examples::Color,
+        Key = proto_packet_test::format::examples::Color,
+        Value = &str,
+    >;
+    fn by_point(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet_test::format::examples::Point,
+        Key = impl proto_packet_test::format::examples::PointView,
+        Value = impl proto_packet_test::format::examples::EntryView,
+    >;
+    fn lists(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = &[u8]>;
+    fn maps(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        u8,
+        Key = u8,
+        Value = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>,
+    >;
+    fn maybe(
+        &self,
+    ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>;
+});
+
+common::plain!(proto_packet_test::format::maps::NewerKeysView, NewerKeys, {
+    fn by_message(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet_test::format::maps::NewerKey,
+        Key = impl proto_packet_test::format::maps::NewerKeyView,
+        Value = u8,
+    >;
+    fn by_variant(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet_test::format::variants::NewerCases,
+        Key = impl proto_packet_test::format::variants::NewerCasesView,
+        Value = u8,
+    >;
+});
+
+common::plain!(proto_packet_test::format::maps::ScoresView, Scores, {
+    fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32>;
+});
+
+common::plain!(proto_packet_test::format::maps::WithMapsView, WithMaps, {
+    fn scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>>;
+    fn rounds(
+        &self,
+    ) -> Option<
+        impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
+    >;
+});
 
 /// Gets the scores of the `Scores` example of `format/binary.md`.
 fn scores() -> BTreeMap<String, u32> {

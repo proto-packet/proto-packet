@@ -22,6 +22,9 @@ macro_rules! assert_encoding {
         assert_eq!(value.encoded_len(), bytes.len());
         assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
         assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+        let (len, encoded): (usize, Vec<u8>) = common::ViewEncode::view_encode(&value);
+        assert_eq!(encoded, bytes);
+        assert_eq!(len, bytes.len());
         common::assert_one_encoding(bytes, |changed| {
             let value: $type = <$type>::decode(changed).ok()?;
             assert_eq!(value.encoded_len(), changed.len());
@@ -29,6 +32,96 @@ macro_rules! assert_encoding {
         });
     }};
 }
+
+common::plain!(proto_packet_test::format::lists::LinesView, Lines, {
+    fn lines(
+        &self,
+    ) -> impl proto_packet::io::ListView<Item = impl proto_packet_test::format::examples::LineView>;
+});
+
+common::plain!(
+    proto_packet_test::format::lists::ListCasesView,
+    ListCases,
+    {
+        fn tag_number(&self) -> u16;
+        fn as_blob(&self) -> Option<&[u8]>;
+        fn as_numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>>;
+        fn as_texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>>;
+        fn as_points(
+            &self,
+        ) -> Option<
+            impl proto_packet::io::ListView<Item = impl proto_packet_test::format::examples::PointView>,
+        >;
+        fn as_number(&self) -> Option<u32>;
+    }
+);
+
+common::plain!(
+    proto_packet_test::format::lists::ListKindsView,
+    ListKinds,
+    {
+        fn bytes(&self) -> &[u8];
+        fn flags(&self) -> impl proto_packet::io::ListView<Item = bool>;
+        fn signed(&self) -> impl proto_packet::io::ListView<Item = i64>;
+        fn floats(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float64>;
+        fn ids(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Uuid>;
+        fn colors(
+            &self,
+        ) -> impl proto_packet::io::ListView<Item = proto_packet_test::format::examples::Color>;
+        fn texts(&self) -> impl proto_packet::io::ListView<Item = &str>;
+        fn points(
+            &self,
+        ) -> impl proto_packet::io::ListView<Item = impl proto_packet_test::format::examples::PointView>;
+        fn entries(
+            &self,
+        ) -> impl proto_packet::io::ListView<Item = impl proto_packet_test::format::examples::EntryView>;
+        fn items(
+            &self,
+        ) -> impl proto_packet::io::ListView<Item = impl proto_packet_test::format::messages::ItemView>;
+        fn shapes(
+            &self,
+        ) -> impl proto_packet::io::ListView<Item = impl proto_packet_test::format::variants::ShapeView>;
+        fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>>;
+    }
+);
+
+common::plain!(proto_packet_test::format::lists::NestedView, Nested, {
+    fn rows(&self) -> impl proto_packet::io::ListView<Item = &[u8]>;
+});
+
+common::plain!(proto_packet_test::format::lists::NumbersView, Numbers, {
+    fn count(&self) -> u8;
+    fn values(&self) -> impl proto_packet::io::ListView<Item = u32>;
+});
+
+common::plain!(proto_packet_test::format::lists::TextsView, Texts, {
+    fn texts(&self) -> impl proto_packet::io::ListView<Item = &str>;
+});
+
+common::plain!(
+    proto_packet_test::format::lists::WithListsView,
+    WithLists,
+    {
+        fn bytes(&self) -> Option<&[u8]>;
+        fn numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>>;
+        fn texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>>;
+        fn points(
+            &self,
+        ) -> Option<
+            impl proto_packet::io::ListView<Item = impl proto_packet_test::format::examples::PointView>,
+        >;
+        fn entries(
+            &self,
+        ) -> Option<
+            impl proto_packet::io::ListView<Item = impl proto_packet_test::format::examples::EntryView>,
+        >;
+        fn children(
+            &self,
+        ) -> Option<
+            impl proto_packet::io::ListView<Item = impl proto_packet_test::format::lists::WithListsView>,
+        >;
+    }
+);
 
 /// Gets the bytes of the `Numbers` example of `format/binary.md`.
 fn numbers_bytes() -> Vec<u8> {
