@@ -15,6 +15,8 @@ lexer! {
 
         LBrace: literal!("{"),
         RBrace: literal!("}"),
+        LBracket: literal!("["),
+        RBracket: literal!("]"),
         Semi: literal!(";"),
         Colon: literal!(":"),
         Dot: literal!("."),

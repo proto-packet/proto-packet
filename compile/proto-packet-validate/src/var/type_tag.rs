@@ -8,6 +8,7 @@ use proto_packet_tree::{ModPath, PrimitiveType, QualifiedName, SpecialType, Type
 pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, ValidateError> {
     match tree {
         TypeTagTree::Name(name) => validate_named_type(name, source),
+        TypeTagTree::List { .. } => todo!(),
     }
 }
 

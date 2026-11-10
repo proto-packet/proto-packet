@@ -26,8 +26,11 @@ pub(crate) fn reject_type_modifier(
 }
 
 /// Checks if the type modifier `keyword` is next.
+///
+/// # Note
+/// - A type starts with a name, or with the `[` of a list.
 fn is_type_modifier(p: &Parser<'_, Kind>, keyword: &str) -> bool {
     p.check_text(Kind::Ident, keyword)
         && p.lookahead(1)
-            .is_some_and(|next| next.kind() == Kind::Ident)
+            .is_some_and(|next| matches!(next.kind(), Kind::Ident | Kind::LBracket))
 }

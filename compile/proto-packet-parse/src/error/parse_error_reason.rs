@@ -40,6 +40,9 @@ pub enum ParseErrorReason {
     /// Expected a `}`. (reported at the token before it)
     ExpectedCloseBrace,
 
+    /// Expected a `]`. (reported at the token before it)
+    ExpectedCloseBracket,
+
     /// Expected a `:`.
     ExpectedColon,
 
@@ -84,6 +87,7 @@ impl ParseErrorReason {
             Self::ExpectedReturns => "expected the `returns` keyword",
             Self::ExpectedOpenBrace => "expected a `{`",
             Self::ExpectedCloseBrace => "expected a `}` after this",
+            Self::ExpectedCloseBracket => "expected a `]` after this",
             Self::ExpectedColon => "expected a `:`",
             Self::ExpectedSemicolon => "expected a `;` after this",
             Self::ExpectedEqual => "expected a `=`",
@@ -113,6 +117,7 @@ impl ParseErrorReason {
             Self::ExpectedReturns => "P_EXPECTED_RETURNS",
             Self::ExpectedOpenBrace => "P_EXPECTED_OPEN_BRACE",
             Self::ExpectedCloseBrace => "P_EXPECTED_CLOSE_BRACE",
+            Self::ExpectedCloseBracket => "P_EXPECTED_CLOSE_BRACKET",
             Self::ExpectedColon => "P_EXPECTED_COLON",
             Self::ExpectedSemicolon => "P_EXPECTED_SEMICOLON",
             Self::ExpectedEqual => "P_EXPECTED_EQUAL",
