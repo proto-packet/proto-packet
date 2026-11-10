@@ -12,6 +12,7 @@ This document specifies the JSON form of ProtoPacket values.
 | `string`        | A string.                                                      |
 | enum            | A case name, or a tag number if the writer doesn't know it.    |
 | list            | An array of the elements.                                      |
+| map             | An object of the entries, with each key as text.               |
 | struct, message | An object of the fields, by name. Absent fields aren't listed. |
 | variant         | `{"var": <case name>, "val": <value>}`                         |
 
@@ -20,6 +21,9 @@ A renamed field or case keeps its schema name. Keys can be in any order, & other
 A float is a string, so that it reads back as the exact float that was written. (ex: `"1.5"`) A
 JSON parser can round a plain number to another float, so readers reject one. A float that isn't
 finite is `"NaN"`, `"Infinity"` or `"-Infinity"`.
+
+A map's key is the text of its JSON, so a number or a `bool` is quoted. (ex: `{"1": true}`) A key
+that is a struct, message, variant, list or map can't be written yet.
 
 ## Unknown Fields & Cases
 
