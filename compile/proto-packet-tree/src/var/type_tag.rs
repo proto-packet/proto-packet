@@ -36,6 +36,11 @@ impl TypeTag {
         matches!(self, Self::List(_))
     }
 
+    /// Checks if the type is the bytes, a list of `u8`.
+    pub fn is_bytes(&self) -> bool {
+        matches!(self, Self::List(element) if **element == Self::Primitive(PrimitiveType::UnsignedInt8))
+    }
+
     /// Checks if the type is a map.
     pub fn is_map(&self) -> bool {
         matches!(self, Self::Map { .. })
