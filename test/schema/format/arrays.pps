@@ -1,0 +1,141 @@
+import format.examples.Entry;
+import format.examples.Point;
+
+// An enum with two cases.
+enum Shade {
+
+    // Light.
+    Light = 1;
+
+    // Dark.
+    Dark = 2;
+}
+
+// The `Mesh` example of `format/binary.md`.
+struct Mesh {
+
+    // The identifier.
+    id: u32;
+
+    // The origin.
+    origin: [3]f32;
+
+    // The tag.
+    tag: [4]u8;
+}
+
+// The `Slots` example of `format/binary.md`.
+struct Slots {
+
+    // The slots, each with a number or empty.
+    slots: [3]optional u32;
+}
+
+// A struct with a list of optional numbers.
+struct OptionalNumbers {
+
+    // The numbers.
+    numbers: []optional u32;
+}
+
+// A struct with a list of optional strings.
+struct OptionalTexts {
+
+    // The texts.
+    texts: []optional string;
+}
+
+// A struct with a map with optional values.
+struct OptionalScores {
+
+    // The score of each name, if it has one.
+    scores: map<string, optional u32>;
+}
+
+// A struct with an array of each kind.
+struct ArrayKinds {
+
+    // An array of bytes.
+    bytes: [4]u8;
+
+    // An array of bits, a byte each.
+    flags: [3]bool;
+
+    // An array of large integers.
+    longs: [2]u64;
+
+    // An array of enums.
+    colors: [2]Shade;
+
+    // An array of structs, which are padded apart.
+    points: [2]Point;
+
+    // An array of arrays.
+    grid: [2][3]u8;
+
+    // An optional array.
+    maybe: optional [2]u16;
+}
+
+// A struct with optional elements of each kind.
+struct OptionKinds {
+
+    // An array of optional enums, which have no presence bits.
+    colors: [2]optional Shade;
+
+    // An array of optional structs.
+    points: [2]optional Point;
+
+    // A list of optional enums, which is like a list of enums.
+    shades: []optional Shade;
+
+    // A list of optional structs with a variable tail.
+    entries: []optional Entry;
+
+    // A list of optional bits.
+    flags: []optional bool;
+
+    // A map with optional strings.
+    names: map<u8, optional string>;
+
+    // A map with optional enums.
+    by_name: map<string, optional Shade>;
+}
+
+// A message with arrays & optional elements.
+message WithArrays {
+
+    // An array.
+    origin: [3]f32 = 1;
+
+    // An array of optional numbers.
+    slots: [3]optional u32 = 2;
+
+    // A list of arrays.
+    rows: [][2]u16 = 3;
+
+    // A list of optional entries.
+    entries: []optional Entry = 4;
+
+    // A map with optional values.
+    scores: map<string, optional u32> = 5;
+
+    // A map with array keys.
+    by_id: map<[2]u8, u8> = 6;
+}
+
+// A variant with arrays & optional elements.
+variant ArrayCases {
+
+    // An array.
+    Origin: [3]f32 = 1;
+
+    // A list of optional numbers.
+    Numbers: []optional u32 = 2;
+
+    // A map with optional values.
+    Scores: map<string, optional u32> = 3;
+
+    // A number.
+    Number: u32 = 4;
+}
