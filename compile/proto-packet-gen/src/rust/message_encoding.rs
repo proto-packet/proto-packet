@@ -1,7 +1,7 @@
 use crate::rust::encoding::{IO, gen_encode, gen_encode_to_of_level, gen_encode_to_with_depth};
 use crate::rust::fields::Field;
 use crate::rust::naming::ident;
-use crate::rust::typing::Typing;
+use crate::rust::typing::{Typing, is_element_coded};
 use code_gen::WithStatements;
 use code_gen::rust::{
     Access, Function, ImplBlock, Receiver, Signature, WithAccess, WithAttributes, WithComments,
@@ -60,11 +60,9 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
                 "if let Some(value) = &{} {{ count += 1; values += value.len(); }}",
                 name
             ),
-            None if tagged.field.tag.is_collection() => format!(
-                "if let Some(value) = &{} {{ count += 1; values += {}::{}_encoded_len(value); }}",
-                name,
-                IO,
-                collection(tagged.field.tag)
+            None if is_element_coded(tagged.field.tag) => format!(
+                "if let Some(value) = &{} {{ count += 1; values += {}::Element::encoded_len(value); }}",
+                name, IO
             ),
             None => {
                 let len: &str = if tagged.field.tag.is_string() {
@@ -80,11 +78,6 @@ fn gen_encoded_len(fields: &[TaggedField<'_>]) -> Function {
         });
     }
     function.with_literal(format!("{}::message_index_len(count) + values", IO))
-}
-
-/// Gets the name of the runtime's functions for the list or map `tag`. (ex: `list`)
-pub(crate) fn collection(tag: &TypeTag) -> &'static str {
-    if tag.is_map() { "map" } else { "list" }
 }
 
 /// Generates the function appending the encoding to the `out` bytes.
@@ -143,7 +136,9 @@ pub(crate) fn gen_value_write(typing: Typing<'_>, tag: &TypeTag, out: &str) -> S
         TypeTag::List(_) if tag.is_bytes() => {
             format!("{}.extend_from_slice(value.as_bytes());", out)
         }
-        TypeTag::List(_) => format!("{}::encode_list(value, {}, depth - 1);", IO, out),
-        TypeTag::Map { .. } => format!("{}::encode_map(value, {}, depth - 1);", IO, out),
+        TypeTag::List(_) | TypeTag::Map { .. } | TypeTag::Array { .. } => {
+            format!("{}::Element::encode_to(value, {}, depth - 1);", IO, out)
+        }
+        TypeTag::Optional(_) => unreachable!("an optional value is in a list, an array or a map"),
     }
 }

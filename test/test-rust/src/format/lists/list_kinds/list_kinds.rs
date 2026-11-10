@@ -421,64 +421,64 @@ impl ListKinds {
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 45;
         len += self.bytes.len();
-        len += proto_packet::io::list_encoded_len(&self.flags);
+        len += proto_packet::io::Element::encoded_len(&self.flags);
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.signed);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.signed);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.floats);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.floats);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.ids);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.ids);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.colors);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.colors);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 2) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.texts);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.texts);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.points);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.points);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.entries);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.entries);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.items);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.items);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.shapes);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.shapes);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         if let Some(value) = &self.maybe {
             {
-                let size: usize = proto_packet::io::list_encoded_len(value);
+                let size: usize = proto_packet::io::Element::encoded_len(value);
                 if size > 0 {
                     len = proto_packet::io::align_up(len, 2) + size;
                 }
@@ -514,13 +514,13 @@ impl ListKinds {
         out.push(u8::from(self.maybe.is_some()));
         out.extend_from_slice(self.bytes.as_bytes());
         proto_packet::io::write_end(out, start, start);
-        proto_packet::io::encode_list(&self.flags, out, depth - 1);
+        proto_packet::io::Element::encode_to(&self.flags, out, depth - 1);
         proto_packet::io::write_end(out, start + 4, start);
         {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.signed, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.signed, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 8, start);
@@ -528,7 +528,7 @@ impl ListKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.floats, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.floats, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 12, start);
@@ -536,7 +536,7 @@ impl ListKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.ids, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.ids, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 16, start);
@@ -544,7 +544,7 @@ impl ListKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 2);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.colors, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.colors, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 20, start);
@@ -552,7 +552,7 @@ impl ListKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.texts, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.texts, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 24, start);
@@ -560,7 +560,7 @@ impl ListKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.points, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.points, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 28, start);
@@ -568,7 +568,7 @@ impl ListKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.entries, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.entries, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 32, start);
@@ -576,7 +576,7 @@ impl ListKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.items, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.items, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 36, start);
@@ -584,7 +584,7 @@ impl ListKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.shapes, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.shapes, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 40, start);
@@ -593,7 +593,7 @@ impl ListKinds {
                 let before: usize = out.len();
                 proto_packet::io::write_padding(out, start, 2);
                 let padded: usize = out.len();
-                proto_packet::io::encode_list(value, out, depth - 1);
+                proto_packet::io::Element::encode_to(value, out, depth - 1);
                 proto_packet::io::trim_padding(out, before, padded);
             }
         }
@@ -656,5 +656,19 @@ impl proto_packet::io::Element for ListKinds {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         ListKinds::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }

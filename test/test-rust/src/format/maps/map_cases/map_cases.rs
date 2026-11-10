@@ -113,7 +113,7 @@ impl MapCases {
     pub fn encoded_len(&self) -> usize {
         match self {
             Self::Unrecognized(case) => 2 + case.bytes.len(),
-            Self::Scores(value) => 2 + proto_packet::io::map_encoded_len(value),
+            Self::Scores(value) => 2 + proto_packet::io::Element::encoded_len(value),
             Self::Number(_) => 6,
         }
     }
@@ -147,7 +147,7 @@ impl MapCases {
             }
             Self::Scores(value) => {
                 out.extend_from_slice(&1_u16.to_le_bytes());
-                proto_packet::io::encode_map(value, out, depth - 1);
+                proto_packet::io::Element::encode_to(value, out, depth - 1);
             }
             Self::Number(value) => {
                 out.extend_from_slice(&2_u16.to_le_bytes());
@@ -213,6 +213,20 @@ impl proto_packet::io::Element for MapCases {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         MapCases::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
 

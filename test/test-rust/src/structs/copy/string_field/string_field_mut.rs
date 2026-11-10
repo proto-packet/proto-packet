@@ -43,7 +43,3 @@ impl StringFieldMut<'_> {
         self.bytes
     }
 }
-
-impl StringFieldMut<'_> {
-    //! Fields
-}

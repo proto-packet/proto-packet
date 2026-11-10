@@ -273,23 +273,23 @@ impl WithLists {
         }
         if let Some(value) = &self.numbers {
             count += 1;
-            values += proto_packet::io::list_encoded_len(value);
+            values += proto_packet::io::Element::encoded_len(value);
         }
         if let Some(value) = &self.texts {
             count += 1;
-            values += proto_packet::io::list_encoded_len(value);
+            values += proto_packet::io::Element::encoded_len(value);
         }
         if let Some(value) = &self.points {
             count += 1;
-            values += proto_packet::io::list_encoded_len(value);
+            values += proto_packet::io::Element::encoded_len(value);
         }
         if let Some(value) = &self.entries {
             count += 1;
-            values += proto_packet::io::list_encoded_len(value);
+            values += proto_packet::io::Element::encoded_len(value);
         }
         if let Some(value) = &self.children {
             count += 1;
-            values += proto_packet::io::list_encoded_len(value);
+            values += proto_packet::io::Element::encoded_len(value);
         }
         proto_packet::io::message_index_len(count) + values
     }
@@ -329,23 +329,23 @@ impl WithLists {
             writer.end_field();
         }
         if let Some(value) = &self.numbers {
-            proto_packet::io::encode_list(value, writer.field(2), depth - 1);
+            proto_packet::io::Element::encode_to(value, writer.field(2), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.texts {
-            proto_packet::io::encode_list(value, writer.field(3), depth - 1);
+            proto_packet::io::Element::encode_to(value, writer.field(3), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.points {
-            proto_packet::io::encode_list(value, writer.field(4), depth - 1);
+            proto_packet::io::Element::encode_to(value, writer.field(4), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.entries {
-            proto_packet::io::encode_list(value, writer.field(5), depth - 1);
+            proto_packet::io::Element::encode_to(value, writer.field(5), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.children {
-            proto_packet::io::encode_list(value, writer.field(6), depth - 1);
+            proto_packet::io::Element::encode_to(value, writer.field(6), depth - 1);
             writer.end_field();
         }
         writer.finish();
@@ -408,6 +408,20 @@ impl proto_packet::io::Element for WithLists {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         WithLists::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
 

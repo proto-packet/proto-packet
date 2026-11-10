@@ -75,6 +75,9 @@ pub enum ParseErrorReason {
 
     /// A struct field type with `optional` twice.
     DuplicateOptional,
+
+    /// An `optional` map key. (ex: `map<optional u8, u8>`)
+    OptionalMapKey,
 }
 
 impl ParseErrorReason {
@@ -110,6 +113,7 @@ impl ParseErrorReason {
             Self::OptionalVariantCase => "variant cases can't be `optional`",
             Self::OptionalAfterBox => "`optional` must come before `box`",
             Self::DuplicateOptional => "`optional` can only appear once",
+            Self::OptionalMapKey => "map keys can't be `optional`",
         }
     }
 
@@ -141,6 +145,7 @@ impl ParseErrorReason {
             Self::OptionalVariantCase => "P_OPTIONAL_VARIANT_CASE",
             Self::OptionalAfterBox => "P_OPTIONAL_AFTER_BOX",
             Self::DuplicateOptional => "P_DUPLICATE_OPTIONAL",
+            Self::OptionalMapKey => "P_OPTIONAL_MAP_KEY",
         }
     }
 }

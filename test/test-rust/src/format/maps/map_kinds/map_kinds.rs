@@ -297,38 +297,38 @@ impl MapKinds {
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 21;
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.by_number);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.by_number);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.by_color);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.by_color);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.by_point);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.by_point);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.lists);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.lists);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.maps);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.maps);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         if let Some(value) = &self.maybe {
             {
-                let size: usize = proto_packet::io::map_encoded_len(value);
+                let size: usize = proto_packet::io::Element::encoded_len(value);
                 if size > 0 {
                     len = proto_packet::io::align_up(len, 8) + size;
                 }
@@ -366,7 +366,7 @@ impl MapKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.by_number, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.by_number, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start, start);
@@ -374,7 +374,7 @@ impl MapKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.by_color, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.by_color, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 4, start);
@@ -382,7 +382,7 @@ impl MapKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.by_point, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.by_point, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 8, start);
@@ -390,7 +390,7 @@ impl MapKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.lists, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.lists, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 12, start);
@@ -398,7 +398,7 @@ impl MapKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.maps, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.maps, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 16, start);
@@ -407,7 +407,7 @@ impl MapKinds {
                 let before: usize = out.len();
                 proto_packet::io::write_padding(out, start, 8);
                 let padded: usize = out.len();
-                proto_packet::io::encode_map(value, out, depth - 1);
+                proto_packet::io::Element::encode_to(value, out, depth - 1);
                 proto_packet::io::trim_padding(out, before, padded);
             }
         }
@@ -465,5 +465,19 @@ impl proto_packet::io::Element for MapKinds {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         MapKinds::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }

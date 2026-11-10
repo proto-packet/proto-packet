@@ -30,10 +30,16 @@ impl<'a> WithMapsRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
                 1 => {
-                    proto_packet::io::MapRef::<String, u32>::new_with_depth(value, depth - 1)?;
+                    <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::check(
+                        value,
+                        depth - 1,
+                    )?;
                 }
                 2 => {
-                    proto_packet::io::ListRef::<std::collections::BTreeMap<u8, u8>>::new_with_depth(value, depth - 1)?;
+                    <Vec<std::collections::BTreeMap<u8, u8>> as proto_packet::io::Element>::check(
+                        value,
+                        depth - 1,
+                    )?;
                 }
                 _ => {}
             }
@@ -80,7 +86,11 @@ impl<'a> WithMapsRef<'a> {
     #[must_use]
     pub fn scores(&self) -> Option<proto_packet::io::MapRef<'a, String, u32>> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 1) }?;
-        Some(unsafe { proto_packet::io::MapRef::new_unchecked(value) })
+        Some(unsafe {
+            <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::read_unchecked(
+                value,
+            )
+        })
     }
 
     /// Gets the field: `rounds`.
@@ -89,7 +99,11 @@ impl<'a> WithMapsRef<'a> {
         &self,
     ) -> Option<proto_packet::io::ListRef<'a, std::collections::BTreeMap<u8, u8>>> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 2) }?;
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe {
+            <Vec<std::collections::BTreeMap<u8, u8>> as proto_packet::io::Element>::read_unchecked(
+                value,
+            )
+        })
     }
 }
 
@@ -104,14 +118,10 @@ impl<'a> WithMapsRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
             match tag {
                 1 => {
-                    result.set_scores(
-                        unsafe { proto_packet::io::MapRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_scores(<std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::decode(unsafe { <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::read_unchecked(value) }));
                 }
                 2 => {
-                    result.set_rounds(
-                        unsafe { proto_packet::io::ListRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_rounds(<Vec<std::collections::BTreeMap<u8, u8>> as proto_packet::io::Element>::decode(unsafe { <Vec<std::collections::BTreeMap<u8, u8>> as proto_packet::io::Element>::read_unchecked(value) }));
                 }
                 _ => unknown_fields.push(proto_packet::io::UnknownField::new(
                     unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },

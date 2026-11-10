@@ -146,4 +146,18 @@ impl proto_packet::io::Element for Result {
     fn encode_to(&self, out: &mut std::vec::Vec<u8>, _depth: usize) {
         Result::encode_to(self, out);
     }
+
+    fn serialize_json<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
+    }
 }

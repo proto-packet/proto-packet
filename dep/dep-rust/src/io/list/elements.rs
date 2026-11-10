@@ -1,6 +1,6 @@
 //! The elements that the runtime has.
 
-use crate::io::list::element::list_alignment;
+use crate::io::list::element::{list_alignment, serde_json_form};
 use crate::io::{DecodeError, Element, ListRef, check_bool, check_utf8, encode_list};
 use crate::io::{list_encoded_len, read_bytes_unchecked};
 use std::cmp::Ordering;
@@ -55,7 +55,9 @@ macro_rules! impl_integer {
 /// Implements a small integer type as an element, which is a number in JSON.
 macro_rules! impl_small_integer {
     ($type:ty, $alignment:expr) => {
-        impl_integer!($type, $alignment, {});
+        impl_integer!($type, $alignment, {
+            serde_json_form!();
+        });
     };
 }
 
@@ -99,6 +101,7 @@ impl Element for u8 {
     const SIZE: Option<usize> = Some(1);
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = false;
+    const IS_BYTE: bool = true;
     type Ref<'a> = u8;
     type View<'a> = u8;
 
@@ -137,6 +140,8 @@ impl Element for u8 {
     fn cmp_refs(a: u8, b: u8) -> Ordering {
         a.cmp(&b)
     }
+
+    serde_json_form!();
 }
 
 impl Element for bool {
@@ -177,6 +182,8 @@ impl Element for bool {
     fn cmp_refs(a: bool, b: bool) -> Ordering {
         a.cmp(&b)
     }
+
+    serde_json_form!();
 }
 
 impl Element for String {
@@ -217,6 +224,8 @@ impl Element for String {
     fn cmp_refs(a: &str, b: &str) -> Ordering {
         a.cmp(b)
     }
+
+    serde_json_form!();
 }
 
 impl<T> Element for Vec<T>
@@ -331,6 +340,8 @@ macro_rules! impl_float {
             fn cmp_refs(a: crate::types::$type, b: crate::types::$type) -> Ordering {
                 a.cmp(&b)
             }
+
+            serde_json_form!();
         }
     };
 }
@@ -379,6 +390,8 @@ impl Element for crate::types::Uuid {
     fn cmp_refs(a: crate::types::Uuid, b: crate::types::Uuid) -> Ordering {
         a.cmp(&b)
     }
+
+    serde_json_form!();
 }
 
 /// Implements a time type as an element, with the integer type it holds.
@@ -424,6 +437,8 @@ macro_rules! impl_time {
             fn cmp_refs(a: crate::types::$type, b: crate::types::$type) -> Ordering {
                 a.cmp(&b)
             }
+
+            serde_json_form!();
         }
     };
 }
@@ -480,6 +495,8 @@ impl<const S: u8> Element for crate::types::Decimal<S> {
     fn cmp_refs(a: crate::types::Decimal<S>, b: crate::types::Decimal<S>) -> Ordering {
         a.cmp(&b)
     }
+
+    serde_json_form!();
 }
 
 #[cfg(feature = "types")]
@@ -521,4 +538,6 @@ impl Element for crate::types::Bytes {
     fn cmp_refs(a: &[u8], b: &[u8]) -> Ordering {
         a.cmp(b)
     }
+
+    serde_json_form!();
 }

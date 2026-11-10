@@ -30,21 +30,16 @@ impl<'a> KeyedMessageRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
                 1 => {
-                    proto_packet::io::MapRef::<crate::format::examples::Point, u8>::new_with_depth(
-                        value,
-                        depth - 1,
-                    )?;
+                    <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::check(value, depth - 1)?;
                 }
                 2 => {
-                    proto_packet::io::ListRef::<
-                        std::collections::BTreeMap<crate::format::examples::Point, u8>,
-                    >::new_with_depth(value, depth - 1)?;
+                    <Vec<std::collections::BTreeMap<crate::format::examples::Point, u8>> as proto_packet::io::Element>::check(value, depth - 1)?;
                 }
                 3 => {
-                    proto_packet::io::MapRef::<
+                    <std::collections::BTreeMap<
                         u8,
                         std::collections::BTreeMap<crate::format::examples::Point, u8>,
-                    >::new_with_depth(value, depth - 1)?;
+                    > as proto_packet::io::Element>::check(value, depth - 1)?;
                 }
                 _ => {}
             }
@@ -93,7 +88,9 @@ impl<'a> KeyedMessageRef<'a> {
         &self,
     ) -> Option<proto_packet::io::MapRef<'a, crate::format::examples::Point, u8>> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 1) }?;
-        Some(unsafe { proto_packet::io::MapRef::new_unchecked(value) })
+        Some(unsafe {
+            <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::read_unchecked(value)
+        })
     }
 
     /// Gets the field: `rounds`.
@@ -107,7 +104,9 @@ impl<'a> KeyedMessageRef<'a> {
         >,
     > {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 2) }?;
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe {
+            <Vec<std::collections::BTreeMap<crate::format::examples::Point, u8>> as proto_packet::io::Element>::read_unchecked(value)
+        })
     }
 
     /// Gets the field: `nested`.
@@ -122,7 +121,12 @@ impl<'a> KeyedMessageRef<'a> {
         >,
     > {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 3) }?;
-        Some(unsafe { proto_packet::io::MapRef::new_unchecked(value) })
+        Some(unsafe {
+            <std::collections::BTreeMap<
+                u8,
+                std::collections::BTreeMap<crate::format::examples::Point, u8>,
+            > as proto_packet::io::Element>::read_unchecked(value)
+        })
     }
 }
 
@@ -137,19 +141,25 @@ impl<'a> KeyedMessageRef<'a> {
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(self.bytes) } {
             match tag {
                 1 => {
-                    result.set_by_point(
-                        unsafe { proto_packet::io::MapRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_by_point(<std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::decode(unsafe { <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::read_unchecked(value) }));
                 }
                 2 => {
-                    result.set_rounds(
-                        unsafe { proto_packet::io::ListRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_rounds(<Vec<std::collections::BTreeMap<crate::format::examples::Point, u8>> as proto_packet::io::Element>::decode(unsafe { <Vec<std::collections::BTreeMap<crate::format::examples::Point, u8>> as proto_packet::io::Element>::read_unchecked(value) }));
                 }
                 3 => {
-                    result.set_nested(
-                        unsafe { proto_packet::io::MapRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_nested(<std::collections::BTreeMap<
+                        u8,
+                        std::collections::BTreeMap<crate::format::examples::Point, u8>,
+                    > as proto_packet::io::Element>::decode(
+                        unsafe {
+                        <std::collections::BTreeMap<
+                            u8,
+                            std::collections::BTreeMap<crate::format::examples::Point, u8>,
+                        > as proto_packet::io::Element>::read_unchecked(
+                            value
+                        )
+                    }
+                    ));
                 }
                 _ => unknown_fields.push(proto_packet::io::UnknownField::new(
                     unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },

@@ -97,6 +97,7 @@ impl proto_packet::io::Element for SingleCase {
     const SIZE: Option<usize> = Some(2);
     const ALIGNMENT: usize = 2;
     const CAN_BE_INVALID: bool = true;
+    const ZERO_IS_ABSENT: bool = true;
     type Ref<'a> = Self;
     type View<'a> = Self;
 
@@ -129,5 +130,19 @@ impl proto_packet::io::Element for SingleCase {
 
     fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         out.extend_from_slice(&self.tag_number().to_le_bytes());
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }

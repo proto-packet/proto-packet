@@ -8,7 +8,7 @@ use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_element::gen_element;
 use crate::rust::gen_eq::gen_native_eq;
 use crate::rust::gen_struct_mut::{
-    check_mut_names, gen_buf_accessors, gen_struct_mut, is_struct, mut_name,
+    check_mut_names, gen_buf_accessors, gen_struct_mut, is_editable, is_struct, mut_name,
 };
 use crate::rust::gen_struct_ref::{can_be_invalid, gen_struct_ref, ref_name};
 use crate::rust::gen_view::{gen_view, view_name};
@@ -198,6 +198,12 @@ where
 {
     let mut cache: LayoutCache = LayoutCache::new(project);
     for (member_name, tag) in members {
+        if cache.has_variable_array_element(tag) {
+            return Err(GenError::VariableArrayElement {
+                type_name: type_name.to_string(),
+                member_name: member_name.to_string(),
+            });
+        }
         if cache.has_empty_element(tag) {
             return Err(GenError::EmptyListElement {
                 type_name: type_name.to_string(),
@@ -212,11 +218,12 @@ where
 ///
 /// # Note
 /// - A string, a list or a map can't change its length in place, so the trait leaves it out.
+/// - An array has no setter yet.
 pub(crate) fn view_mut_fields<'a>(fields: &[Field<'a>]) -> Vec<Field<'a>> {
     fields
         .iter()
         .copied()
-        .filter(|field| !field.tag.is_collection() && !field.tag.is_string())
+        .filter(|field| is_editable(*field))
         .collect()
 }
 

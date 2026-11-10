@@ -6,7 +6,8 @@ use crate::rust::gen_message_ref::{gen_read, gen_value_check};
 use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, ref_name};
 use crate::rust::gen_variant::Case;
 use crate::rust::naming::is_upper_camel_case;
-use crate::rust::typing::Typing;
+use crate::rust::typing::{Typing, is_element_coded};
+use crate::rust::values::element;
 use crate::rust::values::ref_value_type;
 use code_gen::rust::{
     Access, Enum as RustEnum, EnumCase, EnumFields, Function, ImplBlock, Receiver, RustType,
@@ -260,18 +261,20 @@ fn gen_decoding(
 
 /// Generates the expression of the owned `value` of the `case`.
 fn gen_decoded_value(typing: Typing<'_>, case: Case<'_>) -> String {
-    let value: &str = if case.tag.is_string() {
-        "value.to_string()"
+    let value: String = if case.tag.is_string() {
+        "value.to_string()".to_string()
     } else if case.tag.is_bytes() {
-        "proto_packet::types::Bytes::from(value)"
-    } else if case.is_nested(typing) || case.tag.is_collection() {
-        "value.decode()"
+        "proto_packet::types::Bytes::from(value)".to_string()
+    } else if is_element_coded(case.tag) {
+        format!("{}::decode(value)", element(typing, case.tag))
+    } else if case.is_nested(typing) {
+        "value.decode()".to_string()
     } else {
-        "value"
+        "value".to_string()
     };
     if case.is_boxed {
         format!("Box::new({})", value)
     } else {
-        value.to_string()
+        value
     }
 }

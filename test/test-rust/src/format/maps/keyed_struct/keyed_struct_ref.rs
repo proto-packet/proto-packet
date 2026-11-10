@@ -29,15 +29,9 @@ impl<'a> KeyedStructRef<'a> {
         proto_packet::io::check_len(bytes, 5)?;
         proto_packet::io::check_tail_ends(bytes, 0, 1, 5)?;
         proto_packet::io::check_unused_bits(bytes[4], 1)?;
-        proto_packet::io::MapRef::<crate::format::examples::Point, u8>::new_with_depth(
-            proto_packet::io::check_tail_entry(bytes, 0, 0, 2, 5, 4)?,
-            depth - 1,
-        )?;
+        <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 0, 2, 5, 4)?, depth - 1)?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 4, 0) } {
-            proto_packet::io::MapRef::<crate::format::examples::Point, u8>::new_with_depth(
-                proto_packet::io::check_tail_entry(bytes, 0, 1, 2, 5, 4)?,
-                depth - 1,
-            )?;
+            <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 1, 2, 5, 4)?, depth - 1)?;
         } else {
             proto_packet::io::check_tail_absent(bytes, 0, 1, 2, 5)?;
         }
@@ -83,9 +77,7 @@ impl<'a> KeyedStructRef<'a> {
     #[must_use]
     pub fn by_point(&self) -> proto_packet::io::MapRef<'a, crate::format::examples::Point, u8> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 2, 5, 4,
-            ))
+            <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 2, 5, 4))
         }
     }
 
@@ -96,9 +88,7 @@ impl<'a> KeyedStructRef<'a> {
     ) -> Option<proto_packet::io::MapRef<'a, crate::format::examples::Point, u8>> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 4, 0) } {
             Some(unsafe {
-                proto_packet::io::MapRef::new_unchecked(
-                    proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 2, 5, 4),
-                )
+                <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 2, 5, 4))
             })
         } else {
             None
@@ -112,10 +102,7 @@ impl<'a> KeyedStructRef<'a> {
     /// Decodes the [KeyedStruct](super::KeyedStruct).
     #[must_use]
     pub fn decode(&self) -> super::KeyedStruct {
-        super::KeyedStruct::new(
-            self.by_point().decode(),
-            self.maybe().map(|value| value.decode()),
-        )
+        super::KeyedStruct::new(<std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::decode(self.by_point()), self.maybe().map(<std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::decode))
     }
 
     /// Copies the bytes into an owned buf.

@@ -237,6 +237,20 @@ impl proto_packet::io::Element for FloatFields {
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         FloatFields::encode_to_with_depth(self, out, depth);
     }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
+    }
 }
 
 impl proto_packet::serde::Serialize for FloatFields {

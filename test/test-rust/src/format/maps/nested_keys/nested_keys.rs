@@ -138,13 +138,13 @@ impl NestedKeys {
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 4;
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.by_struct);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.by_struct);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.by_list);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.by_list);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
@@ -180,7 +180,7 @@ impl NestedKeys {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.by_struct, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.by_struct, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start, start);
@@ -188,7 +188,7 @@ impl NestedKeys {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.by_list, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.by_list, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
     }
@@ -250,5 +250,19 @@ impl proto_packet::io::Element for NestedKeys {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         NestedKeys::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }

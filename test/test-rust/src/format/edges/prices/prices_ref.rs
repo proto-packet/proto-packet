@@ -32,14 +32,11 @@ impl<'a> PricesRef<'a> {
         if !unsafe { proto_packet::io::read_bit_unchecked(bytes, 36, 0) } {
             proto_packet::io::check_absent(&bytes[24..32])?;
         }
-        proto_packet::io::ListRef::<proto_packet::types::Decimal<2>>::new_with_depth(
+        <Vec<proto_packet::types::Decimal<2>> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 32, 0, 2, 37, 8)?,
             depth - 1,
         )?;
-        proto_packet::io::MapRef::<String, proto_packet::types::Decimal<2>>::new_with_depth(
-            proto_packet::io::check_tail_entry(bytes, 32, 1, 2, 37, 8)?,
-            depth - 1,
-        )?;
+        <std::collections::BTreeMap<String, proto_packet::types::Decimal<2>> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 32, 1, 2, 37, 8)?, depth - 1)?;
         Ok(Self { bytes })
     }
 
@@ -110,9 +107,9 @@ impl<'a> PricesRef<'a> {
     #[must_use]
     pub fn list(&self) -> proto_packet::io::ListRef<'a, proto_packet::types::Decimal<2>> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 32, 0, 2, 37, 8,
-            ))
+            <Vec<proto_packet::types::Decimal<2>> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 32, 0, 2, 37, 8),
+            )
         }
     }
 
@@ -120,9 +117,7 @@ impl<'a> PricesRef<'a> {
     #[must_use]
     pub fn named(&self) -> proto_packet::io::MapRef<'a, String, proto_packet::types::Decimal<2>> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 32, 1, 2, 37, 8,
-            ))
+            <std::collections::BTreeMap<String, proto_packet::types::Decimal<2>> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 32, 1, 2, 37, 8))
         }
     }
 }
@@ -133,14 +128,7 @@ impl<'a> PricesRef<'a> {
     /// Decodes the [Prices](super::Prices).
     #[must_use]
     pub fn decode(&self) -> super::Prices {
-        super::Prices::new(
-            self.price(),
-            self.rate(),
-            self.count(),
-            self.maybe(),
-            self.list().decode(),
-            self.named().decode(),
-        )
+        super::Prices::new(self.price(), self.rate(), self.count(), self.maybe(), <Vec<proto_packet::types::Decimal<2>> as proto_packet::io::Element>::decode(self.list()), <std::collections::BTreeMap<String, proto_packet::types::Decimal<2>> as proto_packet::io::Element>::decode(self.named()))
     }
 
     /// Copies the bytes into an owned buf.

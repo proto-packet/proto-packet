@@ -2,7 +2,7 @@ use crate::layout::{
     BitLayout, EntryLayout, FieldLayout, LayoutCache, TypeLayout, UnitLayout, ValueLayout,
 };
 use proto_packet::io::align_up;
-use proto_packet_tree::{Project, Struct, StructField, TypeTag, WithTypeTag};
+use proto_packet_tree::{Project, Struct, StructField, WithTypeTag};
 
 /// The layout of a struct's encoding. (see `format/binary.md`)
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
@@ -47,10 +47,7 @@ impl StructLayout {
 
         let is_struct: Vec<bool> = fields
             .iter()
-            .map(|field| {
-                let tag: &TypeTag = field.type_tag();
-                matches!(tag, TypeTag::Named(_)) && !cache.is_enum(tag)
-            })
+            .map(|field| cache.is_with_structs(field.type_tag()))
             .collect();
 
         let mut units: Vec<UnitLayout> = Vec::default();

@@ -32,11 +32,11 @@ impl<'a> TimeKindsRef<'a> {
         if !unsafe { proto_packet::io::read_bit_unchecked(bytes, 48, 0) } {
             proto_packet::io::check_absent(&bytes[32..40])?;
         }
-        proto_packet::io::ListRef::<proto_packet::types::Date>::new_with_depth(
+        <Vec<proto_packet::types::Date> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 44, 0, 2, 49, 4)?,
             depth - 1,
         )?;
-        proto_packet::io::MapRef::<proto_packet::types::Date, proto_packet::types::Duration>::new_with_depth(proto_packet::io::check_tail_entry(bytes, 44, 1, 2, 49, 8)?, depth - 1)?;
+        <std::collections::BTreeMap<proto_packet::types::Date, proto_packet::types::Duration> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 44, 1, 2, 49, 8)?, depth - 1)?;
         Ok(Self { bytes })
     }
 
@@ -119,9 +119,9 @@ impl<'a> TimeKindsRef<'a> {
     #[must_use]
     pub fn days(&self) -> proto_packet::io::ListRef<'a, proto_packet::types::Date> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 44, 0, 2, 49, 4,
-            ))
+            <Vec<proto_packet::types::Date> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 44, 0, 2, 49, 4),
+            )
         }
     }
 
@@ -132,9 +132,7 @@ impl<'a> TimeKindsRef<'a> {
     ) -> proto_packet::io::MapRef<'a, proto_packet::types::Date, proto_packet::types::Duration>
     {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 44, 1, 2, 49, 8,
-            ))
+            <std::collections::BTreeMap<proto_packet::types::Date, proto_packet::types::Duration> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 44, 1, 2, 49, 8))
         }
     }
 }
@@ -145,16 +143,7 @@ impl<'a> TimeKindsRef<'a> {
     /// Decodes the [TimeKinds](super::TimeKinds).
     #[must_use]
     pub fn decode(&self) -> super::TimeKinds {
-        super::TimeKinds::new(
-            self.at(),
-            self.micro(),
-            self.nano(),
-            self.day(),
-            self.span(),
-            self.maybe(),
-            self.days().decode(),
-            self.spans().decode(),
-        )
+        super::TimeKinds::new(self.at(), self.micro(), self.nano(), self.day(), self.span(), self.maybe(), <Vec<proto_packet::types::Date> as proto_packet::io::Element>::decode(self.days()), <std::collections::BTreeMap<proto_packet::types::Date, proto_packet::types::Duration> as proto_packet::io::Element>::decode(self.spans()))
     }
 
     /// Copies the bytes into an owned buf.

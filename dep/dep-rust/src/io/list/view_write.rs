@@ -4,6 +4,9 @@
 //! encoded from its view with no native list or map in between.
 
 use crate::io::list::element::list_alignment;
+use crate::io::list::option_write::{
+    option_items_len, option_list_start, write_option_items, write_option_list_start,
+};
 use crate::io::{Element, ListView, MapView, align_up};
 use crate::io::{trim_padding, write_end, write_padding, write_zeros};
 use std::borrow::Borrow;
@@ -172,7 +175,7 @@ where
 }
 
 /// Gets the length of the encoding of a list of the `count` of `items`.
-fn items_len<I, B, T, F>(
+pub(crate) fn items_len<I, B, T, F>(
     items: I,
     count: usize,
     size: Option<usize>,
@@ -201,7 +204,7 @@ where
 /// # Panics
 /// Panics if the count or an end offset does not fit in a `u32`, or the `items` are not the
 /// `count`.
-fn write_items<I, B, T, F>(
+pub(crate) fn write_items<I, B, T, F>(
     items: I,
     count: usize,
     out: &mut Vec<u8>,
@@ -241,4 +244,175 @@ fn write_items<I, B, T, F>(
         }
     }
     assert_eq!(written, count, "the list has another count than its length");
+}
+
+/// Appends the encoding of the `list` as an array of the `len` to the `out` bytes, with each
+/// element written by `write`.
+///
+/// The elements have the `size` & the `alignment`.
+///
+/// # Panics
+/// Panics if the list is not the `len`.
+pub fn write_array_view<L, F>(
+    list: L,
+    out: &mut Vec<u8>,
+    len: usize,
+    size: Option<usize>,
+    alignment: usize,
+    mut write: F,
+) where
+    L: ListView,
+    F: FnMut(&L::Item, &mut Vec<u8>),
+{
+    assert_eq!(list.len(), len, "the array has another length");
+    write_items(list.iter(), len, out, size, alignment, &mut write);
+}
+
+/// Gets the length of the encoding of the `list` of optional elements of the type `T`, with each
+/// present variable-size element measured by `len`.
+pub fn option_list_view_len<T, L, X, F>(list: L, len: F) -> usize
+where
+    T: Element,
+    L: ListView<Item = Option<X>>,
+    F: Fn(&X) -> usize,
+{
+    let count: usize = list.len();
+    if count == 0 {
+        return 0;
+    }
+    option_list_start::<T>() + option_items_len::<T, _, _, X, _>(list.iter(), count, &len)
+}
+
+/// Appends the encoding of the `list` of optional elements of the type `T` to the `out` bytes,
+/// with each present element written by `write`.
+///
+/// # Panics
+/// Panics if the count or an end offset does not fit in a `u32`, or the list has another count of
+/// elements than its length.
+pub fn write_option_list_view<T, L, X, F>(list: L, out: &mut Vec<u8>, mut write: F)
+where
+    T: Element,
+    L: ListView<Item = Option<X>>,
+    F: FnMut(&X, &mut Vec<u8>),
+{
+    let count: usize = list.len();
+    if count == 0 {
+        return;
+    }
+    write_option_list_start::<T>(count, out);
+    write_option_items::<T, _, _, X, _>(list.iter(), count, out, &mut write);
+}
+
+/// Appends the encoding of the `list` as an array of the `len` of optional elements of the type
+/// `T` to the `out` bytes, with each present element written by `write`.
+///
+/// # Panics
+/// Panics if the list is not the `len`.
+pub fn write_option_array_view<T, L, X, F>(list: L, out: &mut Vec<u8>, len: usize, mut write: F)
+where
+    T: Element,
+    L: ListView<Item = Option<X>>,
+    F: FnMut(&X, &mut Vec<u8>),
+{
+    assert_eq!(list.len(), len, "the array has another length");
+    write_option_items::<T, _, _, X, _>(list.iter(), len, out, &mut write);
+}
+
+/// Gets the length of the encoding of the `map` with optional values, with each variable-size key
+/// & present value measured by `key_len` & `value_len`.
+///
+/// # Note
+/// - The keys are written by `write_key` when their order changes the padding between the entries.
+pub fn option_map_view_len<K, V, M, X, KL, VL, KW>(
+    map: M,
+    key_len: KL,
+    value_len: VL,
+    mut write_key: KW,
+) -> usize
+where
+    K: Element,
+    V: Element,
+    M: MapView<K, Value = Option<X>>,
+    KL: Fn(&M::Key) -> usize,
+    VL: Fn(&X) -> usize,
+    KW: FnMut(&M::Key, &mut Vec<u8>),
+{
+    let count: usize = map.len();
+    if count == 0 {
+        return 0;
+    }
+    let keys_start: usize = align_up(4, list_alignment::<K>());
+    let is_len_ordered: bool =
+        (K::SIZE.is_none() && K::ALIGNMENT > 1) || (V::SIZE.is_none() && V::ALIGNMENT > 1);
+    let (keys, values): (usize, usize) = if K::ORDERED_BY_BYTES && is_len_ordered {
+        let entries: Vec<(M::Key, Option<X>)> = entries_by_key_bytes(map, &mut write_key);
+        (
+            items_len(
+                entries.iter().map(|entry| &entry.0),
+                count,
+                K::SIZE,
+                K::ALIGNMENT,
+                &key_len,
+            ),
+            option_items_len::<V, _, _, X, _>(
+                entries.iter().map(|entry| entry.1.as_ref()),
+                count,
+                &value_len,
+            ),
+        )
+    } else {
+        (
+            items_len(
+                map.iter().map(|entry| entry.0),
+                count,
+                K::SIZE,
+                K::ALIGNMENT,
+                &key_len,
+            ),
+            option_items_len::<V, _, _, X, _>(map.iter().map(|entry| entry.1), count, &value_len),
+        )
+    };
+    align_up(keys_start + keys, list_alignment::<V>()) + values
+}
+
+/// Appends the encoding of the `map` with optional values to the `out` bytes, with each key &
+/// present value written by `write_key` & `write_value`.
+///
+/// # Panics
+/// Panics if a count or an end offset does not fit in a `u32`.
+pub fn write_option_map_view<K, V, M, X, KW, VW>(
+    map: M,
+    out: &mut Vec<u8>,
+    mut write_key: KW,
+    mut write_value: VW,
+) where
+    K: Element,
+    V: Element,
+    M: MapView<K, Value = Option<X>>,
+    KW: FnMut(&M::Key, &mut Vec<u8>),
+    VW: FnMut(&X, &mut Vec<u8>),
+{
+    let count: usize = map.len();
+    if count == 0 {
+        return;
+    }
+    let start: usize = out.len();
+    write_zeros(out, 4);
+    write_padding(out, start, list_alignment::<K>());
+    if K::ORDERED_BY_BYTES {
+        let entries: Vec<(M::Key, Option<X>)> = entries_by_key_bytes(map, &mut write_key);
+        let keys = entries.iter().map(|entry| &entry.0);
+        write_items(keys, count, out, K::SIZE, K::ALIGNMENT, &mut write_key);
+        write_end(out, start, start);
+        write_padding(out, start, list_alignment::<V>());
+        let values = entries.iter().map(|entry| entry.1.as_ref());
+        write_option_items::<V, _, _, X, _>(values, count, out, &mut write_value);
+    } else {
+        let keys = map.iter().map(|entry| entry.0);
+        write_items(keys, count, out, K::SIZE, K::ALIGNMENT, &mut write_key);
+        write_end(out, start, start);
+        write_padding(out, start, list_alignment::<V>());
+        let values = map.iter().map(|entry| entry.1);
+        write_option_items::<V, _, _, X, _>(values, count, out, &mut write_value);
+    }
 }

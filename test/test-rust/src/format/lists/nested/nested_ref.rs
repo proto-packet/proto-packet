@@ -27,7 +27,7 @@ impl<'a> NestedRef<'a> {
     ) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 0)?;
-        proto_packet::io::ListRef::<proto_packet::types::Bytes>::new_with_depth(
+        <Vec<proto_packet::types::Bytes> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 0, 4)?,
             depth - 1,
         )?;
@@ -73,9 +73,9 @@ impl<'a> NestedRef<'a> {
     #[must_use]
     pub fn rows(&self) -> proto_packet::io::ListRef<'a, proto_packet::types::Bytes> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 1, 0, 4,
-            ))
+            <Vec<proto_packet::types::Bytes> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 1, 0, 4),
+            )
         }
     }
 }
@@ -86,7 +86,9 @@ impl<'a> NestedRef<'a> {
     /// Decodes the [Nested](super::Nested).
     #[must_use]
     pub fn decode(&self) -> super::Nested {
-        super::Nested::new(self.rows().decode())
+        super::Nested::new(
+            <Vec<proto_packet::types::Bytes> as proto_packet::io::Element>::decode(self.rows()),
+        )
     }
 
     /// Copies the bytes into an owned buf.

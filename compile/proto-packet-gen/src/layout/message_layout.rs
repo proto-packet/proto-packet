@@ -52,7 +52,7 @@ pub fn scalar_size(project: &Project, tag: &TypeTag) -> Option<usize> {
             Some(TypeDec::Enum(_)) => Some(2),
             _ => None,
         },
-        TypeTag::List(_) => None,
-        TypeTag::Map { .. } => None,
+        TypeTag::List(_) | TypeTag::Map { .. } | TypeTag::Array { .. } => None,
+        TypeTag::Optional(_) => unreachable!("an optional value is in a list, an array or a map"),
     }
 }

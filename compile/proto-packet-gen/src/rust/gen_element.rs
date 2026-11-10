@@ -102,12 +102,27 @@ pub(crate) fn gen_element(
     }}
 
     {encode_to}
+
+    fn serialize_json<S>(&self, serializer: S) -> {result}<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {{
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }}
+
+    fn deserialize_json<'de, D>(deserializer: D) -> {result}<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {{
+        proto_packet::serde::Deserialize::deserialize(deserializer)
+    }}
 }}
 ",
         io = IO,
         type_name = type_name,
         ref_name = ref_name,
         encode_to = encode_to,
+        result = prelude.path(PreludeName::Result),
         option = prelude.path(PreludeName::Option),
         size = size,
         alignment = alignment,
@@ -125,6 +140,7 @@ pub(crate) fn gen_enum_element(prelude: Prelude, type_name: &str) -> String {
     const SIZE: {option}<usize> = Some(2);
     const ALIGNMENT: usize = 2;
     const CAN_BE_INVALID: bool = true;
+    const ZERO_IS_ABSENT: bool = true;
     type Ref<'a> = Self;
     type View<'a> = Self;
 
@@ -153,6 +169,20 @@ pub(crate) fn gen_enum_element(prelude: Prelude, type_name: &str) -> String {
 
     fn encode_to(&self, out: &mut {vec}<u8>, _depth: usize) {{
         out.extend_from_slice(&self.tag_number().to_le_bytes());
+    }}
+
+    fn serialize_json<S>(&self, serializer: S) -> {result}<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {{
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }}
+
+    fn deserialize_json<'de, D>(deserializer: D) -> {result}<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {{
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }}
 }}
 ",

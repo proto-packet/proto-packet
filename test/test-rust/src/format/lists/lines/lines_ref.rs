@@ -27,7 +27,7 @@ impl<'a> LinesRef<'a> {
     ) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 0)?;
-        proto_packet::io::ListRef::<crate::format::examples::Line>::new_with_depth(
+        <Vec<crate::format::examples::Line> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 0, 4)?,
             depth - 1,
         )?;
@@ -73,9 +73,9 @@ impl<'a> LinesRef<'a> {
     #[must_use]
     pub fn lines(&self) -> proto_packet::io::ListRef<'a, crate::format::examples::Line> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 1, 0, 4,
-            ))
+            <Vec<crate::format::examples::Line> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 1, 0, 4),
+            )
         }
     }
 }
@@ -86,7 +86,9 @@ impl<'a> LinesRef<'a> {
     /// Decodes the [Lines](super::Lines).
     #[must_use]
     pub fn decode(&self) -> super::Lines {
-        super::Lines::new(self.lines().decode())
+        super::Lines::new(
+            <Vec<crate::format::examples::Line> as proto_packet::io::Element>::decode(self.lines()),
+        )
     }
 
     /// Copies the bytes into an owned buf.

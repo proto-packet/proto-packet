@@ -1,4 +1,4 @@
-use crate::io::{Element, ListRef};
+use crate::io::{Element, ListRef, OptionListRef};
 
 /// The elements of any form of a list.
 ///
@@ -60,5 +60,81 @@ where
 
     fn iter(&self) -> impl Iterator<Item = T::Ref<'a>> {
         ListRef::iter(*self)
+    }
+}
+
+impl<'a, T, const N: usize> ListView for &'a [T; N]
+where
+    T: Element,
+{
+    type Item = T::View<'a>;
+
+    fn len(&self) -> usize {
+        N
+    }
+
+    fn get(&self, index: usize) -> Option<T::View<'a>> {
+        <[T]>::get(*self, index).map(T::view)
+    }
+
+    fn iter(&self) -> impl Iterator<Item = T::View<'a>> {
+        <[T]>::iter(*self).map(T::view)
+    }
+}
+
+impl<'a, T> ListView for &'a [Option<T>]
+where
+    T: Element,
+{
+    type Item = Option<T::View<'a>>;
+
+    fn len(&self) -> usize {
+        <[Option<T>]>::len(self)
+    }
+
+    fn get(&self, index: usize) -> Option<Option<T::View<'a>>> {
+        <[Option<T>]>::get(self, index).map(|element| element.as_ref().map(T::view))
+    }
+
+    fn iter(&self) -> impl Iterator<Item = Option<T::View<'a>>> {
+        <[Option<T>]>::iter(self).map(|element| element.as_ref().map(T::view))
+    }
+}
+
+impl<'a, T, const N: usize> ListView for &'a [Option<T>; N]
+where
+    T: Element,
+{
+    type Item = Option<T::View<'a>>;
+
+    fn len(&self) -> usize {
+        N
+    }
+
+    fn get(&self, index: usize) -> Option<Option<T::View<'a>>> {
+        <[Option<T>]>::get(*self, index).map(|element| element.as_ref().map(T::view))
+    }
+
+    fn iter(&self) -> impl Iterator<Item = Option<T::View<'a>>> {
+        <[Option<T>]>::iter(*self).map(|element| element.as_ref().map(T::view))
+    }
+}
+
+impl<'a, T> ListView for OptionListRef<'a, T>
+where
+    T: Element,
+{
+    type Item = Option<T::Ref<'a>>;
+
+    fn len(&self) -> usize {
+        OptionListRef::len(*self)
+    }
+
+    fn get(&self, index: usize) -> Option<Option<T::Ref<'a>>> {
+        OptionListRef::get(*self, index)
+    }
+
+    fn iter(&self) -> impl Iterator<Item = Option<T::Ref<'a>>> {
+        OptionListRef::iter(*self)
     }
 }

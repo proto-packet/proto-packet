@@ -249,13 +249,13 @@ impl Prices {
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 37;
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.list);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.list);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.named);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.named);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
@@ -296,7 +296,7 @@ impl Prices {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.list, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.list, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 32, start);
@@ -304,7 +304,7 @@ impl Prices {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.named, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.named, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
     }
@@ -361,5 +361,19 @@ impl proto_packet::io::Element for Prices {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         Prices::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }

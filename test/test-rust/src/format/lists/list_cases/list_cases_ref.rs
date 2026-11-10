@@ -33,13 +33,13 @@ impl<'a> ListCasesRef<'a> {
         match tag_number {
             1 => {}
             2 => {
-                proto_packet::io::ListRef::<u32>::new_with_depth(value, depth - 1)?;
+                <Vec<u32> as proto_packet::io::Element>::check(value, depth - 1)?;
             }
             3 => {
-                proto_packet::io::ListRef::<String>::new_with_depth(value, depth - 1)?;
+                <Vec<String> as proto_packet::io::Element>::check(value, depth - 1)?;
             }
             4 => {
-                proto_packet::io::ListRef::<crate::format::examples::Point>::new_with_depth(
+                <Vec<crate::format::examples::Point> as proto_packet::io::Element>::check(
                     value,
                     depth - 1,
                 )?;
@@ -100,14 +100,16 @@ impl<'a> ListCasesRef<'a> {
         match self.tag_number() {
             1 => super::ListCasesCase::Blob(value),
             2 => super::ListCasesCase::Numbers(unsafe {
-                proto_packet::io::ListRef::new_unchecked(value)
+                <Vec<u32> as proto_packet::io::Element>::read_unchecked(value)
             }),
             3 => super::ListCasesCase::Texts(unsafe {
-                proto_packet::io::ListRef::new_unchecked(value)
+                <Vec<String> as proto_packet::io::Element>::read_unchecked(value)
             }),
-            4 => super::ListCasesCase::Points(unsafe {
-                proto_packet::io::ListRef::new_unchecked(value)
-            }),
+            4 => {
+                super::ListCasesCase::Points(unsafe {
+                    <Vec<crate::format::examples::Point> as proto_packet::io::Element>::read_unchecked(value)
+                })
+            }
             5 => super::ListCasesCase::Number(unsafe {
                 proto_packet::io::read_u32_unchecked(value, 0)
             }),
@@ -135,7 +137,7 @@ impl<'a> ListCasesRef<'a> {
             return None;
         }
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe { <Vec<u32> as proto_packet::io::Element>::read_unchecked(value) })
     }
 
     /// Gets the value of the case: `Texts`.
@@ -145,7 +147,7 @@ impl<'a> ListCasesRef<'a> {
             return None;
         }
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe { <Vec<String> as proto_packet::io::Element>::read_unchecked(value) })
     }
 
     /// Gets the value of the case: `Points`.
@@ -157,7 +159,11 @@ impl<'a> ListCasesRef<'a> {
             return None;
         }
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe {
+            <Vec<crate::format::examples::Point> as proto_packet::io::Element>::read_unchecked(
+                value,
+            )
+        })
     }
 
     /// Gets the value of the case: `Number`.
@@ -184,9 +190,17 @@ impl<'a> ListCasesRef<'a> {
             super::ListCasesCase::Blob(value) => {
                 super::ListCases::Blob(proto_packet::types::Bytes::from(value))
             }
-            super::ListCasesCase::Numbers(value) => super::ListCases::Numbers(value.decode()),
-            super::ListCasesCase::Texts(value) => super::ListCases::Texts(value.decode()),
-            super::ListCasesCase::Points(value) => super::ListCases::Points(value.decode()),
+            super::ListCasesCase::Numbers(value) => {
+                super::ListCases::Numbers(<Vec<u32> as proto_packet::io::Element>::decode(value))
+            }
+            super::ListCasesCase::Texts(value) => {
+                super::ListCases::Texts(<Vec<String> as proto_packet::io::Element>::decode(value))
+            }
+            super::ListCasesCase::Points(value) => super::ListCases::Points(<Vec<
+                crate::format::examples::Point,
+            > as proto_packet::io::Element>::decode(
+                value
+            )),
             super::ListCasesCase::Number(value) => super::ListCases::Number(value),
         }
     }

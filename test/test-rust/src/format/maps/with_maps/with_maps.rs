@@ -133,11 +133,11 @@ impl WithMaps {
         let mut values: usize = proto_packet::io::unknown_fields_len(&self.unknown_fields);
         if let Some(value) = &self.scores {
             count += 1;
-            values += proto_packet::io::map_encoded_len(value);
+            values += proto_packet::io::Element::encoded_len(value);
         }
         if let Some(value) = &self.rounds {
             count += 1;
-            values += proto_packet::io::list_encoded_len(value);
+            values += proto_packet::io::Element::encoded_len(value);
         }
         proto_packet::io::message_index_len(count) + values
     }
@@ -168,11 +168,11 @@ impl WithMaps {
         let mut writer: proto_packet::io::MessageWriter =
             proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
         if let Some(value) = &self.scores {
-            proto_packet::io::encode_map(value, writer.field(1), depth - 1);
+            proto_packet::io::Element::encode_to(value, writer.field(1), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.rounds {
-            proto_packet::io::encode_list(value, writer.field(2), depth - 1);
+            proto_packet::io::Element::encode_to(value, writer.field(2), depth - 1);
             writer.end_field();
         }
         writer.finish();
@@ -235,6 +235,20 @@ impl proto_packet::io::Element for WithMaps {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         WithMaps::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
 

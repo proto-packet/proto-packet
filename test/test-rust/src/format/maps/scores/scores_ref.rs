@@ -27,7 +27,7 @@ impl<'a> ScoresRef<'a> {
     ) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 0)?;
-        proto_packet::io::MapRef::<String, u32>::new_with_depth(
+        <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 0, 4)?,
             depth - 1,
         )?;
@@ -73,9 +73,9 @@ impl<'a> ScoresRef<'a> {
     #[must_use]
     pub fn scores(&self) -> proto_packet::io::MapRef<'a, String, u32> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 1, 0, 4,
-            ))
+            <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 1, 0, 4),
+            )
         }
     }
 }
@@ -86,7 +86,11 @@ impl<'a> ScoresRef<'a> {
     /// Decodes the [Scores](super::Scores).
     #[must_use]
     pub fn decode(&self) -> super::Scores {
-        super::Scores::new(self.scores().decode())
+        super::Scores::new(
+            <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::decode(
+                self.scores(),
+            ),
+        )
     }
 
     /// Copies the bytes into an owned buf.

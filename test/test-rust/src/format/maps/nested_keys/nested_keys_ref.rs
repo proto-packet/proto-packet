@@ -28,11 +28,8 @@ impl<'a> NestedKeysRef<'a> {
         proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 4)?;
         proto_packet::io::check_tail_ends(bytes, 0, 1, 4)?;
-        proto_packet::io::MapRef::<crate::format::maps::Tagged, crate::format::examples::Entry>::new_with_depth(proto_packet::io::check_tail_entry(bytes, 0, 0, 2, 4, 8)?, depth - 1)?;
-        proto_packet::io::MapRef::<Vec<crate::format::maps::NewerKey>, u8>::new_with_depth(
-            proto_packet::io::check_tail_entry(bytes, 0, 1, 2, 4, 4)?,
-            depth - 1,
-        )?;
+        <std::collections::BTreeMap<crate::format::maps::Tagged, crate::format::examples::Entry> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 0, 2, 4, 8)?, depth - 1)?;
+        <std::collections::BTreeMap<Vec<crate::format::maps::NewerKey>, u8> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 1, 2, 4, 4)?, depth - 1)?;
         Ok(Self { bytes })
     }
 
@@ -78,9 +75,7 @@ impl<'a> NestedKeysRef<'a> {
     ) -> proto_packet::io::MapRef<'a, crate::format::maps::Tagged, crate::format::examples::Entry>
     {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 2, 4, 8,
-            ))
+            <std::collections::BTreeMap<crate::format::maps::Tagged, crate::format::examples::Entry> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 2, 4, 8))
         }
     }
 
@@ -88,9 +83,7 @@ impl<'a> NestedKeysRef<'a> {
     #[must_use]
     pub fn by_list(&self) -> proto_packet::io::MapRef<'a, Vec<crate::format::maps::NewerKey>, u8> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 1, 2, 4, 4,
-            ))
+            <std::collections::BTreeMap<Vec<crate::format::maps::NewerKey>, u8> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 2, 4, 4))
         }
     }
 }
@@ -101,7 +94,7 @@ impl<'a> NestedKeysRef<'a> {
     /// Decodes the [NestedKeys](super::NestedKeys).
     #[must_use]
     pub fn decode(&self) -> super::NestedKeys {
-        super::NestedKeys::new(self.by_struct().decode(), self.by_list().decode())
+        super::NestedKeys::new(<std::collections::BTreeMap<crate::format::maps::Tagged, crate::format::examples::Entry> as proto_packet::io::Element>::decode(self.by_struct()), <std::collections::BTreeMap<Vec<crate::format::maps::NewerKey>, u8> as proto_packet::io::Element>::decode(self.by_list()))
     }
 
     /// Copies the bytes into an owned buf.

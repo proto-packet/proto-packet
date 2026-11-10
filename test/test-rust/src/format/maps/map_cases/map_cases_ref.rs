@@ -32,7 +32,10 @@ impl<'a> MapCasesRef<'a> {
         let value: &'a [u8] = unsafe { bytes.get_unchecked(2..) };
         match tag_number {
             1 => {
-                proto_packet::io::MapRef::<String, u32>::new_with_depth(value, depth - 1)?;
+                <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::check(
+                    value,
+                    depth - 1,
+                )?;
             }
             2 => {
                 proto_packet::io::check_exact_len(value, 4)?;
@@ -89,7 +92,7 @@ impl<'a> MapCasesRef<'a> {
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
         match self.tag_number() {
             1 => super::MapCasesCase::Scores(unsafe {
-                proto_packet::io::MapRef::new_unchecked(value)
+                <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::read_unchecked(value)
             }),
             2 => super::MapCasesCase::Number(unsafe {
                 proto_packet::io::read_u32_unchecked(value, 0)
@@ -108,7 +111,11 @@ impl<'a> MapCasesRef<'a> {
             return None;
         }
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
-        Some(unsafe { proto_packet::io::MapRef::new_unchecked(value) })
+        Some(unsafe {
+            <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::read_unchecked(
+                value,
+            )
+        })
     }
 
     /// Gets the value of the case: `Number`.
@@ -132,7 +139,11 @@ impl<'a> MapCasesRef<'a> {
             super::MapCasesCase::Unrecognized { tag_number, bytes } => {
                 super::MapCases::from_unknown(tag_number, bytes.to_vec())
             }
-            super::MapCasesCase::Scores(value) => super::MapCases::Scores(value.decode()),
+            super::MapCasesCase::Scores(value) => super::MapCases::Scores(
+                <std::collections::BTreeMap<String, u32> as proto_packet::io::Element>::decode(
+                    value,
+                ),
+            ),
             super::MapCasesCase::Number(value) => super::MapCases::Number(value),
         }
     }

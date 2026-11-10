@@ -17,11 +17,10 @@ use crate::rust::gen_variant_ref::{case_name, gen_variant_case, gen_variant_ref}
 use crate::rust::gen_variant_view::{gen_variant_view, gen_variant_view_mut};
 use crate::rust::gen_view::view_name;
 use crate::rust::gen_view_mut::view_mut_name;
-use crate::rust::message_encoding::collection;
 use crate::rust::message_encoding::gen_value_write;
 use crate::rust::naming::{ident, is_upper_camel_case, snake_case};
 use crate::rust::prelude::{Prelude, PreludeName};
-use crate::rust::typing::Typing;
+use crate::rust::typing::{Typing, is_element_coded};
 use code_gen::rust::{
     Access, Enum as RustEnum, EnumCase, EnumFields, Function, ImplBlock, Receiver, RustType,
     Signature, Var, WithAccess, WithAttributes, WithComments, WithFunctions, WithReceiver,
@@ -380,7 +379,7 @@ fn gen_getter(typing: Typing<'_>, case: Case<'_>) -> Function {
             format!("&[{}]", typing.rust_type(element)),
             format!("value.{}()", method),
         )
-    } else if case.is_nested(typing) || case.tag.is_map() {
+    } else if case.is_nested(typing) || case.tag.is_map() || case.tag.is_array() {
         let value: &str = if case.is_boxed { "&**value" } else { "value" };
         (format!("&{}", value_type), value.to_string())
     } else {
@@ -454,11 +453,10 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
             None if case.tag.is_string() || case.tag.is_bytes() => {
                 format!("Self::{}(value) => 2 + value.len(),", case.ident())
             }
-            None if case.tag.is_collection() => format!(
-                "Self::{}(value) => 2 + {}::{}_encoded_len(value),",
+            None if is_element_coded(case.tag) => format!(
+                "Self::{}(value) => 2 + {}::Element::encoded_len(value),",
                 case.ident(),
-                IO,
-                collection(case.tag)
+                IO
             ),
             None => format!("Self::{}(value) => 2 + value.encoded_len(),", case.ident()),
         });

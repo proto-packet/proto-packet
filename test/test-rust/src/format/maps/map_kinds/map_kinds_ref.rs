@@ -29,28 +29,16 @@ impl<'a> MapKindsRef<'a> {
         proto_packet::io::check_len(bytes, 21)?;
         proto_packet::io::check_tail_ends(bytes, 0, 5, 21)?;
         proto_packet::io::check_unused_bits(bytes[20], 1)?;
-        proto_packet::io::MapRef::<u32, bool>::new_with_depth(
+        <std::collections::BTreeMap<u32, bool> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 0, 6, 21, 4)?,
             depth - 1,
         )?;
-        proto_packet::io::MapRef::<crate::format::examples::Color, String>::new_with_depth(
-            proto_packet::io::check_tail_entry(bytes, 0, 1, 6, 21, 4)?,
-            depth - 1,
-        )?;
-        proto_packet::io::MapRef::<crate::format::examples::Point, crate::format::examples::Entry>::new_with_depth(proto_packet::io::check_tail_entry(bytes, 0, 2, 6, 21, 8)?, depth - 1)?;
-        proto_packet::io::MapRef::<String, proto_packet::types::Bytes>::new_with_depth(
-            proto_packet::io::check_tail_entry(bytes, 0, 3, 6, 21, 4)?,
-            depth - 1,
-        )?;
-        proto_packet::io::MapRef::<u8, std::collections::BTreeMap<u8, u8>>::new_with_depth(
-            proto_packet::io::check_tail_entry(bytes, 0, 4, 6, 21, 4)?,
-            depth - 1,
-        )?;
+        <std::collections::BTreeMap<crate::format::examples::Color, String> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 1, 6, 21, 4)?, depth - 1)?;
+        <std::collections::BTreeMap<crate::format::examples::Point, crate::format::examples::Entry> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 2, 6, 21, 8)?, depth - 1)?;
+        <std::collections::BTreeMap<String, proto_packet::types::Bytes> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 3, 6, 21, 4)?, depth - 1)?;
+        <std::collections::BTreeMap<u8, std::collections::BTreeMap<u8, u8>> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 4, 6, 21, 4)?, depth - 1)?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 20, 0) } {
-            proto_packet::io::MapRef::<i64, proto_packet::types::Float64>::new_with_depth(
-                proto_packet::io::check_tail_entry(bytes, 0, 5, 6, 21, 8)?,
-                depth - 1,
-            )?;
+            <std::collections::BTreeMap<i64, proto_packet::types::Float64> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 5, 6, 21, 8)?, depth - 1)?;
         } else {
             proto_packet::io::check_tail_absent(bytes, 0, 5, 6, 21)?;
         }
@@ -96,9 +84,9 @@ impl<'a> MapKindsRef<'a> {
     #[must_use]
     pub fn by_number(&self) -> proto_packet::io::MapRef<'a, u32, bool> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 6, 21, 4,
-            ))
+            <std::collections::BTreeMap<u32, bool> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 6, 21, 4),
+            )
         }
     }
 
@@ -106,9 +94,7 @@ impl<'a> MapKindsRef<'a> {
     #[must_use]
     pub fn by_color(&self) -> proto_packet::io::MapRef<'a, crate::format::examples::Color, String> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 1, 6, 21, 4,
-            ))
+            <std::collections::BTreeMap<crate::format::examples::Color, String> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 6, 21, 4))
         }
     }
 
@@ -119,9 +105,12 @@ impl<'a> MapKindsRef<'a> {
     ) -> proto_packet::io::MapRef<'a, crate::format::examples::Point, crate::format::examples::Entry>
     {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 2, 6, 21, 8,
-            ))
+            <std::collections::BTreeMap<
+                crate::format::examples::Point,
+                crate::format::examples::Entry,
+            > as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 2, 6, 21, 8),
+            )
         }
     }
 
@@ -129,9 +118,7 @@ impl<'a> MapKindsRef<'a> {
     #[must_use]
     pub fn lists(&self) -> proto_packet::io::MapRef<'a, String, proto_packet::types::Bytes> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 3, 6, 21, 4,
-            ))
+            <std::collections::BTreeMap<String, proto_packet::types::Bytes> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 3, 6, 21, 4))
         }
     }
 
@@ -139,9 +126,7 @@ impl<'a> MapKindsRef<'a> {
     #[must_use]
     pub fn maps(&self) -> proto_packet::io::MapRef<'a, u8, std::collections::BTreeMap<u8, u8>> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 4, 6, 21, 4,
-            ))
+            <std::collections::BTreeMap<u8, std::collections::BTreeMap<u8, u8>> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 4, 6, 21, 4))
         }
     }
 
@@ -150,9 +135,7 @@ impl<'a> MapKindsRef<'a> {
     pub fn maybe(&self) -> Option<proto_packet::io::MapRef<'a, i64, proto_packet::types::Float64>> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 20, 0) } {
             Some(unsafe {
-                proto_packet::io::MapRef::new_unchecked(
-                    proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 5, 6, 21, 8),
-                )
+                <std::collections::BTreeMap<i64, proto_packet::types::Float64> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 5, 6, 21, 8))
             })
         } else {
             None
@@ -166,14 +149,7 @@ impl<'a> MapKindsRef<'a> {
     /// Decodes the [MapKinds](super::MapKinds).
     #[must_use]
     pub fn decode(&self) -> super::MapKinds {
-        super::MapKinds::new(
-            self.by_number().decode(),
-            self.by_color().decode(),
-            self.by_point().decode(),
-            self.lists().decode(),
-            self.maps().decode(),
-            self.maybe().map(|value| value.decode()),
-        )
+        super::MapKinds::new(<std::collections::BTreeMap<u32, bool> as proto_packet::io::Element>::decode(self.by_number()), <std::collections::BTreeMap<crate::format::examples::Color, String> as proto_packet::io::Element>::decode(self.by_color()), <std::collections::BTreeMap<crate::format::examples::Point, crate::format::examples::Entry> as proto_packet::io::Element>::decode(self.by_point()), <std::collections::BTreeMap<String, proto_packet::types::Bytes> as proto_packet::io::Element>::decode(self.lists()), <std::collections::BTreeMap<u8, std::collections::BTreeMap<u8, u8>> as proto_packet::io::Element>::decode(self.maps()), self.maybe().map(<std::collections::BTreeMap<i64, proto_packet::types::Float64> as proto_packet::io::Element>::decode))
     }
 
     /// Copies the bytes into an owned buf.

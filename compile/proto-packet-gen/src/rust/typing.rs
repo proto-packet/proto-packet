@@ -50,6 +50,10 @@ impl Typing<'_> {
             TypeTag::Map { key, value } => RustType::from("std::collections::BTreeMap")
                 .with_generic(self.rust_type(key))
                 .with_generic(self.rust_type(value)),
+            TypeTag::Array { len, element } => {
+                RustType::from(format!("[{}; {}]", self.rust_type(element), len))
+            }
+            TypeTag::Optional(value) => self.option(self.rust_type(value)),
         }
     }
 }
@@ -83,7 +87,8 @@ impl Typing<'_> {
                     | PrimitiveType::SignedInt128
             ),
             TypeTag::List(element) => self.has_json_form(element),
-            TypeTag::Map { .. } => true,
+            TypeTag::Map { .. } | TypeTag::Array { .. } => true,
+            TypeTag::Optional(value) => self.has_json_form(value),
             _ => false,
         }
     }
@@ -107,6 +112,9 @@ impl Typing<'_> {
             TypeTag::Map { key, value } => {
                 self.has_message_or_variant(key, visited)
                     || self.has_message_or_variant(value, visited)
+            }
+            TypeTag::Array { element, .. } | TypeTag::Optional(element) => {
+                self.has_message_or_variant(element, visited)
             }
             TypeTag::Named(name) => match self.project.type_dec_with_name(name.to_ref()) {
                 Some(TypeDec::Message(_) | TypeDec::Variant(_)) => true,
@@ -159,6 +167,9 @@ impl Typing<'_> {
                 _ => false,
             },
             TypeTag::List(_) | TypeTag::Map { .. } => false,
+            TypeTag::Array { element, .. } | TypeTag::Optional(element) => {
+                self.is_copy_visiting(element, visited)
+            }
         }
     }
 
@@ -184,6 +195,14 @@ impl Typing<'_> {
         let field: String = format!("self.{}", field);
         let reference = |rust_type: RustType| rust_type.to_ref(Reference::default());
         let (result, expr): (RustType, String) = match tag {
+            TypeTag::Array { .. } => {
+                let expr: String = if is_optional {
+                    format!("{}.as_ref()", field)
+                } else {
+                    format!("&{}", field)
+                };
+                (reference(self.rust_type(tag)), expr)
+            }
             _ if self.is_copy(tag) => (self.rust_type(tag), field),
             TypeTag::Special(SpecialType::String) => {
                 let method: &str = if is_optional { "as_deref" } else { "as_str" };
@@ -222,5 +241,17 @@ impl Typing<'_> {
     /// Gets the optional type of the `rust_type`.
     pub(crate) fn option(self, rust_type: RustType) -> RustType {
         RustType::from(self.prelude(PreludeName::Option)).with_generic(rust_type)
+    }
+}
+
+/// Checks if a value of the `tag` is read, written & checked through the `Element` of its type.
+///
+/// # Note
+/// - That is a list, a map or an array. The bytes aren't, since they are like a string.
+pub(crate) fn is_element_coded(tag: &TypeTag) -> bool {
+    match tag {
+        TypeTag::List(_) => !tag.is_bytes(),
+        TypeTag::Map { .. } | TypeTag::Array { .. } => true,
+        _ => false,
     }
 }

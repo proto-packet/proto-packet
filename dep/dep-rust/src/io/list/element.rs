@@ -1,11 +1,11 @@
-use crate::io::{DecodeError, JsonValue};
+use crate::io::DecodeError;
 use std::cmp::Ordering;
 
 /// A type that can be an element of a list.
 ///
 /// # Note
 /// - The bytes of a fixed-size element are exactly its size.
-pub trait Element: Sized + JsonValue {
+pub trait Element: Sized {
     /// The size of every encoded element, or `None` for a variable-size type.
     const SIZE: Option<usize>;
 
@@ -28,6 +28,15 @@ pub trait Element: Sized + JsonValue {
     /// # Note
     /// - A map of any other key is a list of its entries.
     const JSON_TEXT_KEY: bool = true;
+
+    /// If the type is a byte, so an array of it is base-64 in JSON.
+    const IS_BYTE: bool = false;
+
+    /// If zeros are not a value of the type, so an optional element of it has no presence bit.
+    ///
+    /// # Note
+    /// - An absent element is zeros, which is enough for such a type. (ex: an enum)
+    const ZERO_IS_ABSENT: bool = false;
 
     /// The element read from its encoded bytes.
     type Ref<'a>: Copy;
@@ -98,18 +107,12 @@ pub trait Element: Sized + JsonValue {
 
     /// Serializes the element as its JSON form.
     ///
-    /// # Note
-    /// - A list or a map overrides this, since its JSON form is not the one serde gives it.
-    ///
     /// # Errors
     /// Returns an error if the `serializer` does.
     #[cfg(feature = "types")]
     fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer,
-    {
-        serde::Serialize::serialize(self, serializer)
-    }
+        S: serde::Serializer;
 
     /// Deserializes the element from its JSON form.
     ///
@@ -118,10 +121,7 @@ pub trait Element: Sized + JsonValue {
     #[cfg(feature = "types")]
     fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
-    {
-        serde::Deserialize::deserialize(deserializer)
-    }
+        D: serde::Deserializer<'de>;
 
     /// Appends the encodings of the fixed-size `elements` to the `out` bytes, back to back.
     ///
@@ -158,3 +158,26 @@ where
         4
     }
 }
+
+/// Implements the JSON functions of an element with the ones serde gives its type.
+macro_rules! serde_json_form {
+    () => {
+        #[cfg(feature = "types")]
+        fn serialize_json<Ser>(&self, serializer: Ser) -> Result<Ser::Ok, Ser::Error>
+        where
+            Ser: serde::Serializer,
+        {
+            serde::Serialize::serialize(self, serializer)
+        }
+
+        #[cfg(feature = "types")]
+        fn deserialize_json<'de, De>(deserializer: De) -> Result<Self, De::Error>
+        where
+            De: serde::Deserializer<'de>,
+        {
+            serde::Deserialize::deserialize(deserializer)
+        }
+    };
+}
+
+pub(crate) use serde_json_form;

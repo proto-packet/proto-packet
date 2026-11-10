@@ -1,4 +1,4 @@
-use crate::io::MapRef;
+use crate::io::{MapRef, OptionMapRef};
 use std::collections::BTreeMap;
 
 /// A map of this crate, with its keys in their order.
@@ -10,3 +10,5 @@ pub trait SortedKeys {}
 impl<K, V> SortedKeys for &BTreeMap<K, V> {}
 
 impl<K, V> SortedKeys for MapRef<'_, K, V> {}
+
+impl<K, V> SortedKeys for OptionMapRef<'_, K, V> {}

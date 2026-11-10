@@ -63,6 +63,26 @@ where
 
     /// Checks the `bytes` of a list of elements of the fixed `size`.
     fn check_fixed(bytes: &[u8], size: usize, depth: usize) -> Result<(), DecodeError> {
+        if !bytes.is_empty() && stride::<T>(size) == size && !T::CAN_BE_INVALID {
+            return if size == 0 || !bytes.len().is_multiple_of(size) {
+                Err(DecodeError::InvalidList)
+            } else {
+                Ok(())
+            };
+        }
+        Self::check_fixed_with(bytes, size, |_, element| T::check(element, depth))
+    }
+
+    /// Checks the `bytes` of a list of elements of the fixed `size`, with each element & its index
+    /// given to `check`.
+    pub(crate) fn check_fixed_with<F>(
+        bytes: &[u8],
+        size: usize,
+        mut check: F,
+    ) -> Result<(), DecodeError>
+    where
+        F: FnMut(usize, &[u8]) -> Result<(), DecodeError>,
+    {
         if bytes.is_empty() {
             return Ok(());
         }
@@ -70,20 +90,26 @@ where
         if size == 0 || bytes.len() < size || !(bytes.len() - size).is_multiple_of(stride) {
             return Err(DecodeError::InvalidList);
         }
-        if stride == size && !T::CAN_BE_INVALID {
-            return Ok(());
-        }
-        for start in (0..bytes.len()).step_by(stride) {
+        for (index, start) in (0..bytes.len()).step_by(stride).enumerate() {
             if start > 0 {
                 check_padding(&bytes[start - (stride - size)..start])?;
             }
-            T::check(&bytes[start..start + size], depth)?;
+            check(index, &bytes[start..start + size])?;
         }
         Ok(())
     }
 
     /// Checks the `bytes` of a list of variable-size elements.
     fn check_variable(bytes: &[u8], depth: usize) -> Result<(), DecodeError> {
+        Self::check_variable_with(bytes, |_, element| T::check(element, depth))
+    }
+
+    /// Checks the `bytes` of a list of variable-size elements, with each element & its index given
+    /// to `check`.
+    pub(crate) fn check_variable_with<F>(bytes: &[u8], mut check: F) -> Result<(), DecodeError>
+    where
+        F: FnMut(usize, &[u8]) -> Result<(), DecodeError>,
+    {
         if bytes.is_empty() {
             return Ok(());
         }
@@ -119,7 +145,7 @@ where
                 return Err(DecodeError::InvalidEndTable);
             }
             check_padding(&bytes[previous..start])?;
-            T::check(&bytes[start..end], depth)?;
+            check(index, &bytes[start..end])?;
             previous = end;
         }
         Ok(())
@@ -196,6 +222,14 @@ where
     /// The `index` must be less than the count.
     #[must_use]
     pub unsafe fn get_unchecked(self, index: usize) -> T::Ref<'a> {
+        unsafe { T::read_unchecked(self.element_bytes_unchecked(index)) }
+    }
+
+    /// Gets the bytes of the element at the `index`, without checking it.
+    ///
+    /// # Safety
+    /// The `index` must be less than the count.
+    pub(crate) unsafe fn element_bytes_unchecked(self, index: usize) -> &'a [u8] {
         let range: Range<usize> = match T::SIZE {
             Some(size) => {
                 let start: usize = index * stride::<T>(size);
@@ -203,7 +237,7 @@ where
             }
             None => unsafe { self.variable_range_unchecked(index) },
         };
-        unsafe { T::read_unchecked(self.bytes.get_unchecked(range)) }
+        unsafe { self.bytes.get_unchecked(range) }
     }
 
     /// Gets the range of the variable-size element at the `index`.

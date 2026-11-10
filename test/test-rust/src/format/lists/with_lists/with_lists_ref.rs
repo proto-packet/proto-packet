@@ -31,25 +31,25 @@ impl<'a> WithListsRef<'a> {
             match tag {
                 1 => {}
                 2 => {
-                    proto_packet::io::ListRef::<u32>::new_with_depth(value, depth - 1)?;
+                    <Vec<u32> as proto_packet::io::Element>::check(value, depth - 1)?;
                 }
                 3 => {
-                    proto_packet::io::ListRef::<String>::new_with_depth(value, depth - 1)?;
+                    <Vec<String> as proto_packet::io::Element>::check(value, depth - 1)?;
                 }
                 4 => {
-                    proto_packet::io::ListRef::<crate::format::examples::Point>::new_with_depth(
+                    <Vec<crate::format::examples::Point> as proto_packet::io::Element>::check(
                         value,
                         depth - 1,
                     )?;
                 }
                 5 => {
-                    proto_packet::io::ListRef::<crate::format::examples::Entry>::new_with_depth(
+                    <Vec<crate::format::examples::Entry> as proto_packet::io::Element>::check(
                         value,
                         depth - 1,
                     )?;
                 }
                 6 => {
-                    proto_packet::io::ListRef::<crate::format::lists::WithLists>::new_with_depth(
+                    <Vec<crate::format::lists::WithLists> as proto_packet::io::Element>::check(
                         value,
                         depth - 1,
                     )?;
@@ -106,28 +106,36 @@ impl<'a> WithListsRef<'a> {
     #[must_use]
     pub fn numbers(&self) -> Option<proto_packet::io::ListRef<'a, u32>> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 2) }?;
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe { <Vec<u32> as proto_packet::io::Element>::read_unchecked(value) })
     }
 
     /// Gets the field: `texts`.
     #[must_use]
     pub fn texts(&self) -> Option<proto_packet::io::ListRef<'a, String>> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 3) }?;
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe { <Vec<String> as proto_packet::io::Element>::read_unchecked(value) })
     }
 
     /// Gets the field: `points`.
     #[must_use]
     pub fn points(&self) -> Option<proto_packet::io::ListRef<'a, crate::format::examples::Point>> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 4) }?;
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe {
+            <Vec<crate::format::examples::Point> as proto_packet::io::Element>::read_unchecked(
+                value,
+            )
+        })
     }
 
     /// Gets the field: `entries`.
     #[must_use]
     pub fn entries(&self) -> Option<proto_packet::io::ListRef<'a, crate::format::examples::Entry>> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 5) }?;
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe {
+            <Vec<crate::format::examples::Entry> as proto_packet::io::Element>::read_unchecked(
+                value,
+            )
+        })
     }
 
     /// Gets the field: `children`.
@@ -136,7 +144,11 @@ impl<'a> WithListsRef<'a> {
         &self,
     ) -> Option<proto_packet::io::ListRef<'a, crate::format::lists::WithLists>> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 6) }?;
-        Some(unsafe { proto_packet::io::ListRef::new_unchecked(value) })
+        Some(unsafe {
+            <Vec<crate::format::lists::WithLists> as proto_packet::io::Element>::read_unchecked(
+                value,
+            )
+        })
     }
 }
 
@@ -154,29 +166,23 @@ impl<'a> WithListsRef<'a> {
                     result.set_bytes(proto_packet::types::Bytes::from(value));
                 }
                 2 => {
-                    result.set_numbers(
-                        unsafe { proto_packet::io::ListRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_numbers(<Vec<u32> as proto_packet::io::Element>::decode(unsafe {
+                        <Vec<u32> as proto_packet::io::Element>::read_unchecked(value)
+                    }));
                 }
                 3 => {
-                    result.set_texts(
-                        unsafe { proto_packet::io::ListRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_texts(<Vec<String> as proto_packet::io::Element>::decode(unsafe {
+                        <Vec<String> as proto_packet::io::Element>::read_unchecked(value)
+                    }));
                 }
                 4 => {
-                    result.set_points(
-                        unsafe { proto_packet::io::ListRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_points(<Vec<crate::format::examples::Point> as proto_packet::io::Element>::decode(unsafe { <Vec<crate::format::examples::Point> as proto_packet::io::Element>::read_unchecked(value) }));
                 }
                 5 => {
-                    result.set_entries(
-                        unsafe { proto_packet::io::ListRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_entries(<Vec<crate::format::examples::Entry> as proto_packet::io::Element>::decode(unsafe { <Vec<crate::format::examples::Entry> as proto_packet::io::Element>::read_unchecked(value) }));
                 }
                 6 => {
-                    result.set_children(
-                        unsafe { proto_packet::io::ListRef::new_unchecked(value) }.decode(),
-                    );
+                    result.set_children(<Vec<crate::format::lists::WithLists> as proto_packet::io::Element>::decode(unsafe { <Vec<crate::format::lists::WithLists> as proto_packet::io::Element>::read_unchecked(value) }));
                 }
                 _ => unknown_fields.push(proto_packet::io::UnknownField::new(
                     unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },

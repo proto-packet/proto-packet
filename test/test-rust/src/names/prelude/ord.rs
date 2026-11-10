@@ -97,6 +97,7 @@ impl proto_packet::io::Element for Ord {
     const SIZE: std::option::Option<usize> = Some(2);
     const ALIGNMENT: usize = 2;
     const CAN_BE_INVALID: bool = true;
+    const ZERO_IS_ABSENT: bool = true;
     type Ref<'a> = Self;
     type View<'a> = Self;
 
@@ -132,5 +133,19 @@ impl proto_packet::io::Element for Ord {
 
     fn encode_to(&self, out: &mut std::vec::Vec<u8>, _depth: usize) {
         out.extend_from_slice(&self.tag_number().to_le_bytes());
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }

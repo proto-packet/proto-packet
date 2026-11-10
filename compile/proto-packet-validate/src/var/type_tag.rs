@@ -15,6 +15,21 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
             key: Box::new(validate_type_tag(key, source)?),
             value: Box::new(validate_type_tag(value, source)?),
         }),
+        TypeTagTree::Array { len, element, .. } => {
+            let element: TypeTag = validate_type_tag(element, source)?;
+            len.text(source)
+                .parse::<u32>()
+                .ok()
+                .filter(|len| *len > 0)
+                .map(|len| TypeTag::Array {
+                    len,
+                    element: Box::new(element),
+                })
+                .ok_or_else(|| ValidateError::new(*len, ValidateErrorReason::InvalidArrayLength))
+        }
+        TypeTagTree::Optional { value, .. } => Ok(TypeTag::Optional(Box::new(validate_type_tag(
+            value, source,
+        )?))),
         TypeTagTree::Decimal { scale, .. } => scale
             .text(source)
             .parse::<u8>()

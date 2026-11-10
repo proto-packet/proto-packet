@@ -308,13 +308,13 @@ impl TimeKinds {
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 49;
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.days);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.days);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
         }
         {
-            let size: usize = proto_packet::io::map_encoded_len(&self.spans);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.spans);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 8) + size;
             }
@@ -357,7 +357,7 @@ impl TimeKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.days, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.days, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start + 44, start);
@@ -365,7 +365,7 @@ impl TimeKinds {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.spans, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.spans, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
     }
@@ -422,5 +422,19 @@ impl proto_packet::io::Element for TimeKinds {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         TimeKinds::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }

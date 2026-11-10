@@ -28,14 +28,8 @@ impl<'a> OlderKeysRef<'a> {
         proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 4)?;
         proto_packet::io::check_tail_ends(bytes, 0, 1, 4)?;
-        proto_packet::io::MapRef::<crate::format::maps::OlderKey, u8>::new_with_depth(
-            proto_packet::io::check_tail_entry(bytes, 0, 0, 2, 4, 4)?,
-            depth - 1,
-        )?;
-        proto_packet::io::MapRef::<crate::format::variants::OlderCases, u8>::new_with_depth(
-            proto_packet::io::check_tail_entry(bytes, 0, 1, 2, 4, 4)?,
-            depth - 1,
-        )?;
+        <std::collections::BTreeMap<crate::format::maps::OlderKey, u8> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 0, 2, 4, 4)?, depth - 1)?;
+        <std::collections::BTreeMap<crate::format::variants::OlderCases, u8> as proto_packet::io::Element>::check(proto_packet::io::check_tail_entry(bytes, 0, 1, 2, 4, 4)?, depth - 1)?;
         Ok(Self { bytes })
     }
 
@@ -78,9 +72,7 @@ impl<'a> OlderKeysRef<'a> {
     #[must_use]
     pub fn by_message(&self) -> proto_packet::io::MapRef<'a, crate::format::maps::OlderKey, u8> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 2, 4, 4,
-            ))
+            <std::collections::BTreeMap<crate::format::maps::OlderKey, u8> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 2, 4, 4))
         }
     }
 
@@ -90,9 +82,7 @@ impl<'a> OlderKeysRef<'a> {
         &self,
     ) -> proto_packet::io::MapRef<'a, crate::format::variants::OlderCases, u8> {
         unsafe {
-            proto_packet::io::MapRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 1, 2, 4, 4,
-            ))
+            <std::collections::BTreeMap<crate::format::variants::OlderCases, u8> as proto_packet::io::Element>::read_unchecked(proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 2, 4, 4))
         }
     }
 }
@@ -103,7 +93,7 @@ impl<'a> OlderKeysRef<'a> {
     /// Decodes the [OlderKeys](super::OlderKeys).
     #[must_use]
     pub fn decode(&self) -> super::OlderKeys {
-        super::OlderKeys::new(self.by_message().decode(), self.by_variant().decode())
+        super::OlderKeys::new(<std::collections::BTreeMap<crate::format::maps::OlderKey, u8> as proto_packet::io::Element>::decode(self.by_message()), <std::collections::BTreeMap<crate::format::variants::OlderCases, u8> as proto_packet::io::Element>::decode(self.by_variant()))
     }
 
     /// Copies the bytes into an owned buf.

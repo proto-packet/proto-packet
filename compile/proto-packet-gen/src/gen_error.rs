@@ -37,6 +37,14 @@ pub enum GenError {
         type_name: String,
         member_name: String,
     },
+
+    /// An array has elements that aren't fixed-size, so the array isn't either.
+    ///
+    /// (ex: an array of strings)
+    VariableArrayElement {
+        type_name: String,
+        member_name: String,
+    },
 }
 
 impl GenError {
@@ -51,6 +59,7 @@ impl GenError {
             Self::StructTooLarge { .. } => "G_STRUCT_TOO_LARGE",
             Self::TypeNameConflict { .. } => "G_TYPE_NAME_CONFLICT",
             Self::EmptyListElement { .. } => "G_EMPTY_LIST_ELEMENT",
+            Self::VariableArrayElement { .. } => "G_VARIABLE_ARRAY_ELEMENT",
         }
     }
 }
@@ -96,6 +105,14 @@ impl Display for GenError {
             } => write!(
                 f,
                 "the list `{}` of `{}` has elements without a size",
+                member_name, type_name
+            ),
+            Self::VariableArrayElement {
+                type_name,
+                member_name,
+            } => write!(
+                f,
+                "the array `{}` of `{}` has elements that aren't fixed-size",
                 member_name, type_name
             ),
         }

@@ -17,6 +17,14 @@ pub enum TypeLayout {
     Variable { alignment: usize },
 }
 
+/// Gets the type of the value of the `tag`, which is the `tag` itself unless it is optional.
+pub(crate) fn without_optional(tag: &TypeTag) -> &TypeTag {
+    match tag {
+        TypeTag::Optional(value) => value,
+        _ => tag,
+    }
+}
+
 /// Gets the declaration of the type with the `name` in the linked `project`.
 fn linked_type<'a>(project: &'a Project, name: &QualifiedName) -> &'a TypeDec {
     project
@@ -111,9 +119,73 @@ impl LayoutCache<'_> {
             TypeTag::Map { key, value } => TypeLayout::Variable {
                 alignment: self
                     .list_alignment(key)
-                    .max(self.list_alignment(value))
+                    .max(self.list_alignment(without_optional(value)))
                     .max(4),
             },
+            TypeTag::Array { len, element } => self.array_layout(*len as usize, element),
+            TypeTag::Optional(_) => {
+                unreachable!("an optional value is in a list, an array or a map")
+            }
+        }
+    }
+
+    /// Gets the layout of an array of the `len` of the `element` type.
+    ///
+    /// # Note
+    /// - The elements are back to back, with only structs padded apart.
+    /// - Optional elements have their presence bits after them, unless they are enums.
+    fn array_layout(&mut self, len: usize, element: &TypeTag) -> TypeLayout {
+        let value: &TypeTag = without_optional(element);
+        let (size, alignment): (usize, usize) = match self.type_layout(value) {
+            TypeLayout::Bit => (1, 1),
+            TypeLayout::Fixed { size, alignment } => (size, alignment),
+            TypeLayout::Variable { alignment } => return TypeLayout::Variable { alignment },
+        };
+        let bits: usize = if element.is_optional() && !self.is_enum(value) {
+            len.div_ceil(8)
+        } else {
+            0
+        };
+        let stride: usize = size.next_multiple_of(alignment);
+        let size: usize = len
+            .saturating_sub(1)
+            .saturating_mul(stride)
+            .saturating_add(size)
+            .saturating_add(bits);
+        TypeLayout::Fixed {
+            size: size.min(MAX_TRACKED_SIZE),
+            alignment,
+        }
+    }
+
+    /// Checks if a fixed-size field of the `tag` is with the structs of its alignment in a struct.
+    ///
+    /// # Note
+    /// - A struct can end off a multiple of its alignment, so the structs are after the scalars.
+    /// - An array is with the scalars only if its elements are scalars that aren't optional.
+    pub(crate) fn is_with_structs(&self, tag: &TypeTag) -> bool {
+        match tag {
+            TypeTag::Named(_) => !self.is_enum(tag),
+            TypeTag::Array { element, .. } => self.is_with_structs(element),
+            TypeTag::Optional(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Checks if the `tag` has an array with elements that aren't fixed-size, at any depth.
+    pub(crate) fn has_variable_array_element(&mut self, tag: &TypeTag) -> bool {
+        match tag {
+            TypeTag::Array { element, .. } => {
+                !self.is_fixed(element, &mut Vec::default())
+                    || self.has_variable_array_element(element)
+            }
+            TypeTag::List(element) | TypeTag::Optional(element) => {
+                self.has_variable_array_element(element)
+            }
+            TypeTag::Map { key, value } => {
+                self.has_variable_array_element(key) || self.has_variable_array_element(value)
+            }
+            _ => false,
         }
     }
 
@@ -121,7 +193,18 @@ impl LayoutCache<'_> {
     ///
     /// # Note
     /// - A list of variable-size elements has a count & an end table, of alignment 4.
+    /// - A list of optional elements with presence bits has a count too.
     pub(crate) fn list_alignment(&mut self, element: &TypeTag) -> usize {
+        if let TypeTag::Optional(value) = element {
+            let is_enum: bool = self.is_enum(value);
+            return match self.type_layout(value) {
+                TypeLayout::Fixed { alignment, .. } if is_enum => alignment,
+                TypeLayout::Bit => 4,
+                TypeLayout::Fixed { alignment, .. } | TypeLayout::Variable { alignment } => {
+                    alignment.max(4)
+                }
+            };
+        }
         match self.type_layout(element) {
             TypeLayout::Bit => 1,
             TypeLayout::Fixed { alignment, .. } => alignment,
@@ -134,15 +217,14 @@ impl LayoutCache<'_> {
     /// # Note
     /// - The count of such a list can't be read from its length.
     pub(crate) fn has_empty_element(&mut self, tag: &TypeTag) -> bool {
+        let mut is_empty = |element: &TypeTag| -> bool {
+            let element: &TypeTag = without_optional(element);
+            matches!(self.type_layout(element), TypeLayout::Fixed { size: 0, .. })
+                || self.has_empty_element(element)
+        };
         match tag {
-            TypeTag::List(element) => {
-                matches!(self.type_layout(element), TypeLayout::Fixed { size: 0, .. })
-                    || self.has_empty_element(element)
-            }
-            TypeTag::Map { key, value } => [key, value].into_iter().any(|element| {
-                matches!(self.type_layout(element), TypeLayout::Fixed { size: 0, .. })
-                    || self.has_empty_element(element)
-            }),
+            TypeTag::List(element) | TypeTag::Array { element, .. } => is_empty(element),
+            TypeTag::Map { key, value } => is_empty(key) || is_empty(value),
             _ => false,
         }
     }
@@ -185,6 +267,9 @@ impl LayoutCache<'_> {
                 _ => false,
             },
             TypeTag::List(_) | TypeTag::Map { .. } => false,
+            TypeTag::Array { element, .. } | TypeTag::Optional(element) => {
+                self.is_fixed(element, visiting)
+            }
         }
     }
 
@@ -207,9 +292,14 @@ impl LayoutCache<'_> {
                 while let Some(tag) = tags.pop() {
                     match tag {
                         TypeTag::List(element) => {
-                            if !self.is_fixed(element, &mut Vec::default()) {
+                            let has_bits: bool =
+                                element.is_optional() && !self.is_enum(without_optional(element));
+                            if has_bits || !self.is_fixed(element, &mut Vec::default()) {
                                 result = result.max(4);
                             }
+                            tags.push(element);
+                        }
+                        TypeTag::Array { element, .. } | TypeTag::Optional(element) => {
                             tags.push(element);
                         }
                         TypeTag::Map { key, value } => {

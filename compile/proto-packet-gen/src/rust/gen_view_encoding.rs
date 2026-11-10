@@ -106,7 +106,7 @@ impl Item<'_> {
 /// Checks if a value of the `tag` is a fixed-size scalar, which a list never measures.
 fn is_scalar(typing: Typing<'_>, tag: &TypeTag) -> bool {
     match tag {
-        TypeTag::Primitive(_) | TypeTag::Special(SpecialType::Uuid) => true,
+        TypeTag::Primitive(_) | TypeTag::Special(SpecialType::Uuid) | TypeTag::Array { .. } => true,
         TypeTag::Named(_) => typing.is_enum(tag),
         _ => false,
     }
@@ -138,24 +138,68 @@ fn gen_write(typing: Typing<'_>, tag: &TypeTag, item: Item<'_>, out: &str, depth
         TypeTag::List(_) if tag.is_bytes() => {
             format!("{}.extend_from_slice({});", out, item.expr)
         }
-        TypeTag::List(element) => format!(
-            "{io}::write_list_view({list}, {out}, <{native} as {io}::Element>::SIZE, <{native} as {io}::Element>::ALIGNMENT, |item, out| {{ {write} }});",
-            io = IO,
-            list = item.value(),
-            out = out,
-            native = typing.rust_type(element),
-            write = gen_write(typing, element, Item::CLOSURE, "out", depth)
-        ),
-        TypeTag::Map { key, value } => format!(
-            "{io}::write_map_view::<{key}, {value}, _, _, _>({map}, {out}, |item, out| {{ {write_key} }}, |item, out| {{ {write_value} }});",
-            io = IO,
-            key = typing.rust_type(key),
-            value = typing.rust_type(value),
-            map = item.value(),
-            out = out,
-            write_key = gen_write(typing, key, Item::CLOSURE, "out", depth),
-            write_value = gen_write(typing, value, Item::CLOSURE, "out", depth)
-        ),
+        TypeTag::List(element) => match element.as_ref() {
+            TypeTag::Optional(value) => format!(
+                "{io}::write_option_list_view::<{native}, _, _, _>({list}, {out}, |item, out| {{ {write} }});",
+                io = IO,
+                list = item.value(),
+                out = out,
+                native = typing.rust_type(value),
+                write = gen_write(typing, value, Item::CLOSURE, "out", depth)
+            ),
+            element => format!(
+                "{io}::write_list_view({list}, {out}, <{native} as {io}::Element>::SIZE, <{native} as {io}::Element>::ALIGNMENT, |item, out| {{ {write} }});",
+                io = IO,
+                list = item.value(),
+                out = out,
+                native = typing.rust_type(element),
+                write = gen_write(typing, element, Item::CLOSURE, "out", depth)
+            ),
+        },
+        TypeTag::Array { len, element } => match element.as_ref() {
+            TypeTag::Optional(value) => format!(
+                "{io}::write_option_array_view::<{native}, _, _, _>({list}, {out}, {len}, |item, out| {{ {write} }});",
+                io = IO,
+                list = item.value(),
+                out = out,
+                len = len,
+                native = typing.rust_type(value),
+                write = gen_write(typing, value, Item::CLOSURE, "out", depth)
+            ),
+            element => format!(
+                "{io}::write_array_view({list}, {out}, {len}, <{native} as {io}::Element>::SIZE, <{native} as {io}::Element>::ALIGNMENT, |item, out| {{ {write} }});",
+                io = IO,
+                list = item.value(),
+                out = out,
+                len = len,
+                native = typing.rust_type(element),
+                write = gen_write(typing, element, Item::CLOSURE, "out", depth)
+            ),
+        },
+        TypeTag::Map { key, value } => {
+            let (function, value): (&str, &TypeTag) = match value.as_ref() {
+                TypeTag::Optional(value) => ("write_option_map_view", value),
+                value => ("write_map_view", value),
+            };
+            let holes: &str = if function == "write_map_view" {
+                "_, _, _"
+            } else {
+                "_, _, _, _"
+            };
+            format!(
+                "{io}::{function}::<{key}, {value}, {holes}>({map}, {out}, |item, out| {{ {write_key} }}, |item, out| {{ {write_value} }});",
+                io = IO,
+                function = function,
+                key = typing.rust_type(key),
+                value = typing.rust_type(value),
+                holes = holes,
+                map = item.value(),
+                out = out,
+                write_key = gen_write(typing, key, Item::CLOSURE, "out", depth),
+                write_value = gen_write(typing, value, Item::CLOSURE, "out", depth)
+            )
+        }
+        TypeTag::Optional(_) => unreachable!("an optional value is in a list, an array or a map"),
     }
 }
 
@@ -167,23 +211,50 @@ fn gen_len(typing: Typing<'_>, tag: &TypeTag, item: Item<'_>) -> String {
             generated_path(tag, "View"),
             item.reference()
         ),
-        TypeTag::List(element) if !tag.is_bytes() => format!(
-            "{io}::list_view_len({list}, <{native} as {io}::Element>::SIZE, <{native} as {io}::Element>::ALIGNMENT, {len})",
-            io = IO,
-            list = item.value(),
-            native = typing.rust_type(element),
-            len = gen_len_closure(typing, element)
+        TypeTag::List(element) if !tag.is_bytes() => match element.as_ref() {
+            TypeTag::Optional(value) => format!(
+                "{io}::option_list_view_len::<{native}, _, _, _>({list}, {len})",
+                io = IO,
+                list = item.value(),
+                native = typing.rust_type(value),
+                len = gen_len_closure(typing, value)
+            ),
+            element => format!(
+                "{io}::list_view_len({list}, <{native} as {io}::Element>::SIZE, <{native} as {io}::Element>::ALIGNMENT, {len})",
+                io = IO,
+                list = item.value(),
+                native = typing.rust_type(element),
+                len = gen_len_closure(typing, element)
+            ),
+        },
+        TypeTag::Array { .. } => format!(
+            "<{} as {}::Element>::SIZE.unwrap_or_default()",
+            typing.rust_type(tag),
+            IO
         ),
-        TypeTag::Map { key, value } => format!(
-            "{io}::map_view_len::<{key_type}, {value_type}, _, _, _, _>({map}, {key_len}, {value_len}, |item, out| {{ {write_key} }})",
-            io = IO,
-            key_type = typing.rust_type(key),
-            value_type = typing.rust_type(value),
-            map = item.value(),
-            key_len = gen_len_closure(typing, key),
-            value_len = gen_len_closure(typing, value),
-            write_key = gen_write(typing, key, Item::CLOSURE, "out", "usize::MAX")
-        ),
+        TypeTag::Map { key, value } => {
+            let (function, value): (&str, &TypeTag) = match value.as_ref() {
+                TypeTag::Optional(value) => ("option_map_view_len", value),
+                value => ("map_view_len", value),
+            };
+            let holes: &str = if function == "map_view_len" {
+                "_, _, _, _"
+            } else {
+                "_, _, _, _, _"
+            };
+            format!(
+                "{io}::{function}::<{key_type}, {value_type}, {holes}>({map}, {key_len}, {value_len}, |item, out| {{ {write_key} }})",
+                io = IO,
+                function = function,
+                key_type = typing.rust_type(key),
+                value_type = typing.rust_type(value),
+                holes = holes,
+                map = item.value(),
+                key_len = gen_len_closure(typing, key),
+                value_len = gen_len_closure(typing, value),
+                write_key = gen_write(typing, key, Item::CLOSURE, "out", "usize::MAX")
+            )
+        }
         _ => format!("{}.len()", item.expr),
     }
 }
@@ -327,6 +398,19 @@ fn gen_fixed_field(typing: Typing<'_>, field: Field<'_>, layout: FieldLayout) ->
             format!("out.extend_from_slice({}.as_bytes());", value)
         }
         TypeTag::Primitive(_) => format!("out.extend_from_slice(&{}.to_le_bytes());", value),
+        TypeTag::Array { .. } if field.is_optional => {
+            let ValueLayout::Fixed { size, .. } = layout.value else {
+                unreachable!("an array is in the fixed block")
+            };
+            format!(
+                "match {} {{ Some(value) => {{ {} }} None => {}::write_zeros(out, {}), }}",
+                getter,
+                gen_write(typing, field.tag, Item::value_of("value"), "out", "0"),
+                IO,
+                size
+            )
+        }
+        TypeTag::Array { .. } => gen_write(typing, field.tag, Item::value_of(&getter), "out", "0"),
         _ if typing.is_enum(field.tag) => {
             let tag_number: String = if field.is_optional {
                 format!("{}.map_or(0, |value| value.tag_number())", getter)
@@ -412,6 +496,11 @@ pub(crate) fn gen_message_view_encoding(
                     "if {}.is_some() {{ count += 1; values += {}; }}",
                     getter, size
                 ),
+                None if tagged.field.tag.is_array() => format!(
+                    "if {}.is_some() {{ count += 1; values += {}; }}",
+                    getter,
+                    gen_len(typing, tagged.field.tag, Item::value_of("value"))
+                ),
                 None => format!(
                     "if let Some(value) = {} {{ count += 1; values += {}; }}",
                     getter,
@@ -460,6 +549,11 @@ pub(crate) fn gen_variant_view_encoding(typing: Typing<'_>, cases: &[Case<'_>]) 
         let getter: String = format!("self.{}()", case.getter_name());
         encoded_len.push(match case.size {
             Some(size) => format!("if {}.is_some() {{ return {}; }}", getter, 2 + size),
+            None if case.tag.is_array() => format!(
+                "if {}.is_some() {{ return 2 + {}; }}",
+                getter,
+                gen_len(typing, case.tag, Item::value_of("value"))
+            ),
             None => format!(
                 "if let Some(value) = {} {{ return 2 + {}; }}",
                 getter,

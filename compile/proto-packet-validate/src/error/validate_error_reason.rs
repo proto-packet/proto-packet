@@ -23,6 +23,9 @@ pub enum ValidateErrorReason {
     /// A decimal with a scale that is too large. (ex: `decimal<19>`)
     InvalidDecimalScale,
 
+    /// An array with no elements, or with too many. (ex: `[0]u8`)
+    InvalidArrayLength,
+
     /// An error constructing the tree. (ex: a duplicate field name)
     Tree(TreeError),
 }
@@ -39,6 +42,7 @@ impl ValidateErrorReason {
             Self::UnknownType { .. } => "V_UNKNOWN_TYPE",
             Self::BoxedNonNamedType => "V_BOXED_NON_NAMED_TYPE",
             Self::InvalidDecimalScale => "V_INVALID_DECIMAL_SCALE",
+            Self::InvalidArrayLength => "V_INVALID_ARRAY_LENGTH",
             Self::Tree(error) => match error {
                 TreeError::DuplicateFieldName { .. } => "V_DUPLICATE_FIELD_NAME",
                 TreeError::DuplicateCaseName { .. } => "V_DUPLICATE_CASE_NAME",
@@ -63,6 +67,9 @@ impl Display for ValidateErrorReason {
                 TagNumber::MAX
             ),
             Self::ImportWithoutModPath => f.write_str("imports must include a mod path"),
+            Self::InvalidArrayLength => {
+                write!(f, "an array's length must be from 1 to {}", u32::MAX)
+            }
             Self::InvalidDecimalScale => write!(
                 f,
                 "a decimal's scale must be from 0 to {}",

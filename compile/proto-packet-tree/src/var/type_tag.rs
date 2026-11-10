@@ -21,6 +21,16 @@ pub enum TypeTag {
         key: Box<TypeTag>,
         value: Box<TypeTag>,
     },
+
+    /// An array, which is a list of exactly the `len` of the `element` type.
+    Array { len: u32, element: Box<TypeTag> },
+
+    /// An optional value of the type.
+    ///
+    /// # Note
+    /// - It is only an element of a list or an array, or a value of a map. An optional field has
+    ///   its own flag.
+    Optional(Box<TypeTag>),
 }
 
 impl TypeTag {
@@ -50,6 +60,16 @@ impl TypeTag {
     pub fn is_collection(&self) -> bool {
         self.is_list() || self.is_map()
     }
+
+    /// Checks if the type is an array.
+    pub fn is_array(&self) -> bool {
+        matches!(self, Self::Array { .. })
+    }
+
+    /// Checks if the type is an optional value.
+    pub fn is_optional(&self) -> bool {
+        matches!(self, Self::Optional(_))
+    }
 }
 
 impl From<PrimitiveType> for TypeTag {
@@ -78,6 +98,8 @@ impl Display for TypeTag {
             Self::Named(name) => write!(f, "{}", name),
             Self::List(element) => write!(f, "[]{}", element),
             Self::Map { key, value } => write!(f, "map<{}, {}>", key, value),
+            Self::Array { len, element } => write!(f, "[{}]{}", len, element),
+            Self::Optional(value) => write!(f, "optional {}", value),
         }
     }
 }

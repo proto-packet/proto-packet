@@ -32,10 +32,7 @@ impl<'a> KeyedCasesRef<'a> {
         let value: &'a [u8] = unsafe { bytes.get_unchecked(2..) };
         match tag_number {
             1 => {
-                proto_packet::io::MapRef::<crate::format::examples::Point, u8>::new_with_depth(
-                    value,
-                    depth - 1,
-                )?;
+                <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::check(value, depth - 1)?;
             }
             2 => {
                 proto_packet::io::check_exact_len(value, 4)?;
@@ -92,7 +89,7 @@ impl<'a> KeyedCasesRef<'a> {
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
         match self.tag_number() {
             1 => super::KeyedCasesCase::ByPoint(unsafe {
-                proto_packet::io::MapRef::new_unchecked(value)
+                <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::read_unchecked(value)
             }),
             2 => super::KeyedCasesCase::Number(unsafe {
                 proto_packet::io::read_u32_unchecked(value, 0)
@@ -113,7 +110,9 @@ impl<'a> KeyedCasesRef<'a> {
             return None;
         }
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
-        Some(unsafe { proto_packet::io::MapRef::new_unchecked(value) })
+        Some(unsafe {
+            <std::collections::BTreeMap<crate::format::examples::Point, u8> as proto_packet::io::Element>::read_unchecked(value)
+        })
     }
 
     /// Gets the value of the case: `Number`.
@@ -137,7 +136,14 @@ impl<'a> KeyedCasesRef<'a> {
             super::KeyedCasesCase::Unrecognized { tag_number, bytes } => {
                 super::KeyedCases::from_unknown(tag_number, bytes.to_vec())
             }
-            super::KeyedCasesCase::ByPoint(value) => super::KeyedCases::ByPoint(value.decode()),
+            super::KeyedCasesCase::ByPoint(value) => {
+                super::KeyedCases::ByPoint(<std::collections::BTreeMap<
+                    crate::format::examples::Point,
+                    u8,
+                > as proto_packet::io::Element>::decode(
+                    value
+                ))
+            }
             super::KeyedCasesCase::Number(value) => super::KeyedCases::Number(value),
         }
     }

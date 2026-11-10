@@ -27,7 +27,7 @@ impl<'a> TextsRef<'a> {
     ) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 0)?;
-        proto_packet::io::ListRef::<String>::new_with_depth(
+        <Vec<String> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 0, 4)?,
             depth - 1,
         )?;
@@ -73,9 +73,9 @@ impl<'a> TextsRef<'a> {
     #[must_use]
     pub fn texts(&self) -> proto_packet::io::ListRef<'a, String> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 1, 0, 4,
-            ))
+            <Vec<String> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 1, 0, 4),
+            )
         }
     }
 }
@@ -86,7 +86,9 @@ impl<'a> TextsRef<'a> {
     /// Decodes the [Texts](super::Texts).
     #[must_use]
     pub fn decode(&self) -> super::Texts {
-        super::Texts::new(self.texts().decode())
+        super::Texts::new(<Vec<String> as proto_packet::io::Element>::decode(
+            self.texts(),
+        ))
     }
 
     /// Copies the bytes into an owned buf.

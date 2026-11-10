@@ -74,6 +74,13 @@ impl NameResolver<'_> {
                 key: Box::new(self.link_type_tag(key, location)?),
                 value: Box::new(self.link_type_tag(value, location)?),
             }),
+            TypeTag::Array { len, element } => Ok(TypeTag::Array {
+                len: *len,
+                element: Box::new(self.link_type_tag(element, location)?),
+            }),
+            TypeTag::Optional(value) => self
+                .link_type_tag(value, location)
+                .map(|value| TypeTag::Optional(Box::new(value))),
         }
     }
 

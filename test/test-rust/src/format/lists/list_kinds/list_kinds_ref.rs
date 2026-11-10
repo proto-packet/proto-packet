@@ -30,48 +30,48 @@ impl<'a> ListKindsRef<'a> {
         proto_packet::io::check_tail_ends(bytes, 0, 11, 45)?;
         proto_packet::io::check_unused_bits(bytes[44], 1)?;
         proto_packet::io::check_tail_entry(bytes, 0, 0, 12, 45, 1)?;
-        proto_packet::io::ListRef::<bool>::new_with_depth(
+        <Vec<bool> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 1, 12, 45, 1)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<i64>::new_with_depth(
+        <Vec<i64> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 2, 12, 45, 8)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<proto_packet::types::Float64>::new_with_depth(
+        <Vec<proto_packet::types::Float64> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 3, 12, 45, 8)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<proto_packet::types::Uuid>::new_with_depth(
+        <Vec<proto_packet::types::Uuid> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 4, 12, 45, 8)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::examples::Color>::new_with_depth(
+        <Vec<crate::format::examples::Color> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 5, 12, 45, 2)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<String>::new_with_depth(
+        <Vec<String> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 6, 12, 45, 4)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::examples::Point>::new_with_depth(
+        <Vec<crate::format::examples::Point> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 7, 12, 45, 4)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::examples::Entry>::new_with_depth(
+        <Vec<crate::format::examples::Entry> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 8, 12, 45, 8)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::messages::Item>::new_with_depth(
+        <Vec<crate::format::messages::Item> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 9, 12, 45, 4)?,
             depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::variants::Shape>::new_with_depth(
+        <Vec<crate::format::variants::Shape> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 10, 12, 45, 4)?,
             depth - 1,
         )?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 44, 0) } {
-            proto_packet::io::ListRef::<u16>::new_with_depth(
+            <Vec<u16> as proto_packet::io::Element>::check(
                 proto_packet::io::check_tail_entry(bytes, 0, 11, 12, 45, 2)?,
                 depth - 1,
             )?;
@@ -126,9 +126,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn flags(&self) -> proto_packet::io::ListRef<'a, bool> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 1, 12, 45, 1,
-            ))
+            <Vec<bool> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 1, 12, 45, 1),
+            )
         }
     }
 
@@ -136,9 +136,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn signed(&self) -> proto_packet::io::ListRef<'a, i64> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 2, 12, 45, 8,
-            ))
+            <Vec<i64> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 2, 12, 45, 8),
+            )
         }
     }
 
@@ -146,9 +146,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn floats(&self) -> proto_packet::io::ListRef<'a, proto_packet::types::Float64> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 3, 12, 45, 8,
-            ))
+            <Vec<proto_packet::types::Float64> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 3, 12, 45, 8),
+            )
         }
     }
 
@@ -156,9 +156,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn ids(&self) -> proto_packet::io::ListRef<'a, proto_packet::types::Uuid> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 4, 12, 45, 8,
-            ))
+            <Vec<proto_packet::types::Uuid> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 4, 12, 45, 8),
+            )
         }
     }
 
@@ -166,9 +166,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn colors(&self) -> proto_packet::io::ListRef<'a, crate::format::examples::Color> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 5, 12, 45, 2,
-            ))
+            <Vec<crate::format::examples::Color> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 5, 12, 45, 2),
+            )
         }
     }
 
@@ -176,9 +176,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn texts(&self) -> proto_packet::io::ListRef<'a, String> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 6, 12, 45, 4,
-            ))
+            <Vec<String> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 6, 12, 45, 4),
+            )
         }
     }
 
@@ -186,9 +186,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn points(&self) -> proto_packet::io::ListRef<'a, crate::format::examples::Point> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 7, 12, 45, 4,
-            ))
+            <Vec<crate::format::examples::Point> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 7, 12, 45, 4),
+            )
         }
     }
 
@@ -196,9 +196,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn entries(&self) -> proto_packet::io::ListRef<'a, crate::format::examples::Entry> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 8, 12, 45, 8,
-            ))
+            <Vec<crate::format::examples::Entry> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 8, 12, 45, 8),
+            )
         }
     }
 
@@ -206,9 +206,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn items(&self) -> proto_packet::io::ListRef<'a, crate::format::messages::Item> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 9, 12, 45, 4,
-            ))
+            <Vec<crate::format::messages::Item> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 9, 12, 45, 4),
+            )
         }
     }
 
@@ -216,9 +216,9 @@ impl<'a> ListKindsRef<'a> {
     #[must_use]
     pub fn shapes(&self) -> proto_packet::io::ListRef<'a, crate::format::variants::Shape> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 10, 12, 45, 4,
-            ))
+            <Vec<crate::format::variants::Shape> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 10, 12, 45, 4),
+            )
         }
     }
 
@@ -227,7 +227,7 @@ impl<'a> ListKindsRef<'a> {
     pub fn maybe(&self) -> Option<proto_packet::io::ListRef<'a, u16>> {
         if unsafe { proto_packet::io::read_bit_unchecked(self.bytes, 44, 0) } {
             Some(unsafe {
-                proto_packet::io::ListRef::new_unchecked(
+                <Vec<u16> as proto_packet::io::Element>::read_unchecked(
                     proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 11, 12, 45, 2),
                 )
             })
@@ -245,17 +245,26 @@ impl<'a> ListKindsRef<'a> {
     pub fn decode(&self) -> super::ListKinds {
         super::ListKinds::new(
             proto_packet::types::Bytes::from(self.bytes()),
-            self.flags().decode(),
-            self.signed().decode(),
-            self.floats().decode(),
-            self.ids().decode(),
-            self.colors().decode(),
-            self.texts().decode(),
-            self.points().decode(),
-            self.entries().decode(),
-            self.items().decode(),
-            self.shapes().decode(),
-            self.maybe().map(|value| value.decode()),
+            <Vec<bool> as proto_packet::io::Element>::decode(self.flags()),
+            <Vec<i64> as proto_packet::io::Element>::decode(self.signed()),
+            <Vec<proto_packet::types::Float64> as proto_packet::io::Element>::decode(self.floats()),
+            <Vec<proto_packet::types::Uuid> as proto_packet::io::Element>::decode(self.ids()),
+            <Vec<crate::format::examples::Color> as proto_packet::io::Element>::decode(
+                self.colors(),
+            ),
+            <Vec<String> as proto_packet::io::Element>::decode(self.texts()),
+            <Vec<crate::format::examples::Point> as proto_packet::io::Element>::decode(
+                self.points(),
+            ),
+            <Vec<crate::format::examples::Entry> as proto_packet::io::Element>::decode(
+                self.entries(),
+            ),
+            <Vec<crate::format::messages::Item> as proto_packet::io::Element>::decode(self.items()),
+            <Vec<crate::format::variants::Shape> as proto_packet::io::Element>::decode(
+                self.shapes(),
+            ),
+            self.maybe()
+                .map(<Vec<u16> as proto_packet::io::Element>::decode),
         )
     }
 

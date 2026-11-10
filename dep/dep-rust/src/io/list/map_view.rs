@@ -1,5 +1,5 @@
 use crate::io::list::SortedKeys;
-use crate::io::{Element, MapRef};
+use crate::io::{Element, MapRef, OptionMapRef};
 use std::collections::BTreeMap;
 
 /// The entries of any form of a map with the key `K`.
@@ -74,5 +74,47 @@ where
 
     fn iter(&self) -> impl Iterator<Item = (K::Ref<'a>, V::Ref<'a>)> {
         MapRef::iter(*self)
+    }
+}
+
+impl<'a, K, V> MapView<K> for &'a BTreeMap<K, Option<V>>
+where
+    K: Element + Ord,
+    V: Element,
+{
+    type Key = K::View<'a>;
+    type Value = Option<V::View<'a>>;
+
+    fn len(&self) -> usize {
+        BTreeMap::len(self)
+    }
+
+    fn get(&self, key: &K) -> Option<Option<V::View<'a>>> {
+        BTreeMap::get(self, key).map(|value| value.as_ref().map(V::view))
+    }
+
+    fn iter(&self) -> impl Iterator<Item = (K::View<'a>, Option<V::View<'a>>)> {
+        BTreeMap::iter(self).map(|(key, value)| (key.view(), value.as_ref().map(V::view)))
+    }
+}
+
+impl<'a, K, V> MapView<K> for OptionMapRef<'a, K, V>
+where
+    K: Element + Ord,
+    V: Element,
+{
+    type Key = K::Ref<'a>;
+    type Value = Option<V::Ref<'a>>;
+
+    fn len(&self) -> usize {
+        OptionMapRef::len(*self)
+    }
+
+    fn get(&self, key: &K) -> Option<Option<V::Ref<'a>>> {
+        OptionMapRef::get_by_key(*self, key)
+    }
+
+    fn iter(&self) -> impl Iterator<Item = (K::Ref<'a>, Option<V::Ref<'a>>)> {
+        OptionMapRef::iter(*self)
     }
 }

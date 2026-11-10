@@ -27,7 +27,7 @@ impl<'a> NumbersRef<'a> {
     ) -> Result<Self, proto_packet::io::DecodeError> {
         proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 1)?;
-        proto_packet::io::ListRef::<u32>::new_with_depth(
+        <Vec<u32> as proto_packet::io::Element>::check(
             proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 1, 4)?,
             depth - 1,
         )?;
@@ -79,9 +79,9 @@ impl<'a> NumbersRef<'a> {
     #[must_use]
     pub fn values(&self) -> proto_packet::io::ListRef<'a, u32> {
         unsafe {
-            proto_packet::io::ListRef::new_unchecked(proto_packet::io::read_tail_entry_unchecked(
-                self.bytes, 0, 0, 1, 1, 4,
-            ))
+            <Vec<u32> as proto_packet::io::Element>::read_unchecked(
+                proto_packet::io::read_tail_entry_unchecked(self.bytes, 0, 0, 1, 1, 4),
+            )
         }
     }
 }
@@ -92,7 +92,10 @@ impl<'a> NumbersRef<'a> {
     /// Decodes the [Numbers](super::Numbers).
     #[must_use]
     pub fn decode(&self) -> super::Numbers {
-        super::Numbers::new(self.count(), self.values().decode())
+        super::Numbers::new(
+            self.count(),
+            <Vec<u32> as proto_packet::io::Element>::decode(self.values()),
+        )
     }
 
     /// Copies the bytes into an owned buf.

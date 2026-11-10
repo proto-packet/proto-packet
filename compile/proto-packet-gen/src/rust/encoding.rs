@@ -1,6 +1,5 @@
 use crate::layout::{FieldLayout, StructLayout, UnitLayout, ValueLayout};
 use crate::rust::fields::Field;
-use crate::rust::message_encoding::collection;
 use crate::rust::naming::ident;
 use crate::rust::prelude::PreludeName;
 use crate::rust::typing::Typing;
@@ -50,12 +49,7 @@ fn gen_encoded_len(fields: &[Field<'_>], layout: &StructLayout) -> Function {
             let size: String = if field.tag.is_string() || field.tag.is_bytes() {
                 format!("{}.len()", value)
             } else if field.tag.is_collection() {
-                format!(
-                    "{}::{}_encoded_len({})",
-                    IO,
-                    collection(field.tag),
-                    gen_list(field, value)
-                )
+                format!("{}::Element::encoded_len({})", IO, gen_list(field, value))
             } else {
                 format!("{}.encoded_len()", value)
             };
@@ -117,9 +111,8 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout
                 format!("out.extend_from_slice({}.as_bytes());", value)
             } else if field.tag.is_collection() {
                 format!(
-                    "{}::encode_{}({}, out, depth - 1);",
+                    "{}::Element::encode_to({}, out, depth - 1);",
                     IO,
-                    collection(field.tag),
                     gen_list(field, value)
                 )
             } else {
@@ -245,6 +238,16 @@ fn gen_fixed_field(typing: Typing<'_>, field: Field<'_>, layout: FieldLayout) ->
             format!("out.extend_from_slice({}.as_bytes());", value)
         }
         TypeTag::Primitive(_) => format!("out.extend_from_slice(&{}.to_le_bytes());", value),
+        TypeTag::Array { .. } if field.is_optional => {
+            let ValueLayout::Fixed { size, .. } = layout.value else {
+                unreachable!("an array is in the fixed block")
+            };
+            format!(
+                "match &{} {{ Some(value) => {}::Element::encode_to(value, out, 0), None => {}::write_zeros(out, {}), }}",
+                name, IO, IO, size
+            )
+        }
+        TypeTag::Array { .. } => format!("{}::Element::encode_to(&{}, out, 0);", IO, name),
         _ if typing.is_enum(field.tag) => {
             let tag_number: String = if field.is_optional {
                 format!("{}.as_ref().map_or(0, |value| value.tag_number())", name)

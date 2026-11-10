@@ -83,14 +83,7 @@ where
         if keys.len() != values.len() {
             return Err(DecodeError::InvalidMap);
         }
-        let mut iter = keys.iter();
-        let mut previous: Option<K::Ref<'_>> = iter.next();
-        for key in iter {
-            if previous.is_some_and(|previous| K::cmp_refs(previous, key) != Ordering::Less) {
-                return Err(DecodeError::InvalidMap);
-            }
-            previous = Some(key);
-        }
+        check_keys(keys)?;
         Ok(map)
     }
 
@@ -194,17 +187,7 @@ where
     /// Returns `None` if the map does not have the `key`.
     #[must_use]
     pub fn get(self, key: K::Ref<'_>) -> Option<V::Ref<'a>> {
-        let keys: ListRef<'a, K> = self.keys();
-        let (mut low, mut high): (usize, usize) = (0, keys.len());
-        while low < high {
-            let middle: usize = (low + high) / 2;
-            match K::cmp_refs(unsafe { keys.get_unchecked(middle) }, key) {
-                Ordering::Less => low = middle + 1,
-                Ordering::Greater => high = middle,
-                Ordering::Equal => return Some(unsafe { self.values().get_unchecked(middle) }),
-            }
-        }
-        None
+        find_key(self.keys(), key).map(|index| unsafe { self.values().get_unchecked(index) })
     }
 
     /// Gets the value of the `key`, given as the key's own type.
@@ -212,22 +195,7 @@ where
     /// Returns `None` if the map does not have the `key`.
     #[must_use]
     pub fn get_by_key(self, key: &K) -> Option<V::Ref<'a>> {
-        if K::ORDERED_BY_BYTES {
-            let mut bytes: Vec<u8> = Vec::with_capacity(key.encoded_len());
-            key.encode_to(&mut bytes, usize::MAX);
-            return self.get(unsafe { K::read_unchecked(&bytes) });
-        }
-        let keys: ListRef<'a, K> = self.keys();
-        let (mut low, mut high): (usize, usize) = (0, keys.len());
-        while low < high {
-            let middle: usize = (low + high) / 2;
-            match key.cmp_ref(unsafe { keys.get_unchecked(middle) }) {
-                Ordering::Greater => low = middle + 1,
-                Ordering::Less => high = middle,
-                Ordering::Equal => return Some(unsafe { self.values().get_unchecked(middle) }),
-            }
-        }
-        None
+        find_native_key(self.keys(), key).map(|index| unsafe { self.values().get_unchecked(index) })
     }
 
     /// Gets the iterator of the entries, in the order of their encoded keys.
@@ -250,6 +218,64 @@ impl<K, V> Debug for MapRef<'_, K, V> {
             .field("bytes", &self.bytes)
             .finish()
     }
+}
+
+/// Checks the `keys` of a map are strictly increasing.
+///
+/// # Errors
+/// Returns an error if a key is not after the key before it.
+pub(crate) fn check_keys<K>(keys: ListRef<'_, K>) -> Result<(), DecodeError>
+where
+    K: Element + Ord,
+{
+    let mut iter = keys.iter();
+    let mut previous: Option<K::Ref<'_>> = iter.next();
+    for key in iter {
+        if previous.is_some_and(|previous| K::cmp_refs(previous, key) != Ordering::Less) {
+            return Err(DecodeError::InvalidMap);
+        }
+        previous = Some(key);
+    }
+    Ok(())
+}
+
+/// Finds the index of the read `key` in the `keys` of a map, by a binary search.
+pub(crate) fn find_key<K>(keys: ListRef<'_, K>, key: K::Ref<'_>) -> Option<usize>
+where
+    K: Element + Ord,
+{
+    let (mut low, mut high): (usize, usize) = (0, keys.len());
+    while low < high {
+        let middle: usize = (low + high) / 2;
+        match K::cmp_refs(unsafe { keys.get_unchecked(middle) }, key) {
+            Ordering::Less => low = middle + 1,
+            Ordering::Greater => high = middle,
+            Ordering::Equal => return Some(middle),
+        }
+    }
+    None
+}
+
+/// Finds the index of the `key` in the `keys` of a map, by a binary search.
+pub(crate) fn find_native_key<K>(keys: ListRef<'_, K>, key: &K) -> Option<usize>
+where
+    K: Element + Ord,
+{
+    if K::ORDERED_BY_BYTES {
+        let mut bytes: Vec<u8> = Vec::with_capacity(key.encoded_len());
+        key.encode_to(&mut bytes, usize::MAX);
+        return find_key(keys, unsafe { K::read_unchecked(&bytes) });
+    }
+    let (mut low, mut high): (usize, usize) = (0, keys.len());
+    while low < high {
+        let middle: usize = (low + high) / 2;
+        match key.cmp_ref(unsafe { keys.get_unchecked(middle) }) {
+            Ordering::Greater => low = middle + 1,
+            Ordering::Less => high = middle,
+            Ordering::Equal => return Some(middle),
+        }
+    }
+    None
 }
 
 /// Gets the length of the encoding of the `map`, in bytes.
@@ -305,7 +331,7 @@ where
 ///
 /// # Note
 /// - A variable-size element is padded by the length of the elements before it.
-const fn is_len_ordered<T>() -> bool
+pub(crate) const fn is_len_ordered<T>() -> bool
 where
     T: Element,
 {
@@ -313,7 +339,7 @@ where
 }
 
 /// Gets the entries of the `map`, in the order of the encoded bytes of their keys.
-fn entries_by_key_bytes<K, V>(map: &BTreeMap<K, V>) -> Vec<(&K, &V)>
+pub(crate) fn entries_by_key_bytes<K, V>(map: &BTreeMap<K, V>) -> Vec<(&K, &V)>
 where
     K: Element,
 {

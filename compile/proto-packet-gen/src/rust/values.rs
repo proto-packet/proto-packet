@@ -12,10 +12,16 @@ const UUID: &str = "proto_packet::types::Uuid";
 pub(crate) const BYTES: &str = "proto_packet::types::Bytes";
 
 /// The type of a list read from its bytes.
-pub(crate) const LIST_REF: &str = "proto_packet::io::ListRef";
+const LIST_REF: &str = "proto_packet::io::ListRef";
 
 /// The type of a map read from its bytes.
-pub(crate) const MAP_REF: &str = "proto_packet::io::MapRef";
+const MAP_REF: &str = "proto_packet::io::MapRef";
+
+/// The type of the optional elements of a list, an array or a map, read from their bytes.
+const OPTION_LIST_REF: &str = "proto_packet::io::OptionListRef";
+
+/// The type of a map with optional values read from its bytes.
+const OPTION_MAP_REF: &str = "proto_packet::io::OptionMapRef";
 
 /// The trait of any form of a list.
 const LIST_VIEW: &str = "proto_packet::io::ListView";
@@ -64,14 +70,36 @@ pub(crate) fn ref_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
         TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
         TypeTag::Named(_) => format!("{}<'a>", generated_path(tag, "Ref")),
         TypeTag::List(_) if tag.is_bytes() => "&'a [u8]".to_string(),
-        TypeTag::List(element) => format!("{}<'a, {}>", LIST_REF, typing.rust_type(element)),
-        TypeTag::Map { key, value } => format!(
-            "{}<'a, {}, {}>",
-            MAP_REF,
-            typing.rust_type(key),
-            typing.rust_type(value)
-        ),
+        TypeTag::List(element) | TypeTag::Array { element, .. } => match element.as_ref() {
+            TypeTag::Optional(value) => {
+                format!("{}<'a, {}>", OPTION_LIST_REF, typing.rust_type(value))
+            }
+            element => format!("{}<'a, {}>", LIST_REF, typing.rust_type(element)),
+        },
+        TypeTag::Map { key, value } => match value.as_ref() {
+            TypeTag::Optional(value) => format!(
+                "{}<'a, {}, {}>",
+                OPTION_MAP_REF,
+                typing.rust_type(key),
+                typing.rust_type(value)
+            ),
+            value => format!(
+                "{}<'a, {}, {}>",
+                MAP_REF,
+                typing.rust_type(key),
+                typing.rust_type(value)
+            ),
+        },
+        TypeTag::Optional(_) => unreachable!("an optional value is in a list, an array or a map"),
     }
+}
+
+/// Gets the `Element` of the Rust type of the list, map or array `tag`, as a path.
+///
+/// # Note
+/// - A list, a map or an array is read, written & checked through it, whatever its elements are.
+pub(crate) fn element(typing: Typing<'_>, tag: &TypeTag) -> String {
+    format!("<{} as proto_packet::io::Element>", typing.rust_type(tag))
 }
 
 /// Gets the type of a value of the scalar or string `tag`, given to a setter.
@@ -81,8 +109,8 @@ pub(crate) fn setter_value_type(tag: &TypeTag) -> String {
         TypeTag::Special(SpecialType::Uuid) => UUID.to_string(),
         TypeTag::Special(SpecialType::String) => "&str".to_string(),
         TypeTag::Named(name) => type_path(name.to_ref()),
-        TypeTag::List(_) | TypeTag::Map { .. } => {
-            unreachable!("a list or a map has no setter in place")
+        TypeTag::List(_) | TypeTag::Map { .. } | TypeTag::Array { .. } | TypeTag::Optional(_) => {
+            unreachable!("a list, a map or an array has no setter in place")
         }
     }
 }
@@ -110,6 +138,12 @@ pub(crate) fn view_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
             view_value_type(typing, key),
             view_value_type(typing, value)
         ),
+        TypeTag::Array { element, .. } => format!(
+            "impl {}<Item = {}>",
+            LIST_VIEW,
+            view_value_type(typing, element)
+        ),
+        TypeTag::Optional(value) => format!("Option<{}>", view_value_type(typing, value)),
         _ => setter_value_type(tag),
     }
 }

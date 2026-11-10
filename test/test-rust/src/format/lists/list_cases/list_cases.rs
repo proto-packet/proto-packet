@@ -156,9 +156,9 @@ impl ListCases {
         match self {
             Self::Unrecognized(case) => 2 + case.bytes.len(),
             Self::Blob(value) => 2 + value.len(),
-            Self::Numbers(value) => 2 + proto_packet::io::list_encoded_len(value),
-            Self::Texts(value) => 2 + proto_packet::io::list_encoded_len(value),
-            Self::Points(value) => 2 + proto_packet::io::list_encoded_len(value),
+            Self::Numbers(value) => 2 + proto_packet::io::Element::encoded_len(value),
+            Self::Texts(value) => 2 + proto_packet::io::Element::encoded_len(value),
+            Self::Points(value) => 2 + proto_packet::io::Element::encoded_len(value),
             Self::Number(_) => 6,
         }
     }
@@ -196,15 +196,15 @@ impl ListCases {
             }
             Self::Numbers(value) => {
                 out.extend_from_slice(&2_u16.to_le_bytes());
-                proto_packet::io::encode_list(value, out, depth - 1);
+                proto_packet::io::Element::encode_to(value, out, depth - 1);
             }
             Self::Texts(value) => {
                 out.extend_from_slice(&3_u16.to_le_bytes());
-                proto_packet::io::encode_list(value, out, depth - 1);
+                proto_packet::io::Element::encode_to(value, out, depth - 1);
             }
             Self::Points(value) => {
                 out.extend_from_slice(&4_u16.to_le_bytes());
-                proto_packet::io::encode_list(value, out, depth - 1);
+                proto_packet::io::Element::encode_to(value, out, depth - 1);
             }
             Self::Number(value) => {
                 out.extend_from_slice(&5_u16.to_le_bytes());
@@ -270,6 +270,20 @@ impl proto_packet::io::Element for ListCases {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         ListCases::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
 

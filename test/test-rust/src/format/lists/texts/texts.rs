@@ -75,7 +75,7 @@ impl Texts {
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 0;
         {
-            let size: usize = proto_packet::io::list_encoded_len(&self.texts);
+            let size: usize = proto_packet::io::Element::encoded_len(&self.texts);
             if size > 0 {
                 len = proto_packet::io::align_up(len, 4) + size;
             }
@@ -110,7 +110,7 @@ impl Texts {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_list(&self.texts, out, depth - 1);
+            proto_packet::io::Element::encode_to(&self.texts, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
     }
@@ -167,5 +167,19 @@ impl proto_packet::io::Element for Texts {
 
     fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
         Texts::encode_to_with_depth(self, out, depth);
+    }
+
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: proto_packet::serde::Serializer,
+    {
+        proto_packet::serde::Serialize::serialize(self, serializer)
+    }
+
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: proto_packet::serde::Deserializer<'de>,
+    {
+        proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
