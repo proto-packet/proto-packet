@@ -43,6 +43,12 @@ pub enum ParseErrorReason {
     /// Expected a `]`. (reported at the token before it)
     ExpectedCloseBracket,
 
+    /// Expected a `,` between the key & the value of a map. (reported at the token before it)
+    ExpectedComma,
+
+    /// Expected a `>`. (reported at the token before it)
+    ExpectedCloseAngle,
+
     /// Expected a `:`.
     ExpectedColon,
 
@@ -88,6 +94,8 @@ impl ParseErrorReason {
             Self::ExpectedOpenBrace => "expected a `{`",
             Self::ExpectedCloseBrace => "expected a `}` after this",
             Self::ExpectedCloseBracket => "expected a `]` after this",
+            Self::ExpectedComma => "expected a `,` after this",
+            Self::ExpectedCloseAngle => "expected a `>` after this",
             Self::ExpectedColon => "expected a `:`",
             Self::ExpectedSemicolon => "expected a `;` after this",
             Self::ExpectedEqual => "expected a `=`",
@@ -118,6 +126,8 @@ impl ParseErrorReason {
             Self::ExpectedOpenBrace => "P_EXPECTED_OPEN_BRACE",
             Self::ExpectedCloseBrace => "P_EXPECTED_CLOSE_BRACE",
             Self::ExpectedCloseBracket => "P_EXPECTED_CLOSE_BRACKET",
+            Self::ExpectedComma => "P_EXPECTED_COMMA",
+            Self::ExpectedCloseAngle => "P_EXPECTED_CLOSE_ANGLE",
             Self::ExpectedColon => "P_EXPECTED_COLON",
             Self::ExpectedSemicolon => "P_EXPECTED_SEMICOLON",
             Self::ExpectedEqual => "P_EXPECTED_EQUAL",
