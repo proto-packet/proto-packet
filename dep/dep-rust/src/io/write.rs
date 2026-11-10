@@ -111,3 +111,16 @@ write_float!(write_nanotime_unchecked, Nanotime, "nanotime");
 write_float!(write_date_unchecked, Date, "date");
 #[cfg(feature = "types")]
 write_float!(write_duration_unchecked, Duration, "duration");
+
+/// Writes the little-endian `decimal` at the `offset`.
+///
+/// # Safety
+/// The value must be within the `bytes`.
+#[cfg(feature = "types")]
+pub unsafe fn write_decimal_unchecked<const S: u8>(
+    bytes: &mut [u8],
+    offset: usize,
+    value: crate::types::Decimal<S>,
+) {
+    unsafe { write_bytes_unchecked(bytes, offset, value.to_le_bytes()) }
+}

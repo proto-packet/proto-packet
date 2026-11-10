@@ -201,3 +201,16 @@ read_time!(
     Duration,
     "duration"
 );
+
+/// Reads the little-endian `decimal` at the `offset`.
+///
+/// # Safety
+/// The value must be within the `bytes`.
+#[cfg(feature = "types")]
+#[must_use]
+pub unsafe fn read_decimal_unchecked<const S: u8>(
+    bytes: &[u8],
+    offset: usize,
+) -> crate::types::Decimal<S> {
+    crate::types::Decimal::new(unsafe { read_i64_unchecked(bytes, offset) })
+}

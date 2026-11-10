@@ -303,3 +303,37 @@ impl_time!(Nanotime, i64);
 impl_time!(Date, i32);
 #[cfg(feature = "types")]
 impl_time!(Duration, i64);
+
+#[cfg(feature = "types")]
+impl<const S: u8> Element for crate::types::Decimal<S> {
+    const SIZE: Option<usize> = Some(8);
+    const ALIGNMENT: usize = 8;
+    const CAN_BE_INVALID: bool = false;
+    type Ref<'a> = crate::types::Decimal<S>;
+
+    fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+        Ok(())
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> crate::types::Decimal<S> {
+        crate::types::Decimal::new(i64::from_le_bytes(unsafe {
+            read_bytes_unchecked(bytes, 0)
+        }))
+    }
+
+    fn decode(element: crate::types::Decimal<S>) -> crate::types::Decimal<S> {
+        element
+    }
+
+    fn encoded_len(&self) -> usize {
+        8
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        out.extend_from_slice(&self.to_le_bytes());
+    }
+
+    fn cmp_refs(a: crate::types::Decimal<S>, b: crate::types::Decimal<S>) -> Ordering {
+        a.cmp(&b)
+    }
+}
