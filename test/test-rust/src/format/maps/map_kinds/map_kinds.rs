@@ -38,6 +38,10 @@
 pub struct MapKinds {
     by_number: std::collections::BTreeMap<u32, bool>,
     by_color: std::collections::BTreeMap<crate::format::examples::Color, String>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     by_point:
         std::collections::BTreeMap<crate::format::examples::Point, crate::format::examples::Entry>,
     lists: std::collections::BTreeMap<String, proto_packet::types::Bytes>,
@@ -414,6 +418,7 @@ impl proto_packet::io::Element for MapKinds {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::MapKindsRef<'a>;
     type View<'a> = &'a Self;
 

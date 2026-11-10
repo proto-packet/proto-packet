@@ -293,13 +293,25 @@ fn gen_json(
     let mut merge: Vec<String> = Vec::default();
     for field in fields {
         let name: String = ident(&field.name);
+        let (value, read): (String, String) = if typing.has_entries_map(field.tag) {
+            (
+                "&proto_packet::types::JsonRef::new(value)".to_string(),
+                format!(
+                    "map.next_value::<{}<proto_packet::types::JsonOwned<{}>>>()?.map(proto_packet::types::JsonOwned::into_value)",
+                    typing.prelude(PreludeName::Option),
+                    typing.rust_type(field.tag)
+                ),
+            )
+        } else {
+            ("value".to_string(), "map.next_value()?".to_string())
+        };
         serialize.push(format!(
-            "if let Some(value) = &self.{} {{ {}::ser::SerializeMap::serialize_entry(&mut map, \"{}\", value)?; }}",
-            name, SERDE, field.name
+            "if let Some(value) = &self.{} {{ {}::ser::SerializeMap::serialize_entry(&mut map, \"{}\", {})?; }}",
+            name, SERDE, field.name, value
         ));
         read_field.push(format!(
-            "\"{}\" => {{ self.{} = map.next_value()?; Ok(true) }}",
-            field.name, name
+            "\"{}\" => {{ self.{} = {}; Ok(true) }}",
+            field.name, name, read
         ));
         merge.push(format!(
             "if other.{name}.is_some() {{ if self.{name}.is_some() {{ return Err(\"{key}\"); }} self.{name} = other.{name}; }}",

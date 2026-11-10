@@ -128,6 +128,17 @@ impl Field<'_> {
                 typing.prelude(PreludeName::Option)
             ));
         }
+        if typing.has_entries_map(self.tag) {
+            let (default, kind): (&str, &str) = if self.is_optional {
+                ("default, ", "option")
+            } else {
+                ("", "value")
+            };
+            field.add_attribute(format!(
+                "serde({}serialize_with = \"proto_packet::types::JsonRef::serialize_{}\", deserialize_with = \"proto_packet::types::JsonOwned::deserialize_{}\")",
+                default, kind, kind
+            ));
+        }
         field
     }
 }

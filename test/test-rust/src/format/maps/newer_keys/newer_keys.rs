@@ -24,7 +24,15 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct NewerKeys {
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     by_message: std::collections::BTreeMap<crate::format::maps::NewerKey, u8>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     by_variant: std::collections::BTreeMap<crate::format::variants::NewerCases, u8>,
 }
 
@@ -203,6 +211,7 @@ impl proto_packet::io::Element for NewerKeys {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
     const ORDERED_BY_BYTES: bool = true;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::NewerKeysRef<'a>;
     type View<'a> = &'a Self;
 

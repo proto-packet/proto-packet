@@ -24,8 +24,16 @@
 )]
 #[serde(crate = "proto_packet::serde")]
 pub struct NestedKeys {
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     by_struct:
         std::collections::BTreeMap<crate::format::maps::Tagged, crate::format::examples::Entry>,
+    #[serde(
+        serialize_with = "proto_packet::types::JsonRef::serialize_value",
+        deserialize_with = "proto_packet::types::JsonOwned::deserialize_value"
+    )]
     by_list: std::collections::BTreeMap<Vec<crate::format::maps::NewerKey>, u8>,
 }
 
@@ -212,6 +220,7 @@ impl proto_packet::io::Element for NestedKeys {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     const ORDERED_BY_BYTES: bool = true;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::NestedKeysRef<'a>;
     type View<'a> = &'a Self;
 

@@ -511,18 +511,35 @@ fn gen_json(typing: Typing<'_>, schema_name: &str, type_name: &str, cases: &[Cas
     )];
     let mut from_case: Vec<String> = Vec::default();
     for case in cases {
+        let (written, read): (String, String) = if typing.has_entries_map(case.tag) {
+            (
+                format!("&{}::JsonRef::new(value)", TYPES),
+                format!(
+                    "<{}::JsonOwned<{}> as {}::Deserialize>::deserialize(value)?.into_value()",
+                    TYPES,
+                    typing.rust_type(case.tag),
+                    SERDE
+                ),
+            )
+        } else {
+            (
+                "value".to_string(),
+                format!("{}::Deserialize::deserialize(value)?", SERDE),
+            )
+        };
         serialize.push(format!(
-            "Self::{}(value) => {}::serialize_case(serializer, \"{}\", \"{}\", value),",
+            "Self::{}(value) => {}::serialize_case(serializer, \"{}\", \"{}\", {}),",
             case.ident(),
             TYPES,
             schema_name,
-            case.name
+            case.name,
+            written
         ));
         from_case.push(format!(
-            "\"{}\" => Ok(Self::{}({}::Deserialize::deserialize(value)?)),",
+            "\"{}\" => Ok(Self::{}({})),",
             case.name,
             case.ident(),
-            SERDE
+            read
         ));
     }
     let names: Vec<String> = cases

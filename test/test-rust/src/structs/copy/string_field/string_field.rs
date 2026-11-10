@@ -129,6 +129,7 @@ impl proto_packet::io::Element for StringField {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::StringFieldRef<'a>;
     type View<'a> = &'a Self;
 

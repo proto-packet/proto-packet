@@ -79,6 +79,7 @@ pub(crate) fn gen_element(
     const SIZE: {option}<usize> = {size};
     const ALIGNMENT: usize = {alignment};
     const CAN_BE_INVALID: bool = {can_be_invalid};{ordered}
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::{ref_name}<'a>;
     type View<'a> = &'a Self;
 

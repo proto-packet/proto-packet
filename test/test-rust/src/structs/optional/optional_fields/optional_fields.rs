@@ -468,6 +468,7 @@ impl proto_packet::io::Element for OptionalFields {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     const ORDERED_BY_BYTES: bool = true;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::OptionalFieldsRef<'a>;
     type View<'a> = &'a Self;
 

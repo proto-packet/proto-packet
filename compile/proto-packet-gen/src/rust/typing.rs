@@ -68,6 +68,30 @@ impl Typing<'_> {
         }
     }
 
+    /// Checks if the `tag` is a list or a map that holds a map with a key that isn't text in JSON.
+    ///
+    /// # Note
+    /// - Such a map is a list of its entries in JSON, which a map of serde can't write.
+    pub(crate) fn has_entries_map(self, tag: &TypeTag) -> bool {
+        match tag {
+            TypeTag::List(element) => self.has_entries_map(element),
+            TypeTag::Map { key, value } => {
+                !self.is_json_text_key(key) || self.has_entries_map(value)
+            }
+            _ => false,
+        }
+    }
+
+    /// Checks if a key of the `tag` is text in JSON.
+    fn is_json_text_key(self, tag: &TypeTag) -> bool {
+        match tag {
+            TypeTag::Primitive(_) | TypeTag::Special(_) => true,
+            TypeTag::Named(_) => self.is_enum(tag),
+            TypeTag::List(_) => tag.is_bytes(),
+            TypeTag::Map { .. } => false,
+        }
+    }
+
     /// Checks if a key of the `tag` is ordered by its encoded bytes in a map.
     ///
     /// # Note

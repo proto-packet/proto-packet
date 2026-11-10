@@ -187,6 +187,7 @@ impl proto_packet::io::Element for Padded {
     const SIZE: Option<usize> = Some(41);
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::PaddedRef<'a>;
     type View<'a> = &'a Self;
 

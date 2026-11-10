@@ -236,6 +236,7 @@ impl proto_packet::io::Element for SignedFields {
     const SIZE: Option<usize> = Some(31);
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = false;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::SignedFieldsRef<'a>;
     type View<'a> = &'a Self;
 

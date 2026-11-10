@@ -372,6 +372,7 @@ impl proto_packet::io::Element for Value {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     const ORDERED_BY_BYTES: bool = true;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::ValueRef<'a>;
     type View<'a> = &'a Self;
 

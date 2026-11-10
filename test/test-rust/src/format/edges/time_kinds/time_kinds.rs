@@ -392,6 +392,7 @@ impl proto_packet::io::Element for TimeKinds {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = super::TimeKindsRef<'a>;
     type View<'a> = &'a Self;
 
