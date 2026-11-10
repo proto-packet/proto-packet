@@ -67,6 +67,17 @@ float, so a `u128` or `i128` value outside that range fails to read. (ex: sorted
 code writes `var` first, so only reordered input fails. The full fix waits for a JSON encoding
 without serde. (`dep/dep-rust/src/types/variant_json.rs` & `buffered.rs`)
 
+### Lists
+
+The lists are missing from some of the generated code.
+
+- The `View` & `ViewMut` traits leave out the list fields & cases, since each form has its own type
+  for a list. (ex: a `ListView` trait that `&[T]` & `ListRef` both have) (`gen_struct.rs`)
+- The `Mut` types have no method for a list field or case, so a list is only read in place.
+  (`gen_struct_mut.rs`, `gen_message_mut.rs` & `gen_variant_mut.rs`)
+- A `[]u8` is an array of numbers in JSON, which is several times the size of the bytes. (ex:
+  base-64 text, like the unknown fields)
+
 ### Recursive Types
 
 A `Ref` type validates its nested values by recursion, so a struct, message or variant that contains
