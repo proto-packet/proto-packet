@@ -67,16 +67,20 @@ float, so a `u128` or `i128` value outside that range fails to read. (ex: sorted
 code writes `var` first, so only reordered input fails. The full fix waits for a JSON encoding
 without serde. (`dep/dep-rust/src/types/variant_json.rs` & `buffered.rs`)
 
-### Lists
+### Lists & Maps
 
-The lists are missing from some of the generated code.
+The lists & the maps are missing from some of the generated code.
 
-- The `View` & `ViewMut` traits leave out the list fields & cases, since each form has its own type
-  for a list. (ex: a `ListView` trait that `&[T]` & `ListRef` both have) (`gen_struct.rs`)
-- The `Mut` types have no method for a list field or case, so a list is only read in place.
+- The `View` & `ViewMut` traits leave out the list & map fields & cases, since each form has its
+  own type for one. (ex: a `ListView` trait that `&[T]` & `ListRef` both have) (`gen_struct.rs`)
+- The `Mut` types have no method for a list or map field or case, so one is only read in place.
   (`gen_struct_mut.rs`, `gen_message_mut.rs` & `gen_variant_mut.rs`)
 - A `[]u8` is an array of numbers in JSON, which is several times the size of the bytes. (ex:
   base-64 text, like the unknown fields)
+- A map with a key that is a struct, message, variant, list or map fails to write as JSON, since a
+  JSON key is text. (ex: an array of the entries)
+- A reader checks the order of the keys of a map by decoding them, unless the key is a number, a
+  `bool`, a `uuid` or a `string`. (`dep/dep-rust/src/io/list/element.rs`)
 
 ### Recursive Types
 
