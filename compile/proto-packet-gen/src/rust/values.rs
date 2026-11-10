@@ -18,10 +18,16 @@ pub(crate) const MAP_REF: &str = "proto_packet::io::MapRef";
 ///
 /// # Note
 /// - A float is the runtime's type with one NaN, so the generated types have `Eq`, `Ord` & `Hash`.
+/// - A time is the runtime's type for it, so its unit can't be mixed up.
 pub(crate) const fn primitive_type(primitive: PrimitiveType) -> &'static str {
     match primitive {
         PrimitiveType::Float32 => "proto_packet::types::Float32",
         PrimitiveType::Float64 => "proto_packet::types::Float64",
+        PrimitiveType::Timestamp => "proto_packet::types::Timestamp",
+        PrimitiveType::Microtime => "proto_packet::types::Microtime",
+        PrimitiveType::Nanotime => "proto_packet::types::Nanotime",
+        PrimitiveType::Date => "proto_packet::types::Date",
+        PrimitiveType::Duration => "proto_packet::types::Duration",
         _ => primitive.name(),
     }
 }

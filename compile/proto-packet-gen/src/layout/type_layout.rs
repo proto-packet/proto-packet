@@ -29,10 +29,18 @@ pub(crate) const fn primitive_size(primitive: PrimitiveType) -> usize {
     match primitive {
         PrimitiveType::Boolean | PrimitiveType::UnsignedInt8 | PrimitiveType::SignedInt8 => 1,
         PrimitiveType::UnsignedInt16 | PrimitiveType::SignedInt16 => 2,
-        PrimitiveType::UnsignedInt32 | PrimitiveType::SignedInt32 | PrimitiveType::Float32 => 4,
-        PrimitiveType::UnsignedInt64 | PrimitiveType::SignedInt64 | PrimitiveType::Float64 => 8,
+        PrimitiveType::UnsignedInt32
+        | PrimitiveType::SignedInt32
+        | PrimitiveType::Float32
+        | PrimitiveType::Date => 4,
+        PrimitiveType::UnsignedInt64
+        | PrimitiveType::SignedInt64
+        | PrimitiveType::Float64
+        | PrimitiveType::Timestamp
+        | PrimitiveType::Microtime
+        | PrimitiveType::Nanotime
+        | PrimitiveType::Duration => 8,
         PrimitiveType::UnsignedInt128 | PrimitiveType::SignedInt128 => 16,
-        _ => todo!(),
     }
 }
 
