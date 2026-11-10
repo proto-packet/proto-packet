@@ -1,5 +1,5 @@
 use crate::io::list::element::stride;
-use crate::io::{DecodeError, Element, ListIter, MAX_DEPTH, align_up, check_padding};
+use crate::io::{DecodeError, Element, ListIter, MAX_DEPTH, align_up, check_padding, check_utf8};
 use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
@@ -101,7 +101,27 @@ where
 
     /// Checks the `bytes` of a list of variable-size elements.
     fn check_variable(bytes: &[u8], depth: usize) -> Result<(), DecodeError> {
+        if T::IS_TEXT && T::ALIGNMENT == 1 {
+            return Self::check_texts(bytes);
+        }
         Self::check_variable_with(bytes, |_, element| T::check(element, depth))
+    }
+
+    /// Checks the `bytes` of a list of texts.
+    ///
+    /// # Note
+    /// - The texts are back to back, so they are checked as one run of text, which is several
+    ///   times faster than checking each one.
+    /// - A text is then valid if it starts on a character boundary, since the next one does too.
+    fn check_texts(bytes: &[u8]) -> Result<(), DecodeError> {
+        Self::check_variable_with(bytes, |_, text| match text.first() {
+            Some(first) if (*first as i8) < -0x40 => Err(DecodeError::InvalidUtf8),
+            _ => Ok(()),
+        })?;
+        match bytes.first_chunk::<4>() {
+            Some(count) => check_utf8(&bytes[u32::from_le_bytes(*count) as usize * 4..]),
+            None => Ok(()),
+        }
     }
 
     /// Checks the `bytes` of a list of variable-size elements, with each element & its index given

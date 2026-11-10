@@ -193,6 +193,7 @@ impl Element for String {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const IS_TEXT: bool = true;
     type Ref<'a> = &'a str;
     type View<'a> = &'a str;
 

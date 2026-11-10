@@ -13,6 +13,7 @@ pub const MAX_DEPTH: usize = 64;
 ///
 /// # Errors
 /// Returns an error if no level is left.
+#[inline]
 pub const fn check_depth(depth: usize) -> Result<(), DecodeError> {
     if depth == 0 {
         Err(DecodeError::TooDeep)
@@ -25,6 +26,7 @@ pub const fn check_depth(depth: usize) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if the `bytes` are shorter than the `size`.
+#[inline]
 pub const fn check_len(bytes: &[u8], size: usize) -> Result<(), DecodeError> {
     if bytes.len() < size {
         return Err(DecodeError::TooShort {
@@ -39,6 +41,7 @@ pub const fn check_len(bytes: &[u8], size: usize) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if the `bytes` are shorter or longer than the `size`.
+#[inline]
 pub const fn check_exact_len(bytes: &[u8], size: usize) -> Result<(), DecodeError> {
     if bytes.len() > size {
         return Err(DecodeError::TooLong {
@@ -58,6 +61,7 @@ pub const fn check_exact_len(bytes: &[u8], size: usize) -> Result<(), DecodeErro
 ///
 /// # Panics
 /// Panics if the end table or the `tail` is not within the `bytes`.
+#[inline]
 pub fn check_ends(
     bytes: &[u8],
     table: usize,
@@ -81,9 +85,16 @@ pub fn check_ends(
 
 /// Checks the `bytes` are valid UTF-8.
 ///
+/// # Note
+/// - Text that is all ASCII is checked first, since that is several times faster for short text.
+///
 /// # Errors
 /// Returns an error if the `bytes` are not valid UTF-8.
+#[inline]
 pub const fn check_utf8(bytes: &[u8]) -> Result<(), DecodeError> {
+    if bytes.is_ascii() {
+        return Ok(());
+    }
     match std::str::from_utf8(bytes) {
         Ok(_) => Ok(()),
         Err(_) => Err(DecodeError::InvalidUtf8),
@@ -94,6 +105,7 @@ pub const fn check_utf8(bytes: &[u8]) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if the `value` is not a valid tag number.
+#[inline]
 pub const fn check_tag_number(value: u16) -> Result<(), DecodeError> {
     if TagNumber::is_valid(value) {
         Ok(())
@@ -106,6 +118,7 @@ pub const fn check_tag_number(value: u16) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if the `value` is not 0 or a valid tag number.
+#[inline]
 pub const fn check_optional_tag_number(value: u16) -> Result<(), DecodeError> {
     if value == 0 {
         Ok(())
@@ -124,6 +137,7 @@ pub const fn check_optional_tag_number(value: u16) -> Result<(), DecodeError> {
 ///
 /// # Panics
 /// Panics if the end table is not within the `bytes`.
+#[inline]
 pub fn check_tail_ends(
     bytes: &[u8],
     table: usize,
@@ -151,6 +165,7 @@ pub fn check_tail_ends(
 ///
 /// # Errors
 /// Returns an error if the padding before the entry reaches its end, or is not zeros.
+#[inline]
 pub fn check_tail_entry(
     bytes: &[u8],
     table: usize,
@@ -191,6 +206,7 @@ fn tail_entry_previous(bytes: &[u8], table: usize, index: usize, header: usize) 
 ///
 /// # Errors
 /// Returns an error if the entry is not empty.
+#[inline]
 pub fn check_tail_absent(
     bytes: &[u8],
     table: usize,
@@ -211,6 +227,7 @@ pub fn check_tail_absent(
 ///
 /// # Errors
 /// Returns an error if a byte is not 0.
+#[inline]
 pub fn check_padding(padding: &[u8]) -> Result<(), DecodeError> {
     if padding.iter().all(|byte| *byte == 0) {
         Ok(())
@@ -223,6 +240,7 @@ pub fn check_padding(padding: &[u8]) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if an unused bit is not 0.
+#[inline]
 pub const fn check_unused_bits(byte: u8, used: u8) -> Result<(), DecodeError> {
     if byte >> used == 0 {
         Ok(())
@@ -235,6 +253,7 @@ pub const fn check_unused_bits(byte: u8, used: u8) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if a byte is not 0.
+#[inline]
 pub fn check_absent(absent: &[u8]) -> Result<(), DecodeError> {
     if absent.iter().all(|byte| *byte == 0) {
         Ok(())
@@ -247,6 +266,7 @@ pub fn check_absent(absent: &[u8]) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if the `byte` is above 1.
+#[inline]
 pub const fn check_bool(byte: u8) -> Result<(), DecodeError> {
     if byte <= 1 {
         Ok(())
@@ -259,6 +279,7 @@ pub const fn check_bool(byte: u8) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if the `bits` are another NaN.
+#[inline]
 #[cfg(feature = "types")]
 pub const fn check_f32(bits: u32) -> Result<(), DecodeError> {
     if crate::types::Float32::is_valid_bits(bits) {
@@ -272,6 +293,7 @@ pub const fn check_f32(bits: u32) -> Result<(), DecodeError> {
 ///
 /// # Errors
 /// Returns an error if the `bits` are another NaN.
+#[inline]
 #[cfg(feature = "types")]
 pub const fn check_f64(bits: u64) -> Result<(), DecodeError> {
     if crate::types::Float64::is_valid_bits(bits) {

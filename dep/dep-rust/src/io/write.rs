@@ -1,10 +1,12 @@
 /// Rounds the `value` up to a multiple of the `alignment`, a power of 2.
+#[inline]
 #[must_use]
 pub const fn align_up(value: usize, alignment: usize) -> usize {
     (value + alignment - 1) & !(alignment - 1)
 }
 
 /// Appends the `count` of zeros to the `out` bytes.
+#[inline]
 pub fn write_zeros(out: &mut Vec<u8>, count: usize) {
     out.resize(out.len() + count, 0);
 }
@@ -13,6 +15,7 @@ pub fn write_zeros(out: &mut Vec<u8>, count: usize) {
 ///
 /// # Panics
 /// Panics if no level is left.
+#[inline]
 pub fn assert_depth(depth: usize) {
     assert!(
         depth > 0,
@@ -23,6 +26,7 @@ pub fn assert_depth(depth: usize) {
 
 /// Pads the `out` bytes with zeros, so the bytes after the `start` are a multiple of the
 /// `alignment`.
+#[inline]
 pub fn write_padding(out: &mut Vec<u8>, start: usize, alignment: usize) {
     out.resize(start + align_up(out.len() - start, alignment), 0);
 }
@@ -33,6 +37,7 @@ pub fn write_padding(out: &mut Vec<u8>, start: usize, alignment: usize) {
 ///
 /// # Note
 /// - An empty entry has no padding before it.
+#[inline]
 pub fn trim_padding(out: &mut Vec<u8>, before: usize, padded: usize) {
     if out.len() == padded {
         out.truncate(before);
@@ -44,6 +49,7 @@ pub fn trim_padding(out: &mut Vec<u8>, before: usize, padded: usize) {
 ///
 /// # Panics
 /// Panics if the end offset does not fit in a `u32`.
+#[inline]
 pub fn write_end(out: &mut [u8], offset: usize, tail: usize) {
     let end: u32 = u32::try_from(out.len() - tail).expect("the tail is too long");
     out[offset..offset + 4].copy_from_slice(&end.to_le_bytes());
@@ -77,6 +83,7 @@ write_int!(write_i128_unchecked, i128);
 ///
 /// # Safety
 /// The bytes must be within the `bytes`.
+#[inline]
 pub unsafe fn write_bytes_unchecked<const N: usize>(
     bytes: &mut [u8],
     offset: usize,
@@ -89,6 +96,7 @@ pub unsafe fn write_bytes_unchecked<const N: usize>(
 ///
 /// # Safety
 /// The byte must be within the `bytes`, & the `bit` must be less than 8.
+#[inline]
 pub unsafe fn write_bit_unchecked(bytes: &mut [u8], offset: usize, bit: u8, value: bool) {
     let byte: &mut u8 = unsafe { bytes.get_unchecked_mut(offset) };
     *byte = (*byte & !(1 << bit)) | (u8::from(value) << bit);
@@ -128,6 +136,7 @@ write_float!(write_duration_unchecked, Duration, "duration");
 ///
 /// # Safety
 /// The value must be within the `bytes`.
+#[inline]
 #[cfg(feature = "types")]
 pub unsafe fn write_decimal_unchecked<const S: u8>(
     bytes: &mut [u8],

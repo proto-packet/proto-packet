@@ -37,6 +37,7 @@ unsafe fn value_range_unchecked(bytes: &[u8], count: usize, index: usize) -> Ran
 }
 
 /// Gets the length of the index of a message with the `count` of fields.
+#[inline]
 #[must_use]
 pub const fn message_index_len(count: usize) -> usize {
     values_offset(count)
@@ -47,6 +48,7 @@ pub const fn message_index_len(count: usize) -> usize {
 /// # Errors
 /// Returns an error if the `bytes` are shorter than the index, the tags aren't strictly increasing
 /// valid tag numbers, the end table is invalid, or a message without fields has more bytes.
+#[inline]
 pub fn check_message(bytes: &[u8]) -> Result<(), DecodeError> {
     check_len(bytes, 2)?;
     let count: usize = unsafe { read_u16_unchecked(bytes, 0) as usize };
@@ -83,6 +85,7 @@ pub struct MessageFields<'a> {
 ///
 /// # Safety
 /// The message index must be valid.
+#[inline]
 #[must_use]
 pub unsafe fn message_fields_unchecked(bytes: &[u8]) -> MessageFields<'_> {
     let count: usize = unsafe { read_u16_unchecked(bytes, 0) as usize };
@@ -96,6 +99,7 @@ pub unsafe fn message_fields_unchecked(bytes: &[u8]) -> MessageFields<'_> {
 impl<'a> Iterator for MessageFields<'a> {
     type Item = (u16, &'a [u8]);
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.index == self.count {
             return None;
@@ -112,6 +116,7 @@ impl<'a> Iterator for MessageFields<'a> {
 /// Searches the `count` of sorted tags read by `tag_at` for the `tag`.
 ///
 /// Returns the tag's index, or the error of the index to insert it at.
+#[inline]
 pub(crate) fn search_tags<F>(count: usize, tag: u16, tag_at: F) -> Result<usize, usize>
 where
     F: Fn(usize) -> u16,
@@ -146,6 +151,7 @@ unsafe fn find_range_unchecked(bytes: &[u8], tag: u16) -> Option<Range<usize>> {
 ///
 /// # Safety
 /// The message index must be valid.
+#[inline]
 #[must_use]
 pub unsafe fn find_field_unchecked(bytes: &[u8], tag: u16) -> Option<&[u8]> {
     let range: Range<usize> = unsafe { find_range_unchecked(bytes, tag) }?;
@@ -156,6 +162,7 @@ pub unsafe fn find_field_unchecked(bytes: &[u8], tag: u16) -> Option<&[u8]> {
 ///
 /// # Safety
 /// The message index must be valid.
+#[inline]
 #[must_use]
 pub unsafe fn find_field_mut_unchecked(bytes: &mut [u8], tag: u16) -> Option<&mut [u8]> {
     let range: Range<usize> = unsafe { find_range_unchecked(bytes, tag) }?;

@@ -30,6 +30,7 @@ read!(read_i128_unchecked, i128);
 ///
 /// # Safety
 /// The bytes must be within the `bytes`.
+#[inline]
 #[must_use]
 pub unsafe fn read_bytes_unchecked<const N: usize>(bytes: &[u8], offset: usize) -> [u8; N] {
     unsafe { *bytes.as_ptr().add(offset).cast::<[u8; N]>() }
@@ -39,6 +40,7 @@ pub unsafe fn read_bytes_unchecked<const N: usize>(bytes: &[u8], offset: usize) 
 ///
 /// # Safety
 /// The byte must be within the `bytes`, & the `bit` must be less than 8.
+#[inline]
 #[must_use]
 pub unsafe fn read_bit_unchecked(bytes: &[u8], offset: usize, bit: u8) -> bool {
     unsafe { *bytes.get_unchecked(offset) & (1 << bit) != 0 }
@@ -206,6 +208,7 @@ read_time!(
 ///
 /// # Safety
 /// The value must be within the `bytes`.
+#[inline]
 #[cfg(feature = "types")]
 #[must_use]
 pub unsafe fn read_decimal_unchecked<const S: u8>(

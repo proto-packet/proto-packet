@@ -17,6 +17,7 @@ impl<'a> MessageWriter<'a> {
 
     /// Creates a new writer appending to the `out` bytes, for the `known` count of fields & the
     /// sorted `unknown` fields.
+    #[inline]
     pub fn new(out: &'a mut Vec<u8>, known: usize, unknown: &'a [UnknownField]) -> Self {
         let count: usize = known + unknown.len();
         let start: usize = out.len();
@@ -37,6 +38,7 @@ impl MessageWriter<'_> {
     //! Writing
 
     /// Starts the field with the `tag`, & gets the bytes to append its value to.
+    #[inline]
     pub fn field(&mut self, tag: u16) -> &mut Vec<u8> {
         self.write_unknown_before(u32::from(tag));
         self.write_tag(tag);
@@ -47,6 +49,7 @@ impl MessageWriter<'_> {
     ///
     /// # Note
     /// - The last field has no end, since its value ends where the message ends.
+    #[inline]
     pub fn end_field(&mut self) {
         if self.ends < self.values {
             write_end(self.out, self.ends, self.values);
@@ -60,6 +63,7 @@ impl MessageWriter<'_> {
     }
 
     /// Writes the unknown fields with tags below the `tag`.
+    #[inline]
     fn write_unknown_before(&mut self, tag: u32) {
         while let Some((field, rest)) = self.unknown.split_first()
             && u32::from(field.tag_number().value()) < tag
@@ -72,6 +76,7 @@ impl MessageWriter<'_> {
     }
 
     /// Writes the `tag` to the index.
+    #[inline]
     fn write_tag(&mut self, tag: u16) {
         self.out[self.tags..self.tags + 2].copy_from_slice(&tag.to_le_bytes());
         self.tags += 2;
@@ -79,6 +84,7 @@ impl MessageWriter<'_> {
 }
 
 /// Gets the length of the encoded `fields`, without their index.
+#[inline]
 #[must_use]
 pub fn unknown_fields_len(fields: &[UnknownField]) -> usize {
     fields.iter().map(|field| field.bytes().len()).sum()
