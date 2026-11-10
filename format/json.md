@@ -8,6 +8,7 @@ This document specifies the JSON form of ProtoPacket values.
 | `u8` to `u128`  | A number.                                                      |
 | `i8` to `i128`  | A number.                                                      |
 | `f32`, `f64`    | A string of the number, or of a name if it isn't finite.       |
+| time types      | A number, the integer the time is stored as.                   |
 | `uuid`          | A string, in its string form.                                  |
 | `string`        | A string.                                                      |
 | enum            | A case name, or a tag number if the writer doesn't know it.    |
