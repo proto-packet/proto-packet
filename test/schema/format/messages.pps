@@ -50,6 +50,9 @@ message AllKinds {
 
     // A float.
     float: f64 = 12;
+
+    // A time.
+    at: timestamp = 13;
 }
 
 // An older version of a message.

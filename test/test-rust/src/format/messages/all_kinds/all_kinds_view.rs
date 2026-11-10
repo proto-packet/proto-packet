@@ -37,6 +37,9 @@ pub trait AllKindsView {
 
     /// Gets the field: `float`.
     fn float(&self) -> Option<proto_packet::types::Float64>;
+
+    /// Gets the field: `at`.
+    fn at(&self) -> Option<proto_packet::types::Timestamp>;
 }
 
 impl<V: AllKindsView> AllKindsView for &V {
@@ -86,6 +89,10 @@ impl<V: AllKindsView> AllKindsView for &V {
 
     fn float(&self) -> Option<proto_packet::types::Float64> {
         (**self).float()
+    }
+
+    fn at(&self) -> Option<proto_packet::types::Timestamp> {
+        (**self).at()
     }
 }
 
@@ -137,6 +144,10 @@ impl<V: AllKindsView> AllKindsView for &mut V {
     fn float(&self) -> Option<proto_packet::types::Float64> {
         (**self).float()
     }
+
+    fn at(&self) -> Option<proto_packet::types::Timestamp> {
+        (**self).at()
+    }
 }
 
 impl AllKindsView for super::AllKinds {
@@ -186,6 +197,10 @@ impl AllKindsView for super::AllKinds {
 
     fn float(&self) -> Option<proto_packet::types::Float64> {
         self.float()
+    }
+
+    fn at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.at()
     }
 }
 
@@ -237,6 +252,10 @@ impl AllKindsView for super::AllKindsRef<'_> {
     fn float(&self) -> Option<proto_packet::types::Float64> {
         self.float()
     }
+
+    fn at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.at()
+    }
 }
 
 impl AllKindsView for super::AllKindsBuf {
@@ -287,6 +306,10 @@ impl AllKindsView for super::AllKindsBuf {
     fn float(&self) -> Option<proto_packet::types::Float64> {
         self.as_ref().float()
     }
+
+    fn at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.as_ref().at()
+    }
 }
 
 impl AllKindsView for super::AllKindsMut<'_> {
@@ -336,5 +359,9 @@ impl AllKindsView for super::AllKindsMut<'_> {
 
     fn float(&self) -> Option<proto_packet::types::Float64> {
         self.as_ref().float()
+    }
+
+    fn at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.as_ref().at()
     }
 }

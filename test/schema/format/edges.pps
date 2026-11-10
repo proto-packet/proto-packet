@@ -68,6 +68,34 @@ struct FloatKinds {
     c: optional f32;
 }
 
+// A struct with a field of each time type.
+struct TimeKinds {
+
+    // The milliseconds since the epoch.
+    at: timestamp;
+
+    // The microseconds since the epoch.
+    micro: microtime;
+
+    // The nanoseconds since the epoch.
+    nano: nanotime;
+
+    // The days since the epoch, of alignment 4.
+    day: date;
+
+    // The nanoseconds of the span.
+    span: duration;
+
+    // An optional time.
+    maybe: optional timestamp;
+
+    // A list of dates.
+    days: []date;
+
+    // A map with time keys.
+    spans: map<date, duration>;
+}
+
 // A fixed struct of the other fixed-size types, with optional fields.
 struct FixedKinds {
 

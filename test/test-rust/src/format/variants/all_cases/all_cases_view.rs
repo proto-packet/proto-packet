@@ -43,6 +43,9 @@ pub trait AllCasesView {
 
     /// Gets the value of the case: `Float`.
     fn as_float(&self) -> Option<proto_packet::types::Float64>;
+
+    /// Gets the value of the case: `At`.
+    fn as_at(&self) -> Option<proto_packet::types::Timestamp>;
 }
 
 impl<V: AllCasesView> AllCasesView for &V {
@@ -100,6 +103,10 @@ impl<V: AllCasesView> AllCasesView for &V {
 
     fn as_float(&self) -> Option<proto_packet::types::Float64> {
         (**self).as_float()
+    }
+
+    fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
+        (**self).as_at()
     }
 }
 
@@ -159,6 +166,10 @@ impl<V: AllCasesView> AllCasesView for &mut V {
     fn as_float(&self) -> Option<proto_packet::types::Float64> {
         (**self).as_float()
     }
+
+    fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
+        (**self).as_at()
+    }
 }
 
 impl AllCasesView for super::AllCases {
@@ -216,6 +227,10 @@ impl AllCasesView for super::AllCases {
 
     fn as_float(&self) -> Option<proto_packet::types::Float64> {
         self.as_float()
+    }
+
+    fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.as_at()
     }
 }
 
@@ -275,6 +290,10 @@ impl AllCasesView for super::AllCasesRef<'_> {
     fn as_float(&self) -> Option<proto_packet::types::Float64> {
         self.as_float()
     }
+
+    fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.as_at()
+    }
 }
 
 impl AllCasesView for super::AllCasesBuf {
@@ -333,6 +352,10 @@ impl AllCasesView for super::AllCasesBuf {
     fn as_float(&self) -> Option<proto_packet::types::Float64> {
         self.as_ref().as_float()
     }
+
+    fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.as_ref().as_at()
+    }
 }
 
 impl AllCasesView for super::AllCasesMut<'_> {
@@ -390,5 +413,9 @@ impl AllCasesView for super::AllCasesMut<'_> {
 
     fn as_float(&self) -> Option<proto_packet::types::Float64> {
         self.as_ref().as_float()
+    }
+
+    fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.as_ref().as_at()
     }
 }

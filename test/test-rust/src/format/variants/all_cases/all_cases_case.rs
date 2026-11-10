@@ -44,4 +44,7 @@ pub enum AllCasesCase<'a> {
 
     /// The case: `Float`.
     Float(proto_packet::types::Float64),
+
+    /// The case: `At`.
+    At(proto_packet::types::Timestamp),
 }

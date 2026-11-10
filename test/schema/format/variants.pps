@@ -54,6 +54,9 @@ variant AllCases {
 
     // A float.
     Float: f64 = 13;
+
+    // A time.
+    At: timestamp = 14;
 }
 
 // An older version of a variant.

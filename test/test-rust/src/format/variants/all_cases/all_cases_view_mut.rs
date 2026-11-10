@@ -52,6 +52,12 @@ pub trait AllCasesViewMut: super::AllCasesView {
         &mut self,
         value: proto_packet::types::Float64,
     ) -> Result<(), proto_packet::io::CapacityError>;
+
+    /// Sets the case: `At`.
+    fn set_at(
+        &mut self,
+        value: proto_packet::types::Timestamp,
+    ) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
@@ -117,6 +123,13 @@ impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
         value: proto_packet::types::Float64,
     ) -> Result<(), proto_packet::io::CapacityError> {
         (**self).set_float(value)
+    }
+
+    fn set_at(
+        &mut self,
+        value: proto_packet::types::Timestamp,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        (**self).set_at(value)
     }
 }
 
@@ -193,6 +206,14 @@ impl AllCasesViewMut for super::AllCases {
         *self = super::AllCases::Float(value);
         Ok(())
     }
+
+    fn set_at(
+        &mut self,
+        value: proto_packet::types::Timestamp,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        *self = super::AllCases::At(value);
+        Ok(())
+    }
 }
 
 impl AllCasesViewMut for super::AllCasesMut<'_> {
@@ -259,6 +280,13 @@ impl AllCasesViewMut for super::AllCasesMut<'_> {
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.set_float(value)
     }
+
+    fn set_at(
+        &mut self,
+        value: proto_packet::types::Timestamp,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.set_at(value)
+    }
 }
 
 impl AllCasesViewMut for super::AllCasesBuf {
@@ -324,5 +352,12 @@ impl AllCasesViewMut for super::AllCasesBuf {
         value: proto_packet::types::Float64,
     ) -> Result<(), proto_packet::io::CapacityError> {
         self.as_mut().set_float(value)
+    }
+
+    fn set_at(
+        &mut self,
+        value: proto_packet::types::Timestamp,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        self.as_mut().set_at(value)
     }
 }

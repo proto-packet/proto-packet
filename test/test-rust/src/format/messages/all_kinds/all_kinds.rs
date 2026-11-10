@@ -39,6 +39,9 @@
 ///
 ///     // A float.
 ///     float: f64 = 12;
+///
+///     // A time.
+///     at: timestamp = 13;
 /// }
 /// ```
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
@@ -55,6 +58,7 @@ pub struct AllKinds {
     boxed_color: Option<Box<crate::format::examples::Color>>,
     signed: Option<i64>,
     float: Option<proto_packet::types::Float64>,
+    at: Option<proto_packet::types::Timestamp>,
     unknown_fields: Vec<proto_packet::io::UnknownField>,
 }
 
@@ -425,6 +429,35 @@ impl AllKinds {
 }
 
 impl AllKinds {
+    //! Field: `at`
+
+    /// Gets the field: `at`.
+    #[must_use]
+    pub fn at(&self) -> Option<proto_packet::types::Timestamp> {
+        self.at
+    }
+
+    /// Sets the field: `at`. Returns the previous value.
+    pub fn set_at<F>(&mut self, at: F) -> Option<proto_packet::types::Timestamp>
+    where
+        F: Into<Option<proto_packet::types::Timestamp>>,
+    {
+        let at: Option<proto_packet::types::Timestamp> = at.into();
+        std::mem::replace(&mut self.at, at)
+    }
+
+    /// Sets the field: `at`. (builder pattern)
+    #[must_use]
+    pub fn with_at<F>(mut self, at: F) -> Self
+    where
+        F: Into<Option<proto_packet::types::Timestamp>>,
+    {
+        self.set_at(at);
+        self
+    }
+}
+
+impl AllKinds {
     //! Unknown Fields
 
     /// Gets the fields the message doesn't know, in tag order.
@@ -500,6 +533,10 @@ impl AllKinds {
             count += 1;
             values += 8;
         }
+        if self.at.is_some() {
+            count += 1;
+            values += 8;
+        }
         proto_packet::io::message_index_len(count) + values
     }
 
@@ -524,7 +561,8 @@ impl AllKinds {
             + usize::from(self.item.is_some())
             + usize::from(self.boxed_color.is_some())
             + usize::from(self.signed.is_some())
-            + usize::from(self.float.is_some());
+            + usize::from(self.float.is_some())
+            + usize::from(self.at.is_some());
         let mut writer: proto_packet::io::MessageWriter =
             proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
         if let Some(value) = &self.flag {
@@ -577,6 +615,10 @@ impl AllKinds {
         }
         if let Some(value) = &self.float {
             writer.field(12).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = &self.at {
+            writer.field(13).extend_from_slice(&value.to_le_bytes());
             writer.end_field();
         }
         writer.finish();
@@ -678,6 +720,9 @@ impl proto_packet::serde::Serialize for AllKinds {
         if let Some(value) = &self.float {
             proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "float", value)?;
         }
+        if let Some(value) = &self.at {
+            proto_packet::serde::ser::SerializeMap::serialize_entry(&mut map, "at", value)?;
+        }
         proto_packet::types::serialize_unknown_fields(&mut map, &self.unknown_fields)?;
         proto_packet::serde::ser::SerializeMap::end(map)
     }
@@ -746,6 +791,10 @@ impl proto_packet::types::JsonMessage for AllKinds {
             }
             "float" => {
                 self.float = map.next_value()?;
+                Ok(true)
+            }
+            "at" => {
+                self.at = map.next_value()?;
                 Ok(true)
             }
             _ => Ok(false),
@@ -828,6 +877,12 @@ impl proto_packet::types::JsonMessage for AllKinds {
                 return Err("float");
             }
             self.float = other.float;
+        }
+        if other.at.is_some() {
+            if self.at.is_some() {
+                return Err("at");
+            }
+            self.at = other.at;
         }
         self.unknown_fields = other.unknown_fields;
         Ok(())

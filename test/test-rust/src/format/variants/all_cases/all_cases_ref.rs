@@ -70,6 +70,9 @@ impl<'a> AllCasesRef<'a> {
                     proto_packet::io::read_u64_unchecked(value, 0)
                 })?;
             }
+            14 => {
+                proto_packet::io::check_exact_len(value, 8)?;
+            }
             _ => {}
         }
         Ok(Self { bytes })
@@ -153,6 +156,9 @@ impl<'a> AllCasesRef<'a> {
             }),
             13 => super::AllCasesCase::Float(unsafe {
                 proto_packet::io::read_f64_unchecked(value, 0)
+            }),
+            14 => super::AllCasesCase::At(unsafe {
+                proto_packet::io::read_timestamp_unchecked(value, 0)
             }),
             tag_number => super::AllCasesCase::Unrecognized {
                 tag_number,
@@ -300,6 +306,16 @@ impl<'a> AllCasesRef<'a> {
         let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
         Some(unsafe { proto_packet::io::read_f64_unchecked(value, 0) })
     }
+
+    /// Gets the value of the case: `At`.
+    #[must_use]
+    pub fn as_at(&self) -> Option<proto_packet::types::Timestamp> {
+        if self.tag_number() != 14 {
+            return None;
+        }
+        let value: &'a [u8] = unsafe { self.bytes.get_unchecked(2..) };
+        Some(unsafe { proto_packet::io::read_timestamp_unchecked(value, 0) })
+    }
 }
 
 impl<'a> AllCasesRef<'a> {
@@ -325,6 +341,7 @@ impl<'a> AllCasesRef<'a> {
             super::AllCasesCase::BoxedColor(value) => super::AllCases::BoxedColor(Box::new(value)),
             super::AllCasesCase::Signed(value) => super::AllCases::Signed(value),
             super::AllCasesCase::Float(value) => super::AllCases::Float(value),
+            super::AllCasesCase::At(value) => super::AllCases::At(value),
         }
     }
 

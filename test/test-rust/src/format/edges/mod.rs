@@ -8,6 +8,7 @@ pub use loop_long::*;
 pub use nine_bits::*;
 pub use signed_kinds::*;
 pub use strings::*;
+pub use time_kinds::*;
 
 mod absent_child;
 mod fixed_kinds;
@@ -17,3 +18,4 @@ mod loop_long;
 mod nine_bits;
 mod signed_kinds;
 mod strings;
+mod time_kinds;

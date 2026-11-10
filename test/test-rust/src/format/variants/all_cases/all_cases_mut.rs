@@ -183,4 +183,16 @@ impl AllCasesMut<'_> {
     ) -> Result<(), proto_packet::io::CapacityError> {
         proto_packet::io::replace_variant(self.bytes, 13, &value.to_le_bytes())
     }
+
+    /// Sets the case: `At`.
+    ///
+    /// # Errors
+    /// Returns an error, leaving the variant unchanged, if the variant would change its
+    /// length.
+    pub fn set_at(
+        &mut self,
+        value: proto_packet::types::Timestamp,
+    ) -> Result<(), proto_packet::io::CapacityError> {
+        proto_packet::io::replace_variant(self.bytes, 14, &value.to_le_bytes())
+    }
 }

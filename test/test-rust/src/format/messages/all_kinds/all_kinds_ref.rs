@@ -65,6 +65,9 @@ impl<'a> AllKindsRef<'a> {
                         proto_packet::io::read_u64_unchecked(value, 0)
                     })?;
                 }
+                13 => {
+                    proto_packet::io::check_exact_len(value, 8)?;
+                }
                 _ => {}
             }
         }
@@ -187,6 +190,13 @@ impl<'a> AllKindsRef<'a> {
         let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 12) }?;
         Some(unsafe { proto_packet::io::read_f64_unchecked(value, 0) })
     }
+
+    /// Gets the field: `at`.
+    #[must_use]
+    pub fn at(&self) -> Option<proto_packet::types::Timestamp> {
+        let value: &'a [u8] = unsafe { proto_packet::io::find_field_unchecked(self.bytes, 13) }?;
+        Some(unsafe { proto_packet::io::read_timestamp_unchecked(value, 0) })
+    }
 }
 
 impl<'a> AllKindsRef<'a> {
@@ -252,6 +262,9 @@ impl<'a> AllKindsRef<'a> {
                 }
                 12 => {
                     result.set_float(unsafe { proto_packet::io::read_f64_unchecked(value, 0) });
+                }
+                13 => {
+                    result.set_at(unsafe { proto_packet::io::read_timestamp_unchecked(value, 0) });
                 }
                 _ => unknown_fields.push(proto_packet::io::UnknownField::new(
                     unsafe { proto_packet::io::TagNumber::new_unchecked(tag) },
