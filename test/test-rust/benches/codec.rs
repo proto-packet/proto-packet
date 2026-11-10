@@ -2,11 +2,13 @@
 //!
 //! Each line is the median time of one call, in nanoseconds.
 
-use proto_packet::io::{MessageWriter, trim_padding, write_end, write_padding, write_zeros};
-use proto_packet_test::format::examples::{Entry, EntryRef, Point, PointRef};
-use proto_packet_test::format::lists::{WithLists, WithListsRef};
+use proto_packet::io::{
+    ListView, MessageWriter, trim_padding, write_end, write_padding, write_zeros,
+};
+use proto_packet_test::format::examples::{Entry, EntryRef, EntryView, Point, PointRef, PointView};
+use proto_packet_test::format::lists::{WithLists, WithListsRef, WithListsView};
 use proto_packet_test::format::maps::{Scores, ScoresRef};
-use proto_packet_test::format::messages::{Newer, NewerRef};
+use proto_packet_test::format::messages::{Newer, NewerRef, NewerView};
 use std::collections::BTreeMap;
 use std::hint::black_box;
 use std::time::{Duration, Instant};
@@ -65,6 +67,114 @@ fn write_list<T>(
     }
 }
 
+/// An entry of borrowed data, written through its view.
+#[derive(Copy, Clone)]
+struct Row<'a> {
+    id: u64,
+    text: &'a str,
+}
+
+impl EntryView for Row<'_> {
+    fn id(&self) -> u64 {
+        self.id
+    }
+
+    fn text(&self) -> &str {
+        self.text
+    }
+}
+
+/// A message of borrowed data, written through its view.
+struct Profile<'a> {
+    name: &'a str,
+    nickname: &'a str,
+    text: &'a str,
+}
+
+impl NewerView for Profile<'_> {
+    fn id(&self) -> Option<u64> {
+        Some(1)
+    }
+
+    fn name(&self) -> Option<&str> {
+        Some(self.name)
+    }
+
+    fn nickname(&self) -> Option<&str> {
+        Some(self.nickname)
+    }
+
+    fn age(&self) -> Option<u32> {
+        Some(36)
+    }
+
+    fn entry(&self) -> Option<impl EntryView> {
+        Some(Row {
+            id: 2,
+            text: self.text,
+        })
+    }
+}
+
+/// A list of the rows of borrowed texts, with no list of rows in between.
+#[derive(Copy, Clone)]
+struct Rows<'a> {
+    texts: &'a [String],
+}
+
+impl<'a> ListView for Rows<'a> {
+    type Item = Row<'a>;
+
+    fn len(&self) -> usize {
+        self.texts.len()
+    }
+
+    fn get(&self, index: usize) -> Option<Row<'a>> {
+        self.texts.get(index).map(|text| Row {
+            id: index as u64,
+            text,
+        })
+    }
+
+    fn iter(&self) -> impl Iterator<Item = Row<'a>> {
+        self.texts.iter().enumerate().map(|(id, text)| Row {
+            id: id as u64,
+            text,
+        })
+    }
+}
+
+/// A message of borrowed lists, written through its view.
+struct Table<'a> {
+    texts: &'a [String],
+}
+
+impl WithListsView for Table<'_> {
+    fn bytes(&self) -> Option<&[u8]> {
+        None
+    }
+
+    fn numbers(&self) -> Option<impl ListView<Item = u32>> {
+        None::<&[u32]>
+    }
+
+    fn texts(&self) -> Option<impl ListView<Item = &str>> {
+        Some(self.texts)
+    }
+
+    fn points(&self) -> Option<impl ListView<Item = impl PointView>> {
+        None::<&[Point]>
+    }
+
+    fn entries(&self) -> Option<impl ListView<Item = impl EntryView>> {
+        Some(Rows { texts: self.texts })
+    }
+
+    fn children(&self) -> Option<impl ListView<Item = impl WithListsView>> {
+        None::<&[WithLists]>
+    }
+}
+
 /// Benchmarks a fixed-size struct.
 fn bench_point() {
     let point: Point = Point::new(1, 2);
@@ -92,11 +202,19 @@ fn bench_entry() {
         out
     };
     assert_eq!(write(7, text), bytes);
+    assert_eq!(Row { id: 7, text }.encode(), bytes);
 
     bench("entry: build & encode", || {
         Entry::new(black_box(7), black_box(text).to_string()).encode()
     });
-    bench("entry: write from borrowed", || {
+    bench("entry: encode a view of borrowed", || {
+        Row {
+            id: black_box(7),
+            text: black_box(text),
+        }
+        .encode()
+    });
+    bench("entry: write by hand from borrowed", || {
         write(black_box(7), black_box(text))
     });
     bench("entry: encode", || black_box(&entry).encode());
@@ -142,11 +260,23 @@ fn bench_message() {
     let message: Newer = build(name, nickname, text);
     let bytes: Vec<u8> = message.encode();
     assert_eq!(write(name, nickname, text), bytes);
+    let view = |name: &str, nickname: &str, text: &str| -> Vec<u8> {
+        Profile {
+            name,
+            nickname,
+            text,
+        }
+        .encode()
+    };
+    assert_eq!(view(name, nickname, text), bytes);
 
     bench("message: build & encode", || {
         build(black_box(name), black_box(nickname), black_box(text)).encode()
     });
-    bench("message: write from borrowed", || {
+    bench("message: encode a view of borrowed", || {
+        view(black_box(name), black_box(nickname), black_box(text))
+    });
+    bench("message: write by hand from borrowed", || {
         write(black_box(name), black_box(nickname), black_box(text))
     });
     bench("message: encode", || black_box(&message).encode());
@@ -200,11 +330,20 @@ fn bench_lists() {
     let message: WithLists = build(&texts);
     let bytes: Vec<u8> = message.encode();
     assert_eq!(write(&texts), bytes);
+    assert_eq!(Table { texts: &texts }.encode(), bytes);
 
     bench("lists: build & encode", || {
         build(black_box(&texts)).encode()
     });
-    bench("lists: write from borrowed", || write(black_box(&texts)));
+    bench("lists: encode a view of borrowed", || {
+        Table {
+            texts: black_box(&texts),
+        }
+        .encode()
+    });
+    bench("lists: write by hand from borrowed", || {
+        write(black_box(&texts))
+    });
     bench("lists: encode", || black_box(&message).encode());
     bench("lists: validate", || {
         WithListsRef::new(black_box(&bytes)).is_ok()
