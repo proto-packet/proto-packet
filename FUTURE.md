@@ -64,9 +64,10 @@ without serde. (`dep/dep-rust/src/types/variant_json.rs` & `buffered.rs`)
 
 The lists & the maps are missing from some of the generated code.
 
-- The `ViewMut` traits & the `Mut` types have no setter for a list or map field or case, since one
-  can't change its length in place. (`gen_struct.rs`, `gen_struct_mut.rs`, `gen_message_mut.rs` &
-  `gen_variant_mut.rs`)
+- The `ViewMut` traits & the `Mut` types have no setter for a value that can change its length in
+  place. That is a string, a list or a map of a struct, any field of a message & any case of a
+  variant. (ex: a setter that fails unless the length is the same, or one that moves the bytes after
+  it) (`gen_struct.rs`, `gen_struct_mut.rs`, `gen_message_mut.rs` & `gen_variant_mut.rs`)
 - The `MapView` trait looks up a value by the key's own type, so a `string` key is a `&String`. (ex:
   look up by the borrowed key, like `&str`) (`dep/dep-rust/src/io/list/map_view.rs`)
 - A reader checks the order of the keys of a map by decoding them, unless the key is a number, a
