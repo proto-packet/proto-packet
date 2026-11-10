@@ -733,12 +733,16 @@ fn comments(count: usize) -> Comment {
 #[test]
 fn messages_nest_at_most_64_levels() {
     assert_eq!(Comment::decode(&comments(64).encode()), Ok(comments(64)));
-    assert_eq!(
-        Comment::decode(&comments(65).encode()),
-        Err(DecodeError::TooDeep)
-    );
-    assert_eq!(
-        CommentRef::new(&comments(65).encode()),
-        Err(DecodeError::TooDeep)
-    );
+
+    // a writer that is given one level more than a value can nest
+    let mut deep: Vec<u8> = Vec::default();
+    comments(65).encode_to_with_depth(&mut deep, 65);
+    assert_eq!(Comment::decode(&deep), Err(DecodeError::TooDeep));
+    assert_eq!(CommentRef::new(&deep), Err(DecodeError::TooDeep));
+}
+
+#[test]
+#[should_panic(expected = "the value nests deeper than 64 levels")]
+fn writers_refuse_messages_that_nest_too_deep() {
+    let _ = comments(65).encode();
 }

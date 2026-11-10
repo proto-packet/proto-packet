@@ -573,12 +573,18 @@ fn lists_are_not_levels() {
     let points: WithLists = WithLists::default().with_points(vec![Point::new(1, 2)]);
     let entries: WithLists =
         WithLists::default().with_entries(vec![Entry::new(1, "a".to_string())]);
+    // a writer that is given one level more than a value can nest
+    let encode_deep = |value: WithLists| -> Vec<u8> {
+        let mut bytes: Vec<u8> = Vec::default();
+        value.encode_to_with_depth(&mut bytes, 65);
+        bytes
+    };
 
     // the points are fixed-size, so the deepest message can hold them
     let deepest: WithLists = nested_children(64, points.clone());
     assert_eq!(WithLists::decode(&deepest.encode()), Ok(deepest));
     assert_eq!(
-        WithLists::decode(&nested_children(65, points).encode()),
+        WithLists::decode(&encode_deep(nested_children(65, points))),
         Err(DecodeError::TooDeep)
     );
 
@@ -586,7 +592,15 @@ fn lists_are_not_levels() {
     let deepest: WithLists = nested_children(63, entries.clone());
     assert_eq!(WithLists::decode(&deepest.encode()), Ok(deepest));
     assert_eq!(
-        WithLists::decode(&nested_children(64, entries).encode()),
+        WithLists::decode(&encode_deep(nested_children(64, entries))),
         Err(DecodeError::TooDeep)
     );
+}
+
+#[test]
+#[should_panic(expected = "the value nests deeper than 64 levels")]
+fn writers_refuse_list_elements_that_nest_too_deep() {
+    let entries: WithLists =
+        WithLists::default().with_entries(vec![Entry::new(1, "a".to_string())]);
+    let _ = nested_children(64, entries).encode();
 }

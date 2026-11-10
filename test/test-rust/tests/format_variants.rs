@@ -705,11 +705,18 @@ fn negated(count: usize) -> Expr {
     (0..count).fold(Expr::Number(1), |expr, _| Expr::Negate(Box::new(expr)))
 }
 
+/// Encodes the `expr` with a writer that is given one level more than a value can nest.
+fn encode_deep(expr: &Expr) -> Vec<u8> {
+    let mut bytes: Vec<u8> = Vec::default();
+    expr.encode_to_with_depth(&mut bytes, 65);
+    bytes
+}
+
 #[test]
 fn variants_nest_at_most_64_levels() {
     assert_eq!(Expr::decode(&negated(63).encode()), Ok(negated(63)));
     assert_eq!(
-        Expr::decode(&negated(64).encode()),
+        Expr::decode(&encode_deep(&negated(64))),
         Err(DecodeError::TooDeep)
     );
 
@@ -720,7 +727,13 @@ fn variants_nest_at_most_64_levels() {
         Ok(sum(negated(61)))
     );
     assert_eq!(
-        Expr::decode(&sum(negated(62)).encode()),
+        Expr::decode(&encode_deep(&sum(negated(62)))),
         Err(DecodeError::TooDeep)
     );
+}
+
+#[test]
+#[should_panic(expected = "the value nests deeper than 64 levels")]
+fn writers_refuse_variants_that_nest_too_deep() {
+    let _ = negated(64).encode();
 }

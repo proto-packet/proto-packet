@@ -1241,3 +1241,22 @@ fn the_deepest_value_fits_a_small_stack() {
         .spawn(move || ListNode::decode(&bytes).map(|nodes| nodes.encode().len()));
     assert_eq!(thread.unwrap().join().unwrap(), Ok(64 * 8 - 3));
 }
+
+/// Gets the `count` of list nodes, each the next node of the one before it.
+fn nodes(count: usize) -> ListNode {
+    (1..count).fold(ListNode::new(7, None), |next, _| {
+        ListNode::new(7, Some(next))
+    })
+}
+
+#[test]
+fn writers_take_the_deepest_value() {
+    assert_eq!(nodes(64).encode(), nodes_bytes(64));
+    assert_eq!(ListNodeBuf::from(&nodes(64)).as_bytes(), nodes_bytes(64));
+}
+
+#[test]
+#[should_panic(expected = "the value nests deeper than 64 levels")]
+fn writers_refuse_structs_that_nest_too_deep() {
+    let _ = nodes(65).encode();
+}
