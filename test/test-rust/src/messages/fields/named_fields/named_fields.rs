@@ -337,6 +337,7 @@ impl proto_packet::io::Element for NamedFields {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::NamedFieldsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::NamedFieldsRef::new(bytes).map(|_| ())
@@ -348,6 +349,10 @@ impl proto_packet::io::Element for NamedFields {
 
     fn decode(element: super::NamedFieldsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

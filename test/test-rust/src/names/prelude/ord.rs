@@ -98,6 +98,7 @@ impl proto_packet::io::Element for Ord {
     const ALIGNMENT: usize = 2;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = Self;
+    type View<'a> = Self;
 
     fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
         proto_packet::io::check_exact_len(bytes, 2)?;
@@ -116,6 +117,10 @@ impl proto_packet::io::Element for Ord {
 
     fn decode(element: Self) -> Self {
         element
+    }
+
+    fn view(&self) -> Self {
+        *self
     }
 
     fn encoded_len(&self) -> usize {

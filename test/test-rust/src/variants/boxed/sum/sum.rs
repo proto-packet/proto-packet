@@ -155,6 +155,7 @@ impl proto_packet::io::Element for Sum {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::SumRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::SumRef::new(bytes).map(|_| ())
@@ -166,6 +167,10 @@ impl proto_packet::io::Element for Sum {
 
     fn decode(element: super::SumRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

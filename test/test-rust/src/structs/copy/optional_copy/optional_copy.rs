@@ -158,6 +158,7 @@ impl proto_packet::io::Element for OptionalCopy {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::OptionalCopyRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::OptionalCopyRef::new(bytes).map(|_| ())
@@ -169,6 +170,10 @@ impl proto_packet::io::Element for OptionalCopy {
 
     fn decode(element: super::OptionalCopyRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

@@ -444,6 +444,7 @@ impl proto_packet::io::Element for OptionalFields {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::OptionalFieldsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::OptionalFieldsRef::new(bytes).map(|_| ())
@@ -455,6 +456,10 @@ impl proto_packet::io::Element for OptionalFields {
 
     fn decode(element: super::OptionalFieldsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

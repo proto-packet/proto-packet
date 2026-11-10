@@ -145,6 +145,7 @@ impl proto_packet::io::Element for Numbers {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::NumbersRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::NumbersRef::new(bytes).map(|_| ())
@@ -156,6 +157,10 @@ impl proto_packet::io::Element for Numbers {
 
     fn decode(element: super::NumbersRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

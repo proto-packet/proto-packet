@@ -446,6 +446,7 @@ impl proto_packet::io::Element for AllCases {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::AllCasesRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::AllCasesRef::new(bytes).map(|_| ())
@@ -457,6 +458,10 @@ impl proto_packet::io::Element for AllCases {
 
     fn decode(element: super::AllCasesRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

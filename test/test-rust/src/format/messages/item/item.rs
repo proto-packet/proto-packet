@@ -181,6 +181,7 @@ impl proto_packet::io::Element for Item {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::ItemRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::ItemRef::new(bytes).map(|_| ())
@@ -192,6 +193,10 @@ impl proto_packet::io::Element for Item {
 
     fn decode(element: super::ItemRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

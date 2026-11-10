@@ -106,6 +106,7 @@ impl proto_packet::io::Element for StringField {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::StringFieldRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::StringFieldRef::new(bytes).map(|_| ())
@@ -117,6 +118,10 @@ impl proto_packet::io::Element for StringField {
 
     fn decode(element: super::StringFieldRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

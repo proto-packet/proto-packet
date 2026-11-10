@@ -132,6 +132,7 @@ impl proto_packet::io::Element for Point {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = false;
     type Ref<'a> = super::PointRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::PointRef::new(bytes).map(|_| ())
@@ -143,6 +144,10 @@ impl proto_packet::io::Element for Point {
 
     fn decode(element: super::PointRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

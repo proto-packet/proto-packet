@@ -181,6 +181,7 @@ impl proto_packet::io::Element for WithMaps {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::WithMapsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::WithMapsRef::new(bytes).map(|_| ())
@@ -192,6 +193,10 @@ impl proto_packet::io::Element for WithMaps {
 
     fn decode(element: super::WithMapsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

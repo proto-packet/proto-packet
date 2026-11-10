@@ -185,6 +185,7 @@ impl proto_packet::io::Element for Option {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::OptionRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
         super::OptionRef::new(bytes).map(|_| ())
@@ -196,6 +197,10 @@ impl proto_packet::io::Element for Option {
 
     fn decode(element: super::OptionRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

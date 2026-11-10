@@ -268,6 +268,7 @@ impl proto_packet::io::Element for FixedKinds {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::FixedKindsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::FixedKindsRef::new(bytes).map(|_| ())
@@ -279,6 +280,10 @@ impl proto_packet::io::Element for FixedKinds {
 
     fn decode(element: super::FixedKindsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

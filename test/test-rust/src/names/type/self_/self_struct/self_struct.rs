@@ -105,6 +105,7 @@ impl proto_packet::io::Element for SelfStruct {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = false;
     type Ref<'a> = super::SelfStructRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::SelfStructRef::new(bytes).map(|_| ())
@@ -116,6 +117,10 @@ impl proto_packet::io::Element for SelfStruct {
 
     fn decode(element: super::SelfStructRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

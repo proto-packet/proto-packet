@@ -105,6 +105,7 @@ impl proto_packet::io::Element for EdgeTags {
     const ALIGNMENT: usize = 2;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = Self;
+    type View<'a> = Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         proto_packet::io::check_exact_len(bytes, 2)?;
@@ -123,6 +124,10 @@ impl proto_packet::io::Element for EdgeTags {
 
     fn decode(element: Self) -> Self {
         element
+    }
+
+    fn view(&self) -> Self {
+        *self
     }
 
     fn encoded_len(&self) -> usize {

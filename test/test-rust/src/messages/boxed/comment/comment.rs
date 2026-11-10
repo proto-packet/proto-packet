@@ -187,6 +187,7 @@ impl proto_packet::io::Element for Comment {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::CommentRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::CommentRef::new(bytes).map(|_| ())
@@ -198,6 +199,10 @@ impl proto_packet::io::Element for Comment {
 
     fn decode(element: super::CommentRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

@@ -200,6 +200,7 @@ impl proto_packet::io::Element for Expr {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::ExprRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::ExprRef::new(bytes).map(|_| ())
@@ -211,6 +212,10 @@ impl proto_packet::io::Element for Expr {
 
     fn decode(element: super::ExprRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

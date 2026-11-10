@@ -202,6 +202,7 @@ impl proto_packet::io::Element for CopyFields {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::CopyFieldsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::CopyFieldsRef::new(bytes).map(|_| ())
@@ -213,6 +214,10 @@ impl proto_packet::io::Element for CopyFields {
 
     fn decode(element: super::CopyFieldsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

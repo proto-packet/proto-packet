@@ -369,6 +369,7 @@ impl proto_packet::io::Element for TimeKinds {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::TimeKindsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::TimeKindsRef::new(bytes).map(|_| ())
@@ -380,6 +381,10 @@ impl proto_packet::io::Element for TimeKinds {
 
     fn decode(element: super::TimeKindsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

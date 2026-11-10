@@ -121,6 +121,7 @@ impl proto_packet::io::Element for Nested {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::NestedRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::NestedRef::new(bytes).map(|_| ())
@@ -132,6 +133,10 @@ impl proto_packet::io::Element for Nested {
 
     fn decode(element: super::NestedRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

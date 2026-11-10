@@ -139,6 +139,7 @@ impl proto_packet::io::Element for String {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::StringRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
         super::StringRef::new(bytes).map(|_| ())
@@ -150,6 +151,10 @@ impl proto_packet::io::Element for String {
 
     fn decode(element: super::StringRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

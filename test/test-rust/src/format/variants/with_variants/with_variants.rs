@@ -231,6 +231,7 @@ impl proto_packet::io::Element for WithVariants {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::WithVariantsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::WithVariantsRef::new(bytes).map(|_| ())
@@ -242,6 +243,10 @@ impl proto_packet::io::Element for WithVariants {
 
     fn decode(element: super::WithVariantsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

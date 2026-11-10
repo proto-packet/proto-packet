@@ -159,6 +159,7 @@ impl proto_packet::io::Element for MapCases {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::MapCasesRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::MapCasesRef::new(bytes).map(|_| ())
@@ -170,6 +171,10 @@ impl proto_packet::io::Element for MapCases {
 
     fn decode(element: super::MapCasesRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

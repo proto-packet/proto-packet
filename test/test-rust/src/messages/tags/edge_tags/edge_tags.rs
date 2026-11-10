@@ -181,6 +181,7 @@ impl proto_packet::io::Element for EdgeTags {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::EdgeTagsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::EdgeTagsRef::new(bytes).map(|_| ())
@@ -192,6 +193,10 @@ impl proto_packet::io::Element for EdgeTags {
 
     fn decode(element: super::EdgeTagsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

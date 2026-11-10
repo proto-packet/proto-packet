@@ -181,6 +181,7 @@ impl proto_packet::io::Element for KeywordMessage {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::KeywordMessageRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::KeywordMessageRef::new(bytes).map(|_| ())
@@ -192,6 +193,10 @@ impl proto_packet::io::Element for KeywordMessage {
 
     fn decode(element: super::KeywordMessageRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

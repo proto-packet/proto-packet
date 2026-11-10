@@ -225,6 +225,7 @@ impl proto_packet::io::Element for SignedFields {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = false;
     type Ref<'a> = super::SignedFieldsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::SignedFieldsRef::new(bytes).map(|_| ())
@@ -236,6 +237,10 @@ impl proto_packet::io::Element for SignedFields {
 
     fn decode(element: super::SignedFieldsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

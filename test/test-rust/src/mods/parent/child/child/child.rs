@@ -105,6 +105,7 @@ impl proto_packet::io::Element for Child {
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = false;
     type Ref<'a> = super::ChildRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::ChildRef::new(bytes).map(|_| ())
@@ -116,6 +117,10 @@ impl proto_packet::io::Element for Child {
 
     fn decode(element: super::ChildRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

@@ -308,6 +308,7 @@ impl proto_packet::io::Element for Prices {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::PricesRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::PricesRef::new(bytes).map(|_| ())
@@ -319,6 +320,10 @@ impl proto_packet::io::Element for Prices {
 
     fn decode(element: super::PricesRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

@@ -179,6 +179,24 @@ where
         None
     }
 
+    /// Gets the value of the `key`, given as the key's own type.
+    ///
+    /// Returns `None` if the map does not have the `key`.
+    #[must_use]
+    pub fn get_by_key(self, key: &K) -> Option<V::Ref<'a>> {
+        let keys: ListRef<'a, K> = self.keys();
+        let (mut low, mut high): (usize, usize) = (0, keys.len());
+        while low < high {
+            let middle: usize = (low + high) / 2;
+            match key.cmp_ref(unsafe { keys.get_unchecked(middle) }) {
+                Ordering::Greater => low = middle + 1,
+                Ordering::Less => high = middle,
+                Ordering::Equal => return Some(unsafe { self.values().get_unchecked(middle) }),
+            }
+        }
+        None
+    }
+
     /// Gets the iterator of the entries, in the order of their keys.
     pub fn iter(self) -> impl ExactSizeIterator<Item = (K::Ref<'a>, V::Ref<'a>)> {
         self.keys().iter().zip(self.values().iter())
@@ -248,6 +266,11 @@ where
     const ALIGNMENT: usize = map_alignment::<K, V>();
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = MapRef<'a, K, V>;
+    type View<'a>
+        = &'a BTreeMap<K, V>
+    where
+        K: 'a,
+        V: 'a;
 
     fn check(bytes: &[u8]) -> Result<(), DecodeError> {
         MapRef::<K, V>::new(bytes).map(|_| ())
@@ -259,6 +282,10 @@ where
 
     fn decode(element: MapRef<'_, K, V>) -> BTreeMap<K, V> {
         element.decode()
+    }
+
+    fn view(&self) -> &BTreeMap<K, V> {
+        self
     }
 
     fn encoded_len(&self) -> usize {

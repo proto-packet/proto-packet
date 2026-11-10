@@ -13,6 +13,7 @@ macro_rules! impl_integer {
             const ALIGNMENT: usize = $alignment;
             const CAN_BE_INVALID: bool = false;
             type Ref<'a> = $type;
+            type View<'a> = $type;
 
             fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
                 Ok(())
@@ -24,6 +25,14 @@ macro_rules! impl_integer {
 
             fn decode(element: $type) -> $type {
                 element
+            }
+
+            fn view(&self) -> $type {
+                *self
+            }
+
+            fn cmp_ref(&self, other: $type) -> Ordering {
+                self.cmp(&other)
             }
 
             fn encoded_len(&self) -> usize {
@@ -56,6 +65,7 @@ impl Element for u8 {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = false;
     type Ref<'a> = u8;
+    type View<'a> = u8;
 
     fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
         Ok(())
@@ -67,6 +77,14 @@ impl Element for u8 {
 
     fn decode(element: u8) -> u8 {
         element
+    }
+
+    fn view(&self) -> u8 {
+        *self
+    }
+
+    fn cmp_ref(&self, other: u8) -> Ordering {
+        self.cmp(&other)
     }
 
     fn encoded_len(&self) -> usize {
@@ -91,6 +109,7 @@ impl Element for bool {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = bool;
+    type View<'a> = bool;
 
     fn check(bytes: &[u8]) -> Result<(), DecodeError> {
         check_bool(bytes[0])
@@ -102,6 +121,14 @@ impl Element for bool {
 
     fn decode(element: bool) -> bool {
         element
+    }
+
+    fn view(&self) -> bool {
+        *self
+    }
+
+    fn cmp_ref(&self, other: bool) -> Ordering {
+        self.cmp(&other)
     }
 
     fn encoded_len(&self) -> usize {
@@ -122,6 +149,7 @@ impl Element for String {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = &'a str;
+    type View<'a> = &'a str;
 
     fn check(bytes: &[u8]) -> Result<(), DecodeError> {
         check_utf8(bytes)
@@ -133,6 +161,14 @@ impl Element for String {
 
     fn decode(element: &str) -> String {
         element.to_string()
+    }
+
+    fn view(&self) -> &str {
+        self
+    }
+
+    fn cmp_ref(&self, other: &str) -> Ordering {
+        self.as_str().cmp(other)
     }
 
     fn encoded_len(&self) -> usize {
@@ -156,6 +192,10 @@ where
     const ALIGNMENT: usize = list_alignment::<T>();
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = ListRef<'a, T>;
+    type View<'a>
+        = &'a [T]
+    where
+        T: 'a;
 
     fn check(bytes: &[u8]) -> Result<(), DecodeError> {
         ListRef::<T>::new(bytes).map(|_| ())
@@ -167,6 +207,10 @@ where
 
     fn decode(element: ListRef<'_, T>) -> Vec<T> {
         element.decode()
+    }
+
+    fn view(&self) -> &[T] {
+        self
     }
 
     fn encoded_len(&self) -> usize {
@@ -187,6 +231,7 @@ macro_rules! impl_float {
             const ALIGNMENT: usize = size_of::<$bits>();
             const CAN_BE_INVALID: bool = true;
             type Ref<'a> = crate::types::$type;
+            type View<'a> = crate::types::$type;
 
             fn check(bytes: &[u8]) -> Result<(), DecodeError> {
                 let bits: &[u8; size_of::<$bits>()] =
@@ -201,6 +246,14 @@ macro_rules! impl_float {
 
             fn decode(element: crate::types::$type) -> crate::types::$type {
                 element
+            }
+
+            fn view(&self) -> crate::types::$type {
+                *self
+            }
+
+            fn cmp_ref(&self, other: crate::types::$type) -> Ordering {
+                self.cmp(&other)
             }
 
             fn encoded_len(&self) -> usize {
@@ -229,6 +282,7 @@ impl Element for crate::types::Uuid {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = false;
     type Ref<'a> = crate::types::Uuid;
+    type View<'a> = crate::types::Uuid;
 
     fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
         Ok(())
@@ -240,6 +294,14 @@ impl Element for crate::types::Uuid {
 
     fn decode(element: crate::types::Uuid) -> crate::types::Uuid {
         element
+    }
+
+    fn view(&self) -> crate::types::Uuid {
+        *self
+    }
+
+    fn cmp_ref(&self, other: crate::types::Uuid) -> Ordering {
+        self.cmp(&other)
     }
 
     fn encoded_len(&self) -> usize {
@@ -264,6 +326,7 @@ macro_rules! impl_time {
             const ALIGNMENT: usize = size_of::<$int>();
             const CAN_BE_INVALID: bool = false;
             type Ref<'a> = crate::types::$type;
+            type View<'a> = crate::types::$type;
 
             fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
                 Ok(())
@@ -276,6 +339,14 @@ macro_rules! impl_time {
 
             fn decode(element: crate::types::$type) -> crate::types::$type {
                 element
+            }
+
+            fn view(&self) -> crate::types::$type {
+                *self
+            }
+
+            fn cmp_ref(&self, other: crate::types::$type) -> Ordering {
+                self.cmp(&other)
             }
 
             fn encoded_len(&self) -> usize {
@@ -310,6 +381,7 @@ impl<const S: u8> Element for crate::types::Decimal<S> {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = false;
     type Ref<'a> = crate::types::Decimal<S>;
+    type View<'a> = crate::types::Decimal<S>;
 
     fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
         Ok(())
@@ -323,6 +395,14 @@ impl<const S: u8> Element for crate::types::Decimal<S> {
 
     fn decode(element: crate::types::Decimal<S>) -> crate::types::Decimal<S> {
         element
+    }
+
+    fn view(&self) -> crate::types::Decimal<S> {
+        *self
+    }
+
+    fn cmp_ref(&self, other: crate::types::Decimal<S>) -> Ordering {
+        self.cmp(&other)
     }
 
     fn encoded_len(&self) -> usize {
@@ -344,6 +424,7 @@ impl Element for crate::types::Bytes {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = false;
     type Ref<'a> = &'a [u8];
+    type View<'a> = &'a [u8];
 
     fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
         Ok(())
@@ -355,6 +436,14 @@ impl Element for crate::types::Bytes {
 
     fn decode(element: &[u8]) -> crate::types::Bytes {
         element.into()
+    }
+
+    fn view(&self) -> &[u8] {
+        self.as_bytes()
+    }
+
+    fn cmp_ref(&self, other: &[u8]) -> Ordering {
+        self.as_bytes().cmp(other)
     }
 
     fn encoded_len(&self) -> usize {

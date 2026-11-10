@@ -24,6 +24,7 @@ pub(crate) fn gen_element(
     const ALIGNMENT: usize = {alignment};
     const CAN_BE_INVALID: bool = {can_be_invalid};
     type Ref<'a> = super::{ref_name}<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> {result}<(), {io}::DecodeError> {{
         super::{ref_name}::new(bytes).map(|_| ())
@@ -35,6 +36,10 @@ pub(crate) fn gen_element(
 
     fn decode(element: super::{ref_name}<'_>) -> Self {{
         element.decode()
+    }}
+
+    fn view(&self) -> &Self {{
+        self
     }}
 
     fn encoded_len(&self) -> usize {{
@@ -66,6 +71,7 @@ pub(crate) fn gen_enum_element(prelude: Prelude, type_name: &str) -> String {
     const ALIGNMENT: usize = 2;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = Self;
+    type View<'a> = Self;
 
     fn check(bytes: &[u8]) -> {result}<(), {io}::DecodeError> {{
         {io}::check_exact_len(bytes, 2)?;
@@ -80,6 +86,10 @@ pub(crate) fn gen_enum_element(prelude: Prelude, type_name: &str) -> String {
 
     fn decode(element: Self) -> Self {{
         element
+    }}
+
+    fn view(&self) -> Self {{
+        *self
     }}
 
     fn encoded_len(&self) -> usize {{

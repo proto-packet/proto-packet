@@ -181,6 +181,7 @@ impl proto_packet::io::Element for SpecialFields {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::SpecialFieldsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::SpecialFieldsRef::new(bytes).map(|_| ())
@@ -192,6 +193,10 @@ impl proto_packet::io::Element for SpecialFields {
 
     fn decode(element: super::SpecialFieldsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

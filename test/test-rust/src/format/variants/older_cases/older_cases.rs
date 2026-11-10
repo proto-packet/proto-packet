@@ -140,6 +140,7 @@ impl proto_packet::io::Element for OlderCases {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::OlderCasesRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::OlderCasesRef::new(bytes).map(|_| ())
@@ -151,6 +152,10 @@ impl proto_packet::io::Element for OlderCases {
 
     fn decode(element: super::OlderCasesRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

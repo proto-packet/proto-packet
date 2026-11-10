@@ -18,6 +18,14 @@ pub trait Element: Sized {
     /// The element read from its encoded bytes.
     type Ref<'a>: Copy;
 
+    /// The element borrowed from the type itself. (ex: `&str` for a `String`)
+    ///
+    /// # Note
+    /// - It is the `Ref` type where it can be, so a list reads the same in every form.
+    type View<'a>
+    where
+        Self: 'a;
+
     /// Checks the `bytes` are a valid element.
     ///
     /// # Errors
@@ -32,6 +40,9 @@ pub trait Element: Sized {
 
     /// Decodes the read `element`.
     fn decode(element: Self::Ref<'_>) -> Self;
+
+    /// Borrows the element.
+    fn view(&self) -> Self::View<'_>;
 
     /// Gets the length of the encoding, in bytes.
     fn encoded_len(&self) -> usize;
@@ -48,6 +59,17 @@ pub trait Element: Sized {
         Self: Ord,
     {
         Self::decode(a).cmp(&Self::decode(b))
+    }
+
+    /// Compares the element to a read element, in the order of the keys of a map.
+    ///
+    /// # Note
+    /// - A type overrides this when it can compare without decoding the read element.
+    fn cmp_ref(&self, other: Self::Ref<'_>) -> Ordering
+    where
+        Self: Ord,
+    {
+        self.cmp(&Self::decode(other))
     }
 
     /// Appends the encodings of the fixed-size `elements` to the `out` bytes, back to back.

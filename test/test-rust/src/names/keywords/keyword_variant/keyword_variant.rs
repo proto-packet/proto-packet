@@ -140,6 +140,7 @@ impl proto_packet::io::Element for KeywordVariant {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::KeywordVariantRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::KeywordVariantRef::new(bytes).map(|_| ())
@@ -151,6 +152,10 @@ impl proto_packet::io::Element for KeywordVariant {
 
     fn decode(element: super::KeywordVariantRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

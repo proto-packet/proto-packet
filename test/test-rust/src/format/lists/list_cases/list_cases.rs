@@ -216,6 +216,7 @@ impl proto_packet::io::Element for ListCases {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::ListCasesRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::ListCasesRef::new(bytes).map(|_| ())
@@ -227,6 +228,10 @@ impl proto_packet::io::Element for ListCases {
 
     fn decode(element: super::ListCasesRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

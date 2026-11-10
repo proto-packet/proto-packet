@@ -139,6 +139,7 @@ impl proto_packet::io::Element for GreetResponse {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::GreetResponseRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::GreetResponseRef::new(bytes).map(|_| ())
@@ -150,6 +151,10 @@ impl proto_packet::io::Element for GreetResponse {
 
     fn decode(element: super::GreetResponseRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

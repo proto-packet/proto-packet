@@ -167,6 +167,7 @@ impl proto_packet::io::Element for LoopByte {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::LoopByteRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::LoopByteRef::new(bytes).map(|_| ())
@@ -178,6 +179,10 @@ impl proto_packet::io::Element for LoopByte {
 
     fn decode(element: super::LoopByteRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

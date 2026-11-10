@@ -172,6 +172,7 @@ impl proto_packet::io::Element for Shape {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::ShapeRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::ShapeRef::new(bytes).map(|_| ())
@@ -183,6 +184,10 @@ impl proto_packet::io::Element for Shape {
 
     fn decode(element: super::ShapeRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

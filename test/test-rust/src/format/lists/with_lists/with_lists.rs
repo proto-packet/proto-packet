@@ -354,6 +354,7 @@ impl proto_packet::io::Element for WithLists {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::WithListsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::WithListsRef::new(bytes).map(|_| ())
@@ -365,6 +366,10 @@ impl proto_packet::io::Element for WithLists {
 
     fn decode(element: super::WithListsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

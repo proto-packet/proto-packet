@@ -165,6 +165,7 @@ impl proto_packet::io::Element for Outer {
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::OuterRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::OuterRef::new(bytes).map(|_| ())
@@ -176,6 +177,10 @@ impl proto_packet::io::Element for Outer {
 
     fn decode(element: super::OuterRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

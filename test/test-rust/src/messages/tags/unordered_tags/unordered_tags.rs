@@ -225,6 +225,7 @@ impl proto_packet::io::Element for UnorderedTags {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::UnorderedTagsRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::UnorderedTagsRef::new(bytes).map(|_| ())
@@ -236,6 +237,10 @@ impl proto_packet::io::Element for UnorderedTags {
 
     fn decode(element: super::UnorderedTagsRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {

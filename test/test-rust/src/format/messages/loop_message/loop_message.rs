@@ -187,6 +187,7 @@ impl proto_packet::io::Element for LoopMessage {
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
     type Ref<'a> = super::LoopMessageRef<'a>;
+    type View<'a> = &'a Self;
 
     fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
         super::LoopMessageRef::new(bytes).map(|_| ())
@@ -198,6 +199,10 @@ impl proto_packet::io::Element for LoopMessage {
 
     fn decode(element: super::LoopMessageRef<'_>) -> Self {
         element.decode()
+    }
+
+    fn view(&self) -> &Self {
+        self
     }
 
     fn encoded_len(&self) -> usize {
