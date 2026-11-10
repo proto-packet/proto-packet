@@ -42,15 +42,6 @@ Some schema names generate Rust that doesn't compile, or that hides other items.
 - The errors for a conflict with a child mod name the Rust folder, not the schema mod path: empty at
   the root, & `self_` instead of `self`. (`generate.rs`)
 
-### Ordering
-
-A message or a variant is ordered by tag number, but a field or a case that a reader doesn't know is
-compared by its bytes, where a reader that knows it compares its value. So two readers with
-different schemas can order two keys of a map differently, when the keys first differ in a field
-only one of them knows. (ex: a `u32` of 256 is before 1 by its bytes) A map with such keys can be
-valid for one reader & not for the other. (ex: only allow a key without a message or a variant)
-(`gen_ord.rs`)
-
 ### Doc Comments
 
 The comments of enums, variants, services & their members are copied into the rustdoc unchanged, so
@@ -81,7 +72,9 @@ The lists & the maps are missing from some of the generated code.
 - A map with a key that is a struct, message, variant, list or map fails to write as JSON, since a
   JSON key is text. (ex: an array of the entries)
 - A reader checks the order of the keys of a map by decoding them, unless the key is a number, a
-  `bool`, a `uuid` or a `string`. (`dep/dep-rust/src/io/list/element.rs`)
+  `bool`, a `uuid`, a `string` or ordered by its bytes. (`dep/dep-rust/src/io/list/element.rs`)
+- A writer encodes each key that is ordered by its bytes twice, once to sort the keys & once to
+  write them. (ex: write the keys from the sorted bytes) (`dep/dep-rust/src/io/list/map_ref.rs`)
 
 ### Decimals
 
