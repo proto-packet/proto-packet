@@ -47,15 +47,6 @@ impl ShapeMut<'_> {
 impl ShapeMut<'_> {
     //! Cases
 
-    /// Sets the case: `Circle`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_circle(&mut self, value: u32) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 1, &value.to_le_bytes())
-    }
-
     /// Gets the mut of the case: `Square`.
     #[must_use]
     pub fn as_square_mut(&mut self) -> Option<crate::format::examples::PointMut<'_>> {

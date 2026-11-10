@@ -4,18 +4,11 @@
 pub trait SpecialFieldsViewMut: super::SpecialFieldsView {
     /// Sets the field: `id`.
     fn set_id(&mut self, value: proto_packet::types::Uuid);
-
-    /// Sets the field: `text`.
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: SpecialFieldsViewMut> SpecialFieldsViewMut for &mut V {
     fn set_id(&mut self, value: proto_packet::types::Uuid) {
         (**self).set_id(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
     }
 }
 
@@ -23,29 +16,16 @@ impl SpecialFieldsViewMut for super::SpecialFields {
     fn set_id(&mut self, value: proto_packet::types::Uuid) {
         self.set_id(value);
     }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value.to_string());
-        Ok(())
-    }
 }
 
 impl SpecialFieldsViewMut for super::SpecialFieldsMut<'_> {
     fn set_id(&mut self, value: proto_packet::types::Uuid) {
         self.set_id(value)
     }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
 }
 
 impl SpecialFieldsViewMut for super::SpecialFieldsBuf {
     fn set_id(&mut self, value: proto_packet::types::Uuid) {
         self.as_mut().set_id(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
     }
 }

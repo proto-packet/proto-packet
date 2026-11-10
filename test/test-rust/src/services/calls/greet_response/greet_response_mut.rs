@@ -43,20 +43,3 @@ impl GreetResponseMut<'_> {
         self.bytes
     }
 }
-
-impl GreetResponseMut<'_> {
-    //! Fields
-
-    /// Sets the field: `greeting`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_greeting<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        proto_packet::io::replace_field(self.bytes, 1, value.map(str::as_bytes))
-    }
-}

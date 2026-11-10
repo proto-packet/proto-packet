@@ -43,35 +43,3 @@ impl FloatFieldsMut<'_> {
         self.bytes
     }
 }
-
-impl FloatFieldsMut<'_> {
-    //! Fields
-
-    /// Sets the field: `float32`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_float32(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Float32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<proto_packet::types::Float32> = value.into();
-        let bytes: Option<[u8; 4]> = value.map(|value| value.to_le_bytes());
-        proto_packet::io::replace_field(self.bytes, 1, bytes.as_ref().map(|bytes| bytes.as_slice()))
-    }
-
-    /// Sets the field: `float64`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_float64(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Float64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<proto_packet::types::Float64> = value.into();
-        let bytes: Option<[u8; 8]> = value.map(|value| value.to_le_bytes());
-        proto_packet::io::replace_field(self.bytes, 2, bytes.as_ref().map(|bytes| bytes.as_slice()))
-    }
-}

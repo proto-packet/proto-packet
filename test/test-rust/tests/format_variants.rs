@@ -1,14 +1,14 @@
 mod common;
 
 use common::ID;
-use proto_packet::io::{CapacityError, DecodeError};
+use proto_packet::io::DecodeError;
 use proto_packet::types::Float64;
 use proto_packet_test::format::examples::{Color, Entry, Point, PointView, PointViewMut};
 use proto_packet_test::format::messages::Item;
 use proto_packet_test::format::variants::{
-    AllCases, AllCasesCase, AllCasesMut, AllCasesRef, NewerCases, OlderCases, OlderCasesCase,
-    OlderCasesRef, Shape, ShapeBuf, ShapeCase, ShapeMut, ShapeRef, ShapeView, ShapeViewMut,
-    WithCases, WithVariants, WithVariantsMut, WithVariantsRef,
+    AllCases, AllCasesCase, AllCasesRef, NewerCases, OlderCases, OlderCasesCase, OlderCasesRef,
+    Shape, ShapeBuf, ShapeCase, ShapeMut, ShapeRef, ShapeView, ShapeViewMut, WithCases,
+    WithVariants, WithVariantsMut, WithVariantsRef,
 };
 use proto_packet_test::variants::boxed::{
     Expr, ExprBuf, ExprMut, ExprRef, ExprView, ExprViewMut, Sum, SumView, SumViewMut,
@@ -342,67 +342,6 @@ fn unknown_cases_are_not_validated() {
 }
 
 #[test]
-fn mut_replaces_values_that_fit() {
-    let mut bytes: Vec<u8> = Shape::Circle(5).encode();
-    let mut value: ShapeMut = ShapeMut::new(&mut bytes).unwrap();
-    value.set_circle(9).unwrap();
-    assert_eq!(value.as_ref().as_circle(), Some(9));
-}
-
-#[test]
-fn mut_switches_to_cases_of_the_same_length() {
-    let mut bytes: Vec<u8> = AllCases::Flag(true).encode();
-    let mut value: AllCasesMut = AllCasesMut::new(&mut bytes).unwrap();
-    value.set_byte(7).unwrap();
-    assert_eq!(value.as_ref().as_byte(), Some(7));
-    assert_eq!(AllCases::decode(&bytes), Ok(AllCases::Byte(7)));
-}
-
-#[test]
-fn mut_rejects_cases_of_another_length() {
-    let original: Vec<u8> = AllCases::Byte(1).encode();
-    let mut bytes: Vec<u8> = original.clone();
-    let mut value: AllCasesMut = AllCasesMut::new(&mut bytes).unwrap();
-    assert_eq!(
-        value.set_large(9),
-        Err(CapacityError {
-            required: 18,
-            capacity: 3,
-        })
-    );
-    assert_eq!(bytes, original);
-
-    let original: Vec<u8> = AllCases::Large(2).encode();
-    let mut bytes: Vec<u8> = original.clone();
-    let mut value: AllCasesMut = AllCasesMut::new(&mut bytes).unwrap();
-    assert_eq!(
-        value.set_byte(7),
-        Err(CapacityError {
-            required: 3,
-            capacity: 18,
-        })
-    );
-    assert_eq!(bytes, original);
-}
-
-#[test]
-fn mut_strings_must_fill_the_variant() {
-    let original: Vec<u8> = AllCases::Text("abc".to_string()).encode();
-    let mut bytes: Vec<u8> = original.clone();
-    let mut value: AllCasesMut = AllCasesMut::new(&mut bytes).unwrap();
-    assert!(value.set_text("ab").is_err());
-    assert!(value.set_text("abcd").is_err());
-    assert_eq!(bytes, original);
-
-    let mut value: AllCasesMut = AllCasesMut::new(&mut bytes).unwrap();
-    value.set_text("xyz").unwrap();
-    assert_eq!(
-        AllCases::decode(&bytes),
-        Ok(AllCases::Text("xyz".to_string()))
-    );
-}
-
-#[test]
 fn mut_reaches_the_present_nested_case() {
     let mut bytes: Vec<u8> = Shape::Square(Point::new(1, 2)).encode();
     let mut value: ShapeMut = ShapeMut::new(&mut bytes).unwrap();
@@ -450,16 +389,10 @@ fn views_read_every_form() {
 }
 
 /// Edits any editable form of a shape.
-fn edit_shape<S: ShapeViewMut>(shape: &mut S) -> Result<(), CapacityError> {
+fn edit_shape<S: ShapeViewMut>(shape: &mut S) {
     if let Some(mut point) = shape.as_square_mut() {
         point.set_x(9);
     }
-    Ok(())
-}
-
-/// Sets the circle of any editable form of a shape.
-fn make_circle<S: ShapeViewMut>(shape: &mut S) -> Result<(), CapacityError> {
-    shape.set_circle(4)
 }
 
 #[test]
@@ -468,21 +401,21 @@ fn view_muts_edit_every_form() {
     let expected: Shape = Shape::Square(Point::new(9, 2));
 
     let mut native: Shape = value.clone();
-    edit_shape(&mut native).unwrap();
+    edit_shape(&mut native);
     assert_eq!(native, expected);
-    make_circle(&mut native).unwrap();
-    assert_eq!(native, Shape::Circle(4));
 
     let mut buf: ShapeBuf = ShapeBuf::from(&value);
-    edit_shape(&mut buf).unwrap();
-    assert_eq!(buf.decode(), expected);
-    assert!(make_circle(&mut buf).is_err());
+    edit_shape(&mut buf);
     assert_eq!(buf.decode(), expected);
 
     let mut bytes: Vec<u8> = value.encode();
     let mut edit: ShapeMut = ShapeMut::new(&mut bytes).unwrap();
-    edit_shape(&mut edit).unwrap();
+    edit_shape(&mut edit);
     assert_eq!(edit.as_ref().as_square().unwrap().x(), 9);
+
+    let mut circle: Shape = Shape::Circle(5);
+    edit_shape(&mut circle);
+    assert_eq!(circle, Shape::Circle(5));
 }
 
 /// Gets the value of any form of an expression.
@@ -498,17 +431,17 @@ fn eval<E: ExprView>(expr: &E) -> i64 {
     eval(&left) + eval(&right)
 }
 
-/// Doubles each number of any editable form of an expression, in place.
-fn double<E: ExprViewMut>(expr: &mut E) -> Result<(), CapacityError> {
-    if let Some(number) = expr.as_number() {
-        return expr.set_number(number * 2);
+/// Counts the numbers of any editable form of an expression, through its mutable values.
+fn count<E: ExprViewMut>(expr: &mut E) -> usize {
+    if expr.as_number().is_some() {
+        return 1;
     }
     if let Some(mut inner) = expr.as_negate_mut() {
-        return double(&mut inner);
+        return count(&mut inner);
     }
     let mut sum = expr.as_add_mut().unwrap();
-    double(&mut sum.left_mut())?;
-    double(&mut sum.right_mut())
+    let left: usize = count(&mut sum.left_mut());
+    left + count(&mut sum.right_mut())
 }
 
 /// Gets a recursive expression: `1 + -(2 + 3)`.
@@ -530,11 +463,9 @@ fn recursive_variants() {
     assert_eq!(eval(&ExprMut::new(&mut bytes).unwrap()), -4);
 
     let mut native: Expr = expr(1);
-    double(&mut native).unwrap();
-    assert_eq!(native, expr(2));
-
-    double(&mut ExprMut::new(&mut bytes).unwrap()).unwrap();
-    assert_eq!(Expr::decode(&bytes), Ok(expr(2)));
+    assert_eq!(count(&mut native), 3);
+    assert_eq!(count(&mut ExprMut::new(&mut bytes).unwrap()), 3);
+    assert_eq!(count(&mut ExprBuf::from(&value)), 3);
 }
 
 /// Gets a struct with variants.
@@ -569,9 +500,8 @@ fn structs_edit_their_variants() {
     let mut bytes: Vec<u8> = with_variants().encode();
     let mut value: WithVariantsMut = WithVariantsMut::new(&mut bytes).unwrap();
     value.shape_mut().as_square_mut().unwrap().set_y(9);
-    value.maybe_mut().unwrap().set_circle(6).unwrap();
+    assert!(value.maybe_mut().unwrap().as_square_mut().is_none());
     assert_eq!(value.as_ref().shape().as_square().unwrap().y(), 9);
-    assert_eq!(value.as_ref().maybe().unwrap().as_circle(), Some(6));
     assert_eq!(value.as_ref().before(), "before");
 }
 

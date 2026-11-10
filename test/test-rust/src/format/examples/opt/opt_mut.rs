@@ -68,24 +68,6 @@ impl OptMut<'_> {
         unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 6, 2, value.is_some()) };
     }
 
-    /// Sets the field: `d`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value isn't the length
-    /// of the one it replaces.
-    pub fn set_d<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        proto_packet::io::replace_str(
-            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 0, 1, 7, 1) },
-            value.unwrap_or_default(),
-        )?;
-        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 6, 4, value.is_some()) };
-        Ok(())
-    }
-
     /// Sets the field: `e`.
     pub fn set_e(&mut self, value: impl Into<Option<crate::format::examples::Color>>) {
         let value: Option<crate::format::examples::Color> = value.into();

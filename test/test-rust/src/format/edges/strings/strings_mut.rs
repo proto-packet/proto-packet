@@ -52,18 +52,6 @@ impl StringsMut<'_> {
         unsafe { proto_packet::io::write_u8_unchecked(self.bytes, 12, value) };
     }
 
-    /// Sets the field: `first`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value isn't the length
-    /// of the one it replaces.
-    pub fn set_first(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_str(
-            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 0, 4, 14, 1) },
-            value,
-        )
-    }
-
     /// Gets the mut of the field: `entry`.
     #[must_use]
     pub fn entry_mut(&mut self) -> crate::format::examples::EntryMut<'_> {
@@ -72,35 +60,5 @@ impl StringsMut<'_> {
                 proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 1, 4, 14, 8),
             )
         }
-    }
-
-    /// Sets the field: `second`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value isn't the length
-    /// of the one it replaces.
-    pub fn set_second<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        proto_packet::io::replace_str(
-            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 2, 4, 14, 1) },
-            value.unwrap_or_default(),
-        )?;
-        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 13, 0, value.is_some()) };
-        Ok(())
-    }
-
-    /// Sets the field: `third`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value isn't the length
-    /// of the one it replaces.
-    pub fn set_third(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_str(
-            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 3, 4, 14, 1) },
-            value,
-        )
     }
 }

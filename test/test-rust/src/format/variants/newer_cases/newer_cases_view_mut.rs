@@ -2,69 +2,29 @@
 
 /// The editable cases of any editable form of [NewerCases](super::NewerCases).
 pub trait NewerCasesViewMut: super::NewerCasesView {
-    /// Sets the case: `Number`.
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Text`.
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable value of the case: `Point`.
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut>;
 }
 
 impl<V: NewerCasesViewMut> NewerCasesViewMut for &mut V {
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_number(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         (**self).as_point_mut()
     }
 }
 
 impl NewerCasesViewMut for super::NewerCases {
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::NewerCases::Number(value);
-        Ok(())
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::NewerCases::Text(value.to_string());
-        Ok(())
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.as_point_mut()
     }
 }
 
 impl NewerCasesViewMut for super::NewerCasesMut<'_> {
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_number(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.as_point_mut()
     }
 }
 
 impl NewerCasesViewMut for super::NewerCasesBuf {
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_number(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.as_point_mut()
     }

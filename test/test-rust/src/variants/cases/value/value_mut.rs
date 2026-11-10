@@ -47,45 +47,6 @@ impl ValueMut<'_> {
 impl ValueMut<'_> {
     //! Cases
 
-    /// Sets the case: `Boolean`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_boolean(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 1, &[u8::from(value)])
-    }
-
-    /// Sets the case: `Unsigned64`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_unsigned64(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 2, &value.to_le_bytes())
-    }
-
-    /// Sets the case: `Id`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 3, value.as_bytes())
-    }
-
-    /// Sets the case: `Text`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 4, value.as_bytes())
-    }
-
     /// Gets the mut of the case: `Point`.
     #[must_use]
     pub fn as_point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {
@@ -111,18 +72,6 @@ impl ValueMut<'_> {
             return None;
         }
         Some(unsafe { crate::types::LabelMut::new_unchecked(self.bytes.get_unchecked_mut(2..)) })
-    }
-
-    /// Sets the case: `Color`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_color(
-        &mut self,
-        value: crate::types::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 8, &value.tag_number().to_le_bytes())
     }
 
     /// Gets the mut of the case: `Shape`.

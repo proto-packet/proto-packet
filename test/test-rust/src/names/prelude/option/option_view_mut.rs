@@ -2,65 +2,29 @@
 
 /// The editable fields of any editable form of [Option](super::Option).
 pub trait OptionViewMut: super::OptionView {
-    /// Sets the field: `text`.
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable field: `next`.
     fn next_mut(&mut self) -> Option<impl crate::names::prelude::OptionViewMut>;
 }
 
 impl<V: OptionViewMut> OptionViewMut for &mut V {
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
-    }
-
     fn next_mut(&mut self) -> Option<impl crate::names::prelude::OptionViewMut> {
         (**self).next_mut()
     }
 }
 
 impl OptionViewMut for super::Option {
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        self.set_text(value.map(str::to_string));
-        Ok(())
-    }
-
     fn next_mut(&mut self) -> Option<impl crate::names::prelude::OptionViewMut> {
         self.next_mut()
     }
 }
 
 impl OptionViewMut for super::OptionMut<'_> {
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
-
     fn next_mut(&mut self) -> Option<impl crate::names::prelude::OptionViewMut> {
         self.next_mut()
     }
 }
 
 impl OptionViewMut for super::OptionBuf {
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
-    }
-
     fn next_mut(&mut self) -> Option<impl crate::names::prelude::OptionViewMut> {
         self.next_mut()
     }

@@ -47,18 +47,6 @@ impl WithVariantsMut<'_> {
 impl WithVariantsMut<'_> {
     //! Fields
 
-    /// Sets the field: `before`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value isn't the length
-    /// of the one it replaces.
-    pub fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_str(
-            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 8, 0, 3, 17, 1) },
-            value,
-        )
-    }
-
     /// Gets the mut of the field: `shape`.
     #[must_use]
     pub fn shape_mut(&mut self) -> crate::format::variants::ShapeMut<'_> {

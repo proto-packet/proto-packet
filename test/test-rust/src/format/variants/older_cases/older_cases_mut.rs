@@ -43,16 +43,3 @@ impl OlderCasesMut<'_> {
         self.bytes
     }
 }
-
-impl OlderCasesMut<'_> {
-    //! Cases
-
-    /// Sets the case: `Text`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 2, value.as_bytes())
-    }
-}

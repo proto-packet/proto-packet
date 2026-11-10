@@ -43,34 +43,3 @@ impl UnorderedTagsMut<'_> {
         self.bytes
     }
 }
-
-impl UnorderedTagsMut<'_> {
-    //! Cases
-
-    /// Sets the case: `Three`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_three(&mut self, value: u32) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 3, &value.to_le_bytes())
-    }
-
-    /// Sets the case: `One`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_one(&mut self, value: u32) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 1, &value.to_le_bytes())
-    }
-
-    /// Sets the case: `Two`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_two(&mut self, value: u32) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 2, &value.to_le_bytes())
-    }
-}

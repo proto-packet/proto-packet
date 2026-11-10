@@ -1,23 +1,20 @@
 use crate::rust::encoding::IO;
-use crate::rust::gen_message_mut::gen_bytes;
 use crate::rust::gen_struct_mut::{
     gen_mut_construction, gen_mut_dec, gen_mut_properties, mut_name,
 };
 use crate::rust::gen_struct_ref::{generated_path, ref_name};
 use crate::rust::gen_variant::Case;
 use crate::rust::typing::Typing;
-use crate::rust::values::setter_value_type;
 use code_gen::rust::{
-    Access, Function, ImplBlock, Receiver, RustType, Signature, Var, WithAccess, WithAttributes,
-    WithComments, WithFunctions, WithReceiver, WithResult, WithVarParams,
+    Access, Function, ImplBlock, Receiver, RustType, Signature, WithAccess, WithAttributes,
+    WithComments, WithFunctions, WithReceiver, WithResult,
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
-use proto_packet_tree::TypeTag;
 
 /// Generates the `Mut` type of the variant with the `schema_name` & the Rust `type_name`.
 ///
-/// It edits the valid encoding of the variant in place, & every edit keeps it valid. A variant has
-/// no length of its own, so a string must fill the variant, & any other case must fit in it.
+/// It edits the valid encoding of the variant in place, & every edit keeps it valid. It has no
+/// setters, since another case can have another length, so it only reaches its nested values.
 pub(crate) fn gen_variant_mut(
     typing: Typing<'_>,
     schema_name: &str,
@@ -33,14 +30,10 @@ pub(crate) fn gen_variant_mut(
         .with_statement(gen_mut_construction(&name, &ref_name))
         .with_statement(EmptyLine::default())
         .with_statement(gen_mut_properties(&any_lifetime, &ref_name));
-    if cases.iter().any(|case| !case.tag.is_collection()) {
+    if cases.iter().any(|case| case.is_nested(typing)) {
         let mut fields: ImplBlock = ImplBlock::from(any_lifetime).with_comment(" Cases");
-        for case in cases.iter().filter(|case| !case.tag.is_collection()) {
-            fields.add_function(if case.is_nested(typing) {
-                gen_child(*case, "self.bytes", "self.bytes")
-            } else {
-                gen_setter(typing, *case)
-            });
+        for case in cases.iter().filter(|case| case.is_nested(typing)) {
+            fields.add_function(gen_child(*case, "self.bytes", "self.bytes"));
         }
         block.add_statement(EmptyLine::default());
         block.add_statement(fields);
@@ -93,33 +86,4 @@ pub(crate) fn gen_variant_buf_accessors(
         }
     }
     Some(result)
-}
-
-/// Generates the signature of the setter of the scalar or string `case`.
-pub(crate) fn gen_setter_signature(case: Case<'_>) -> Signature {
-    Signature::from(case.setter_name())
-        .with_receiver(Receiver::BorrowedMut)
-        .with_param(Var::from(("value", setter_value_type(case.tag).as_str())))
-        .with_result(format!("Result<(), {}::CapacityError>", IO))
-}
-
-/// Generates the setter of the scalar or string `case`.
-fn gen_setter(typing: Typing<'_>, case: Case<'_>) -> Function {
-    let bytes: String = match case.tag {
-        TypeTag::Special(_) => "value.as_bytes()".to_string(),
-        _ => format!("&{}", gen_bytes(typing, case.tag)),
-    };
-    Function::from(gen_setter_signature(case))
-        .with_comment(format!(" Sets the case: `{}`.", case.name))
-        .with_comment("")
-        .with_comment(" # Errors")
-        .with_comment(
-            " Returns an error, leaving the variant unchanged, if the variant would change its",
-        )
-        .with_comment(" length.")
-        .with_access(Access::Public)
-        .with_literal(format!(
-            "{}::replace_variant(self.bytes, {}, {})",
-            IO, case.number, bytes
-        ))
 }

@@ -2,21 +2,6 @@
 
 /// The editable cases of any editable form of [Value](super::Value).
 pub trait ValueViewMut: super::ValueView {
-    /// Sets the case: `Boolean`.
-    fn set_boolean(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Unsigned64`.
-    fn set_unsigned64(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Id`.
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Text`.
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable value of the case: `Point`.
     fn as_point_mut(&mut self) -> Option<impl crate::types::PointViewMut>;
 
@@ -26,36 +11,11 @@ pub trait ValueViewMut: super::ValueView {
     /// Gets the mutable value of the case: `Label`.
     fn as_label_mut(&mut self) -> Option<impl crate::types::LabelViewMut>;
 
-    /// Sets the case: `Color`.
-    fn set_color(
-        &mut self,
-        value: crate::types::Color,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable value of the case: `Shape`.
     fn as_shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut>;
 }
 
 impl<V: ValueViewMut> ValueViewMut for &mut V {
-    fn set_boolean(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_boolean(value)
-    }
-
-    fn set_unsigned64(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_unsigned64(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_id(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::types::PointViewMut> {
         (**self).as_point_mut()
     }
@@ -68,42 +28,12 @@ impl<V: ValueViewMut> ValueViewMut for &mut V {
         (**self).as_label_mut()
     }
 
-    fn set_color(
-        &mut self,
-        value: crate::types::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_color(value)
-    }
-
     fn as_shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut> {
         (**self).as_shape_mut()
     }
 }
 
 impl ValueViewMut for super::Value {
-    fn set_boolean(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::Value::Boolean(value);
-        Ok(())
-    }
-
-    fn set_unsigned64(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::Value::Unsigned64(value);
-        Ok(())
-    }
-
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::Value::Id(value);
-        Ok(())
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::Value::Text(value.to_string());
-        Ok(())
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::types::PointViewMut> {
         self.as_point_mut()
     }
@@ -114,14 +44,6 @@ impl ValueViewMut for super::Value {
 
     fn as_label_mut(&mut self) -> Option<impl crate::types::LabelViewMut> {
         self.as_label_mut()
-    }
-
-    fn set_color(
-        &mut self,
-        value: crate::types::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::Value::Color(value);
-        Ok(())
     }
 
     fn as_shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut> {
@@ -130,25 +52,6 @@ impl ValueViewMut for super::Value {
 }
 
 impl ValueViewMut for super::ValueMut<'_> {
-    fn set_boolean(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_boolean(value)
-    }
-
-    fn set_unsigned64(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_unsigned64(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_id(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::types::PointViewMut> {
         self.as_point_mut()
     }
@@ -159,13 +62,6 @@ impl ValueViewMut for super::ValueMut<'_> {
 
     fn as_label_mut(&mut self) -> Option<impl crate::types::LabelViewMut> {
         self.as_label_mut()
-    }
-
-    fn set_color(
-        &mut self,
-        value: crate::types::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_color(value)
     }
 
     fn as_shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut> {
@@ -174,25 +70,6 @@ impl ValueViewMut for super::ValueMut<'_> {
 }
 
 impl ValueViewMut for super::ValueBuf {
-    fn set_boolean(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_boolean(value)
-    }
-
-    fn set_unsigned64(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_unsigned64(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_id(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::types::PointViewMut> {
         self.as_point_mut()
     }
@@ -203,13 +80,6 @@ impl ValueViewMut for super::ValueBuf {
 
     fn as_label_mut(&mut self) -> Option<impl crate::types::LabelViewMut> {
         self.as_label_mut()
-    }
-
-    fn set_color(
-        &mut self,
-        value: crate::types::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_color(value)
     }
 
     fn as_shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut> {

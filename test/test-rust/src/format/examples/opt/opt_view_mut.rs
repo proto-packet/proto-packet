@@ -11,12 +11,6 @@ pub trait OptViewMut: super::OptView {
     /// Sets the field: `c`.
     fn set_c(&mut self, value: impl Into<Option<bool>>);
 
-    /// Sets the field: `d`.
-    fn set_d<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Sets the field: `e`.
     fn set_e(&mut self, value: impl Into<Option<crate::format::examples::Color>>);
 }
@@ -32,13 +26,6 @@ impl<V: OptViewMut> OptViewMut for &mut V {
 
     fn set_c(&mut self, value: impl Into<Option<bool>>) {
         (**self).set_c(value)
-    }
-
-    fn set_d<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_d(value)
     }
 
     fn set_e(&mut self, value: impl Into<Option<crate::format::examples::Color>>) {
@@ -59,15 +46,6 @@ impl OptViewMut for super::Opt {
         self.set_c(value);
     }
 
-    fn set_d<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        self.set_d(value.map(str::to_string));
-        Ok(())
-    }
-
     fn set_e(&mut self, value: impl Into<Option<crate::format::examples::Color>>) {
         self.set_e(value);
     }
@@ -86,13 +64,6 @@ impl OptViewMut for super::OptMut<'_> {
         self.set_c(value)
     }
 
-    fn set_d<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_d(value)
-    }
-
     fn set_e(&mut self, value: impl Into<Option<crate::format::examples::Color>>) {
         self.set_e(value)
     }
@@ -109,13 +80,6 @@ impl OptViewMut for super::OptBuf {
 
     fn set_c(&mut self, value: impl Into<Option<bool>>) {
         self.as_mut().set_c(value)
-    }
-
-    fn set_d<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_d(value)
     }
 
     fn set_e(&mut self, value: impl Into<Option<crate::format::examples::Color>>) {

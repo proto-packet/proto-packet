@@ -47,20 +47,6 @@ impl LoopMessageMut<'_> {
 impl LoopMessageMut<'_> {
     //! Fields
 
-    /// Sets the field: `value`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_value(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<u32> = value.into();
-        let bytes: Option<[u8; 4]> = value.map(|value| value.to_le_bytes());
-        proto_packet::io::replace_field(self.bytes, 1, bytes.as_ref().map(|bytes| bytes.as_slice()))
-    }
-
     /// Gets the mut of the field: `next`.
     #[must_use]
     pub fn next_mut(&mut self) -> Option<crate::format::messages::LoopStructMut<'_>> {

@@ -2,49 +2,29 @@
 
 /// The editable fields of any editable form of [Person](super::Person).
 pub trait PersonViewMut: super::PersonView {
-    /// Sets the field: `name`.
-    fn set_name(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Sets the field: `age`.
     fn set_age(&mut self, value: u8);
 }
 
 impl<V: PersonViewMut> PersonViewMut for &mut V {
-    fn set_name(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_name(value)
-    }
-
     fn set_age(&mut self, value: u8) {
         (**self).set_age(value)
     }
 }
 
 impl PersonViewMut for super::Person {
-    fn set_name(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_name(value.to_string());
-        Ok(())
-    }
-
     fn set_age(&mut self, value: u8) {
         self.set_age(value);
     }
 }
 
 impl PersonViewMut for super::PersonMut<'_> {
-    fn set_name(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_name(value)
-    }
-
     fn set_age(&mut self, value: u8) {
         self.set_age(value)
     }
 }
 
 impl PersonViewMut for super::PersonBuf {
-    fn set_name(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_name(value)
-    }
-
     fn set_age(&mut self, value: u8) {
         self.as_mut().set_age(value)
     }

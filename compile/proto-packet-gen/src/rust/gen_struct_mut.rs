@@ -60,8 +60,9 @@ fn method_name(typing: Typing<'_>, field: Field<'_>) -> String {
 
 /// Generates the `Mut` type of the `structure` with the Rust `type_name`.
 ///
-/// It edits the valid encoding of the struct in place, & every edit keeps it valid. Its file
-/// imports nothing & declares only the `Mut` type, so the prelude names are never shadowed.
+/// It edits the valid encoding of the struct in place, & every edit keeps it valid. A setter can't
+/// fail, so only a fixed-size field has one. Its file imports nothing & declares only the `Mut`
+/// type, so the prelude names are never shadowed.
 pub(crate) fn gen_struct_mut(
     typing: Typing<'_>,
     structure: &Struct,
@@ -153,13 +154,11 @@ fn gen_fields(
 ) -> ImplBlock {
     let mut result: ImplBlock = ImplBlock::from(mut_type.clone()).with_comment(" Fields");
     for (field, field_layout) in fields.iter().zip(&layout.fields) {
-        if field.tag.is_collection() {
+        if field.tag.is_collection() || field.tag.is_string() {
             continue;
         }
         let mut function: Function = if is_struct(typing, *field) {
             gen_child(*field, *field_layout, layout, "self.bytes", "self.bytes")
-        } else if field.tag.is_string() {
-            gen_string_setter(*field, *field_layout, layout)
         } else {
             gen_setter(typing, *field, *field_layout)
         };
@@ -218,79 +217,21 @@ pub(crate) fn gen_child(
         .with_literal(value)
 }
 
-/// Generates the signature of the setter of the scalar or string `field`.
-///
-/// A fallible setter returns a `Result`. An optional string has a named lifetime, since
-/// `impl Trait` can't elide it.
-pub(crate) fn gen_setter_signature(field: Field<'_>, is_fallible: bool) -> Signature {
-    let is_string: bool = field.tag.is_string();
-    let (name, param): (String, String) = if field.is_optional && is_string {
-        (
-            format!("{}<'v>", field.setter_name()),
-            "impl Into<Option<&'v str>>".to_string(),
-        )
-    } else if field.is_optional {
-        (
-            field.setter_name(),
-            format!("impl Into<Option<{}>>", setter_value_type(field.tag)),
-        )
+/// Generates the signature of the setter of the scalar `field`.
+pub(crate) fn gen_setter_signature(field: Field<'_>) -> Signature {
+    let param: String = if field.is_optional {
+        format!("impl Into<Option<{}>>", setter_value_type(field.tag))
     } else {
-        (field.setter_name(), setter_value_type(field.tag))
+        setter_value_type(field.tag)
     };
-    let signature: Signature = Signature::from(name)
+    Signature::from(field.setter_name())
         .with_receiver(Receiver::BorrowedMut)
-        .with_param(Var::from(("value", param.as_str())));
-    if is_fallible {
-        signature.with_result(format!("Result<(), {}::CapacityError>", IO))
-    } else {
-        signature
-    }
-}
-
-/// Generates the setter of the string `field`.
-///
-/// # Note
-/// - Nothing moves in place, so the value must be the length of the one it replaces.
-fn gen_string_setter(
-    field: Field<'_>,
-    field_layout: FieldLayout,
-    layout: &StructLayout,
-) -> Function {
-    let ValueLayout::Entry { index } = field_layout.value else {
-        unreachable!("a string is an entry")
-    };
-    let mut function: Function = Function::from(gen_setter_signature(field, true))
-        .with_comment(format!(" Sets the field: `{}`.", field.name))
-        .with_comment("")
-        .with_comment(" # Errors")
-        .with_comment(
-            " Returns an error, leaving the struct unchanged, if the value isn't the length",
-        )
-        .with_comment(" of the one it replaces.")
-        .with_access(Access::Public);
-    let replace = |value: &str| -> String {
-        format!(
-            "{}::replace_str(unsafe {{ {} }}, {})",
-            IO,
-            read_entry("read_tail_entry_mut_unchecked", layout, index, "self.bytes"),
-            value
-        )
-    };
-    let Some(presence) = field_layout.presence else {
-        return function.with_literal(replace("value"));
-    };
-    function.add_semi("let value: Option<&str> = value.into()");
-    function.add_semi(format!("{}?", replace("value.unwrap_or_default()")));
-    function.add_literal(format!(
-        "unsafe {{ {}::write_bit_unchecked(self.bytes, {}, {}, value.is_some()) }};",
-        IO, presence.offset, presence.bit
-    ));
-    function.with_literal("Ok(())")
+        .with_param(Var::from(("value", param.as_str())))
 }
 
 /// Generates the setter of the scalar `field`.
 fn gen_setter(typing: Typing<'_>, field: Field<'_>, field_layout: FieldLayout) -> Function {
-    let mut function: Function = Function::from(gen_setter_signature(field, false))
+    let mut function: Function = Function::from(gen_setter_signature(field))
         .with_comment(format!(" Sets the field: `{}`.", field.name))
         .with_access(Access::Public);
     if field.is_optional {

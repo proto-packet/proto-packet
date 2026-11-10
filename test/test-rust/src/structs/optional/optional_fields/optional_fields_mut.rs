@@ -67,24 +67,6 @@ impl OptionalFieldsMut<'_> {
         unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 42, 1, value.is_some()) };
     }
 
-    /// Sets the field: `text`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value isn't the length
-    /// of the one it replaces.
-    pub fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        proto_packet::io::replace_str(
-            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 20, 0, 4, 43, 1) },
-            value.unwrap_or_default(),
-        )?;
-        unsafe { proto_packet::io::write_bit_unchecked(self.bytes, 42, 2, value.is_some()) };
-        Ok(())
-    }
-
     /// Gets the mut of the field: `point`.
     #[must_use]
     pub fn point_mut(&mut self) -> Option<crate::types::PointMut<'_>> {

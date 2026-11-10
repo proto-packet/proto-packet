@@ -7,9 +7,6 @@ pub trait PairViewMut: super::PairView {
 
     /// Gets the mutable field: `second`.
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut;
-
-    /// Sets the field: `note`.
-    fn set_note(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: PairViewMut> PairViewMut for &mut V {
@@ -19,10 +16,6 @@ impl<V: PairViewMut> PairViewMut for &mut V {
 
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         (**self).second_mut()
-    }
-
-    fn set_note(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_note(value)
     }
 }
 
@@ -34,11 +27,6 @@ impl PairViewMut for super::Pair {
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.second_mut()
     }
-
-    fn set_note(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_note(value.to_string());
-        Ok(())
-    }
 }
 
 impl PairViewMut for super::PairMut<'_> {
@@ -49,10 +37,6 @@ impl PairViewMut for super::PairMut<'_> {
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.second_mut()
     }
-
-    fn set_note(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_note(value)
-    }
 }
 
 impl PairViewMut for super::PairBuf {
@@ -62,9 +46,5 @@ impl PairViewMut for super::PairBuf {
 
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.second_mut()
-    }
-
-    fn set_note(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_note(value)
     }
 }

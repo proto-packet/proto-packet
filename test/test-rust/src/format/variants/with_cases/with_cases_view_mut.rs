@@ -7,12 +7,6 @@ pub trait WithCasesViewMut: super::WithCasesView {
 
     /// Gets the mutable field: `older`.
     fn older_mut(&mut self) -> Option<impl crate::format::variants::OlderCasesViewMut>;
-
-    /// Sets the field: `id`.
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: WithCasesViewMut> WithCasesViewMut for &mut V {
@@ -22,13 +16,6 @@ impl<V: WithCasesViewMut> WithCasesViewMut for &mut V {
 
     fn older_mut(&mut self) -> Option<impl crate::format::variants::OlderCasesViewMut> {
         (**self).older_mut()
-    }
-
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_id(value)
     }
 }
 
@@ -40,14 +27,6 @@ impl WithCasesViewMut for super::WithCases {
     fn older_mut(&mut self) -> Option<impl crate::format::variants::OlderCasesViewMut> {
         self.older_mut()
     }
-
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_id(value);
-        Ok(())
-    }
 }
 
 impl WithCasesViewMut for super::WithCasesMut<'_> {
@@ -58,13 +37,6 @@ impl WithCasesViewMut for super::WithCasesMut<'_> {
     fn older_mut(&mut self) -> Option<impl crate::format::variants::OlderCasesViewMut> {
         self.older_mut()
     }
-
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_id(value)
-    }
 }
 
 impl WithCasesViewMut for super::WithCasesBuf {
@@ -74,12 +46,5 @@ impl WithCasesViewMut for super::WithCasesBuf {
 
     fn older_mut(&mut self) -> Option<impl crate::format::variants::OlderCasesViewMut> {
         self.older_mut()
-    }
-
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_id(value)
     }
 }

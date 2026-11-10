@@ -5,9 +5,6 @@ pub trait KeywordStructViewMut: super::KeywordStructView {
     /// Sets the field: `type`.
     fn set_type(&mut self, value: u32);
 
-    /// Sets the field: `match`.
-    fn set_match(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Sets the field: `self`.
     fn set_self(&mut self, value: u32);
 }
@@ -15,10 +12,6 @@ pub trait KeywordStructViewMut: super::KeywordStructView {
 impl<V: KeywordStructViewMut> KeywordStructViewMut for &mut V {
     fn set_type(&mut self, value: u32) {
         (**self).set_type(value)
-    }
-
-    fn set_match(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_match(value)
     }
 
     fn set_self(&mut self, value: u32) {
@@ -31,11 +24,6 @@ impl KeywordStructViewMut for super::KeywordStruct {
         self.set_type(value);
     }
 
-    fn set_match(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_match(value.to_string());
-        Ok(())
-    }
-
     fn set_self(&mut self, value: u32) {
         self.set_self(value);
     }
@@ -46,10 +34,6 @@ impl KeywordStructViewMut for super::KeywordStructMut<'_> {
         self.set_type(value)
     }
 
-    fn set_match(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_match(value)
-    }
-
     fn set_self(&mut self, value: u32) {
         self.set_self(value)
     }
@@ -58,10 +42,6 @@ impl KeywordStructViewMut for super::KeywordStructMut<'_> {
 impl KeywordStructViewMut for super::KeywordStructBuf {
     fn set_type(&mut self, value: u32) {
         self.as_mut().set_type(value)
-    }
-
-    fn set_match(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_match(value)
     }
 
     fn set_self(&mut self, value: u32) {

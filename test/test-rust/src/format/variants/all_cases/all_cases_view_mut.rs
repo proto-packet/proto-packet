@@ -2,30 +2,6 @@
 
 /// The editable cases of any editable form of [AllCases](super::AllCases).
 pub trait AllCasesViewMut: super::AllCasesView {
-    /// Sets the case: `Flag`.
-    fn set_flag(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Byte`.
-    fn set_byte(&mut self, value: u8) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Large`.
-    fn set_large(&mut self, value: u128) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Id`.
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Color`.
-    fn set_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Text`.
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable value of the case: `Point`.
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut>;
 
@@ -37,66 +13,9 @@ pub trait AllCasesViewMut: super::AllCasesView {
 
     /// Gets the mutable value of the case: `Shape`.
     fn as_shape_mut(&mut self) -> Option<impl crate::format::variants::ShapeViewMut>;
-
-    /// Sets the case: `BoxedColor`.
-    fn set_boxed_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Signed`.
-    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Float`.
-    fn set_float(
-        &mut self,
-        value: proto_packet::types::Float64,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `At`.
-    fn set_at(
-        &mut self,
-        value: proto_packet::types::Timestamp,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the case: `Price`.
-    fn set_price(
-        &mut self,
-        value: proto_packet::types::Decimal<2>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
-    fn set_flag(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_flag(value)
-    }
-
-    fn set_byte(&mut self, value: u8) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_byte(value)
-    }
-
-    fn set_large(&mut self, value: u128) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_large(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_id(value)
-    }
-
-    fn set_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_color(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         (**self).as_point_mut()
     }
@@ -112,77 +31,9 @@ impl<V: AllCasesViewMut> AllCasesViewMut for &mut V {
     fn as_shape_mut(&mut self) -> Option<impl crate::format::variants::ShapeViewMut> {
         (**self).as_shape_mut()
     }
-
-    fn set_boxed_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_boxed_color(value)
-    }
-
-    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_signed(value)
-    }
-
-    fn set_float(
-        &mut self,
-        value: proto_packet::types::Float64,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_float(value)
-    }
-
-    fn set_at(
-        &mut self,
-        value: proto_packet::types::Timestamp,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_at(value)
-    }
-
-    fn set_price(
-        &mut self,
-        value: proto_packet::types::Decimal<2>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_price(value)
-    }
 }
 
 impl AllCasesViewMut for super::AllCases {
-    fn set_flag(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Flag(value);
-        Ok(())
-    }
-
-    fn set_byte(&mut self, value: u8) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Byte(value);
-        Ok(())
-    }
-
-    fn set_large(&mut self, value: u128) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Large(value);
-        Ok(())
-    }
-
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Id(value);
-        Ok(())
-    }
-
-    fn set_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Color(value);
-        Ok(())
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Text(value.to_string());
-        Ok(())
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.as_point_mut()
     }
@@ -197,77 +48,10 @@ impl AllCasesViewMut for super::AllCases {
 
     fn as_shape_mut(&mut self) -> Option<impl crate::format::variants::ShapeViewMut> {
         self.as_shape_mut()
-    }
-
-    fn set_boxed_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::BoxedColor(Box::new(value));
-        Ok(())
-    }
-
-    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Signed(value);
-        Ok(())
-    }
-
-    fn set_float(
-        &mut self,
-        value: proto_packet::types::Float64,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Float(value);
-        Ok(())
-    }
-
-    fn set_at(
-        &mut self,
-        value: proto_packet::types::Timestamp,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::At(value);
-        Ok(())
-    }
-
-    fn set_price(
-        &mut self,
-        value: proto_packet::types::Decimal<2>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::AllCases::Price(value);
-        Ok(())
     }
 }
 
 impl AllCasesViewMut for super::AllCasesMut<'_> {
-    fn set_flag(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_flag(value)
-    }
-
-    fn set_byte(&mut self, value: u8) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_byte(value)
-    }
-
-    fn set_large(&mut self, value: u128) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_large(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_id(value)
-    }
-
-    fn set_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_color(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.as_point_mut()
     }
@@ -282,72 +66,10 @@ impl AllCasesViewMut for super::AllCasesMut<'_> {
 
     fn as_shape_mut(&mut self) -> Option<impl crate::format::variants::ShapeViewMut> {
         self.as_shape_mut()
-    }
-
-    fn set_boxed_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_boxed_color(value)
-    }
-
-    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_signed(value)
-    }
-
-    fn set_float(
-        &mut self,
-        value: proto_packet::types::Float64,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_float(value)
-    }
-
-    fn set_at(
-        &mut self,
-        value: proto_packet::types::Timestamp,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_at(value)
-    }
-
-    fn set_price(
-        &mut self,
-        value: proto_packet::types::Decimal<2>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_price(value)
     }
 }
 
 impl AllCasesViewMut for super::AllCasesBuf {
-    fn set_flag(&mut self, value: bool) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_flag(value)
-    }
-
-    fn set_byte(&mut self, value: u8) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_byte(value)
-    }
-
-    fn set_large(&mut self, value: u128) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_large(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: proto_packet::types::Uuid,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_id(value)
-    }
-
-    fn set_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_color(value)
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
-    }
-
     fn as_point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.as_point_mut()
     }
@@ -362,37 +84,5 @@ impl AllCasesViewMut for super::AllCasesBuf {
 
     fn as_shape_mut(&mut self) -> Option<impl crate::format::variants::ShapeViewMut> {
         self.as_shape_mut()
-    }
-
-    fn set_boxed_color(
-        &mut self,
-        value: crate::format::examples::Color,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_boxed_color(value)
-    }
-
-    fn set_signed(&mut self, value: i64) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_signed(value)
-    }
-
-    fn set_float(
-        &mut self,
-        value: proto_packet::types::Float64,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_float(value)
-    }
-
-    fn set_at(
-        &mut self,
-        value: proto_packet::types::Timestamp,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_at(value)
-    }
-
-    fn set_price(
-        &mut self,
-        value: proto_packet::types::Decimal<2>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_price(value)
     }
 }

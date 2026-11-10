@@ -5,20 +5,8 @@ pub trait StringsViewMut: super::StringsView {
     /// Sets the field: `number`.
     fn set_number(&mut self, value: u8);
 
-    /// Sets the field: `first`.
-    fn set_first(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable field: `entry`.
     fn entry_mut(&mut self) -> impl crate::format::examples::EntryViewMut;
-
-    /// Sets the field: `second`.
-    fn set_second<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `third`.
-    fn set_third(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: StringsViewMut> StringsViewMut for &mut V {
@@ -26,23 +14,8 @@ impl<V: StringsViewMut> StringsViewMut for &mut V {
         (**self).set_number(value)
     }
 
-    fn set_first(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_first(value)
-    }
-
     fn entry_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         (**self).entry_mut()
-    }
-
-    fn set_second<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_second(value)
-    }
-
-    fn set_third(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_third(value)
     }
 }
 
@@ -51,27 +24,8 @@ impl StringsViewMut for super::Strings {
         self.set_number(value);
     }
 
-    fn set_first(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_first(value.to_string());
-        Ok(())
-    }
-
     fn entry_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.entry_mut()
-    }
-
-    fn set_second<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        self.set_second(value.map(str::to_string));
-        Ok(())
-    }
-
-    fn set_third(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_third(value.to_string());
-        Ok(())
     }
 }
 
@@ -80,23 +34,8 @@ impl StringsViewMut for super::StringsMut<'_> {
         self.set_number(value)
     }
 
-    fn set_first(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_first(value)
-    }
-
     fn entry_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.entry_mut()
-    }
-
-    fn set_second<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_second(value)
-    }
-
-    fn set_third(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_third(value)
     }
 }
 
@@ -105,22 +44,7 @@ impl StringsViewMut for super::StringsBuf {
         self.as_mut().set_number(value)
     }
 
-    fn set_first(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_first(value)
-    }
-
     fn entry_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.entry_mut()
-    }
-
-    fn set_second<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_second(value)
-    }
-
-    fn set_third(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_third(value)
     }
 }

@@ -71,20 +71,6 @@ impl NamedFieldsMut<'_> {
         Some(unsafe { crate::types::LabelMut::new_unchecked(value) })
     }
 
-    /// Sets the field: `color`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::types::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<crate::types::Color> = value.into();
-        let bytes: Option<[u8; 2]> = value.map(|value| value.tag_number().to_le_bytes());
-        proto_packet::io::replace_field(self.bytes, 4, bytes.as_ref().map(|bytes| bytes.as_slice()))
-    }
-
     /// Gets the mut of the field: `shape`.
     #[must_use]
     pub fn shape_mut(&mut self) -> Option<crate::types::ShapeMut<'_>> {

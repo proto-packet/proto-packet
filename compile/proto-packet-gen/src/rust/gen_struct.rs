@@ -180,7 +180,7 @@ pub fn gen_struct(
         },
         TypeFile {
             suffix: "_view_mut",
-            code: gen_view_mut(typing, schema_name, &view_mut_fields, &type_name, false),
+            code: gen_view_mut(typing, schema_name, &view_mut_fields, &type_name),
         },
     ])
 }
@@ -208,15 +208,27 @@ where
     Ok(())
 }
 
-/// Gets the `fields` that the `ViewMut` trait has.
+/// Gets the `fields` of a struct that its `ViewMut` trait has.
 ///
 /// # Note
-/// - A list or a map can't change its length in place, so the trait leaves it out.
+/// - A string, a list or a map can't change its length in place, so the trait leaves it out.
 pub(crate) fn view_mut_fields<'a>(fields: &[Field<'a>]) -> Vec<Field<'a>> {
     fields
         .iter()
         .copied()
-        .filter(|field| !field.tag.is_collection())
+        .filter(|field| !field.tag.is_collection() && !field.tag.is_string())
+        .collect()
+}
+
+/// Gets the `fields` of a message that its `ViewMut` trait has, which are its nested types.
+///
+/// # Note
+/// - A field of a message can't be set in place, since an absent field has no bytes to set.
+pub(crate) fn nested_fields<'a>(typing: Typing<'_>, fields: &[Field<'a>]) -> Vec<Field<'a>> {
+    fields
+        .iter()
+        .copied()
+        .filter(|field| is_struct(typing, *field))
         .collect()
 }
 

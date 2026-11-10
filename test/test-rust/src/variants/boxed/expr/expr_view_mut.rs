@@ -2,9 +2,6 @@
 
 /// The editable cases of any editable form of [Expr](super::Expr).
 pub trait ExprViewMut: super::ExprView {
-    /// Sets the case: `Number`.
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable value of the case: `Negate`.
     fn as_negate_mut(&mut self) -> Option<impl crate::variants::boxed::ExprViewMut>;
 
@@ -13,10 +10,6 @@ pub trait ExprViewMut: super::ExprView {
 }
 
 impl<V: ExprViewMut> ExprViewMut for &mut V {
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_number(value)
-    }
-
     fn as_negate_mut(&mut self) -> Option<impl crate::variants::boxed::ExprViewMut> {
         (**self).as_negate_mut()
     }
@@ -27,11 +20,6 @@ impl<V: ExprViewMut> ExprViewMut for &mut V {
 }
 
 impl ExprViewMut for super::Expr {
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::Expr::Number(value);
-        Ok(())
-    }
-
     fn as_negate_mut(&mut self) -> Option<impl crate::variants::boxed::ExprViewMut> {
         self.as_negate_mut()
     }
@@ -42,10 +30,6 @@ impl ExprViewMut for super::Expr {
 }
 
 impl ExprViewMut for super::ExprMut<'_> {
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_number(value)
-    }
-
     fn as_negate_mut(&mut self) -> Option<impl crate::variants::boxed::ExprViewMut> {
         self.as_negate_mut()
     }
@@ -56,10 +40,6 @@ impl ExprViewMut for super::ExprMut<'_> {
 }
 
 impl ExprViewMut for super::ExprBuf {
-    fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_number(value)
-    }
-
     fn as_negate_mut(&mut self) -> Option<impl crate::variants::boxed::ExprViewMut> {
         self.as_negate_mut()
     }

@@ -43,34 +43,3 @@ impl OlderMut<'_> {
         self.bytes
     }
 }
-
-impl OlderMut<'_> {
-    //! Fields
-
-    /// Sets the field: `name`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_name<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        proto_packet::io::replace_field(self.bytes, 2, value.map(str::as_bytes))
-    }
-
-    /// Sets the field: `age`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_age(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<u32> = value.into();
-        let bytes: Option<[u8; 4]> = value.map(|value| value.to_le_bytes());
-        proto_packet::io::replace_field(self.bytes, 4, bytes.as_ref().map(|bytes| bytes.as_slice()))
-    }
-}

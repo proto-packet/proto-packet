@@ -13,7 +13,7 @@ use crate::rust::gen_message_mut::{gen_message_buf_accessors, gen_message_mut};
 use crate::rust::gen_message_ref::gen_message_ref;
 use crate::rust::gen_ord::gen_message_ord;
 use crate::rust::gen_struct::{
-    check_list_elements, check_type_name, gen_accessor, gen_decoding, view_mut_fields,
+    check_list_elements, check_type_name, gen_accessor, gen_decoding, nested_fields,
 };
 use crate::rust::gen_struct_mut::{check_mut_names, is_struct, mut_name};
 use crate::rust::gen_struct_ref::ref_name;
@@ -206,9 +206,8 @@ pub fn gen_message(
             code: gen_view_mut(
                 typing,
                 schema_name,
-                &view_mut_fields(&fields),
+                &nested_fields(typing, &fields),
                 &type_name,
-                true,
             ),
         },
     ])

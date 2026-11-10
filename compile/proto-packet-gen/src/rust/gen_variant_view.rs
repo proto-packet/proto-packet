@@ -2,7 +2,6 @@ use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::{generated_path, ref_name};
 use crate::rust::gen_variant::Case;
-use crate::rust::gen_variant_mut::gen_setter_signature;
 use crate::rust::gen_view::view_name;
 use crate::rust::gen_view_encoding::{
     ViewEncoding, ViewForm, WithViewFunctions, gen_variant_view_encoding, gen_view_functions,
@@ -150,7 +149,6 @@ fn gen_getter_signature(typing: Typing<'_>, case: Case<'_>) -> Signature {
 /// code can edit any editable form of the variant. The trait is also implemented for mutable
 /// references, since the variant's own accessors return one.
 pub(crate) fn gen_variant_view_mut(
-    typing: Typing<'_>,
     schema_name: &str,
     cases: &[Case<'_>],
     type_name: &str,
@@ -172,13 +170,11 @@ pub(crate) fn gen_variant_view_mut(
     }
     result.set_access(Access::Public);
     for case in cases {
-        let comment: String = if case.is_nested(typing) {
-            format!(" Gets the mutable value of the case: `{}`.", case.name)
-        } else {
-            format!(" Sets the case: `{}`.", case.name)
-        };
         result.add_signature_dec(
-            SignatureDec::from(gen_method_signature(typing, *case)).with_comment(comment),
+            SignatureDec::from(gen_method_signature(*case)).with_comment(format!(
+                " Gets the mutable value of the case: `{}`.",
+                case.name
+            )),
         );
     }
 
@@ -186,95 +182,49 @@ pub(crate) fn gen_variant_view_mut(
         .with_statement(result)
         .with_statement(EmptyLine::default())
         .with_statement(
-            gen_view_mut_impl(typing, cases, &name, "&mut V", Form::Reference, type_name)
+            gen_view_mut_impl(cases, &name, "&mut V", Form::Reference)
                 .with_generic(generic.as_str()),
         )
         .with_statement(EmptyLine::default())
         .with_statement(gen_view_mut_impl(
-            typing,
             cases,
             &name,
             format!("super::{}", type_name).as_str(),
             Form::Native,
-            type_name,
         ))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_view_mut_impl(
-            typing,
-            cases,
-            &name,
-            mut_type,
-            Form::Mut,
-            type_name,
-        ))
+        .with_statement(gen_view_mut_impl(cases, &name, mut_type, Form::Mut))
         .with_statement(EmptyLine::default())
         .with_statement(gen_view_mut_impl(
-            typing,
             cases,
             &name,
             buf_type.as_str(),
             Form::Buf,
-            type_name,
         ))
         .to_code()
 }
 
 /// Generates the impl block of the `ViewMut` trait with the `name` for the `form` type `target`.
-fn gen_view_mut_impl<T>(
-    typing: Typing<'_>,
-    cases: &[Case<'_>],
-    name: &str,
-    target: T,
-    form: Form,
-    type_name: &str,
-) -> ImplBlock
+fn gen_view_mut_impl<T>(cases: &[Case<'_>], name: &str, target: T, form: Form) -> ImplBlock
 where
     T: Into<RustType>,
 {
     let mut result: ImplBlock = ImplBlock::from(target).with_for_trait(name);
     for case in cases {
-        let mut function: Function = Function::from(gen_method_signature(typing, *case));
-        for statement in gen_body(typing, *case, form, type_name) {
-            function.add_literal(statement);
-        }
-        result.add_function(function);
+        result.add_function(
+            Function::from(gen_method_signature(*case))
+                .with_literal(form.gen_accessor_call(&case.accessor_name())),
+        );
     }
     result
 }
 
-/// Generates the signature of the method of the `case`.
-fn gen_method_signature(typing: Typing<'_>, case: Case<'_>) -> Signature {
-    if !case.is_nested(typing) {
-        return gen_setter_signature(case);
-    }
+/// Generates the signature of the accessor of the nested `case`.
+fn gen_method_signature(case: Case<'_>) -> Signature {
     Signature::from(case.accessor_name())
         .with_receiver(Receiver::BorrowedMut)
         .with_result(format!(
             "Option<impl {}>",
             generated_path(case.tag, "ViewMut")
         ))
-}
-
-/// Generates the statements of the method of the `case` for the `form`.
-fn gen_body(typing: Typing<'_>, case: Case<'_>, form: Form, type_name: &str) -> Vec<String> {
-    if case.is_nested(typing) {
-        return vec![form.gen_accessor_call(&case.accessor_name())];
-    }
-    if let Some(call) = form.gen_setter_call(&case.setter_name()) {
-        return vec![call];
-    }
-    let value: &str = if case.tag.is_string() {
-        "value.to_string()"
-    } else {
-        "value"
-    };
-    let value: String = if case.is_boxed {
-        format!("Box::new({})", value)
-    } else {
-        value.to_string()
-    };
-    vec![
-        format!("*self = super::{}::{}({});", type_name, case.ident(), value),
-        "Ok(())".to_string(),
-    ]
 }

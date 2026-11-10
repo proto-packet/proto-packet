@@ -1,13 +1,12 @@
 mod common;
 
 use common::ID;
-use proto_packet::io::{CapacityError, DecodeError};
+use proto_packet::io::DecodeError;
 use proto_packet::types::Float64;
 use proto_packet_test::format::examples::{Color, Entry, Point};
 use proto_packet_test::format::messages::{
-    AllKinds, AllKindsMut, AllKindsRef, Item, ItemBuf, ItemMut, ItemRef, ItemView, ItemViewMut,
-    LoopMessage, LoopStruct, Newer, NewerRef, Older, OlderMut, OlderRef, WithMessages,
-    WithMessagesMut, WithMessagesRef,
+    AllKinds, AllKindsMut, AllKindsRef, Item, ItemBuf, ItemMut, ItemRef, ItemView, LoopMessage,
+    LoopStruct, Newer, NewerRef, Older, OlderRef, WithMessages, WithMessagesMut, WithMessagesRef,
 };
 use proto_packet_test::messages::boxed::{Comment, CommentRef, CommentView, CommentViewMut};
 use proto_packet_test::messages::empty::{EmptyMessage, EmptyMessageRef};
@@ -417,73 +416,12 @@ fn unknown_fields_are_not_validated() {
 }
 
 #[test]
-fn mut_sets_values_in_place() {
-    let mut bytes: Vec<u8> = item_bytes();
-    let mut value: ItemMut = ItemMut::new(&mut bytes).unwrap();
-    value.set_id(9).unwrap();
-    value.set_text("yo").unwrap();
-    assert_eq!(
-        Item::decode(&bytes),
-        Ok(Item::default().with_text("yo".to_string()).with_id(9))
-    );
-}
-
-#[test]
-fn mut_rejects_changes_of_length() {
-    let mut bytes: Vec<u8> = item_bytes();
-    let mut value: ItemMut = ItemMut::new(&mut bytes).unwrap();
-    assert_eq!(
-        value.set_text(None),
-        Err(CapacityError {
-            required: 8,
-            capacity: 16,
-        })
-    );
-    assert_eq!(
-        value.set_text("hello"),
-        Err(CapacityError {
-            required: 19,
-            capacity: 16,
-        })
-    );
-    assert_eq!(bytes, item_bytes());
-}
-
-#[test]
-fn mut_rejects_new_fields() {
-    let original: Vec<u8> = Item::default().with_id(7).encode();
-    let mut bytes: Vec<u8> = original.clone();
-    let mut value: ItemMut = ItemMut::new(&mut bytes).unwrap();
-    assert_eq!(
-        value.set_text("hi"),
-        Err(CapacityError {
-            required: 16,
-            capacity: 8,
-        })
-    );
-    value.set_text(None).unwrap();
-    assert_eq!(bytes, original);
-}
-
-#[test]
-fn mut_keeps_unknown_fields() {
-    let mut bytes: Vec<u8> = newer().encode();
-    let mut older: OlderMut = OlderMut::new(&mut bytes).unwrap();
-    older.set_age(40).unwrap();
-    older.set_name("Eve").unwrap();
-    assert_eq!(
-        Newer::decode(&bytes),
-        Ok(newer().with_age(40).with_name("Eve".to_string()))
-    );
-}
-
-#[test]
 fn mut_reaches_present_nested_values() {
     let mut bytes: Vec<u8> = all_kinds().encode();
     let mut kinds: AllKindsMut = AllKindsMut::new(&mut bytes).unwrap();
     kinds.point_mut().unwrap().set_y(9);
     kinds.entry_mut().unwrap().set_id(8);
-    kinds.item_mut().unwrap().set_id(7).unwrap();
+    assert!(kinds.item_mut().is_some());
     let decoded: AllKinds = AllKinds::decode(&bytes).unwrap();
     assert_eq!(decoded.point().unwrap().y(), 9);
     assert_eq!(decoded.entry().unwrap().id(), 8);
@@ -495,11 +433,10 @@ fn mut_reaches_present_nested_values() {
 
 #[test]
 fn bufs_own_the_encoding() {
-    let mut buf: ItemBuf = ItemBuf::from(&item());
+    let buf: ItemBuf = ItemBuf::from(&item());
     assert_eq!(buf.as_bytes(), item_bytes());
-    buf.as_mut().set_id(9).unwrap();
-    assert_eq!(buf.as_ref().id(), Some(9));
-    assert_eq!(buf.decode(), item().with_id(9));
+    assert_eq!(buf.as_ref().id(), Some(7));
+    assert_eq!(buf.decode(), item());
     assert_eq!(
         ItemBuf::new(item_bytes()).unwrap().into_bytes(),
         item_bytes()
@@ -526,41 +463,16 @@ fn views_read_every_form() {
     assert_eq!(item_fields(&ItemMut::new(&mut bytes).unwrap()), expected);
 }
 
-/// Edits any editable form of an item.
-fn retag<I: ItemViewMut>(item: &mut I) -> Result<(), CapacityError> {
-    item.set_id(9)?;
-    item.set_text("yo")
-}
-
-#[test]
-fn view_muts_edit_every_form() {
-    let expected: Item = Item::default().with_text("yo".to_string()).with_id(9);
-
-    let mut value: Item = item();
-    retag(&mut value).unwrap();
-    assert_eq!(value, expected);
-
-    let mut buf: ItemBuf = ItemBuf::from(&item());
-    retag(&mut buf).unwrap();
-    assert_eq!(buf.decode(), expected);
-
-    let mut bytes: Vec<u8> = item_bytes();
-    retag(&mut ItemMut::new(&mut bytes).unwrap()).unwrap();
-    assert_eq!(Item::decode(&bytes), Ok(expected));
-}
-
 /// Gets the depth of any form of a comment.
 fn depth<C: CommentView>(comment: &C) -> usize {
     1 + comment.reply().map_or(0, |reply| depth(&reply))
 }
 
-/// Sets the text of every comment of any editable form.
-fn mark<C: CommentViewMut>(comment: &mut C) -> Result<(), CapacityError> {
-    comment.set_text("x")?;
-    match comment.reply_mut() {
-        Some(mut reply) => mark(&mut reply),
-        None => Ok(()),
-    }
+/// Gets the depth of any editable form of a comment, through its mutable replies.
+fn depth_mut<C: CommentViewMut>(comment: &mut C) -> usize {
+    1 + comment
+        .reply_mut()
+        .map_or(0, |mut reply| depth_mut(&mut reply))
 }
 
 #[test]
@@ -578,10 +490,9 @@ fn recursive_messages() {
     assert_eq!(depth(&CommentRef::new(&bytes).unwrap()), 3);
 
     let mut edit = value.clone();
-    mark(&mut edit).unwrap();
-    assert_eq!(edit.reply().unwrap().text(), Some("x"));
-    mark(&mut proto_packet_test::messages::boxed::CommentMut::new(&mut bytes).unwrap()).unwrap();
-    assert_eq!(Comment::decode(&bytes), Ok(edit));
+    assert_eq!(depth_mut(&mut edit), 3);
+    let mut comment = proto_packet_test::messages::boxed::CommentMut::new(&mut bytes).unwrap();
+    assert_eq!(depth_mut(&mut comment), 3);
 }
 
 /// Gets a struct with messages.
@@ -620,15 +531,11 @@ fn structs_reject_invalid_messages() {
 }
 
 #[test]
-fn structs_edit_their_messages_in_place() {
+fn structs_reach_their_messages_in_place() {
     let mut bytes: Vec<u8> = with_messages().encode();
     let mut value: WithMessagesMut = WithMessagesMut::new(&mut bytes).unwrap();
-    value.item_mut().set_id(5).unwrap();
-    assert!(value.item_mut().set_text("too long").is_err());
-    assert!(value.item_mut().set_text(None).is_err());
-    value.item_mut().set_text("yo").unwrap();
-    assert_eq!(value.as_ref().item().text(), Some("yo"));
-    assert_eq!(value.as_ref().item().id(), Some(5));
+    assert_eq!(value.item_mut().as_ref().id(), Some(7));
+    assert_eq!(value.maybe_mut().unwrap().as_ref().id(), Some(9));
     assert_eq!(value.as_ref().before(), "before");
     WithMessagesRef::new(value.as_bytes()).unwrap();
 }

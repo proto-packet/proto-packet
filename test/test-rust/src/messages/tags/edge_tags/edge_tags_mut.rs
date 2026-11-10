@@ -43,39 +43,3 @@ impl EdgeTagsMut<'_> {
         self.bytes
     }
 }
-
-impl EdgeTagsMut<'_> {
-    //! Fields
-
-    /// Sets the field: `min`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_min(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<u32> = value.into();
-        let bytes: Option<[u8; 4]> = value.map(|value| value.to_le_bytes());
-        proto_packet::io::replace_field(self.bytes, 1, bytes.as_ref().map(|bytes| bytes.as_slice()))
-    }
-
-    /// Sets the field: `max`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_max(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<u32> = value.into();
-        let bytes: Option<[u8; 4]> = value.map(|value| value.to_le_bytes());
-        proto_packet::io::replace_field(
-            self.bytes,
-            65535,
-            bytes.as_ref().map(|bytes| bytes.as_slice()),
-        )
-    }
-}

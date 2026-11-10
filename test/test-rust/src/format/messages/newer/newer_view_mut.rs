@@ -2,171 +2,29 @@
 
 /// The editable fields of any editable form of [Newer](super::Newer).
 pub trait NewerViewMut: super::NewerView {
-    /// Sets the field: `id`.
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u64>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `name`.
-    fn set_name<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `nickname`.
-    fn set_nickname<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `age`.
-    fn set_age(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable field: `entry`.
     fn entry_mut(&mut self) -> Option<impl crate::format::examples::EntryViewMut>;
 }
 
 impl<V: NewerViewMut> NewerViewMut for &mut V {
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_id(value)
-    }
-
-    fn set_name<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_name(value)
-    }
-
-    fn set_nickname<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_nickname(value)
-    }
-
-    fn set_age(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_age(value)
-    }
-
     fn entry_mut(&mut self) -> Option<impl crate::format::examples::EntryViewMut> {
         (**self).entry_mut()
     }
 }
 
 impl NewerViewMut for super::Newer {
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_id(value);
-        Ok(())
-    }
-
-    fn set_name<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        self.set_name(value.map(str::to_string));
-        Ok(())
-    }
-
-    fn set_nickname<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        self.set_nickname(value.map(str::to_string));
-        Ok(())
-    }
-
-    fn set_age(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_age(value);
-        Ok(())
-    }
-
     fn entry_mut(&mut self) -> Option<impl crate::format::examples::EntryViewMut> {
         self.entry_mut()
     }
 }
 
 impl NewerViewMut for super::NewerMut<'_> {
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_id(value)
-    }
-
-    fn set_name<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_name(value)
-    }
-
-    fn set_nickname<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_nickname(value)
-    }
-
-    fn set_age(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_age(value)
-    }
-
     fn entry_mut(&mut self) -> Option<impl crate::format::examples::EntryViewMut> {
         self.entry_mut()
     }
 }
 
 impl NewerViewMut for super::NewerBuf {
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<u64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_id(value)
-    }
-
-    fn set_name<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_name(value)
-    }
-
-    fn set_nickname<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_nickname(value)
-    }
-
-    fn set_age(
-        &mut self,
-        value: impl Into<Option<u32>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_age(value)
-    }
-
     fn entry_mut(&mut self) -> Option<impl crate::format::examples::EntryViewMut> {
         self.entry_mut()
     }

@@ -2,42 +2,6 @@
 
 /// The editable fields of any editable form of [AllKinds](super::AllKinds).
 pub trait AllKindsViewMut: super::AllKindsView {
-    /// Sets the field: `flag`.
-    fn set_flag(
-        &mut self,
-        value: impl Into<Option<bool>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `byte`.
-    fn set_byte(
-        &mut self,
-        value: impl Into<Option<u8>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `large`.
-    fn set_large(
-        &mut self,
-        value: impl Into<Option<u128>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `id`.
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Uuid>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `color`.
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `text`.
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable field: `point`.
     fn point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut>;
 
@@ -46,81 +10,9 @@ pub trait AllKindsViewMut: super::AllKindsView {
 
     /// Gets the mutable field: `item`.
     fn item_mut(&mut self) -> Option<impl crate::format::messages::ItemViewMut>;
-
-    /// Sets the field: `boxed_color`.
-    fn set_boxed_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `signed`.
-    fn set_signed(
-        &mut self,
-        value: impl Into<Option<i64>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `float`.
-    fn set_float(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Float64>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `at`.
-    fn set_at(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Timestamp>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
-    /// Sets the field: `price`.
-    fn set_price(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AllKindsViewMut> AllKindsViewMut for &mut V {
-    fn set_flag(
-        &mut self,
-        value: impl Into<Option<bool>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_flag(value)
-    }
-
-    fn set_byte(
-        &mut self,
-        value: impl Into<Option<u8>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_byte(value)
-    }
-
-    fn set_large(
-        &mut self,
-        value: impl Into<Option<u128>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_large(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Uuid>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_id(value)
-    }
-
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_color(value)
-    }
-
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
-    }
-
     fn point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         (**self).point_mut()
     }
@@ -132,93 +24,9 @@ impl<V: AllKindsViewMut> AllKindsViewMut for &mut V {
     fn item_mut(&mut self) -> Option<impl crate::format::messages::ItemViewMut> {
         (**self).item_mut()
     }
-
-    fn set_boxed_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_boxed_color(value)
-    }
-
-    fn set_signed(
-        &mut self,
-        value: impl Into<Option<i64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_signed(value)
-    }
-
-    fn set_float(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Float64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_float(value)
-    }
-
-    fn set_at(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Timestamp>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_at(value)
-    }
-
-    fn set_price(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_price(value)
-    }
 }
 
 impl AllKindsViewMut for super::AllKinds {
-    fn set_flag(
-        &mut self,
-        value: impl Into<Option<bool>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_flag(value);
-        Ok(())
-    }
-
-    fn set_byte(
-        &mut self,
-        value: impl Into<Option<u8>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_byte(value);
-        Ok(())
-    }
-
-    fn set_large(
-        &mut self,
-        value: impl Into<Option<u128>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_large(value);
-        Ok(())
-    }
-
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Uuid>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_id(value);
-        Ok(())
-    }
-
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_color(value);
-        Ok(())
-    }
-
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        self.set_text(value.map(str::to_string));
-        Ok(())
-    }
-
     fn point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.point_mut()
     }
@@ -229,92 +37,10 @@ impl AllKindsViewMut for super::AllKinds {
 
     fn item_mut(&mut self) -> Option<impl crate::format::messages::ItemViewMut> {
         self.item_mut()
-    }
-
-    fn set_boxed_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_boxed_color(value);
-        Ok(())
-    }
-
-    fn set_signed(
-        &mut self,
-        value: impl Into<Option<i64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_signed(value);
-        Ok(())
-    }
-
-    fn set_float(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Float64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_float(value);
-        Ok(())
-    }
-
-    fn set_at(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Timestamp>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_at(value);
-        Ok(())
-    }
-
-    fn set_price(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_price(value);
-        Ok(())
     }
 }
 
 impl AllKindsViewMut for super::AllKindsMut<'_> {
-    fn set_flag(
-        &mut self,
-        value: impl Into<Option<bool>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_flag(value)
-    }
-
-    fn set_byte(
-        &mut self,
-        value: impl Into<Option<u8>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_byte(value)
-    }
-
-    fn set_large(
-        &mut self,
-        value: impl Into<Option<u128>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_large(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Uuid>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_id(value)
-    }
-
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_color(value)
-    }
-
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
-
     fn point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.point_mut()
     }
@@ -325,87 +51,10 @@ impl AllKindsViewMut for super::AllKindsMut<'_> {
 
     fn item_mut(&mut self) -> Option<impl crate::format::messages::ItemViewMut> {
         self.item_mut()
-    }
-
-    fn set_boxed_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_boxed_color(value)
-    }
-
-    fn set_signed(
-        &mut self,
-        value: impl Into<Option<i64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_signed(value)
-    }
-
-    fn set_float(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Float64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_float(value)
-    }
-
-    fn set_at(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Timestamp>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_at(value)
-    }
-
-    fn set_price(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_price(value)
     }
 }
 
 impl AllKindsViewMut for super::AllKindsBuf {
-    fn set_flag(
-        &mut self,
-        value: impl Into<Option<bool>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_flag(value)
-    }
-
-    fn set_byte(
-        &mut self,
-        value: impl Into<Option<u8>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_byte(value)
-    }
-
-    fn set_large(
-        &mut self,
-        value: impl Into<Option<u128>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_large(value)
-    }
-
-    fn set_id(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Uuid>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_id(value)
-    }
-
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_color(value)
-    }
-
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
-    }
-
     fn point_mut(&mut self) -> Option<impl crate::format::examples::PointViewMut> {
         self.point_mut()
     }
@@ -416,40 +65,5 @@ impl AllKindsViewMut for super::AllKindsBuf {
 
     fn item_mut(&mut self) -> Option<impl crate::format::messages::ItemViewMut> {
         self.item_mut()
-    }
-
-    fn set_boxed_color(
-        &mut self,
-        value: impl Into<Option<crate::format::examples::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_boxed_color(value)
-    }
-
-    fn set_signed(
-        &mut self,
-        value: impl Into<Option<i64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_signed(value)
-    }
-
-    fn set_float(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Float64>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_float(value)
-    }
-
-    fn set_at(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Timestamp>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_at(value)
-    }
-
-    fn set_price(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Decimal<2>>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_price(value)
     }
 }

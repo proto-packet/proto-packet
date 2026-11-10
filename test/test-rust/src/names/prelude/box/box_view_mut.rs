@@ -4,18 +4,11 @@
 pub trait BoxViewMut: super::BoxView {
     /// Gets the mutable value of the case: `Inner`.
     fn as_inner_mut(&mut self) -> Option<impl crate::names::prelude::BoxViewMut>;
-
-    /// Sets the case: `Text`.
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: BoxViewMut> BoxViewMut for &mut V {
     fn as_inner_mut(&mut self) -> Option<impl crate::names::prelude::BoxViewMut> {
         (**self).as_inner_mut()
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
     }
 }
 
@@ -23,29 +16,16 @@ impl BoxViewMut for super::Box {
     fn as_inner_mut(&mut self) -> Option<impl crate::names::prelude::BoxViewMut> {
         self.as_inner_mut()
     }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        *self = super::Box::Text(value.to_string());
-        Ok(())
-    }
 }
 
 impl BoxViewMut for super::BoxMut<'_> {
     fn as_inner_mut(&mut self) -> Option<impl crate::names::prelude::BoxViewMut> {
         self.as_inner_mut()
     }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
 }
 
 impl BoxViewMut for super::BoxBuf {
     fn as_inner_mut(&mut self) -> Option<impl crate::names::prelude::BoxViewMut> {
         self.as_inner_mut()
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
     }
 }

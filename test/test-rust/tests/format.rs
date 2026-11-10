@@ -1,19 +1,18 @@
 mod common;
 
 use common::ID;
-use proto_packet::io::{CapacityError, DecodeError};
+use proto_packet::io::DecodeError;
 use proto_packet::types::{Float32, Float64, Uuid};
 use proto_packet_test::format::edges::{
     AbsentChild, FixedKinds, FixedKindsBuf, FixedKindsMut, FixedKindsRef, FixedKindsView,
     FixedKindsViewMut, FloatKinds, FloatKindsMut, FloatKindsRef, LoopByte, LoopLong, NineBits,
-    NineBitsMut, NineBitsRef, SignedKinds, SignedKindsMut, SignedKindsRef, Strings, StringsMut,
+    NineBitsMut, NineBitsRef, SignedKinds, SignedKindsMut, SignedKindsRef,
 };
 use proto_packet_test::format::examples::{
     Color, Entry, EntryBuf, EntryRef, EntryView, EntryViewMut, Line, LineBuf, LineMut, LineRef,
     LineView, LineViewMut, Mixed, MixedMut, MixedRef, Opt, OptBuf, OptMut, OptRef, OptView,
     OptViewMut, Outer, OuterRef, Padded, PaddedRef, Pair, PairBuf, PairMut, PairRef, PairView,
-    PairViewMut, Person, PersonBuf, PersonMut, PersonRef, PersonViewMut, Point, PointBuf, PointMut,
-    PointRef, PointView, PointViewMut,
+    PairViewMut, Person, PersonRef, Point, PointBuf, PointMut, PointRef, PointView, PointViewMut,
 };
 use proto_packet_test::structs::boxed::{
     ListNode, ListNodeBuf, ListNodeMut, ListNodeRef, ListNodeView, ListNodeViewMut,
@@ -796,107 +795,13 @@ fn mut_only_reaches_present_optional_structs() {
 }
 
 #[test]
-fn mut_sets_strings_of_the_same_length() {
-    let mut bytes: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
-    let mut person: PersonMut = PersonMut::new(&mut bytes).unwrap();
-    person.set_name("Bob").unwrap();
-    assert_eq!(bytes, [36, b'B', b'o', b'b']);
-}
-
-#[test]
-fn mut_rejects_strings_of_another_length() {
-    let original: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
-    let mut bytes: Vec<u8> = original.clone();
-    let mut person: PersonMut = PersonMut::new(&mut bytes).unwrap();
-    for (name, required) in [("Grace", 5), ("Al", 2), ("", 0)] {
-        assert_eq!(
-            person.set_name(name),
-            Err(CapacityError {
-                required,
-                capacity: 3,
-            })
-        );
-    }
-    assert_eq!(bytes, original);
-}
-
-/// Gets the test struct with strings around a variable struct.
-fn strings() -> Strings {
-    Strings::new(
-        7,
-        "first".to_string(),
-        Entry::new(1, "text".to_string()),
-        Some("second".to_string()),
-        "third".to_string(),
-    )
-}
-
-#[test]
-fn mut_sets_strings_between_other_entries() {
-    let mut bytes: Vec<u8> = strings().encode();
-    let mut value: StringsMut = StringsMut::new(&mut bytes).unwrap();
-    value.set_first("FIRST").unwrap();
-    value.set_third("THIRD").unwrap();
-    assert!(value.set_first("1st").is_err());
-    assert_eq!(
-        Strings::decode(&bytes),
-        Ok(Strings::new(
-            7,
-            "FIRST".to_string(),
-            Entry::new(1, "text".to_string()),
-            Some("second".to_string()),
-            "THIRD".to_string(),
-        ))
-    );
-}
-
-#[test]
-fn mut_sets_optional_strings() {
-    let mut bytes: Vec<u8> = strings().encode();
-    let mut value: StringsMut = StringsMut::new(&mut bytes).unwrap();
-    value.set_second("SECOND").unwrap();
-    assert_eq!(value.as_ref().second(), Some("SECOND"));
-    assert_eq!(
-        value.set_second(None),
-        Err(CapacityError {
-            required: 0,
-            capacity: 6,
-        })
-    );
-    assert_eq!(value.as_ref().second(), Some("SECOND"));
-    assert_eq!(value.as_ref().third(), "third");
-
-    let mut bytes: Vec<u8> = Opt::new(false, None, None, None, None).encode();
-    let mut opt: OptMut = OptMut::new(&mut bytes).unwrap();
-    opt.set_d("").unwrap();
-    assert_eq!(opt.as_ref().d(), Some(""));
-    opt.set_d(None).unwrap();
-    assert_eq!(opt.as_ref().d(), None);
-}
-
-#[test]
-fn mut_failed_optional_strings_stay_absent() {
-    let mut bytes: Vec<u8> = Opt::new(false, None, None, None, None).encode();
-    let original: Vec<u8> = bytes.clone();
-    let mut opt: OptMut = OptMut::new(&mut bytes).unwrap();
-    assert!(opt.set_d("hi").is_err());
-    assert_eq!(bytes, original);
-}
-
-#[test]
 fn mut_edits_nested_variable_structs() {
     let mut bytes: Vec<u8> = pair_bytes();
     let mut pair: PairMut = PairMut::new(&mut bytes).unwrap();
-    assert_eq!(
-        pair.first_mut().set_text("hello, world"),
-        Err(CapacityError {
-            required: 12,
-            capacity: 5,
-        })
-    );
-    pair.first_mut().set_text("HELLO").unwrap();
+    pair.first_mut().set_id(7);
     pair.second_mut().set_id(8);
-    assert_eq!(pair.as_ref().first().text(), "HELLO");
+    assert_eq!(pair.as_ref().first().id(), 7);
+    assert_eq!(pair.as_ref().first().text(), "hello");
     assert_eq!(pair.as_ref().second().id(), 8);
     assert_eq!(pair.as_ref().note(), "ok");
     PairRef::new(pair.as_bytes()).unwrap();
@@ -1056,35 +961,6 @@ fn view_muts_edit_every_form() {
     assert_eq!(Point::decode(&bytes), Ok(Point::new(11, 2)));
 }
 
-/// Renames any editable form of a person.
-fn rename<P: PersonViewMut>(person: &mut P, name: &str) -> Result<(), CapacityError> {
-    person.set_name(name)
-}
-
-#[test]
-fn view_muts_set_strings() {
-    let mut person: Person = Person::new("Ada".to_string(), 36);
-    rename(&mut person, "Grace Hopper").unwrap();
-    assert_eq!(person.name(), "Grace Hopper");
-
-    let mut buf: PersonBuf = PersonBuf::from(&Person::new("Ada".to_string(), 36));
-    rename(&mut buf, "Bob").unwrap();
-    assert_eq!(buf.decode(), Person::new("Bob".to_string(), 36));
-    assert_eq!(
-        rename(&mut buf, "Grace"),
-        Err(CapacityError {
-            required: 5,
-            capacity: 3,
-        })
-    );
-
-    let mut bytes: Vec<u8> = Person::new("Ada".to_string(), 36).encode();
-    let mut edit: PersonMut = PersonMut::new(&mut bytes).unwrap();
-    assert!(rename(&mut edit, "Grace").is_err());
-    rename(&mut edit, "Eve").unwrap();
-    assert_eq!(edit.as_ref().name(), "Eve");
-}
-
 /// Edits any editable form of a line, through its `Copy` nested struct.
 fn raise_line<L: LineViewMut>(line: &mut L) {
     line.start_mut().set_y(9);
@@ -1092,10 +968,9 @@ fn raise_line<L: LineViewMut>(line: &mut L) {
 }
 
 /// Edits any editable form of a pair, through its non-`Copy` nested structs.
-fn retag<P: PairViewMut>(pair: &mut P) -> Result<(), CapacityError> {
-    pair.first_mut().set_text("HELLO")?;
+fn retag<P: PairViewMut>(pair: &mut P) {
+    pair.first_mut().set_id(7);
     pair.second_mut().set_id(8);
-    pair.set_note("no")
 }
 
 #[test]
@@ -1116,68 +991,61 @@ fn view_muts_edit_nested_structs() {
     assert_eq!(Line::decode(&bytes), Ok(expected));
 
     let expected: Pair = Pair::new(
-        Entry::new(1, "HELLO".to_string()),
+        Entry::new(7, "hello".to_string()),
         Entry::new(8, "hi".to_string()),
-        "no".to_string(),
+        "ok".to_string(),
     );
 
     let mut value: Pair = pair();
-    retag(&mut value).unwrap();
+    retag(&mut value);
     assert_eq!(value, expected);
 
     let mut buf: PairBuf = PairBuf::from(&pair());
-    retag(&mut buf).unwrap();
+    retag(&mut buf);
     assert_eq!(buf.decode(), expected);
 
     let mut bytes: Vec<u8> = pair_bytes();
-    retag(&mut PairMut::new(&mut bytes).unwrap()).unwrap();
+    retag(&mut PairMut::new(&mut bytes).unwrap());
     assert_eq!(Pair::decode(&bytes), Ok(expected));
 }
 
-/// Sets the optional fields of any editable form of an `Opt`.
-fn fill_opt<O: OptViewMut>(opt: &mut O) -> Result<(), CapacityError> {
+/// Sets the optional fixed-size fields of any editable form of an `Opt`.
+fn fill_opt<O: OptViewMut>(opt: &mut O) {
     opt.set_b(5);
     opt.set_c(true);
-    opt.set_d("hi")?;
     opt.set_e(Color::Red);
-    Ok(())
 }
 
-/// Clears the optional fields of any editable form of an `Opt`.
-fn clear_opt<O: OptViewMut>(opt: &mut O) -> Result<(), CapacityError> {
+/// Clears the optional fixed-size fields of any editable form of an `Opt`.
+fn clear_opt<O: OptViewMut>(opt: &mut O) {
     opt.set_b(None);
     opt.set_c(None);
-    opt.set_d(None)?;
     opt.set_e(None);
-    Ok(())
 }
 
 #[test]
 fn view_muts_set_optional_fields() {
-    let filled: Opt = Opt::new(
-        false,
-        Some(5),
-        Some(true),
-        Some("hi".to_string()),
-        Some(Color::Red),
-    );
-    let absent: Opt = Opt::new(false, None, None, None, None);
+    let text: Option<String> = Some("hi".to_string());
+    let filled: Opt = Opt::new(false, Some(5), Some(true), text.clone(), Some(Color::Red));
+    let absent: Opt = Opt::new(false, None, None, text, None);
 
     let mut value: Opt = absent.clone();
-    fill_opt(&mut value).unwrap();
+    fill_opt(&mut value);
     assert_eq!(value, filled);
-    clear_opt(&mut value).unwrap();
+    clear_opt(&mut value);
     assert_eq!(value, absent);
 
-    let mut bytes: Vec<u8> = filled.encode();
+    let mut bytes: Vec<u8> = absent.encode();
     let mut edit: OptMut = OptMut::new(&mut bytes).unwrap();
-    fill_opt(&mut edit).unwrap();
-    assert!(clear_opt(&mut edit).is_err());
-    assert_eq!(edit.as_ref().d(), Some("hi"));
+    fill_opt(&mut edit);
+    assert_eq!(Opt::decode(edit.as_bytes()), Ok(filled.clone()));
+    clear_opt(&mut edit);
+    assert_eq!(Opt::decode(edit.as_bytes()), Ok(absent.clone()));
 
     let mut buf: OptBuf = OptBuf::from(&absent);
-    assert!(fill_opt(&mut buf).is_err());
-    clear_opt(&mut buf).unwrap();
+    fill_opt(&mut buf);
+    assert_eq!(buf.decode(), filled);
+    clear_opt(&mut buf);
     assert_eq!(buf.decode(), absent);
 }
 

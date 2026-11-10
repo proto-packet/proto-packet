@@ -8,12 +8,6 @@ pub trait OptionalFieldsViewMut: super::OptionalFieldsView {
     /// Sets the field: `id`.
     fn set_id(&mut self, value: impl Into<Option<proto_packet::types::Uuid>>);
 
-    /// Sets the field: `text`.
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable field: `point`.
     fn point_mut(&mut self) -> Option<impl crate::types::PointViewMut>;
 
@@ -37,13 +31,6 @@ impl<V: OptionalFieldsViewMut> OptionalFieldsViewMut for &mut V {
 
     fn set_id(&mut self, value: impl Into<Option<proto_packet::types::Uuid>>) {
         (**self).set_id(value)
-    }
-
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
     }
 
     fn point_mut(&mut self) -> Option<impl crate::types::PointViewMut> {
@@ -76,15 +63,6 @@ impl OptionalFieldsViewMut for super::OptionalFields {
         self.set_id(value);
     }
 
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        self.set_text(value.map(str::to_string));
-        Ok(())
-    }
-
     fn point_mut(&mut self) -> Option<impl crate::types::PointViewMut> {
         self.point_mut()
     }
@@ -115,13 +93,6 @@ impl OptionalFieldsViewMut for super::OptionalFieldsMut<'_> {
         self.set_id(value)
     }
 
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
-
     fn point_mut(&mut self) -> Option<impl crate::types::PointViewMut> {
         self.point_mut()
     }
@@ -150,13 +121,6 @@ impl OptionalFieldsViewMut for super::OptionalFieldsBuf {
 
     fn set_id(&mut self, value: impl Into<Option<proto_packet::types::Uuid>>) {
         self.as_mut().set_id(value)
-    }
-
-    fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
     }
 
     fn point_mut(&mut self) -> Option<impl crate::types::PointViewMut> {

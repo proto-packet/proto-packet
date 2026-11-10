@@ -7,9 +7,6 @@ pub trait AbsentChildViewMut: super::AbsentChildView {
 
     /// Gets the mutable field: `second`.
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut;
-
-    /// Sets the field: `text`.
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
 }
 
 impl<V: AbsentChildViewMut> AbsentChildViewMut for &mut V {
@@ -19,10 +16,6 @@ impl<V: AbsentChildViewMut> AbsentChildViewMut for &mut V {
 
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         (**self).second_mut()
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_text(value)
     }
 }
 
@@ -34,11 +27,6 @@ impl AbsentChildViewMut for super::AbsentChild {
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.second_mut()
     }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value.to_string());
-        Ok(())
-    }
 }
 
 impl AbsentChildViewMut for super::AbsentChildMut<'_> {
@@ -49,10 +37,6 @@ impl AbsentChildViewMut for super::AbsentChildMut<'_> {
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.second_mut()
     }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_text(value)
-    }
 }
 
 impl AbsentChildViewMut for super::AbsentChildBuf {
@@ -62,9 +46,5 @@ impl AbsentChildViewMut for super::AbsentChildBuf {
 
     fn second_mut(&mut self) -> impl crate::format::examples::EntryViewMut {
         self.second_mut()
-    }
-
-    fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_text(value)
     }
 }

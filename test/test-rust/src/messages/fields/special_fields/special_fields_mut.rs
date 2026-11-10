@@ -43,34 +43,3 @@ impl SpecialFieldsMut<'_> {
         self.bytes
     }
 }
-
-impl SpecialFieldsMut<'_> {
-    //! Fields
-
-    /// Sets the field: `id`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_id(
-        &mut self,
-        value: impl Into<Option<proto_packet::types::Uuid>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<proto_packet::types::Uuid> = value.into();
-        let bytes: Option<[u8; 16]> = value.map(|value| *value.as_bytes());
-        proto_packet::io::replace_field(self.bytes, 1, bytes.as_ref().map(|bytes| bytes.as_slice()))
-    }
-
-    /// Sets the field: `text`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        proto_packet::io::replace_field(self.bytes, 2, value.map(str::as_bytes))
-    }
-}

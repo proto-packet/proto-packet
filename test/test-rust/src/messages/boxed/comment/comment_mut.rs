@@ -47,19 +47,6 @@ impl CommentMut<'_> {
 impl CommentMut<'_> {
     //! Fields
 
-    /// Sets the field: `text`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the message unchanged, if the message would change its
-    /// length.
-    pub fn set_text<'v>(
-        &mut self,
-        value: impl Into<Option<&'v str>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        let value: Option<&str> = value.into();
-        proto_packet::io::replace_field(self.bytes, 1, value.map(str::as_bytes))
-    }
-
     /// Gets the mut of the field: `reply`.
     #[must_use]
     pub fn reply_mut(&mut self) -> Option<crate::messages::boxed::CommentMut<'_>> {

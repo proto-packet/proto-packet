@@ -57,13 +57,4 @@ impl BoxMut<'_> {
             crate::names::prelude::BoxMut::new_unchecked(self.bytes.get_unchecked_mut(2..))
         })
     }
-
-    /// Sets the case: `Text`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_text(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 2, value.as_bytes())
-    }
 }

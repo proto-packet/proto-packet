@@ -193,7 +193,7 @@ pub fn gen_variant(
     let view_mut_cases: Vec<Case> = cases
         .iter()
         .copied()
-        .filter(|case| !case.tag.is_collection())
+        .filter(|case| case.is_nested(typing))
         .collect();
     Ok(vec![
         TypeFile {
@@ -232,7 +232,7 @@ pub fn gen_variant(
         },
         TypeFile {
             suffix: "_view_mut",
-            code: gen_variant_view_mut(typing, schema_name, &view_mut_cases, &type_name),
+            code: gen_variant_view_mut(schema_name, &view_mut_cases, &type_name),
         },
     ])
 }

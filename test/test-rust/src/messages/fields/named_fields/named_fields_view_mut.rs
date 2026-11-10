@@ -11,12 +11,6 @@ pub trait NamedFieldsViewMut: super::NamedFieldsView {
     /// Gets the mutable field: `label`.
     fn label_mut(&mut self) -> Option<impl crate::types::LabelViewMut>;
 
-    /// Sets the field: `color`.
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::types::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable field: `shape`.
     fn shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut>;
 }
@@ -32,13 +26,6 @@ impl<V: NamedFieldsViewMut> NamedFieldsViewMut for &mut V {
 
     fn label_mut(&mut self) -> Option<impl crate::types::LabelViewMut> {
         (**self).label_mut()
-    }
-
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::types::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_color(value)
     }
 
     fn shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut> {
@@ -59,14 +46,6 @@ impl NamedFieldsViewMut for super::NamedFields {
         self.label_mut()
     }
 
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::types::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_color(value);
-        Ok(())
-    }
-
     fn shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut> {
         self.shape_mut()
     }
@@ -85,13 +64,6 @@ impl NamedFieldsViewMut for super::NamedFieldsMut<'_> {
         self.label_mut()
     }
 
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::types::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_color(value)
-    }
-
     fn shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut> {
         self.shape_mut()
     }
@@ -108,13 +80,6 @@ impl NamedFieldsViewMut for super::NamedFieldsBuf {
 
     fn label_mut(&mut self) -> Option<impl crate::types::LabelViewMut> {
         self.label_mut()
-    }
-
-    fn set_color(
-        &mut self,
-        value: impl Into<Option<crate::types::Color>>,
-    ) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_color(value)
     }
 
     fn shape_mut(&mut self) -> Option<impl crate::types::ShapeViewMut> {

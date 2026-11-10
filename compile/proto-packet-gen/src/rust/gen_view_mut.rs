@@ -61,16 +61,15 @@ pub(crate) fn view_mut_name(type_name: &str) -> String {
 
 /// Generates the `ViewMut` trait of the type with the `schema_name` & the Rust `type_name`.
 ///
-/// It has a setter for each scalar & string field, & an accessor for each nested struct or message,
-/// so generic code can edit any editable form of the type. A string can fail, since the `Mut` type
-/// can't change its length, & so can any field of a message, for the same reason, if `all_fallible`.
+/// It has a setter for each of the scalar `fields`, & an accessor for each nested struct or message,
+/// so generic code can edit any editable form of the type. Every edit is in place & can't fail,
+/// so a value that can change its length has no setter. (ex: a string, or a field of a message)
 /// The trait is also implemented for mutable references, since the type's own accessors return one.
 pub(crate) fn gen_view_mut(
     typing: Typing<'_>,
     schema_name: &str,
     fields: &[Field<'_>],
     type_name: &str,
-    all_fallible: bool,
 ) -> String {
     let name: String = view_mut_name(schema_name);
     let mut_type: RustType = RustType::from(format!("super::{}", mut_name(schema_name)))
@@ -78,25 +77,11 @@ pub(crate) fn gen_view_mut(
     let buf_type: String = format!("super::{}", buf_name(schema_name));
     let generic: String = format!("V: {}", name);
     Block::default()
-        .with_statement(gen_trait(
-            typing,
-            schema_name,
-            fields,
-            &name,
-            type_name,
-            all_fallible,
-        ))
+        .with_statement(gen_trait(typing, schema_name, fields, &name, type_name))
         .with_statement(EmptyLine::default())
         .with_statement(
-            gen_impl(
-                typing,
-                fields,
-                &name,
-                "&mut V",
-                Form::Reference,
-                all_fallible,
-            )
-            .with_generic(generic.as_str()),
+            gen_impl(typing, fields, &name, "&mut V", Form::Reference)
+                .with_generic(generic.as_str()),
         )
         .with_statement(EmptyLine::default())
         .with_statement(gen_impl(
@@ -105,17 +90,9 @@ pub(crate) fn gen_view_mut(
             &name,
             format!("super::{}", type_name).as_str(),
             Form::Native,
-            all_fallible,
         ))
         .with_statement(EmptyLine::default())
-        .with_statement(gen_impl(
-            typing,
-            fields,
-            &name,
-            mut_type,
-            Form::Mut,
-            all_fallible,
-        ))
+        .with_statement(gen_impl(typing, fields, &name, mut_type, Form::Mut))
         .with_statement(EmptyLine::default())
         .with_statement(gen_impl(
             typing,
@@ -123,7 +100,6 @@ pub(crate) fn gen_view_mut(
             &name,
             buf_type.as_str(),
             Form::Buf,
-            all_fallible,
         ))
         .to_code()
 }
@@ -135,7 +111,6 @@ fn gen_trait(
     fields: &[Field<'_>],
     name: &str,
     type_name: &str,
-    all_fallible: bool,
 ) -> Trait {
     let mut result: Trait = Trait::from(name)
         .with_comment(format!(
@@ -157,7 +132,7 @@ fn gen_trait(
             format!(" Sets the field: `{}`.", field.name)
         };
         let signature_dec: SignatureDec =
-            SignatureDec::from(gen_signature(typing, *field, all_fallible)).with_comment(comment);
+            SignatureDec::from(gen_signature(typing, *field)).with_comment(comment);
         result.add_signature_dec(signature_dec);
     }
     result
@@ -170,26 +145,24 @@ fn gen_impl<T>(
     name: &str,
     target: T,
     form: Form,
-    all_fallible: bool,
 ) -> ImplBlock
 where
     T: Into<RustType>,
 {
     let mut result: ImplBlock = ImplBlock::from(target).with_for_trait(name);
     for field in fields {
-        let mut function: Function = Function::from(gen_signature(typing, *field, all_fallible));
-        for statement in gen_body(typing, *field, form, all_fallible) {
-            function.add_literal(statement);
-        }
-        result.add_function(function);
+        result.add_function(
+            Function::from(gen_signature(typing, *field))
+                .with_literal(gen_body(typing, *field, form)),
+        );
     }
     result
 }
 
 /// Generates the signature of the method of the `field`.
-fn gen_signature(typing: Typing<'_>, field: Field<'_>, all_fallible: bool) -> Signature {
+fn gen_signature(typing: Typing<'_>, field: Field<'_>) -> Signature {
     if !is_struct(typing, field) {
-        return gen_setter_signature(field, all_fallible || field.tag.is_string());
+        return gen_setter_signature(field);
     }
     let child: String = format!("impl {}", generated_path(field.tag, "ViewMut"));
     let result: String = if field.is_optional {
@@ -202,31 +175,12 @@ fn gen_signature(typing: Typing<'_>, field: Field<'_>, all_fallible: bool) -> Si
         .with_result(result)
 }
 
-/// Generates the statements of the method of the `field` for the `form`.
-fn gen_body(typing: Typing<'_>, field: Field<'_>, form: Form, all_fallible: bool) -> Vec<String> {
+/// Generates the statement of the method of the `field` for the `form`.
+fn gen_body(typing: Typing<'_>, field: Field<'_>, form: Form) -> String {
     if is_struct(typing, field) {
-        return vec![form.gen_accessor_call(&field.accessor_name())];
+        return form.gen_accessor_call(&field.accessor_name());
     }
     let setter: String = field.setter_name();
-    if let Some(call) = form.gen_setter_call(&setter) {
-        return vec![call];
-    }
-    if !field.tag.is_string() {
-        let mut statements: Vec<String> = vec![format!("self.{}(value);", setter)];
-        if all_fallible {
-            statements.push("Ok(())".to_string());
-        }
-        return statements;
-    }
-    if field.is_optional {
-        return vec![
-            "let value: Option<&str> = value.into();".to_string(),
-            format!("self.{}(value.map(str::to_string));", setter),
-            "Ok(())".to_string(),
-        ];
-    }
-    vec![
-        format!("self.{}(value.to_string());", setter),
-        "Ok(())".to_string(),
-    ]
+    form.gen_setter_call(&setter)
+        .unwrap_or_else(|| format!("self.{}(value);", setter))
 }

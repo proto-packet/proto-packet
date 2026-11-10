@@ -52,18 +52,6 @@ impl KeywordStructMut<'_> {
         unsafe { proto_packet::io::write_u32_unchecked(self.bytes, 0, value) };
     }
 
-    /// Sets the field: `match`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value isn't the length
-    /// of the one it replaces.
-    pub fn set_match(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_str(
-            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 0, 1, 8, 1) },
-            value,
-        )
-    }
-
     /// Sets the field: `self`.
     pub fn set_self(&mut self, value: u32) {
         unsafe { proto_packet::io::write_u32_unchecked(self.bytes, 4, value) };

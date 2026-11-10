@@ -2,9 +2,6 @@
 
 /// The editable fields of any editable form of [WithVariants](super::WithVariants).
 pub trait WithVariantsViewMut: super::WithVariantsView {
-    /// Sets the field: `before`.
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable field: `shape`.
     fn shape_mut(&mut self) -> impl crate::format::variants::ShapeViewMut;
 
@@ -16,10 +13,6 @@ pub trait WithVariantsViewMut: super::WithVariantsView {
 }
 
 impl<V: WithVariantsViewMut> WithVariantsViewMut for &mut V {
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_before(value)
-    }
-
     fn shape_mut(&mut self) -> impl crate::format::variants::ShapeViewMut {
         (**self).shape_mut()
     }
@@ -34,11 +27,6 @@ impl<V: WithVariantsViewMut> WithVariantsViewMut for &mut V {
 }
 
 impl WithVariantsViewMut for super::WithVariants {
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_before(value.to_string());
-        Ok(())
-    }
-
     fn shape_mut(&mut self) -> impl crate::format::variants::ShapeViewMut {
         self.shape_mut()
     }
@@ -53,10 +41,6 @@ impl WithVariantsViewMut for super::WithVariants {
 }
 
 impl WithVariantsViewMut for super::WithVariantsMut<'_> {
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_before(value)
-    }
-
     fn shape_mut(&mut self) -> impl crate::format::variants::ShapeViewMut {
         self.shape_mut()
     }
@@ -71,10 +55,6 @@ impl WithVariantsViewMut for super::WithVariantsMut<'_> {
 }
 
 impl WithVariantsViewMut for super::WithVariantsBuf {
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_before(value)
-    }
-
     fn shape_mut(&mut self) -> impl crate::format::variants::ShapeViewMut {
         self.shape_mut()
     }

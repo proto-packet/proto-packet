@@ -47,15 +47,6 @@ impl ExprMut<'_> {
 impl ExprMut<'_> {
     //! Cases
 
-    /// Sets the case: `Number`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the variant unchanged, if the variant would change its
-    /// length.
-    pub fn set_number(&mut self, value: u64) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_variant(self.bytes, 1, &value.to_le_bytes())
-    }
-
     /// Gets the mut of the case: `Negate`.
     #[must_use]
     pub fn as_negate_mut(&mut self) -> Option<crate::variants::boxed::ExprMut<'_>> {

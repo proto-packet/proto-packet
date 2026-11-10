@@ -2,9 +2,6 @@
 
 /// The editable fields of any editable form of [WithMessages](super::WithMessages).
 pub trait WithMessagesViewMut: super::WithMessagesView {
-    /// Sets the field: `before`.
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError>;
-
     /// Gets the mutable field: `item`.
     fn item_mut(&mut self) -> impl crate::format::messages::ItemViewMut;
 
@@ -16,10 +13,6 @@ pub trait WithMessagesViewMut: super::WithMessagesView {
 }
 
 impl<V: WithMessagesViewMut> WithMessagesViewMut for &mut V {
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        (**self).set_before(value)
-    }
-
     fn item_mut(&mut self) -> impl crate::format::messages::ItemViewMut {
         (**self).item_mut()
     }
@@ -34,11 +27,6 @@ impl<V: WithMessagesViewMut> WithMessagesViewMut for &mut V {
 }
 
 impl WithMessagesViewMut for super::WithMessages {
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_before(value.to_string());
-        Ok(())
-    }
-
     fn item_mut(&mut self) -> impl crate::format::messages::ItemViewMut {
         self.item_mut()
     }
@@ -53,10 +41,6 @@ impl WithMessagesViewMut for super::WithMessages {
 }
 
 impl WithMessagesViewMut for super::WithMessagesMut<'_> {
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.set_before(value)
-    }
-
     fn item_mut(&mut self) -> impl crate::format::messages::ItemViewMut {
         self.item_mut()
     }
@@ -71,10 +55,6 @@ impl WithMessagesViewMut for super::WithMessagesMut<'_> {
 }
 
 impl WithMessagesViewMut for super::WithMessagesBuf {
-    fn set_before(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        self.as_mut().set_before(value)
-    }
-
     fn item_mut(&mut self) -> impl crate::format::messages::ItemViewMut {
         self.item_mut()
     }

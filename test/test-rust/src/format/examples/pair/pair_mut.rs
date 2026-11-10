@@ -66,16 +66,4 @@ impl PairMut<'_> {
             )
         }
     }
-
-    /// Sets the field: `note`.
-    ///
-    /// # Errors
-    /// Returns an error, leaving the struct unchanged, if the value isn't the length
-    /// of the one it replaces.
-    pub fn set_note(&mut self, value: &str) -> Result<(), proto_packet::io::CapacityError> {
-        proto_packet::io::replace_str(
-            unsafe { proto_packet::io::read_tail_entry_mut_unchecked(self.bytes, 0, 2, 3, 8, 1) },
-            value,
-        )
-    }
 }
