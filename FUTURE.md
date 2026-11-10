@@ -44,10 +44,12 @@ Some schema names generate Rust that doesn't compile, or that hides other items.
 
 ### Ordering
 
-Generated enums order their cases by tag number, but variants derive `Ord`, ordering their cases by
-declaration order, & messages derive it over their fields in declaration order. Reordering a
-variant's cases or a message's fields in the schema doesn't change their tag numbers, but changes
-their order, & so the order of the maps keyed by them. (`gen_variant.rs` & `gen_message.rs`)
+A message or a variant is ordered by tag number, but a field or a case that a reader doesn't know is
+compared by its bytes, where a reader that knows it compares its value. So two readers with
+different schemas can order two keys of a map differently, when the keys first differ in a field
+only one of them knows. (ex: a `u32` of 256 is before 1 by its bytes) A map with such keys can be
+valid for one reader & not for the other. (ex: only allow a key without a message or a variant)
+(`gen_ord.rs`)
 
 ### Doc Comments
 
