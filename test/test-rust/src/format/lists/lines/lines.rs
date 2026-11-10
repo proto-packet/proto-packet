@@ -186,3 +186,5 @@ impl proto_packet::io::Element for Lines {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for Lines {}

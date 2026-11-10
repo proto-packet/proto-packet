@@ -117,6 +117,8 @@ pub(crate) fn gen_element(
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }}
 }}
+
+impl {io}::ArrayElement for {type_name} {{}}
 ",
         io = IO,
         type_name = type_name,
@@ -185,6 +187,8 @@ pub(crate) fn gen_enum_element(prelude: Prelude, type_name: &str) -> String {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }}
 }}
+
+impl {io}::ArrayElement for {type_name} {{}}
 ",
         io = IO,
         type_name = type_name,

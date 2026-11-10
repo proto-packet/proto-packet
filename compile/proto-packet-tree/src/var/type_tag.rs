@@ -66,6 +66,11 @@ impl TypeTag {
         matches!(self, Self::Array { .. })
     }
 
+    /// Checks if the type is an array of bytes, which are `u8`.
+    pub fn is_byte_array(&self) -> bool {
+        matches!(self, Self::Array { element, .. } if **element == Self::Primitive(PrimitiveType::UnsignedInt8))
+    }
+
     /// Checks if the type is an optional value.
     pub fn is_optional(&self) -> bool {
         matches!(self, Self::Optional(_))

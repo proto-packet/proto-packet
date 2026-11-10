@@ -213,6 +213,8 @@ impl proto_packet::io::Element for GreetRequest {
     }
 }
 
+impl proto_packet::io::ArrayElement for GreetRequest {}
+
 impl proto_packet::serde::Serialize for GreetRequest {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

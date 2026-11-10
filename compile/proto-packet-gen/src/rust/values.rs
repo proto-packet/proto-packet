@@ -70,6 +70,7 @@ pub(crate) fn ref_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
         TypeTag::Named(name) if typing.is_enum(tag) => type_path(name.to_ref()),
         TypeTag::Named(_) => format!("{}<'a>", generated_path(tag, "Ref")),
         TypeTag::List(_) if tag.is_bytes() => "&'a [u8]".to_string(),
+        TypeTag::Array { len, .. } if tag.is_byte_array() => format!("&'a [u8; {}]", len),
         TypeTag::List(element) | TypeTag::Array { element, .. } => match element.as_ref() {
             TypeTag::Optional(value) => {
                 format!("{}<'a, {}>", OPTION_LIST_REF, typing.rust_type(value))
@@ -138,6 +139,7 @@ pub(crate) fn view_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
             view_value_type(typing, key),
             view_value_type(typing, value)
         ),
+        TypeTag::Array { len, .. } if tag.is_byte_array() => format!("&[u8; {}]", len),
         TypeTag::Array { element, .. } => format!(
             "impl {}<Item = {}>",
             LIST_VIEW,

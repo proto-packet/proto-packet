@@ -225,3 +225,5 @@ impl proto_packet::io::Element for Sum {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for Sum {}

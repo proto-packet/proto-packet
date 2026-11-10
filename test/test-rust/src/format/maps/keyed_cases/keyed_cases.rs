@@ -232,6 +232,8 @@ impl proto_packet::io::Element for KeyedCases {
     }
 }
 
+impl proto_packet::io::ArrayElement for KeyedCases {}
+
 impl proto_packet::serde::Serialize for KeyedCases {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

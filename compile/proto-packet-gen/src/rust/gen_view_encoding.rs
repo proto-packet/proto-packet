@@ -156,6 +156,9 @@ fn gen_write(typing: Typing<'_>, tag: &TypeTag, item: Item<'_>, out: &str, depth
                 write = gen_write(typing, element, Item::CLOSURE, "out", depth)
             ),
         },
+        TypeTag::Array { .. } if tag.is_byte_array() => {
+            format!("{}.extend_from_slice(&{}[..]);", out, item.expr)
+        }
         TypeTag::Array { len, element } => match element.as_ref() {
             TypeTag::Optional(value) => format!(
                 "{io}::write_option_array_view::<{native}, _, _, _>({list}, {out}, {len}, |item, out| {{ {write} }});",

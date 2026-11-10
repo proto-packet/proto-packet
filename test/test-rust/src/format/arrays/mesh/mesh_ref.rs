@@ -76,7 +76,7 @@ impl<'a> MeshRef<'a> {
 
     /// Gets the field: `tag`.
     #[must_use]
-    pub fn tag(&self) -> proto_packet::io::ListRef<'a, u8> {
+    pub fn tag(&self) -> &'a [u8; 4] {
         unsafe {
             <[u8; 4] as proto_packet::io::Element>::read_unchecked(self.bytes.get_unchecked(16..20))
         }

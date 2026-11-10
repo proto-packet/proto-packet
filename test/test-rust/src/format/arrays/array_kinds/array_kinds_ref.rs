@@ -79,7 +79,7 @@ impl<'a> ArrayKindsRef<'a> {
 
     /// Gets the field: `bytes`.
     #[must_use]
-    pub fn bytes(&self) -> proto_packet::io::ListRef<'a, u8> {
+    pub fn bytes(&self) -> &'a [u8; 4] {
         unsafe {
             <[u8; 4] as proto_packet::io::Element>::read_unchecked(self.bytes.get_unchecked(40..44))
         }

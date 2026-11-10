@@ -247,6 +247,8 @@ impl proto_packet::io::Element for Shape {
     }
 }
 
+impl proto_packet::io::ArrayElement for Shape {}
+
 impl proto_packet::serde::Serialize for Shape {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

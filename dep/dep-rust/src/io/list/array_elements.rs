@@ -1,11 +1,14 @@
 //! The arrays as elements.
 //!
 //! An array is a list of exactly its length of fixed-size elements, so it is fixed-size & has no
-//! count. An array of optional elements has their presence bits after them.
+//! count. An array of optional elements has their presence bits after them. An array of bytes is
+//! read in place as its bytes.
 
 use crate::io::list::element::stride;
 use crate::io::list::option_write::{bits_len, option_items_len, write_option_items};
-use crate::io::{DecodeError, Element, ListRef, OptionListRef, check_exact_len, encode_list};
+use crate::io::{ArrayElement, DecodeError, Element, ListRef, OptionListRef};
+use crate::io::{check_exact_len, encode_list};
+use std::cmp::Ordering;
 
 /// Gets the size of an array of the `len` of elements of the type `T`, if they are fixed-size.
 const fn array_size<T>(len: usize) -> Option<usize>
@@ -39,15 +42,77 @@ fn check_array_len(bytes: &[u8], size: Option<usize>) -> Result<(), DecodeError>
     }
 }
 
+impl<T, const N: usize> ArrayElement for [T; N] where T: ArrayElement {}
+
+impl<T, const N: usize> ArrayElement for [Option<T>; N] where T: Element {}
+
+impl<const N: usize> ArrayElement for [u8; N] {}
+
+impl<const N: usize> Element for [u8; N] {
+    const SIZE: Option<usize> = Some(N);
+    const ALIGNMENT: usize = 1;
+    const CAN_BE_INVALID: bool = false;
+    type Ref<'a> = &'a [u8; N];
+    type View<'a> = &'a [u8; N];
+
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
+        check_exact_len(bytes, N)
+    }
+
+    unsafe fn read_unchecked(bytes: &[u8]) -> &[u8; N] {
+        unsafe { <&[u8; N]>::try_from(bytes).unwrap_unchecked() }
+    }
+
+    fn decode(element: &[u8; N]) -> [u8; N] {
+        *element
+    }
+
+    fn view(&self) -> &[u8; N] {
+        self
+    }
+
+    fn encoded_len(&self) -> usize {
+        N
+    }
+
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self);
+    }
+
+    fn cmp_refs(a: &[u8; N], b: &[u8; N]) -> Ordering {
+        a.cmp(b)
+    }
+
+    fn cmp_ref(&self, other: &[u8; N]) -> Ordering {
+        self.cmp(other)
+    }
+
+    #[cfg(feature = "types")]
+    fn serialize_json<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::types::serialize_byte_array(self, serializer)
+    }
+
+    #[cfg(feature = "types")]
+    fn deserialize_json<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        crate::types::deserialize_byte_array(deserializer)
+    }
+}
+
 impl<T, const N: usize> Element for [T; N]
 where
-    T: Element,
+    T: ArrayElement,
 {
     const SIZE: Option<usize> = array_size::<T>(N);
     const ALIGNMENT: usize = T::ALIGNMENT;
     const CAN_BE_INVALID: bool = true;
     const ORDERED_BY_BYTES: bool = T::ORDERED_BY_BYTES;
-    const JSON_TEXT_KEY: bool = T::IS_BYTE;
+    const JSON_TEXT_KEY: bool = false;
     type Ref<'a> = ListRef<'a, T>;
     type View<'a>
         = &'a [T]

@@ -147,3 +147,5 @@ impl proto_packet::io::Element for Unrecognized {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for Unrecognized {}

@@ -296,6 +296,8 @@ impl proto_packet::io::Element for NewerKey {
     }
 }
 
+impl proto_packet::io::ArrayElement for NewerKey {}
+
 impl proto_packet::serde::Serialize for NewerKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

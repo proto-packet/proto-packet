@@ -247,6 +247,8 @@ impl proto_packet::io::Element for Box {
     }
 }
 
+impl proto_packet::io::ArrayElement for Box {}
+
 impl proto_packet::serde::Serialize for Box {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where

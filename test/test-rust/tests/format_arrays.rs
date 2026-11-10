@@ -52,7 +52,7 @@ common::plain!(
     proto_packet_test::format::arrays::ArrayKindsView,
     ArrayKinds,
     {
-        fn bytes(&self) -> impl proto_packet::io::ListView<Item = u8>;
+        fn bytes(&self) -> &[u8; 4];
         fn flags(&self) -> impl proto_packet::io::ListView<Item = bool>;
         fn longs(&self) -> impl proto_packet::io::ListView<Item = u64>;
         fn colors(
@@ -61,9 +61,7 @@ common::plain!(
         fn points(
             &self,
         ) -> impl proto_packet::io::ListView<Item = impl proto_packet_test::format::examples::PointView>;
-        fn grid(
-            &self,
-        ) -> impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u8>>;
+        fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]>;
         fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>>;
     }
 );
@@ -71,7 +69,7 @@ common::plain!(
 common::plain!(proto_packet_test::format::arrays::MeshView, Mesh, {
     fn id(&self) -> u32;
     fn origin(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float32>;
-    fn tag(&self) -> impl proto_packet::io::ListView<Item = u8>;
+    fn tag(&self) -> &[u8; 4];
 });
 
 common::plain!(
@@ -160,13 +158,7 @@ common::plain!(
         ) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>>>;
         fn by_id(
             &self,
-        ) -> Option<
-            impl proto_packet::io::MapView<
-                [u8; 2],
-                Key = impl proto_packet::io::ListView<Item = u8>,
-                Value = u8,
-            >,
-        >;
+        ) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>>;
     }
 );
 
@@ -211,7 +203,8 @@ fn mesh_example() {
     assert_eq!(mesh.origin().len(), 3);
     assert_eq!(mesh.origin().get(1), Some(Float32::new(2.0)));
     assert_eq!(mesh.origin().get(3), None);
-    assert_eq!(mesh.tag().as_bytes(), [9, 8, 7, 6]);
+    let tag: &[u8; 4] = mesh.tag();
+    assert_eq!(tag, &[9, 8, 7, 6]);
 }
 
 #[test]
@@ -329,7 +322,7 @@ fn arrays_are_in_the_fixed_header() {
     assert_encoding!(ArrayKinds, array_kinds(), &bytes);
 
     let kinds: ArrayKindsRef = ArrayKindsRef::new(&bytes).unwrap();
-    assert_eq!(kinds.bytes().as_bytes(), [1, 2, 3, 4]);
+    assert_eq!(kinds.bytes(), &[1, 2, 3, 4]);
     assert_eq!(
         kinds.flags().iter().collect::<Vec<bool>>(),
         [true, false, true]
@@ -337,7 +330,8 @@ fn arrays_are_in_the_fixed_header() {
     assert_eq!(kinds.longs().get(1), Some(6));
     assert_eq!(kinds.colors().get(1), Some(Shade::Dark));
     assert_eq!(kinds.points().get(1).unwrap().y(), 4);
-    assert_eq!(kinds.grid().get(1).unwrap().as_bytes(), [4, 5, 6]);
+    let row: &[u8; 3] = kinds.grid().get(1).unwrap();
+    assert_eq!(row, &[4, 5, 6]);
     assert_eq!(kinds.maybe().unwrap().get(0), Some(7));
 
     let absent: ArrayKinds = ArrayKinds::new(
@@ -437,6 +431,8 @@ fn messages_and_variants_hold_arrays_and_optional_elements() {
     assert_eq!(message.rows().unwrap().get(1).unwrap().get(0), Some(3));
     assert!(message.entries().unwrap().get(1).unwrap().is_none());
     assert_eq!(message.scores().unwrap().get("a"), Some(Some(1)));
+    assert_eq!(message.by_id().unwrap().get(&[1, 2]), Some(3));
+    assert_eq!(message.by_id().unwrap().get(&[1, 3]), None);
     assert_encoding!(WithArrays, WithArrays::default(), &[0, 0]);
 
     for value in [

@@ -326,6 +326,8 @@ impl proto_packet::io::Element for BoxedFields {
     }
 }
 
+impl proto_packet::io::ArrayElement for BoxedFields {}
+
 impl proto_packet::serde::Serialize for BoxedFields {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

@@ -385,6 +385,8 @@ impl proto_packet::io::Element for SignedFields {
     }
 }
 
+impl proto_packet::io::ArrayElement for SignedFields {}
+
 impl proto_packet::serde::Serialize for SignedFields {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

@@ -1,7 +1,7 @@
 //! The elements that the runtime has.
 
 use crate::io::list::element::{list_alignment, serde_json_form};
-use crate::io::{DecodeError, Element, ListRef, check_bool, check_utf8, encode_list};
+use crate::io::{ArrayElement, DecodeError, Element, ListRef, check_bool, check_utf8, encode_list};
 use crate::io::{list_encoded_len, read_bytes_unchecked};
 use std::cmp::Ordering;
 
@@ -49,6 +49,8 @@ macro_rules! impl_integer {
 
             $($json)*
         }
+
+        impl ArrayElement for $type {}
     };
 }
 
@@ -101,7 +103,6 @@ impl Element for u8 {
     const SIZE: Option<usize> = Some(1);
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = false;
-    const IS_BYTE: bool = true;
     type Ref<'a> = u8;
     type View<'a> = u8;
 
@@ -186,6 +187,8 @@ impl Element for bool {
     serde_json_form!();
 }
 
+impl ArrayElement for bool {}
+
 impl Element for String {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
@@ -227,6 +230,8 @@ impl Element for String {
 
     serde_json_form!();
 }
+
+impl ArrayElement for String {}
 
 impl<T> Element for Vec<T>
 where
@@ -295,6 +300,8 @@ where
     }
 }
 
+impl<T> ArrayElement for Vec<T> where T: Element {}
+
 /// Implements a float type as an element, with the integer type of its bits.
 #[cfg(feature = "types")]
 macro_rules! impl_float {
@@ -343,6 +350,8 @@ macro_rules! impl_float {
 
             serde_json_form!();
         }
+
+        impl ArrayElement for crate::types::$type {}
     };
 }
 
@@ -394,6 +403,9 @@ impl Element for crate::types::Uuid {
     serde_json_form!();
 }
 
+#[cfg(feature = "types")]
+impl ArrayElement for crate::types::Uuid {}
+
 /// Implements a time type as an element, with the integer type it holds.
 #[cfg(feature = "types")]
 macro_rules! impl_time {
@@ -440,6 +452,8 @@ macro_rules! impl_time {
 
             serde_json_form!();
         }
+
+        impl ArrayElement for crate::types::$type {}
     };
 }
 
@@ -500,6 +514,9 @@ impl<const S: u8> Element for crate::types::Decimal<S> {
 }
 
 #[cfg(feature = "types")]
+impl<const S: u8> ArrayElement for crate::types::Decimal<S> {}
+
+#[cfg(feature = "types")]
 impl Element for crate::types::Bytes {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
@@ -541,3 +558,6 @@ impl Element for crate::types::Bytes {
 
     serde_json_form!();
 }
+
+#[cfg(feature = "types")]
+impl ArrayElement for crate::types::Bytes {}

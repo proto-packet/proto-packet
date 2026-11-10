@@ -1,3 +1,4 @@
+pub use array_element::*;
 pub use copy_slice::*;
 pub use element::*;
 pub use list_iter::*;
@@ -12,6 +13,7 @@ pub use option_write::*;
 pub use view_slice::*;
 pub use view_write::*;
 
+mod array_element;
 mod copy_slice;
 mod element;
 mod list_iter;

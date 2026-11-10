@@ -158,3 +158,5 @@ impl proto_packet::io::Element for After {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for After {}

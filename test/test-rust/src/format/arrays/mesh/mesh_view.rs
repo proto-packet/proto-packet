@@ -9,7 +9,7 @@ pub trait MeshView {
     fn origin(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float32>;
 
     /// Gets the field: `tag`.
-    fn tag(&self) -> impl proto_packet::io::ListView<Item = u8>;
+    fn tag(&self) -> &[u8; 4];
 
     /// Gets the length of the encoding, in bytes.
     fn encoded_len(&self) -> usize {
@@ -47,16 +47,7 @@ pub trait MeshView {
                 out.extend_from_slice(&item.to_le_bytes());
             },
         );
-        proto_packet::io::write_array_view(
-            self.tag(),
-            out,
-            4,
-            <u8 as proto_packet::io::Element>::SIZE,
-            <u8 as proto_packet::io::Element>::ALIGNMENT,
-            |item, out| {
-                out.extend_from_slice(&item.to_le_bytes());
-            },
-        );
+        out.extend_from_slice(&self.tag()[..]);
     }
 }
 
@@ -69,7 +60,7 @@ impl<V: MeshView> MeshView for &V {
         (**self).origin()
     }
 
-    fn tag(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn tag(&self) -> &[u8; 4] {
         (**self).tag()
     }
 
@@ -91,7 +82,7 @@ impl<V: MeshView> MeshView for &mut V {
         (**self).origin()
     }
 
-    fn tag(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn tag(&self) -> &[u8; 4] {
         (**self).tag()
     }
 
@@ -113,7 +104,7 @@ impl MeshView for super::Mesh {
         self.origin()
     }
 
-    fn tag(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn tag(&self) -> &[u8; 4] {
         self.tag()
     }
 
@@ -135,7 +126,7 @@ impl MeshView for super::MeshRef<'_> {
         self.origin()
     }
 
-    fn tag(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn tag(&self) -> &[u8; 4] {
         self.tag()
     }
 
@@ -157,7 +148,7 @@ impl MeshView for super::MeshBuf {
         self.as_ref().origin()
     }
 
-    fn tag(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn tag(&self) -> &[u8; 4] {
         self.as_ref().tag()
     }
 
@@ -179,7 +170,7 @@ impl MeshView for super::MeshMut<'_> {
         self.as_ref().origin()
     }
 
-    fn tag(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn tag(&self) -> &[u8; 4] {
         self.as_ref().tag()
     }
 

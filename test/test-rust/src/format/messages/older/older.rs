@@ -252,6 +252,8 @@ impl proto_packet::io::Element for Older {
     }
 }
 
+impl proto_packet::io::ArrayElement for Older {}
+
 impl proto_packet::serde::Serialize for Older {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

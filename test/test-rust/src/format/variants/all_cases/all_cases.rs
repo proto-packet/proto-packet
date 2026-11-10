@@ -533,6 +533,8 @@ impl proto_packet::io::Element for AllCases {
     }
 }
 
+impl proto_packet::io::ArrayElement for AllCases {}
+
 impl proto_packet::serde::Serialize for AllCases {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

@@ -1,7 +1,7 @@
 use crate::io::list::option_write::{
     bits_len, encode_option_list, option_list_alignment, option_list_encoded_len, option_list_start,
 };
-use crate::io::{DecodeError, Element, ListRef, MAX_DEPTH};
+use crate::io::{ArrayElement, DecodeError, Element, ListRef, MAX_DEPTH};
 use crate::io::{check_absent, check_padding, check_unused_bits, read_u32_unchecked};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
@@ -336,3 +336,5 @@ where
         crate::types::deserialize_option_list(deserializer)
     }
 }
+
+impl<T> ArrayElement for Vec<Option<T>> where T: Element {}

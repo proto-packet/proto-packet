@@ -1,6 +1,6 @@
 //! The JSON forms of the lists & the maps.
 
-use crate::io::{Element, ListRef, encode_list};
+use crate::io::Element;
 use crate::types::{Bytes, JsonOwned, JsonRef};
 use serde::de::{Error, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -108,7 +108,7 @@ where
     })
 }
 
-/// Serializes the `array` as a list of its elements, or as base-64 if its elements are bytes.
+/// Serializes the `array` as a list of its elements.
 pub(crate) fn serialize_array<T, S, const N: usize>(
     array: &[T; N],
     serializer: S,
@@ -117,17 +117,10 @@ where
     T: Element,
     S: Serializer,
 {
-    if T::IS_BYTE {
-        let mut bytes: Vec<u8> = Vec::with_capacity(N);
-        encode_list(array, &mut bytes, 0);
-        Bytes::new(bytes).serialize(serializer)
-    } else {
-        serialize_list(array, serializer)
-    }
+    serialize_list(array, serializer)
 }
 
-/// Deserializes an array from a list of exactly its length, or from base-64 if its elements are
-/// bytes.
+/// Deserializes an array from a list of exactly its length.
 pub(crate) fn deserialize_array<'de, T, D, const N: usize>(
     deserializer: D,
 ) -> Result<[T; N], D::Error>
@@ -135,15 +128,31 @@ where
     T: Element,
     D: Deserializer<'de>,
 {
-    let list: Vec<T> = if T::IS_BYTE {
-        let bytes: Bytes = Bytes::deserialize(deserializer)?;
-        ListRef::<T>::new(bytes.as_bytes())
-            .map_err(D::Error::custom)?
-            .decode()
-    } else {
-        deserialize_list(deserializer)?
-    };
+    let list: Vec<T> = deserialize_list(deserializer)?;
     <[T; N]>::try_from(list).map_err(|_| D::Error::custom("an array of another length"))
+}
+
+/// Serializes the `array` of bytes as base-64.
+pub(crate) fn serialize_byte_array<S, const N: usize>(
+    array: &[u8; N],
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    Bytes::from(&array[..]).serialize(serializer)
+}
+
+/// Deserializes an array of bytes from base-64 of exactly its length.
+pub(crate) fn deserialize_byte_array<'de, D, const N: usize>(
+    deserializer: D,
+) -> Result<[u8; N], D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let bytes: Bytes = Bytes::deserialize(deserializer)?;
+    <[u8; N]>::try_from(bytes.as_bytes())
+        .map_err(|_| D::Error::custom("an array of another length"))
 }
 
 /// Deserializes an array of optional elements from a list of exactly its length.

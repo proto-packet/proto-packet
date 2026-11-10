@@ -255,6 +255,8 @@ impl proto_packet::io::Element for KeywordMessage {
     }
 }
 
+impl proto_packet::io::ArrayElement for KeywordMessage {}
+
 impl proto_packet::serde::Serialize for KeywordMessage {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

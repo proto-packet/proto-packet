@@ -424,6 +424,8 @@ impl proto_packet::io::Element for NamedFields {
     }
 }
 
+impl proto_packet::io::ArrayElement for NamedFields {}
+
 impl proto_packet::serde::Serialize for NamedFields {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

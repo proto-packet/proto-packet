@@ -29,9 +29,6 @@ pub trait Element: Sized {
     /// - A map of any other key is a list of its entries.
     const JSON_TEXT_KEY: bool = true;
 
-    /// If the type is a byte, so an array of it is base-64 in JSON.
-    const IS_BYTE: bool = false;
-
     /// If zeros are not a value of the type, so an optional element of it has no presence bit.
     ///
     /// # Note

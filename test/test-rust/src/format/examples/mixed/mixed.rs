@@ -243,3 +243,5 @@ impl proto_packet::io::Element for Mixed {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for Mixed {}

@@ -1,6 +1,8 @@
 use crate::io::list::element::list_alignment;
 use crate::io::list::list_write::{elements_encoded_len, encode_elements};
-use crate::io::{DecodeError, Element, ListRef, MAX_DEPTH, align_up, check_padding, write_end};
+use crate::io::{
+    ArrayElement, DecodeError, Element, ListRef, MAX_DEPTH, align_up, check_padding, write_end,
+};
 use crate::io::{write_padding, write_zeros};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -453,4 +455,11 @@ where
     {
         crate::types::deserialize_map(deserializer)
     }
+}
+
+impl<K, V> ArrayElement for BTreeMap<K, V>
+where
+    K: Element + Ord,
+    V: Element,
+{
 }

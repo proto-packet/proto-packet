@@ -392,6 +392,8 @@ impl proto_packet::io::Element for Newer {
     }
 }
 
+impl proto_packet::io::ArrayElement for Newer {}
+
 impl proto_packet::serde::Serialize for Newer {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

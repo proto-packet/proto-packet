@@ -214,6 +214,8 @@ impl proto_packet::io::Element for KeywordVariant {
     }
 }
 
+impl proto_packet::io::ArrayElement for KeywordVariant {}
+
 impl proto_packet::serde::Serialize for KeywordVariant {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

@@ -268,6 +268,8 @@ impl proto_packet::io::Element for ArrayCases {
     }
 }
 
+impl proto_packet::io::ArrayElement for ArrayCases {}
+
 impl proto_packet::serde::Serialize for ArrayCases {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

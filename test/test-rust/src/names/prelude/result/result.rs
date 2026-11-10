@@ -161,3 +161,5 @@ impl proto_packet::io::Element for Result {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for Result {}

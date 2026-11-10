@@ -316,6 +316,8 @@ impl proto_packet::io::Element for WithCases {
     }
 }
 
+impl proto_packet::io::ArrayElement for WithCases {}
+
 impl proto_packet::serde::Serialize for WithCases {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

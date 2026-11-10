@@ -158,3 +158,5 @@ impl proto_packet::io::Element for MoveStruct {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for MoveStruct {}

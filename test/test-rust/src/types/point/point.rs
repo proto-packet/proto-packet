@@ -185,3 +185,5 @@ impl proto_packet::io::Element for Point {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for Point {}

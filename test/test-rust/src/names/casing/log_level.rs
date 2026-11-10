@@ -154,3 +154,5 @@ impl proto_packet::io::Element for Log_Level {
         proto_packet::serde::Deserialize::deserialize(deserializer)
     }
 }
+
+impl proto_packet::io::ArrayElement for Log_Level {}

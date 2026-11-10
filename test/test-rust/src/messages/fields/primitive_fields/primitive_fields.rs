@@ -428,6 +428,8 @@ impl proto_packet::io::Element for PrimitiveFields {
     }
 }
 
+impl proto_packet::io::ArrayElement for PrimitiveFields {}
+
 impl proto_packet::serde::Serialize for PrimitiveFields {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

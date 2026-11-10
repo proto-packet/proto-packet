@@ -28,15 +28,7 @@ pub trait WithArraysView {
     ) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>>>;
 
     /// Gets the field: `by_id`.
-    fn by_id(
-        &self,
-    ) -> Option<
-        impl proto_packet::io::MapView<
-            [u8; 2],
-            Key = impl proto_packet::io::ListView<Item = u8>,
-            Value = u8,
-        >,
-    >;
+    fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>>;
 
     /// Gets the length of the encoding, in bytes.
     fn encoded_len(&self) -> usize {
@@ -86,16 +78,7 @@ pub trait WithArraysView {
                 |_| 0,
                 |_| 0,
                 |item, out| {
-                    proto_packet::io::write_array_view(
-                        *item,
-                        out,
-                        2,
-                        <u8 as proto_packet::io::Element>::SIZE,
-                        <u8 as proto_packet::io::Element>::ALIGNMENT,
-                        |item, out| {
-                            out.extend_from_slice(&item.to_le_bytes());
-                        },
-                    );
+                    out.extend_from_slice(&item[..]);
                 },
             );
         }
@@ -204,16 +187,7 @@ pub trait WithArraysView {
                 value,
                 writer.field(6),
                 |item, out| {
-                    proto_packet::io::write_array_view(
-                        *item,
-                        out,
-                        2,
-                        <u8 as proto_packet::io::Element>::SIZE,
-                        <u8 as proto_packet::io::Element>::ALIGNMENT,
-                        |item, out| {
-                            out.extend_from_slice(&item.to_le_bytes());
-                        },
-                    );
+                    out.extend_from_slice(&item[..]);
                 },
                 |item, out| {
                     out.extend_from_slice(&item.to_le_bytes());
@@ -257,15 +231,7 @@ impl<V: WithArraysView> WithArraysView for &V {
         (**self).scores()
     }
 
-    fn by_id(
-        &self,
-    ) -> Option<
-        impl proto_packet::io::MapView<
-            [u8; 2],
-            Key = impl proto_packet::io::ListView<Item = u8>,
-            Value = u8,
-        >,
-    > {
+    fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
         (**self).by_id()
     }
 
@@ -310,15 +276,7 @@ impl<V: WithArraysView> WithArraysView for &mut V {
         (**self).scores()
     }
 
-    fn by_id(
-        &self,
-    ) -> Option<
-        impl proto_packet::io::MapView<
-            [u8; 2],
-            Key = impl proto_packet::io::ListView<Item = u8>,
-            Value = u8,
-        >,
-    > {
+    fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
         (**self).by_id()
     }
 
@@ -363,15 +321,7 @@ impl WithArraysView for super::WithArrays {
         self.scores()
     }
 
-    fn by_id(
-        &self,
-    ) -> Option<
-        impl proto_packet::io::MapView<
-            [u8; 2],
-            Key = impl proto_packet::io::ListView<Item = u8>,
-            Value = u8,
-        >,
-    > {
+    fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
         self.by_id()
     }
 
@@ -416,15 +366,7 @@ impl WithArraysView for super::WithArraysRef<'_> {
         self.scores()
     }
 
-    fn by_id(
-        &self,
-    ) -> Option<
-        impl proto_packet::io::MapView<
-            [u8; 2],
-            Key = impl proto_packet::io::ListView<Item = u8>,
-            Value = u8,
-        >,
-    > {
+    fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
         self.by_id()
     }
 
@@ -474,15 +416,7 @@ impl WithArraysView for super::WithArraysBuf {
         self.as_ref().scores()
     }
 
-    fn by_id(
-        &self,
-    ) -> Option<
-        impl proto_packet::io::MapView<
-            [u8; 2],
-            Key = impl proto_packet::io::ListView<Item = u8>,
-            Value = u8,
-        >,
-    > {
+    fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
         self.as_ref().by_id()
     }
 
@@ -527,15 +461,7 @@ impl WithArraysView for super::WithArraysMut<'_> {
         self.as_ref().scores()
     }
 
-    fn by_id(
-        &self,
-    ) -> Option<
-        impl proto_packet::io::MapView<
-            [u8; 2],
-            Key = impl proto_packet::io::ListView<Item = u8>,
-            Value = u8,
-        >,
-    > {
+    fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
         self.as_ref().by_id()
     }
 

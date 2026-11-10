@@ -1,7 +1,7 @@
 use crate::io::list::element::list_alignment;
 use crate::io::list::map_ref::{check_keys, find_key, find_native_key, map_alignment};
 use crate::io::list::option_write::{encode_option_map, option_map_encoded_len};
-use crate::io::{DecodeError, Element, ListRef, MAX_DEPTH, OptionListRef};
+use crate::io::{ArrayElement, DecodeError, Element, ListRef, MAX_DEPTH, OptionListRef};
 use crate::io::{align_up, check_padding, read_u32_unchecked};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -272,4 +272,11 @@ where
     {
         crate::types::deserialize_option_map(deserializer)
     }
+}
+
+impl<K, V> ArrayElement for BTreeMap<K, Option<V>>
+where
+    K: Element + Ord,
+    V: Element,
+{
 }

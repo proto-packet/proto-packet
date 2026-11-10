@@ -262,6 +262,8 @@ impl proto_packet::io::Element for Comment {
     }
 }
 
+impl proto_packet::io::ArrayElement for Comment {}
+
 impl proto_packet::serde::Serialize for Comment {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

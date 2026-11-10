@@ -3,7 +3,7 @@
 /// The fields of any form of [ArrayKinds](super::ArrayKinds).
 pub trait ArrayKindsView {
     /// Gets the field: `bytes`.
-    fn bytes(&self) -> impl proto_packet::io::ListView<Item = u8>;
+    fn bytes(&self) -> &[u8; 4];
 
     /// Gets the field: `flags`.
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool>;
@@ -20,9 +20,7 @@ pub trait ArrayKindsView {
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>;
 
     /// Gets the field: `grid`.
-    fn grid(
-        &self,
-    ) -> impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u8>>;
+    fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]>;
 
     /// Gets the field: `maybe`.
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>>;
@@ -97,16 +95,7 @@ pub trait ArrayKindsView {
             }
             None => proto_packet::io::write_zeros(out, 4),
         }
-        proto_packet::io::write_array_view(
-            self.bytes(),
-            out,
-            4,
-            <u8 as proto_packet::io::Element>::SIZE,
-            <u8 as proto_packet::io::Element>::ALIGNMENT,
-            |item, out| {
-                out.extend_from_slice(&item.to_le_bytes());
-            },
-        );
+        out.extend_from_slice(&self.bytes()[..]);
         proto_packet::io::write_array_view(
             self.flags(),
             out,
@@ -124,16 +113,7 @@ pub trait ArrayKindsView {
             <[u8; 3] as proto_packet::io::Element>::SIZE,
             <[u8; 3] as proto_packet::io::Element>::ALIGNMENT,
             |item, out| {
-                proto_packet::io::write_array_view(
-                    *item,
-                    out,
-                    3,
-                    <u8 as proto_packet::io::Element>::SIZE,
-                    <u8 as proto_packet::io::Element>::ALIGNMENT,
-                    |item, out| {
-                        out.extend_from_slice(&item.to_le_bytes());
-                    },
-                );
+                out.extend_from_slice(&item[..]);
             },
         );
         out.push(u8::from(self.maybe().is_some()));
@@ -141,7 +121,7 @@ pub trait ArrayKindsView {
 }
 
 impl<V: ArrayKindsView> ArrayKindsView for &V {
-    fn bytes(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn bytes(&self) -> &[u8; 4] {
         (**self).bytes()
     }
 
@@ -163,9 +143,7 @@ impl<V: ArrayKindsView> ArrayKindsView for &V {
         (**self).points()
     }
 
-    fn grid(
-        &self,
-    ) -> impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u8>> {
+    fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
         (**self).grid()
     }
 
@@ -183,7 +161,7 @@ impl<V: ArrayKindsView> ArrayKindsView for &V {
 }
 
 impl<V: ArrayKindsView> ArrayKindsView for &mut V {
-    fn bytes(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn bytes(&self) -> &[u8; 4] {
         (**self).bytes()
     }
 
@@ -205,9 +183,7 @@ impl<V: ArrayKindsView> ArrayKindsView for &mut V {
         (**self).points()
     }
 
-    fn grid(
-        &self,
-    ) -> impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u8>> {
+    fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
         (**self).grid()
     }
 
@@ -225,7 +201,7 @@ impl<V: ArrayKindsView> ArrayKindsView for &mut V {
 }
 
 impl ArrayKindsView for super::ArrayKinds {
-    fn bytes(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn bytes(&self) -> &[u8; 4] {
         self.bytes()
     }
 
@@ -247,9 +223,7 @@ impl ArrayKindsView for super::ArrayKinds {
         self.points()
     }
 
-    fn grid(
-        &self,
-    ) -> impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u8>> {
+    fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
         self.grid()
     }
 
@@ -267,7 +241,7 @@ impl ArrayKindsView for super::ArrayKinds {
 }
 
 impl ArrayKindsView for super::ArrayKindsRef<'_> {
-    fn bytes(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn bytes(&self) -> &[u8; 4] {
         self.bytes()
     }
 
@@ -289,9 +263,7 @@ impl ArrayKindsView for super::ArrayKindsRef<'_> {
         self.points()
     }
 
-    fn grid(
-        &self,
-    ) -> impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u8>> {
+    fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
         self.grid()
     }
 
@@ -309,7 +281,7 @@ impl ArrayKindsView for super::ArrayKindsRef<'_> {
 }
 
 impl ArrayKindsView for super::ArrayKindsBuf {
-    fn bytes(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn bytes(&self) -> &[u8; 4] {
         self.as_ref().bytes()
     }
 
@@ -331,9 +303,7 @@ impl ArrayKindsView for super::ArrayKindsBuf {
         self.as_ref().points()
     }
 
-    fn grid(
-        &self,
-    ) -> impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u8>> {
+    fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
         self.as_ref().grid()
     }
 
@@ -351,7 +321,7 @@ impl ArrayKindsView for super::ArrayKindsBuf {
 }
 
 impl ArrayKindsView for super::ArrayKindsMut<'_> {
-    fn bytes(&self) -> impl proto_packet::io::ListView<Item = u8> {
+    fn bytes(&self) -> &[u8; 4] {
         self.as_ref().bytes()
     }
 
@@ -373,9 +343,7 @@ impl ArrayKindsView for super::ArrayKindsMut<'_> {
         self.as_ref().points()
     }
 
-    fn grid(
-        &self,
-    ) -> impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u8>> {
+    fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
         self.as_ref().grid()
     }
 
