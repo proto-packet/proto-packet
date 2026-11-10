@@ -23,9 +23,9 @@ Special Types:
   container.
 
 Time Types:
-todo -- decide the range. Unrestricted is likely, with an optional conversion to each language's
-time type.
 - The epoch of these types is `1970-01-01 00:00:00 UTC`. Leap seconds aren't counted.
+- Each type is its whole integer, so no value is out of range. A language's own time type may not
+  hold every value, so a conversion to one can fail.
 - The `timestamp` type is stored as an `i64`. It is the number of milliseconds since the epoch.
 - The `microtime` type is stored as an `i64`. It is the number of microseconds since the epoch.
 - The `nanotime` type is stored as an `i64`. It is the number of nanoseconds since the epoch, as
@@ -370,14 +370,15 @@ Fields the reader doesn't know aren't checked.
 A variant holds exactly one of its cases. Cases can be added & removed over time. A case's tag
 number & type never change.
 
-todo -- this layout is for now & may change.
-
 ```text
 variant = [tag][value]
 ```
 
 - The `tag` is a `u16`. It is the tag number of the case.
 - The `value` is the rest of the variant. It is stored the same way as a value in a message.
+
+A variant doesn't store its length. It comes from its container, like the length of every value.
+The value has no padding before it, since a case with another alignment can be added later.
 
 ```text
 struct Point { x: u32; y: u32; }
