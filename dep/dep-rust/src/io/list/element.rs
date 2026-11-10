@@ -1,4 +1,5 @@
 use crate::io::DecodeError;
+use std::cmp::Ordering;
 
 /// A type that can be an element of a list.
 ///
@@ -37,6 +38,17 @@ pub trait Element: Sized {
 
     /// Appends the encoding to the `out` bytes.
     fn encode_to(&self, out: &mut Vec<u8>);
+
+    /// Compares two read elements, in the order of the keys of a map.
+    ///
+    /// # Note
+    /// - A type overrides this when it can compare the elements without decoding them.
+    fn cmp_refs(a: Self::Ref<'_>, b: Self::Ref<'_>) -> Ordering
+    where
+        Self: Ord,
+    {
+        Self::decode(a).cmp(&Self::decode(b))
+    }
 
     /// Appends the encodings of the fixed-size `elements` to the `out` bytes, back to back.
     ///

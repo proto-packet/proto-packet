@@ -35,6 +35,9 @@ pub enum DecodeError {
 
     /// A list's length does not fit its elements, or its count is 0.
     InvalidList,
+
+    /// A map's keys & values do not match, or its keys are not strictly increasing.
+    InvalidMap,
 }
 
 impl Display for DecodeError {
@@ -55,6 +58,7 @@ impl Display for DecodeError {
             Self::InvalidBool { value } => write!(f, "invalid bool: {}", value),
             Self::InvalidFloat => f.write_str("invalid float"),
             Self::InvalidList => f.write_str("invalid list"),
+            Self::InvalidMap => f.write_str("invalid map"),
         }
     }
 }

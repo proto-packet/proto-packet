@@ -3,6 +3,7 @@
 use crate::io::list::element::list_alignment;
 use crate::io::{DecodeError, Element, ListRef, check_bool, check_utf8, encode_list};
 use crate::io::{list_encoded_len, read_bytes_unchecked};
+use std::cmp::Ordering;
 
 /// Implements an integer type as an element, with its alignment.
 macro_rules! impl_integer {
@@ -31,6 +32,10 @@ macro_rules! impl_integer {
 
             fn encode_to(&self, out: &mut Vec<u8>) {
                 out.extend_from_slice(&self.to_le_bytes());
+            }
+
+            fn cmp_refs(a: $type, b: $type) -> Ordering {
+                a.cmp(&b)
             }
         }
     };
@@ -75,6 +80,10 @@ impl Element for u8 {
     fn encode_all_to(elements: &[u8], out: &mut Vec<u8>) {
         out.extend_from_slice(elements);
     }
+
+    fn cmp_refs(a: u8, b: u8) -> Ordering {
+        a.cmp(&b)
+    }
 }
 
 impl Element for bool {
@@ -102,6 +111,10 @@ impl Element for bool {
     fn encode_to(&self, out: &mut Vec<u8>) {
         out.push(u8::from(*self));
     }
+
+    fn cmp_refs(a: bool, b: bool) -> Ordering {
+        a.cmp(&b)
+    }
 }
 
 impl Element for String {
@@ -128,6 +141,10 @@ impl Element for String {
 
     fn encode_to(&self, out: &mut Vec<u8>) {
         out.extend_from_slice(self.as_bytes());
+    }
+
+    fn cmp_refs(a: &str, b: &str) -> Ordering {
+        a.cmp(b)
     }
 }
 
@@ -193,6 +210,10 @@ macro_rules! impl_float {
             fn encode_to(&self, out: &mut Vec<u8>) {
                 out.extend_from_slice(&self.to_le_bytes());
             }
+
+            fn cmp_refs(a: crate::types::$type, b: crate::types::$type) -> Ordering {
+                a.cmp(&b)
+            }
         }
     };
 }
@@ -227,5 +248,9 @@ impl Element for crate::types::Uuid {
 
     fn encode_to(&self, out: &mut Vec<u8>) {
         out.extend_from_slice(self.as_bytes());
+    }
+
+    fn cmp_refs(a: crate::types::Uuid, b: crate::types::Uuid) -> Ordering {
+        a.cmp(&b)
     }
 }
