@@ -15,7 +15,7 @@ This document specifies the JSON form of ProtoPacket values.
 | enum            | A case name, or a tag number if the writer doesn't know it.    |
 | `[]u8`          | A string of the bytes, as base-64.                             |
 | list            | An array of the elements.                                      |
-| map             | An object of the entries, with each key as text.               |
+| map             | An object of the entries, or an array if a key isn't text.     |
 | struct, message | An object of the fields, by name. Absent fields aren't listed. |
 | variant         | `{"var": <case name>, "val": <value>}`                         |
 
@@ -31,8 +31,15 @@ integer. (ex: `"1700000000000000000"`)
 A decimal is a string for the same reason as a float. (ex: `"1.50"`) A reader takes fewer fraction
 digits than its scale, but not more, & no exponent. (ex: `"1.5"`)
 
-A map's key is the text of its JSON, so a number or a `bool` is quoted. (ex: `{"1": true}`) A key
-that is a struct, message, variant, list or map can't be written yet.
+A map's key is the text of its JSON, so a number or a `bool` is quoted. (ex: `{"1": true}`) A
+`[]u8` key is its base-64.
+
+A key that is a struct, message, variant, list or map isn't text. Its map is an array of the
+entries, each an array of the key & the value:
+
+```text
+map<Point, u8>:  [[{"x": 1, "y": 2}, 3], [{"x": 4, "y": 5}, 6]]
+```
 
 ## Unknown Fields & Cases
 
@@ -69,3 +76,5 @@ Readers reject JSON when:
 - A tag-numbered value isn't valid base-64, or isn't valid for a field or case the reader knows.
 - A float isn't a string of a decimal number or of one of its names, or is out of the range of its
   type.
+- A map is an object where its key isn't text, or an array where it is.
+- An array of entries repeats a key, or an entry isn't a key & a value.
