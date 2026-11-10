@@ -583,7 +583,7 @@ compared without decoding them. Unknown fields & cases are compared as their byt
 ### Depth
 
 A message, a variant & a struct with a variable tail are each a level. A list, a map & a fixed-size
-struct aren't. Readers reject a value with more than 64 levels:
+struct aren't. Readers reject a value with more than 64 levels, & writers don't write one:
 
 ```text
 message Node { children: []Node = 1; }
