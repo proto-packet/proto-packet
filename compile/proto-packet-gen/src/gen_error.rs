@@ -29,6 +29,14 @@ pub enum GenError {
 
     /// A type is named like a generated type of its schema file. (ex: `PointRef` with `Point`)
     TypeNameConflict { mod_path: String, type_name: String },
+
+    /// A list has elements without a size, so its count can't be read from its length.
+    ///
+    /// (ex: a list of a struct without fields)
+    EmptyListElement {
+        type_name: String,
+        member_name: String,
+    },
 }
 
 impl GenError {
@@ -42,6 +50,7 @@ impl GenError {
             Self::CaseNameConflict { .. } => "G_CASE_NAME_CONFLICT",
             Self::StructTooLarge { .. } => "G_STRUCT_TOO_LARGE",
             Self::TypeNameConflict { .. } => "G_TYPE_NAME_CONFLICT",
+            Self::EmptyListElement { .. } => "G_EMPTY_LIST_ELEMENT",
         }
     }
 }
@@ -80,6 +89,14 @@ impl Display for GenError {
                 f,
                 "the type name `{}` conflicts with a generated type in `{}`",
                 type_name, mod_path
+            ),
+            Self::EmptyListElement {
+                type_name,
+                member_name,
+            } => write!(
+                f,
+                "the list `{}` of `{}` has elements without a size",
+                member_name, type_name
             ),
         }
     }

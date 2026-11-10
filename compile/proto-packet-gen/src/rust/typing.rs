@@ -43,7 +43,9 @@ impl Typing<'_> {
                 RustType::from(self.prelude(PreludeName::String))
             }
             TypeTag::Named(name) => RustType::from(type_path(name.to_ref())),
-            TypeTag::List(_) => todo!(),
+            TypeTag::List(element) => {
+                RustType::from(self.prelude(PreludeName::Vec)).with_generic(self.rust_type(element))
+            }
         }
     }
 }
@@ -95,7 +97,7 @@ impl Typing<'_> {
                 }
                 _ => false,
             },
-            TypeTag::List(_) => todo!(),
+            TypeTag::List(_) => false,
         }
     }
 
@@ -126,6 +128,13 @@ impl Typing<'_> {
                 let method: &str = if is_optional { "as_deref" } else { "as_str" };
                 (
                     reference(RustType::from("str")),
+                    format!("{}.{}()", field, method),
+                )
+            }
+            TypeTag::List(element) => {
+                let method: &str = if is_optional { "as_deref" } else { "as_slice" };
+                (
+                    reference(RustType::from(format!("[{}]", self.rust_type(element)))),
                     format!("{}.{}()", field, method),
                 )
             }

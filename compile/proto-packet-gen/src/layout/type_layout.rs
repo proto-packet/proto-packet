@@ -95,7 +95,35 @@ impl LayoutCache<'_> {
                 },
                 TypeDec::Service(_) => unreachable!("the linker rejects services as types"),
             },
-            TypeTag::List(_) => todo!(),
+            TypeTag::List(element) => TypeLayout::Variable {
+                alignment: self.list_alignment(element),
+            },
+        }
+    }
+
+    /// Gets the alignment of a list of the `element` type.
+    ///
+    /// # Note
+    /// - A list of variable-size elements has a count & an end table, of alignment 4.
+    pub(crate) fn list_alignment(&mut self, element: &TypeTag) -> usize {
+        match self.type_layout(element) {
+            TypeLayout::Bit => 1,
+            TypeLayout::Fixed { alignment, .. } => alignment,
+            TypeLayout::Variable { alignment } => alignment.max(4),
+        }
+    }
+
+    /// Checks if the `tag` is a list with elements of no size, at any depth.
+    ///
+    /// # Note
+    /// - The count of such a list can't be read from its length.
+    pub(crate) fn has_empty_element(&mut self, tag: &TypeTag) -> bool {
+        match tag {
+            TypeTag::List(element) => {
+                matches!(self.type_layout(element), TypeLayout::Fixed { size: 0, .. })
+                    || self.has_empty_element(element)
+            }
+            _ => false,
         }
     }
 
@@ -136,7 +164,7 @@ impl LayoutCache<'_> {
                 }
                 _ => false,
             },
-            TypeTag::List(_) => todo!(),
+            TypeTag::List(_) => false,
         }
     }
 
@@ -152,9 +180,15 @@ impl LayoutCache<'_> {
         while let Some(structure) = structs.pop() {
             let mut variable: usize = 0;
             for field in structure.fields() {
-                let tag: &TypeTag = field.type_tag();
+                let mut tag: &TypeTag = field.type_tag();
                 if !self.is_fixed(tag, &mut Vec::default()) {
                     variable += 1;
+                }
+                while let TypeTag::List(element) = tag {
+                    if !self.is_fixed(element, &mut Vec::default()) {
+                        result = result.max(4);
+                    }
+                    tag = element;
                 }
                 match tag {
                     TypeTag::Named(name) => match linked_type(project, name) {

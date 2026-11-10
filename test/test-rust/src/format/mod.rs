@@ -2,5 +2,6 @@
 
 pub mod edges;
 pub mod examples;
+pub mod lists;
 pub mod messages;
 pub mod variants;

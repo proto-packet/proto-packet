@@ -1,5 +1,5 @@
 use crate::GenError;
-use crate::layout::StructLayout;
+use crate::layout::{LayoutCache, StructLayout};
 use crate::rust::derives::{add_derives, add_serde_derives};
 use crate::rust::docs::{PpsLine, add_pps_docs};
 use crate::rust::encoding::{IO, gen_encoding};
@@ -22,8 +22,8 @@ use code_gen::rust::{
 };
 use code_gen::{Block, EmptyLine, Statement, WithStatements};
 use proto_packet_tree::{
-    ModPathRef, Project, Struct, StructField as SchemaField, WithComments as _, WithFieldName,
-    WithTypeName, WithTypeTag,
+    ModPathRef, Project, Struct, StructField as SchemaField, TypeTag, WithComments as _,
+    WithFieldName, WithTypeName, WithTypeTag,
 };
 
 /// The name of the constructor.
@@ -67,6 +67,11 @@ pub fn gen_struct(
     let type_name: String = ident(&structure.type_name());
     let typing: Typing = Typing::new(project, Prelude::new(&type_name));
     let fields: Vec<Field> = structure.fields().iter().map(field).collect();
+    check_list_elements(
+        project,
+        &format!("{}.{}", mod_path, structure.type_name()),
+        fields.iter().map(|field| (field.name.value(), field.tag)),
+    )?;
     let layout: StructLayout = StructLayout::new(project, structure);
     if layout.fixed_size > u32::MAX as usize {
         return Err(GenError::StructTooLarge {
@@ -127,6 +132,7 @@ pub fn gen_struct(
         layout.alignment,
         can_be_invalid(typing, &fields, &layout),
     ));
+    let view_fields: Vec<Field> = view_fields(&fields);
     Ok(vec![
         TypeFile {
             suffix: "",
@@ -150,13 +156,48 @@ pub fn gen_struct(
         },
         TypeFile {
             suffix: "_view",
-            code: gen_view(typing, schema_name, &fields, &type_name),
+            code: gen_view(typing, schema_name, &view_fields, &type_name),
         },
         TypeFile {
             suffix: "_view_mut",
-            code: gen_view_mut(typing, schema_name, &fields, &type_name, false),
+            code: gen_view_mut(typing, schema_name, &view_fields, &type_name, false),
         },
     ])
+}
+
+/// Checks no member of the type with the `type_name` is a list with elements of no size.
+///
+/// The `members` are the names & the types of the fields or the cases.
+pub(crate) fn check_list_elements<'a, I>(
+    project: &Project,
+    type_name: &str,
+    members: I,
+) -> Result<(), GenError>
+where
+    I: Iterator<Item = (&'a str, &'a TypeTag)>,
+{
+    let mut cache: LayoutCache = LayoutCache::new(project);
+    for (member_name, tag) in members {
+        if cache.has_empty_element(tag) {
+            return Err(GenError::EmptyListElement {
+                type_name: type_name.to_string(),
+                member_name: member_name.to_string(),
+            });
+        }
+    }
+    Ok(())
+}
+
+/// Gets the `fields` that the `View` & `ViewMut` traits have.
+///
+/// # Note
+/// - A list has no type that every form shares, so the traits leave it out.
+pub(crate) fn view_fields<'a>(fields: &[Field<'a>]) -> Vec<Field<'a>> {
+    fields
+        .iter()
+        .copied()
+        .filter(|field| !field.tag.is_list())
+        .collect()
 }
 
 /// Checks no type of the schema file at the `mod_path` has the `name` of a generated type.

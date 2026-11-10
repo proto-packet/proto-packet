@@ -1,0 +1,77 @@
+import format.examples.Color;
+import format.examples.Entry;
+import format.examples.Line;
+import format.examples.Point;
+import format.messages.Item;
+import format.variants.Shape;
+
+// The `Numbers` example of `format/binary.md`.
+struct Numbers {
+
+    // A fixed-size field.
+    count: u8;
+
+    // A list of fixed-size elements, of alignment 4.
+    values: []u32;
+}
+
+// The `Texts` example of `format/binary.md`.
+struct Texts {
+
+    // A list of variable-size elements.
+    texts: []string;
+}
+
+// A struct with a list of structs that are padded apart.
+struct Lines {
+
+    // A list of structs of 17 bytes, of alignment 4.
+    lines: []Line;
+}
+
+// A struct with a list of lists.
+struct Nested {
+
+    // A list of lists of bytes.
+    rows: [][]u8;
+}
+
+// A struct with a list of each kind of element.
+struct ListKinds {
+
+    // The bytes.
+    bytes: []u8;
+
+    // A byte for each element.
+    flags: []bool;
+
+    // The signed integers.
+    signed: []i64;
+
+    // The floats.
+    floats: []f64;
+
+    // The UUIDs.
+    ids: []uuid;
+
+    // The enums.
+    colors: []Color;
+
+    // The strings.
+    texts: []string;
+
+    // The fixed structs.
+    points: []Point;
+
+    // The variable structs, of alignment 8.
+    entries: []Entry;
+
+    // The messages.
+    items: []Item;
+
+    // The variants.
+    shapes: []Shape;
+
+    // An optional list.
+    maybe: optional []u16;
+}

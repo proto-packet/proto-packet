@@ -52,6 +52,6 @@ pub fn scalar_size(project: &Project, tag: &TypeTag) -> Option<usize> {
             Some(TypeDec::Enum(_)) => Some(2),
             _ => None,
         },
-        TypeTag::List(_) => todo!(),
+        TypeTag::List(_) => None,
     }
 }

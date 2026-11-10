@@ -196,8 +196,12 @@ impl Strings {
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 14;
         len += self.first.len();
-        len = proto_packet::io::align_up(len, 8);
-        len += self.entry.encoded_len();
+        {
+            let size: usize = self.entry.encoded_len();
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
         if let Some(value) = &self.second {
             len += value.len();
         }
@@ -221,8 +225,13 @@ impl Strings {
         out.push(u8::from(self.second.is_some()));
         out.extend_from_slice(self.first.as_bytes());
         proto_packet::io::write_end(out, start, start);
-        proto_packet::io::write_padding(out, start, 8);
-        self.entry.encode_to(out);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            self.entry.encode_to(out);
+            proto_packet::io::trim_padding(out, before, padded);
+        }
         proto_packet::io::write_end(out, start + 4, start);
         if let Some(value) = &self.second {
             out.extend_from_slice(value.as_bytes());

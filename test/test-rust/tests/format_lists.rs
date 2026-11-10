@@ -1,0 +1,281 @@
+mod common;
+
+use common::{ID, assert_json};
+use proto_packet::io::{DecodeError, ListRef};
+use proto_packet::types::Float64;
+use proto_packet_test::format::examples::{Color, Entry, Line, Point};
+use proto_packet_test::format::lists::{
+    Lines, ListKinds, ListKindsRef, Nested, NestedRef, Numbers, NumbersRef, Texts, TextsRef,
+};
+use proto_packet_test::format::messages::Item;
+use proto_packet_test::format::variants::Shape;
+
+/// Asserts the `value` of the `type` encodes to the `bytes`, & decodes back from them.
+macro_rules! assert_encoding {
+    ($type:ty, $value:expr, $bytes:expr) => {{
+        let value: $type = $value;
+        let bytes: &[u8] = $bytes;
+        assert_eq!(value.encode(), bytes);
+        assert_eq!(value.encoded_len(), bytes.len());
+        assert_eq!(<$type>::decode(bytes), Ok(value.clone()));
+        assert_eq!(unsafe { <$type>::decode_unchecked(bytes) }, value);
+    }};
+}
+
+/// Gets the bytes of the `Numbers` example of `format/binary.md`.
+fn numbers_bytes() -> Vec<u8> {
+    vec![
+        7, // count
+        0, 0, 0, // padding
+        1, 0, 0, 0, 2, 0, 0, 0, // values
+    ]
+}
+
+/// Gets the bytes of the `Texts` example of `format/binary.md`.
+fn texts_bytes() -> Vec<u8> {
+    [
+        &[3, 0, 0, 0][..],           // count
+        &[14, 0, 0, 0, 14, 0, 0, 0], // ends
+        b"hi",
+        b"yo!",
+    ]
+    .concat()
+}
+
+/// Gets the value of the `Texts` example of `format/binary.md`.
+fn texts() -> Texts {
+    Texts::new(vec!["hi".to_string(), String::default(), "yo!".to_string()])
+}
+
+/// Gets a struct with a list of each kind of element.
+fn list_kinds() -> ListKinds {
+    ListKinds::new(
+        vec![1, 2, 3],
+        vec![true, false],
+        vec![-1, i64::MIN],
+        vec![Float64::new(1.5), Float64::NAN],
+        vec![ID],
+        vec![Color::Red],
+        vec!["a".to_string(), "bc".to_string()],
+        vec![Point::new(1, 2), Point::new(3, 4)],
+        vec![
+            Entry::new(5, "five".to_string()),
+            Entry::new(6, String::default()),
+        ],
+        vec![Item::default().with_id(7), Item::default()],
+        vec![Shape::Circle(8), Shape::Square(Point::new(9, 10))],
+        Some(vec![11, 12]),
+    )
+}
+
+#[test]
+fn numbers_example() {
+    let bytes: Vec<u8> = numbers_bytes();
+    assert_encoding!(Numbers, Numbers::new(7, vec![1, 2]), &bytes);
+
+    let numbers: NumbersRef = NumbersRef::new(&bytes).unwrap();
+    let values: ListRef<u32> = numbers.values();
+    assert_eq!(values.len(), 2);
+    assert_eq!(
+        (values.get(0), values.get(1), values.get(2)),
+        (Some(1), Some(2), None)
+    );
+    assert_eq!(values.iter().collect::<Vec<u32>>(), [1, 2]);
+    assert_eq!(
+        values.as_bytes().as_ptr() as usize % 4,
+        bytes.as_ptr() as usize % 4
+    );
+}
+
+#[test]
+fn empty_lists_are_no_bytes() {
+    assert_encoding!(Numbers, Numbers::new(7, Vec::default()), &[7]);
+    assert_encoding!(Texts, Texts::new(Vec::default()), &[]);
+
+    let numbers: NumbersRef = NumbersRef::new(&[7]).unwrap();
+    assert!(numbers.values().is_empty());
+    assert_eq!(numbers.values().len(), 0);
+    assert_eq!(numbers.values().iter().next(), None);
+}
+
+#[test]
+fn texts_example() {
+    let bytes: Vec<u8> = texts_bytes();
+    assert_eq!(bytes.len(), 17);
+    assert_encoding!(Texts, texts(), &bytes);
+
+    let view: TextsRef = TextsRef::new(&bytes).unwrap();
+    assert_eq!(view.texts().len(), 3);
+    assert_eq!(
+        view.texts().iter().collect::<Vec<&str>>(),
+        ["hi", "", "yo!"]
+    );
+    assert_eq!(view.texts().get(2), Some("yo!"));
+    assert_eq!(view.texts().get(3), None);
+}
+
+#[test]
+fn a_single_element_has_no_ends() {
+    let bytes: [u8; 6] = [1, 0, 0, 0, b'h', b'i'];
+    assert_encoding!(Texts, Texts::new(vec!["hi".to_string()]), &bytes);
+}
+
+#[test]
+fn structs_are_padded_apart() {
+    let line = |base: u32| Line::new(Point::new(base, base + 1), Point::new(base + 2, 9), 7);
+    let bytes: Vec<u8> = [
+        &[1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 9, 0, 0, 0, 7][..], // the first line
+        &[0; 3],                                                  // padding
+        &[4, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0, 9, 0, 0, 0, 7],     // the second line
+    ]
+    .concat();
+    assert_eq!(bytes.len(), 37);
+    assert_encoding!(Lines, Lines::new(vec![line(1), line(4)]), &bytes);
+
+    let mut padding: Vec<u8> = bytes.clone();
+    padding[18] = 0xFF;
+    assert_eq!(Lines::decode(&padding), Err(DecodeError::InvalidPadding));
+    assert_eq!(Lines::decode(&bytes[..36]), Err(DecodeError::InvalidList));
+}
+
+#[test]
+fn lists_nest() {
+    let bytes: Vec<u8> = [
+        &[3, 0, 0, 0][..],           // count
+        &[14, 0, 0, 0, 14, 0, 0, 0], // ends
+        &[1, 2],
+        &[3],
+    ]
+    .concat();
+    let value: Nested = Nested::new(vec![vec![1, 2], Vec::default(), vec![3]]);
+    assert_encoding!(Nested, value, &bytes);
+
+    let nested: NestedRef = NestedRef::new(&bytes).unwrap();
+    let rows: Vec<&[u8]> = nested.rows().iter().map(ListRef::as_bytes).collect();
+    assert_eq!(rows, [&[1_u8, 2][..], &[], &[3]]);
+}
+
+#[test]
+fn every_kind_round_trips() {
+    let value: ListKinds = list_kinds();
+    let bytes: Vec<u8> = value.encode();
+    assert_encoding!(ListKinds, value.clone(), &bytes);
+
+    let kinds: ListKindsRef = ListKindsRef::new(&bytes).unwrap();
+    assert_eq!(kinds.bytes().as_bytes(), [1, 2, 3]);
+    assert_eq!(kinds.flags().iter().collect::<Vec<bool>>(), [true, false]);
+    assert_eq!(kinds.signed().get(1), Some(i64::MIN));
+    assert_eq!(kinds.floats().get(1), Some(Float64::NAN));
+    assert_eq!(kinds.ids().get(0), Some(ID));
+    assert_eq!(kinds.colors().get(0), Some(Color::Red));
+    assert_eq!(kinds.texts().get(1), Some("bc"));
+    assert_eq!(kinds.points().get(1).unwrap().y(), 4);
+    assert_eq!(kinds.entries().get(0).unwrap().text(), "five");
+    assert_eq!(kinds.entries().get(1).unwrap().id(), 6);
+    assert_eq!(kinds.items().get(0).unwrap().id(), Some(7));
+    assert_eq!(kinds.shapes().get(0).unwrap().as_circle(), Some(8));
+    assert_eq!(kinds.maybe().unwrap().decode(), [11, 12]);
+
+    assert_eq!(value.points(), [Point::new(1, 2), Point::new(3, 4)]);
+    assert_eq!(value.maybe(), Some(&[11_u16, 12][..]));
+}
+
+#[test]
+fn absent_lists_are_not_empty_lists() {
+    let absent: ListKinds = list_kinds().with_maybe(None);
+    let empty: ListKinds = list_kinds().with_maybe(Vec::default());
+    assert_ne!(absent.encode(), empty.encode());
+    assert_eq!(absent.encoded_len(), empty.encoded_len());
+    assert_eq!(ListKinds::decode(&absent.encode()).unwrap().maybe(), None);
+    assert_eq!(
+        ListKinds::decode(&empty.encode()).unwrap().maybe(),
+        Some(&[][..])
+    );
+}
+
+#[test]
+fn rejects_lengths_that_do_not_fit_the_elements() {
+    let mut bytes: Vec<u8> = numbers_bytes();
+    bytes.push(3);
+    assert_eq!(Numbers::decode(&bytes), Err(DecodeError::InvalidList));
+    assert_eq!(Numbers::decode(&bytes[..10]), Err(DecodeError::InvalidList));
+}
+
+#[test]
+fn rejects_invalid_counts_and_ends() {
+    assert_eq!(Texts::decode(&[0, 0, 0, 0]), Err(DecodeError::InvalidList));
+    assert_eq!(
+        Texts::decode(&[1, 0]),
+        Err(DecodeError::TooShort {
+            expected: 4,
+            actual: 2,
+        })
+    );
+    assert_eq!(
+        Texts::decode(&[9, 0, 0, 0, b'h', b'i']),
+        Err(DecodeError::InvalidList)
+    );
+
+    let mut before_the_table: Vec<u8> = texts_bytes();
+    before_the_table[4] = 11;
+    assert_eq!(
+        Texts::decode(&before_the_table),
+        Err(DecodeError::InvalidEndTable)
+    );
+
+    let mut decreasing: Vec<u8> = texts_bytes();
+    decreasing[8] = 13;
+    assert_eq!(
+        Texts::decode(&decreasing),
+        Err(DecodeError::InvalidEndTable)
+    );
+
+    let mut past_the_end: Vec<u8> = texts_bytes();
+    past_the_end[8] = 18;
+    assert_eq!(
+        Texts::decode(&past_the_end),
+        Err(DecodeError::InvalidEndTable)
+    );
+}
+
+#[test]
+fn rejects_invalid_elements() {
+    let mut text: Vec<u8> = texts_bytes();
+    text[12] = 0xFF;
+    assert_eq!(Texts::decode(&text), Err(DecodeError::InvalidUtf8));
+
+    let flags = |flag: u8| -> Vec<u8> {
+        let mut value: ListKinds = list_kinds();
+        value.set_flags(vec![true]);
+        let mut bytes: Vec<u8> = value.encode();
+        let at: usize = ListKindsRef::new(&bytes)
+            .unwrap()
+            .flags()
+            .as_bytes()
+            .as_ptr() as usize
+            - bytes.as_ptr() as usize;
+        bytes[at] = flag;
+        bytes
+    };
+    assert!(ListKinds::decode(&flags(0)).is_ok());
+    assert_eq!(
+        ListKinds::decode(&flags(2)),
+        Err(DecodeError::InvalidBool { value: 2 })
+    );
+}
+
+#[test]
+fn lists_are_arrays_in_json() {
+    assert_json(
+        &Numbers::new(7, vec![1, 2]),
+        r#"{"count":7,"values":[1,2]}"#,
+    );
+    assert_json(&texts(), r#"{"texts":["hi","","yo!"]}"#);
+    assert_json(
+        &Nested::new(vec![vec![1, 2], Vec::default()]),
+        r#"{"rows":[[1,2],[]]}"#,
+    );
+    let value: ListKinds = list_kinds();
+    let json: String = serde_json::to_string(&value).unwrap();
+    assert_eq!(serde_json::from_str::<ListKinds>(&json).unwrap(), value);
+}

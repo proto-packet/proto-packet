@@ -42,16 +42,21 @@ fn gen_encoded_len(fields: &[Field<'_>], layout: &StructLayout) -> Function {
     function.add_semi(format!("let mut len: usize = {}", layout.fixed_size));
     for entry in &layout.entries {
         let field: Field<'_> = fields[entry.field];
-        let padding: String = if entry.alignment > 1 {
-            format!("len = {}::align_up(len, {}); ", IO, entry.alignment)
-        } else {
-            String::default()
-        };
         function.add_literal(gen_entry(field, |value: &str| {
-            if field.tag.is_string() {
-                format!("{}len += {}.len();", padding, value)
+            let size: String = if field.tag.is_string() {
+                format!("{}.len()", value)
+            } else if field.tag.is_list() {
+                format!("{}::list_encoded_len({})", IO, gen_list(field, value))
             } else {
-                format!("{}len += {}.encoded_len();", padding, value)
+                format!("{}.encoded_len()", value)
+            };
+            if entry.alignment > 1 {
+                format!(
+                    "{{ let size: usize = {}; if size > 0 {{ len = {}::align_up(len, {}) + size; }} }}",
+                    size, IO, entry.alignment
+                )
+            } else {
+                format!("len += {};", size)
             }
         }));
     }
@@ -83,7 +88,7 @@ pub(crate) fn gen_encode(typing: Typing<'_>, kind: &str) -> Function {
 /// Getting the lengths first would walk each nested struct once for each struct it is nested in.
 ///
 /// # Note
-/// - An entry is padded to its alignment only when it's present.
+/// - An entry is padded to its alignment, unless it's empty.
 /// - The last entry has no end, since it ends where the struct ends.
 fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout) -> Function {
     let mut statements: Vec<String> = layout
@@ -98,16 +103,21 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout
     }
     for (index, entry) in layout.entries.iter().enumerate() {
         let field: Field<'_> = fields[entry.field];
-        let padding: String = if entry.alignment > 1 {
-            format!("{}::write_padding(out, start, {}); ", IO, entry.alignment)
-        } else {
-            String::default()
-        };
         statements.push(gen_entry(field, |value: &str| {
-            if field.tag.is_string() {
-                format!("{}out.extend_from_slice({}.as_bytes());", padding, value)
+            let write: String = if field.tag.is_string() {
+                format!("out.extend_from_slice({}.as_bytes());", value)
+            } else if field.tag.is_list() {
+                format!("{}::encode_list({}, out);", IO, gen_list(field, value))
             } else {
-                format!("{}{}.encode_to(out);", padding, value)
+                format!("{}.encode_to(out);", value)
+            };
+            if entry.alignment > 1 {
+                format!(
+                    "{{ let before: usize = out.len(); {}::write_padding(out, start, {}); let padded: usize = out.len(); {} {}::trim_padding(out, before, padded); }}",
+                    IO, entry.alignment, write, IO
+                )
+            } else {
+                write
             }
         }));
         if index < layout.ends() {
@@ -187,6 +197,18 @@ fn gen_fixed_field(typing: Typing<'_>, field: Field<'_>, layout: FieldLayout) ->
             )
         }
         _ => format!("{}.encode_to(out);", name),
+    }
+}
+
+/// Generates the expression of the slice of the list `field` with the `value` expression.
+///
+/// # Note
+/// - The value of an optional field is already a reference.
+fn gen_list(field: Field<'_>, value: &str) -> String {
+    if field.is_optional {
+        value.to_string()
+    } else {
+        format!("&{}", value)
     }
 }
 

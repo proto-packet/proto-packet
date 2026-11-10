@@ -140,10 +140,18 @@ impl Pair {
     #[must_use]
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 8;
-        len = proto_packet::io::align_up(len, 8);
-        len += self.first.encoded_len();
-        len = proto_packet::io::align_up(len, 8);
-        len += self.second.encoded_len();
+        {
+            let size: usize = self.first.encoded_len();
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize = self.second.encoded_len();
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
         len += self.note.len();
         len
     }
@@ -160,11 +168,21 @@ impl Pair {
     pub fn encode_to(&self, out: &mut Vec<u8>) {
         let start: usize = out.len();
         proto_packet::io::write_zeros(out, 8);
-        proto_packet::io::write_padding(out, start, 8);
-        self.first.encode_to(out);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            self.first.encode_to(out);
+            proto_packet::io::trim_padding(out, before, padded);
+        }
         proto_packet::io::write_end(out, start, start);
-        proto_packet::io::write_padding(out, start, 8);
-        self.second.encode_to(out);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            self.second.encode_to(out);
+            proto_packet::io::trim_padding(out, before, padded);
+        }
         proto_packet::io::write_end(out, start + 4, start);
         out.extend_from_slice(self.note.as_bytes());
     }

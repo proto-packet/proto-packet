@@ -106,8 +106,12 @@ impl LoopByte {
     pub fn encoded_len(&self) -> usize {
         let mut len: usize = 2;
         if let Some(value) = &self.next {
-            len = proto_packet::io::align_up(len, 8);
-            len += value.encoded_len();
+            {
+                let size: usize = value.encoded_len();
+                if size > 0 {
+                    len = proto_packet::io::align_up(len, 8) + size;
+                }
+            }
         }
         len
     }
@@ -126,8 +130,13 @@ impl LoopByte {
         out.extend_from_slice(&self.value.to_le_bytes());
         out.push(u8::from(self.next.is_some()));
         if let Some(value) = &self.next {
-            proto_packet::io::write_padding(out, start, 8);
-            value.encode_to(out);
+            {
+                let before: usize = out.len();
+                proto_packet::io::write_padding(out, start, 8);
+                let padded: usize = out.len();
+                value.encode_to(out);
+                proto_packet::io::trim_padding(out, before, padded);
+            }
         }
     }
 }

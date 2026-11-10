@@ -126,6 +126,6 @@ pub(crate) fn gen_value_write(typing: Typing<'_>, tag: &TypeTag, out: &str) -> S
             out
         ),
         TypeTag::Named(_) => format!("value.encode_to({});", out),
-        TypeTag::List(_) => todo!(),
+        TypeTag::List(_) => format!("{}::encode_list(value, {});", IO, out),
     }
 }
