@@ -486,7 +486,62 @@ Readers reject a list when any of these is true.
 
 ## Maps
 
-todo -- design the encoding. A map is `map<K, V>`.
+A map is its keys as a list, then its values as a list. The `n`th value is the value of the `n`th
+key. An empty map is no bytes.
+
+```text
+map = [keys end][keys][values]
+```
+
+- The `keys end` is a `u32`. It is the offset where the keys end, from the start of the map.
+- The `keys` are a list of the key type. (see [Lists](#lists))
+- The `values` are a list of the value type, with one value for each key.
+
+Each list starts at the next multiple of its own alignment, with zeros as padding before it. The
+alignment of a map is the largest of the two lists, & at least 4.
+
+```text
+struct Scores { scores: map<string, u32>; }
+
+[keys end][keys: "a", "bc"][padding: 1][values: 1, 2]
+
+Scores({"a": 1, "bc": 2}) is 24 bytes, alignment 4
+
+offset  0: keys end = 15
+offset  4: keys: count = 2
+offset  8: keys: ends = 9
+offset 12: keys: "a", "bc"
+offset 16: values = 1, 2
+```
+
+### Key Order
+
+The keys are strictly increasing, so a map has no two equal keys & a reader finds a key by a binary
+search. Any type can be a key.
+
+| Type             | Order                                                     |
+|------------------|-----------------------------------------------------------|
+| `bool`           | False before true.                                        |
+| integers         | By number.                                                |
+| floats           | By number, with `-0.0` before `0.0` & the NaN last.       |
+| `uuid`, `string` | By bytes.                                                 |
+| enum             | By tag number.                                            |
+| struct           | By the fields, in declaration order.                      |
+| list             | By the elements. A list comes after the lists it extends. |
+| map              | By the entries, each a key then its value.                |
+
+todo -- a message or a variant as a key is ordered by its declaration order, which a schema change
+can reorder. (see [Ordering](../FUTURE.md#ordering))
+
+### Validation
+
+Readers reject a map when any of these is true.
+
+- It is shorter than its `keys end`.
+- Its keys or its values are no bytes, or its keys end past the end of the map.
+- Its keys or its values are an invalid list, or they aren't the same count.
+- Its keys aren't strictly increasing.
+- The padding before its keys or its values isn't zeros.
 
 ## Reading & Writing
 
