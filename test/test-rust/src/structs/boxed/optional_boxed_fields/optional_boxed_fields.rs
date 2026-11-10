@@ -322,6 +322,7 @@ impl proto_packet::io::Element for OptionalBoxedFields {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::OptionalBoxedFieldsRef<'a>;
     type View<'a> = &'a Self;
 
@@ -339,6 +340,13 @@ impl proto_packet::io::Element for OptionalBoxedFields {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(
+        a: super::OptionalBoxedFieldsRef<'_>,
+        b: super::OptionalBoxedFieldsRef<'_>,
+    ) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

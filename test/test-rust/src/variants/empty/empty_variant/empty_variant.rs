@@ -117,6 +117,7 @@ impl proto_packet::io::Element for EmptyVariant {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::EmptyVariantRef<'a>;
     type View<'a> = &'a Self;
 
@@ -134,6 +135,13 @@ impl proto_packet::io::Element for EmptyVariant {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(
+        a: super::EmptyVariantRef<'_>,
+        b: super::EmptyVariantRef<'_>,
+    ) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

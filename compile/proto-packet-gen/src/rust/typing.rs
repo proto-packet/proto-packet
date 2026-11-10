@@ -67,6 +67,43 @@ impl Typing<'_> {
             _ => false,
         }
     }
+
+    /// Checks if a key of the `tag` is ordered by its encoded bytes in a map.
+    ///
+    /// # Note
+    /// - A message or a variant is, & so is a type with one inside it.
+    pub(crate) fn is_ordered_by_bytes(self, tag: &TypeTag) -> bool {
+        self.has_message_or_variant(tag, &mut Vec::default())
+    }
+
+    /// Checks if the `tag` is a message or a variant, or has one inside it.
+    ///
+    /// # Note
+    /// - A struct is `visited` once, since a struct can hold itself through a loop of types.
+    fn has_message_or_variant(self, tag: &TypeTag, visited: &mut Vec<QualifiedName>) -> bool {
+        match tag {
+            TypeTag::Primitive(_) | TypeTag::Special(_) => false,
+            TypeTag::List(element) => self.has_message_or_variant(element, visited),
+            TypeTag::Map { key, value } => {
+                self.has_message_or_variant(key, visited)
+                    || self.has_message_or_variant(value, visited)
+            }
+            TypeTag::Named(name) => match self.project.type_dec_with_name(name.to_ref()) {
+                Some(TypeDec::Message(_) | TypeDec::Variant(_)) => true,
+                Some(TypeDec::Struct(structure)) => {
+                    if visited.contains(name) {
+                        return false;
+                    }
+                    visited.push(name.clone());
+                    structure
+                        .fields()
+                        .iter()
+                        .any(|field| self.has_message_or_variant(field.type_tag(), visited))
+                }
+                _ => false,
+            },
+        }
+    }
 }
 
 impl Typing<'_> {

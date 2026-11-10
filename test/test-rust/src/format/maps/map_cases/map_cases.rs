@@ -158,6 +158,7 @@ impl proto_packet::io::Element for MapCases {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::MapCasesRef<'a>;
     type View<'a> = &'a Self;
 
@@ -175,6 +176,10 @@ impl proto_packet::io::Element for MapCases {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(a: super::MapCasesRef<'_>, b: super::MapCasesRef<'_>) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

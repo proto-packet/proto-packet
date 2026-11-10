@@ -131,6 +131,9 @@ pub fn gen_struct(
         layout.is_fixed().then_some(layout.fixed_size),
         layout.alignment,
         can_be_invalid(typing, &fields, &layout),
+        fields
+            .iter()
+            .any(|field| typing.is_ordered_by_bytes(field.tag)),
     ));
     let view_mut_fields: Vec<Field> = view_mut_fields(&fields);
     Ok(vec![

@@ -168,6 +168,7 @@ pub fn gen_variant(
         None,
         1,
         true,
+        true,
     ));
     block.add_statement(EmptyLine::default());
     block.add_literal(gen_json(typing, schema_name, &type_name, &cases));

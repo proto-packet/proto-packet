@@ -443,6 +443,7 @@ impl proto_packet::io::Element for OptionalFields {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 8;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::OptionalFieldsRef<'a>;
     type View<'a> = &'a Self;
 
@@ -460,6 +461,13 @@ impl proto_packet::io::Element for OptionalFields {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(
+        a: super::OptionalFieldsRef<'_>,
+        b: super::OptionalFieldsRef<'_>,
+    ) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

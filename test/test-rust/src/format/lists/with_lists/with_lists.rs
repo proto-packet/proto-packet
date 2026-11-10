@@ -353,6 +353,7 @@ impl proto_packet::io::Element for WithLists {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::WithListsRef<'a>;
     type View<'a> = &'a Self;
 
@@ -370,6 +371,10 @@ impl proto_packet::io::Element for WithLists {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(a: super::WithListsRef<'_>, b: super::WithListsRef<'_>) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

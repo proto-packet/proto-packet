@@ -255,6 +255,7 @@ impl proto_packet::io::Element for NamedFields {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 4;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::NamedFieldsRef<'a>;
     type View<'a> = &'a Self;
 
@@ -272,6 +273,10 @@ impl proto_packet::io::Element for NamedFields {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(a: super::NamedFieldsRef<'_>, b: super::NamedFieldsRef<'_>) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

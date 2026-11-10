@@ -139,6 +139,7 @@ impl proto_packet::io::Element for OlderCases {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::OlderCasesRef<'a>;
     type View<'a> = &'a Self;
 
@@ -156,6 +157,10 @@ impl proto_packet::io::Element for OlderCases {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(a: super::OlderCasesRef<'_>, b: super::OlderCasesRef<'_>) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

@@ -310,6 +310,7 @@ impl proto_packet::io::Element for SignedFields {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::SignedFieldsRef<'a>;
     type View<'a> = &'a Self;
 
@@ -327,6 +328,13 @@ impl proto_packet::io::Element for SignedFields {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(
+        a: super::SignedFieldsRef<'_>,
+        b: super::SignedFieldsRef<'_>,
+    ) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

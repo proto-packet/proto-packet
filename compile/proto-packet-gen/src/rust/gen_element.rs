@@ -6,6 +6,9 @@ use crate::rust::prelude::{Prelude, PreludeName};
 /// Generates the list element impl of the struct, message or variant with the `type_name`.
 ///
 /// The element is read through the `ref_name` type. A fixed-size type has a `size`.
+///
+/// # Note
+/// - A type that is `ordered_by_bytes` as the key of a map compares its encoded bytes.
 pub(crate) fn gen_element(
     prelude: Prelude,
     type_name: &str,
@@ -13,16 +16,32 @@ pub(crate) fn gen_element(
     size: Option<usize>,
     alignment: usize,
     can_be_invalid: bool,
+    ordered_by_bytes: bool,
 ) -> String {
     let size: String = match size {
         Some(size) => format!("Some({})", size),
         None => "None".to_string(),
     };
+    let (ordered, cmp_refs): (&str, String) = if ordered_by_bytes {
+        (
+            "\n    const ORDERED_BY_BYTES: bool = true;",
+            format!(
+                "
+    fn cmp_refs(a: super::{ref_name}<'_>, b: super::{ref_name}<'_>) -> std::cmp::Ordering {{
+        a.as_bytes().cmp(b.as_bytes())
+    }}
+",
+                ref_name = ref_name
+            ),
+        )
+    } else {
+        ("", String::default())
+    };
     format!(
         "impl {io}::Element for {type_name} {{
     const SIZE: {option}<usize> = {size};
     const ALIGNMENT: usize = {alignment};
-    const CAN_BE_INVALID: bool = {can_be_invalid};
+    const CAN_BE_INVALID: bool = {can_be_invalid};{ordered}
     type Ref<'a> = super::{ref_name}<'a>;
     type View<'a> = &'a Self;
 
@@ -41,7 +60,7 @@ pub(crate) fn gen_element(
     fn view(&self) -> &Self {{
         self
     }}
-
+{cmp_refs}
     fn encoded_len(&self) -> usize {{
         {type_name}::encoded_len(self)
     }}
@@ -60,6 +79,8 @@ pub(crate) fn gen_element(
         size = size,
         alignment = alignment,
         can_be_invalid = can_be_invalid,
+        ordered = ordered,
+        cmp_refs = cmp_refs,
     )
 }
 

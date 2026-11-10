@@ -138,6 +138,7 @@ impl proto_packet::io::Element for Label {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::LabelRef<'a>;
     type View<'a> = &'a Self;
 
@@ -155,6 +156,10 @@ impl proto_packet::io::Element for Label {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(a: super::LabelRef<'_>, b: super::LabelRef<'_>) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {

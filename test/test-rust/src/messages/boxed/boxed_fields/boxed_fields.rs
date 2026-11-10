@@ -242,6 +242,7 @@ impl proto_packet::io::Element for BoxedFields {
     const SIZE: Option<usize> = None;
     const ALIGNMENT: usize = 1;
     const CAN_BE_INVALID: bool = true;
+    const ORDERED_BY_BYTES: bool = true;
     type Ref<'a> = super::BoxedFieldsRef<'a>;
     type View<'a> = &'a Self;
 
@@ -259,6 +260,10 @@ impl proto_packet::io::Element for BoxedFields {
 
     fn view(&self) -> &Self {
         self
+    }
+
+    fn cmp_refs(a: super::BoxedFieldsRef<'_>, b: super::BoxedFieldsRef<'_>) -> std::cmp::Ordering {
+        a.as_bytes().cmp(b.as_bytes())
     }
 
     fn encoded_len(&self) -> usize {
