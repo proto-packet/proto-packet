@@ -530,11 +530,13 @@ search. Any type can be a key.
 | `uuid`, `string` | By bytes.                                                 |
 | enum             | By tag number.                                            |
 | struct           | By the fields, in declaration order.                      |
+| message          | By the fields, in tag number order. Absent is first.      |
+| variant          | By tag number, then by the value.                         |
 | list             | By the elements. A list comes after the lists it extends. |
 | map              | By the entries, each a key then its value.                |
 
-todo -- a message or a variant as a key is ordered by its declaration order, which a schema change
-can reorder. (see [Ordering](../FUTURE.md#ordering))
+A message's unknown fields are compared last, by tag number & then by their bytes. An unknown case
+of a variant is compared by its bytes.
 
 ### Validation
 
