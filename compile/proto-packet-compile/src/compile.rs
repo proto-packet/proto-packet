@@ -13,6 +13,13 @@ pub enum Language {
 }
 
 impl Language {
+    //! Constants
+
+    /// The target languages.
+    pub const ALL: [Self; 1] = [Self::Rust];
+}
+
+impl Language {
     //! Names
 
     /// Gets the name. (ex: `rust`)
@@ -24,7 +31,7 @@ impl Language {
 
     /// Gets the optional language with the `name`.
     pub fn from_name(name: &str) -> Option<Self> {
-        [Self::Rust]
+        Self::ALL
             .into_iter()
             .find(|language| language.name() == name)
     }
@@ -41,11 +48,19 @@ pub fn compile(language: Language, source: &Path, target: &Path) -> Result<(), R
     let sources: Vec<SchemaSource> = read_schema_sources(source, &config)?;
     check_schema_files(&sources, target)?;
     let project: Project = check_sources(&sources)?;
-    let files: Vec<GeneratedFile> = match language {
-        Language::Rust => proto_packet_gen::rust::generate(&project),
-    }
-    .map_err(|error| Report::from(Code::error(error.code(), error.to_string())))?;
+    let files: Vec<GeneratedFile> = generate(language, &project)?;
     write_files(target, &files)
+}
+
+/// Generates the `language` code of the linked `project`, in memory.
+pub(crate) fn generate(
+    language: Language,
+    project: &Project,
+) -> Result<Vec<GeneratedFile>, Report> {
+    match language {
+        Language::Rust => proto_packet_gen::rust::generate(project),
+    }
+    .map_err(|error| Report::from(Code::error(error.code(), error.to_string())))
 }
 
 /// Checks the `target` folder can be replaced without deleting the `source` folder.
