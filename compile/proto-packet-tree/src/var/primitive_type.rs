@@ -56,12 +56,22 @@ pub enum PrimitiveType {
 
     /// A span of time, as nanoseconds.
     Duration,
+
+    /// A decimal number with the `scale` count of fraction digits.
+    Decimal { scale: u8 },
+}
+
+impl PrimitiveType {
+    //! Decimals
+
+    /// The largest scale of a decimal.
+    pub const MAX_DECIMAL_SCALE: u8 = 18;
 }
 
 impl PrimitiveType {
     //! Names
 
-    /// The primitive types.
+    /// The primitive types that are named by a single word.
     pub const ALL: [Self; 18] = [
         Self::Boolean,
         Self::UnsignedInt8,
@@ -83,7 +93,7 @@ impl PrimitiveType {
         Self::Duration,
     ];
 
-    /// Gets the name. (ex: `u8`)
+    /// Gets the name, without the scale of a decimal. (ex: `u8`)
     pub const fn name(self) -> &'static str {
         match self {
             Self::Boolean => "bool",
@@ -104,6 +114,7 @@ impl PrimitiveType {
             Self::Nanotime => "nanotime",
             Self::Date => "date",
             Self::Duration => "duration",
+            Self::Decimal { .. } => "decimal",
         }
     }
 
@@ -117,6 +128,9 @@ impl PrimitiveType {
 
 impl Display for PrimitiveType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.name())
+        match self {
+            Self::Decimal { scale } => write!(f, "decimal<{}>", scale),
+            _ => f.write_str(self.name()),
+        }
     }
 }
