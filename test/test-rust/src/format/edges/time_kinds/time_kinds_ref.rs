@@ -14,18 +14,29 @@ impl<'a> TimeKindsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 49)?;
         proto_packet::io::check_tail_ends(bytes, 44, 1, 49)?;
         proto_packet::io::check_unused_bits(bytes[48], 1)?;
         if !unsafe { proto_packet::io::read_bit_unchecked(bytes, 48, 0) } {
             proto_packet::io::check_absent(&bytes[32..40])?;
         }
-        proto_packet::io::ListRef::<proto_packet::types::Date>::new(
+        proto_packet::io::ListRef::<proto_packet::types::Date>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 44, 0, 2, 49, 4)?,
+            depth - 1,
         )?;
-        proto_packet::io::MapRef::<proto_packet::types::Date, proto_packet::types::Duration>::new(
-            proto_packet::io::check_tail_entry(bytes, 44, 1, 2, 49, 8)?,
-        )?;
+        proto_packet::io::MapRef::<proto_packet::types::Date, proto_packet::types::Duration>::new_with_depth(proto_packet::io::check_tail_entry(bytes, 44, 1, 2, 49, 8)?, depth - 1)?;
         Ok(Self { bytes })
     }
 

@@ -203,8 +203,8 @@ impl proto_packet::io::Element for NestedKeys {
     type Ref<'a> = super::NestedKeysRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
-        super::NestedKeysRef::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> Result<(), proto_packet::io::DecodeError> {
+        super::NestedKeysRef::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::NestedKeysRef<'_> {

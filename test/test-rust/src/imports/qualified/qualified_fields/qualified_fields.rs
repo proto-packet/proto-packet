@@ -281,7 +281,7 @@ impl proto_packet::io::Element for QualifiedFields {
     type Ref<'a> = super::QualifiedFieldsRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::QualifiedFieldsRef::new(bytes).map(|_| ())
     }
 

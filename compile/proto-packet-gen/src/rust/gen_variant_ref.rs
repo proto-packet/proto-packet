@@ -1,7 +1,7 @@
 use crate::rust::encoding::IO;
 use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_eq::gen_ref_eq;
-use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
+use crate::rust::gen_forms::{gen_new_of_level, gen_new_unchecked, gen_new_with_depth, gen_to_buf};
 use crate::rust::gen_message_ref::{gen_read, gen_value_check};
 use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, ref_name};
 use crate::rust::gen_variant::Case;
@@ -100,7 +100,7 @@ pub(crate) fn gen_variant_ref(
 
 /// Generates the impl block constructing the `ref_type`.
 fn gen_construction(typing: Typing<'_>, cases: &[Case<'_>], ref_type: &RustType) -> ImplBlock {
-    let mut new: Function = gen_new("ref", "&'a [u8]")
+    let mut new: Function = gen_new_with_depth()
         .with_semi(format!("{}::check_len(bytes, 2)?", IO))
         .with_semi(format!(
             "let tag_number: u16 = unsafe {{ {}::read_u16_unchecked(bytes, 0) }}",
@@ -134,6 +134,7 @@ fn gen_construction(typing: Typing<'_>, cases: &[Case<'_>], ref_type: &RustType)
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
         .with_comment(" Construction")
+        .with_function(gen_new_of_level())
         .with_function(new)
         .with_function(gen_new_unchecked("ref", "&'a [u8]"))
 }

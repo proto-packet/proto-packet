@@ -14,6 +14,18 @@ impl<'a> ValueRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 2)?;
         let tag_number: u16 = unsafe { proto_packet::io::read_u16_unchecked(bytes, 0) };
         proto_packet::io::check_tag_number(tag_number)?;
@@ -35,13 +47,13 @@ impl<'a> ValueRef<'a> {
                 proto_packet::io::check_utf8(value)?;
             }
             5 => {
-                crate::types::PointRef::new(value)?;
+                <crate::types::Point as proto_packet::io::Element>::check(value, depth - 1)?;
             }
             6 => {
-                crate::types::PersonRef::new(value)?;
+                <crate::types::Person as proto_packet::io::Element>::check(value, depth - 1)?;
             }
             7 => {
-                crate::types::LabelRef::new(value)?;
+                <crate::types::Label as proto_packet::io::Element>::check(value, depth - 1)?;
             }
             8 => {
                 proto_packet::io::check_exact_len(value, 2)?;
@@ -50,7 +62,7 @@ impl<'a> ValueRef<'a> {
                 })?;
             }
             9 => {
-                crate::types::ShapeRef::new(value)?;
+                <crate::types::Shape as proto_packet::io::Element>::check(value, depth - 1)?;
             }
             _ => {}
         }

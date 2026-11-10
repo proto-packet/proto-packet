@@ -14,17 +14,31 @@ impl<'a> PricesRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 37)?;
         proto_packet::io::check_tail_ends(bytes, 32, 1, 37)?;
         proto_packet::io::check_unused_bits(bytes[36], 1)?;
         if !unsafe { proto_packet::io::read_bit_unchecked(bytes, 36, 0) } {
             proto_packet::io::check_absent(&bytes[24..32])?;
         }
-        proto_packet::io::ListRef::<proto_packet::types::Decimal<2>>::new(
+        proto_packet::io::ListRef::<proto_packet::types::Decimal<2>>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 32, 0, 2, 37, 8)?,
+            depth - 1,
         )?;
-        proto_packet::io::MapRef::<String, proto_packet::types::Decimal<2>>::new(
+        proto_packet::io::MapRef::<String, proto_packet::types::Decimal<2>>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 32, 1, 2, 37, 8)?,
+            depth - 1,
         )?;
         Ok(Self { bytes })
     }

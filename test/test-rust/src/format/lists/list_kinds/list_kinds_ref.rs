@@ -14,44 +14,67 @@ impl<'a> ListKindsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 45)?;
         proto_packet::io::check_tail_ends(bytes, 0, 11, 45)?;
         proto_packet::io::check_unused_bits(bytes[44], 1)?;
         proto_packet::io::check_tail_entry(bytes, 0, 0, 12, 45, 1)?;
-        proto_packet::io::ListRef::<bool>::new(proto_packet::io::check_tail_entry(
-            bytes, 0, 1, 12, 45, 1,
-        )?)?;
-        proto_packet::io::ListRef::<i64>::new(proto_packet::io::check_tail_entry(
-            bytes, 0, 2, 12, 45, 8,
-        )?)?;
-        proto_packet::io::ListRef::<proto_packet::types::Float64>::new(
+        proto_packet::io::ListRef::<bool>::new_with_depth(
+            proto_packet::io::check_tail_entry(bytes, 0, 1, 12, 45, 1)?,
+            depth - 1,
+        )?;
+        proto_packet::io::ListRef::<i64>::new_with_depth(
+            proto_packet::io::check_tail_entry(bytes, 0, 2, 12, 45, 8)?,
+            depth - 1,
+        )?;
+        proto_packet::io::ListRef::<proto_packet::types::Float64>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 3, 12, 45, 8)?,
+            depth - 1,
         )?;
-        proto_packet::io::ListRef::<proto_packet::types::Uuid>::new(
+        proto_packet::io::ListRef::<proto_packet::types::Uuid>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 4, 12, 45, 8)?,
+            depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::examples::Color>::new(
+        proto_packet::io::ListRef::<crate::format::examples::Color>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 5, 12, 45, 2)?,
+            depth - 1,
         )?;
-        proto_packet::io::ListRef::<String>::new(proto_packet::io::check_tail_entry(
-            bytes, 0, 6, 12, 45, 4,
-        )?)?;
-        proto_packet::io::ListRef::<crate::format::examples::Point>::new(
+        proto_packet::io::ListRef::<String>::new_with_depth(
+            proto_packet::io::check_tail_entry(bytes, 0, 6, 12, 45, 4)?,
+            depth - 1,
+        )?;
+        proto_packet::io::ListRef::<crate::format::examples::Point>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 7, 12, 45, 4)?,
+            depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::examples::Entry>::new(
+        proto_packet::io::ListRef::<crate::format::examples::Entry>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 8, 12, 45, 8)?,
+            depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::messages::Item>::new(
+        proto_packet::io::ListRef::<crate::format::messages::Item>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 9, 12, 45, 4)?,
+            depth - 1,
         )?;
-        proto_packet::io::ListRef::<crate::format::variants::Shape>::new(
+        proto_packet::io::ListRef::<crate::format::variants::Shape>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 10, 12, 45, 4)?,
+            depth - 1,
         )?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 44, 0) } {
-            proto_packet::io::ListRef::<u16>::new(proto_packet::io::check_tail_entry(
-                bytes, 0, 11, 12, 45, 2,
-            )?)?;
+            proto_packet::io::ListRef::<u16>::new_with_depth(
+                proto_packet::io::check_tail_entry(bytes, 0, 11, 12, 45, 2)?,
+                depth - 1,
+            )?;
         } else {
             proto_packet::io::check_tail_absent(bytes, 0, 11, 12, 45)?;
         }

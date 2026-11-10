@@ -14,24 +14,45 @@ impl<'a> WithListsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_message(bytes)?;
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
                 1 => {}
                 2 => {
-                    proto_packet::io::ListRef::<u32>::new(value)?;
+                    proto_packet::io::ListRef::<u32>::new_with_depth(value, depth - 1)?;
                 }
                 3 => {
-                    proto_packet::io::ListRef::<String>::new(value)?;
+                    proto_packet::io::ListRef::<String>::new_with_depth(value, depth - 1)?;
                 }
                 4 => {
-                    proto_packet::io::ListRef::<crate::format::examples::Point>::new(value)?;
+                    proto_packet::io::ListRef::<crate::format::examples::Point>::new_with_depth(
+                        value,
+                        depth - 1,
+                    )?;
                 }
                 5 => {
-                    proto_packet::io::ListRef::<crate::format::examples::Entry>::new(value)?;
+                    proto_packet::io::ListRef::<crate::format::examples::Entry>::new_with_depth(
+                        value,
+                        depth - 1,
+                    )?;
                 }
                 6 => {
-                    proto_packet::io::ListRef::<crate::format::lists::WithLists>::new(value)?;
+                    proto_packet::io::ListRef::<crate::format::lists::WithLists>::new_with_depth(
+                        value,
+                        depth - 1,
+                    )?;
                 }
                 _ => {}
             }

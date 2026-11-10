@@ -246,8 +246,8 @@ impl proto_packet::io::Element for WithMessages {
     type Ref<'a> = super::WithMessagesRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
-        super::WithMessagesRef::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> Result<(), proto_packet::io::DecodeError> {
+        super::WithMessagesRef::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::WithMessagesRef<'_> {

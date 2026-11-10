@@ -2,6 +2,25 @@ use crate::io::read::tail_entry_range_unchecked;
 use crate::io::{DecodeError, TagNumber};
 use std::ops::Range;
 
+/// The most levels a value can nest.
+///
+/// # Note
+/// - A message, a variant & a struct with a variable tail are each a level.
+/// - A reader checks a value by recursion, so the levels bound the stack it uses.
+pub const MAX_DEPTH: usize = 64;
+
+/// Checks a value that is a level can nest, with the `depth` of levels left.
+///
+/// # Errors
+/// Returns an error if no level is left.
+pub const fn check_depth(depth: usize) -> Result<(), DecodeError> {
+    if depth == 0 {
+        Err(DecodeError::TooDeep)
+    } else {
+        Ok(())
+    }
+}
+
 /// Checks the `bytes` can hold a fixed block of the `size`.
 ///
 /// # Errors

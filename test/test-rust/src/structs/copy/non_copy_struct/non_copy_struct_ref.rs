@@ -14,8 +14,23 @@ impl<'a> NonCopyStructRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 0)?;
-        crate::types::PersonRef::new(proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 0, 1)?)?;
+        crate::types::PersonRef::new_with_depth(
+            proto_packet::io::check_tail_entry(bytes, 0, 0, 1, 0, 1)?,
+            depth - 1,
+        )?;
         Ok(Self { bytes })
     }
 

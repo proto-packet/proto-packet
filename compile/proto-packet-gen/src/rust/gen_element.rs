@@ -9,6 +9,7 @@ use crate::rust::prelude::{Prelude, PreludeName};
 ///
 /// # Note
 /// - A type that is `ordered_by_bytes` as the key of a map compares its encoded bytes.
+/// - A fixed-size type is not a level, so it takes no depth.
 pub(crate) fn gen_element(
     prelude: Prelude,
     type_name: &str,
@@ -18,6 +19,24 @@ pub(crate) fn gen_element(
     can_be_invalid: bool,
     ordered_by_bytes: bool,
 ) -> String {
+    let check: String = match size {
+        Some(_) => format!(
+            "fn check(bytes: &[u8], _depth: usize) -> {result}<(), {io}::DecodeError> {{
+        super::{ref_name}::new(bytes).map(|_| ())
+    }}",
+            result = prelude.path(PreludeName::Result),
+            io = IO,
+            ref_name = ref_name
+        ),
+        None => format!(
+            "fn check(bytes: &[u8], depth: usize) -> {result}<(), {io}::DecodeError> {{
+        super::{ref_name}::new_with_depth(bytes, depth).map(|_| ())
+    }}",
+            result = prelude.path(PreludeName::Result),
+            io = IO,
+            ref_name = ref_name
+        ),
+    };
     let size: String = match size {
         Some(size) => format!("Some({})", size),
         None => "None".to_string(),
@@ -45,9 +64,7 @@ pub(crate) fn gen_element(
     type Ref<'a> = super::{ref_name}<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> {result}<(), {io}::DecodeError> {{
-        super::{ref_name}::new(bytes).map(|_| ())
-    }}
+    {check}
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::{ref_name}<'_> {{
         unsafe {{ super::{ref_name}::new_unchecked(bytes) }}
@@ -74,13 +91,13 @@ pub(crate) fn gen_element(
         type_name = type_name,
         ref_name = ref_name,
         option = prelude.path(PreludeName::Option),
-        result = prelude.path(PreludeName::Result),
         vec = prelude.path(PreludeName::Vec),
         size = size,
         alignment = alignment,
         can_be_invalid = can_be_invalid,
         ordered = ordered,
         cmp_refs = cmp_refs,
+        check = check,
     )
 }
 
@@ -94,7 +111,7 @@ pub(crate) fn gen_enum_element(prelude: Prelude, type_name: &str) -> String {
     type Ref<'a> = Self;
     type View<'a> = Self;
 
-    fn check(bytes: &[u8]) -> {result}<(), {io}::DecodeError> {{
+    fn check(bytes: &[u8], _depth: usize) -> {result}<(), {io}::DecodeError> {{
         {io}::check_exact_len(bytes, 2)?;
         {io}::check_tag_number(unsafe {{ {io}::read_u16_unchecked(bytes, 0) }})
     }}

@@ -186,7 +186,7 @@ impl proto_packet::io::Element for FloatKinds {
     type Ref<'a> = super::FloatKindsRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::FloatKindsRef::new(bytes).map(|_| ())
     }
 

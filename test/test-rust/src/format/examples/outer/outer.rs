@@ -179,7 +179,7 @@ impl proto_packet::io::Element for Outer {
     type Ref<'a> = super::OuterRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::OuterRef::new(bytes).map(|_| ())
     }
 

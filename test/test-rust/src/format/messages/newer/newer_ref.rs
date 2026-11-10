@@ -14,6 +14,18 @@ impl<'a> NewerRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_message(bytes)?;
         for (tag, value) in unsafe { proto_packet::io::message_fields_unchecked(bytes) } {
             match tag {
@@ -30,7 +42,10 @@ impl<'a> NewerRef<'a> {
                     proto_packet::io::check_exact_len(value, 4)?;
                 }
                 5 => {
-                    crate::format::examples::EntryRef::new(value)?;
+                    <crate::format::examples::Entry as proto_packet::io::Element>::check(
+                        value,
+                        depth - 1,
+                    )?;
                 }
                 _ => {}
             }

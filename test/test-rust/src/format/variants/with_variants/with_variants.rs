@@ -246,8 +246,8 @@ impl proto_packet::io::Element for WithVariants {
     type Ref<'a> = super::WithVariantsRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
-        super::WithVariantsRef::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> Result<(), proto_packet::io::DecodeError> {
+        super::WithVariantsRef::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::WithVariantsRef<'_> {

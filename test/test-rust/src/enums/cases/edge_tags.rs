@@ -107,7 +107,7 @@ impl proto_packet::io::Element for EdgeTags {
     type Ref<'a> = Self;
     type View<'a> = Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         proto_packet::io::check_exact_len(bytes, 2)?;
         proto_packet::io::check_tag_number(unsafe {
             proto_packet::io::read_u16_unchecked(bytes, 0)

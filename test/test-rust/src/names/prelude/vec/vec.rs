@@ -119,7 +119,10 @@ impl proto_packet::io::Element for Vec {
     type Ref<'a> = super::VecRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
+    fn check(
+        bytes: &[u8],
+        _depth: usize,
+    ) -> std::result::Result<(), proto_packet::io::DecodeError> {
         super::VecRef::new(bytes).map(|_| ())
     }
 

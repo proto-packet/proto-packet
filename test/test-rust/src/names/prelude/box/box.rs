@@ -187,8 +187,8 @@ impl proto_packet::io::Element for Box {
     type Ref<'a> = super::BoxRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
-        super::BoxRef::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> std::result::Result<(), proto_packet::io::DecodeError> {
+        super::BoxRef::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::BoxRef<'_> {

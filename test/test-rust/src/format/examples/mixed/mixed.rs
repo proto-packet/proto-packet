@@ -200,7 +200,7 @@ impl proto_packet::io::Element for Mixed {
     type Ref<'a> = super::MixedRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::MixedRef::new(bytes).map(|_| ())
     }
 

@@ -44,7 +44,7 @@ const UNKNOWN_FIELDS: &str = "unknown_fields";
 const UNKNOWN_FIELD: &str = "proto_packet::io::UnknownField";
 
 /// The names of the generated methods of a message & its `Ref` type.
-const METHODS: [&str; 12] = [
+const METHODS: [&str; 13] = [
     CONSTRUCTOR,
     UNKNOWN_FIELDS,
     "with_unknown_fields",
@@ -55,6 +55,7 @@ const METHODS: [&str; 12] = [
     "decode_unchecked",
     "new",
     "new_unchecked",
+    "new_with_depth",
     "as_bytes",
     "to_buf",
 ];

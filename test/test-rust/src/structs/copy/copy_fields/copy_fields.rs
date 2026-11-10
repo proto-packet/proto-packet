@@ -216,7 +216,7 @@ impl proto_packet::io::Element for CopyFields {
     type Ref<'a> = super::CopyFieldsRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::CopyFieldsRef::new(bytes).map(|_| ())
     }
 

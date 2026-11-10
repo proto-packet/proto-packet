@@ -263,7 +263,7 @@ impl proto_packet::io::Element for SignedKinds {
     type Ref<'a> = super::SignedKindsRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::SignedKindsRef::new(bytes).map(|_| ())
     }
 

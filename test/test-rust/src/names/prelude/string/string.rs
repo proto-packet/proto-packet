@@ -154,8 +154,8 @@ impl proto_packet::io::Element for String {
     type Ref<'a> = super::StringRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
-        super::StringRef::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> std::result::Result<(), proto_packet::io::DecodeError> {
+        super::StringRef::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::StringRef<'_> {

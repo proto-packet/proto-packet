@@ -268,7 +268,7 @@ impl proto_packet::io::Element for PrimitiveFields {
     type Ref<'a> = super::PrimitiveFieldsRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::PrimitiveFieldsRef::new(bytes).map(|_| ())
     }
 

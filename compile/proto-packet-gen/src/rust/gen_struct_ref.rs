@@ -3,7 +3,9 @@ use crate::rust::encoding::IO;
 use crate::rust::fields::Field;
 use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_eq::gen_ref_eq;
-use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
+use crate::rust::gen_forms::{
+    gen_new, gen_new_of_level, gen_new_unchecked, gen_new_with_depth, gen_to_buf,
+};
 use crate::rust::naming::{ident, is_upper_camel_case, type_path};
 use crate::rust::typing::Typing;
 use crate::rust::values::{LIST_REF, MAP_REF, float_bits, ref_value_type};
@@ -107,8 +109,14 @@ fn gen_construction(
     } else {
         "check_len"
     };
-    let mut new: Function = gen_new("ref", "&'a [u8]")
-        .with_semi(format!("{}::{}(bytes, {})?", IO, check, layout.fixed_size));
+    let is_level: bool = !layout.is_fixed();
+    let new: Function = if is_level {
+        gen_new_with_depth()
+    } else {
+        gen_new("ref", "&'a [u8]")
+    };
+    let mut new: Function =
+        new.with_semi(format!("{}::{}(bytes, {})?", IO, check, layout.fixed_size));
     if layout.ends() > 0 {
         new.add_semi(format!(
             "{}::check_tail_ends(bytes, {}, {}, {})?",
@@ -130,9 +138,13 @@ fn gen_construction(
     }
     let new: Function = new.with_literal("Ok(Self { bytes })");
 
-    ImplBlock::from(ref_type.clone())
+    let mut block: ImplBlock = ImplBlock::from(ref_type.clone())
         .with_generic("'a")
-        .with_comment(" Construction")
+        .with_comment(" Construction");
+    if is_level {
+        block.add_function(gen_new_of_level());
+    }
+    block
         .with_function(new)
         .with_function(gen_new_unchecked("ref", "&'a [u8]"))
 }
@@ -269,20 +281,20 @@ fn gen_present_check(
             read_entry("check_tail_entry", layout, index, "bytes")
         ),
         (ValueLayout::Entry { index }, TypeTag::List(element)) => format!(
-            "{}::<{}>::new({}?)?;",
+            "{}::<{}>::new_with_depth({}?, depth - 1)?;",
             LIST_REF,
             typing.rust_type(element),
             read_entry("check_tail_entry", layout, index, "bytes")
         ),
         (ValueLayout::Entry { index }, TypeTag::Map { key, value }) => format!(
-            "{}::<{}, {}>::new({}?)?;",
+            "{}::<{}, {}>::new_with_depth({}?, depth - 1)?;",
             MAP_REF,
             typing.rust_type(key),
             typing.rust_type(value),
             read_entry("check_tail_entry", layout, index, "bytes")
         ),
         (ValueLayout::Entry { index }, _) => format!(
-            "{}::new({}?)?;",
+            "{}::new_with_depth({}?, depth - 1)?;",
             generated_path(field.tag, "Ref"),
             read_entry("check_tail_entry", layout, index, "bytes")
         ),

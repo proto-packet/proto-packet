@@ -38,6 +38,9 @@ pub enum DecodeError {
 
     /// A map's keys & values do not match, or its keys are not strictly increasing.
     InvalidMap,
+
+    /// A value nests deeper than the most levels a value can nest.
+    TooDeep,
 }
 
 impl Display for DecodeError {
@@ -59,6 +62,7 @@ impl Display for DecodeError {
             Self::InvalidFloat => f.write_str("invalid float"),
             Self::InvalidList => f.write_str("invalid list"),
             Self::InvalidMap => f.write_str("invalid map"),
+            Self::TooDeep => f.write_str("too deep"),
         }
     }
 }

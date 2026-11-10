@@ -119,7 +119,7 @@ impl proto_packet::io::Element for Same {
     type Ref<'a> = super::SameRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::SameRef::new(bytes).map(|_| ())
     }
 

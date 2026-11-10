@@ -1,7 +1,7 @@
 use crate::rust::encoding::IO;
 use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_eq::gen_ref_eq;
-use crate::rust::gen_forms::{gen_new, gen_new_unchecked, gen_to_buf};
+use crate::rust::gen_forms::{gen_new_of_level, gen_new_unchecked, gen_new_with_depth, gen_to_buf};
 use crate::rust::gen_struct_ref::{gen_ref_dec, gen_ref_properties, generated_path, ref_name};
 use crate::rust::message_encoding::TaggedField;
 use crate::rust::naming::{ident, type_path};
@@ -56,7 +56,7 @@ fn gen_construction(
     ref_type: &RustType,
 ) -> ImplBlock {
     let mut new: Function =
-        gen_new("ref", "&'a [u8]").with_semi(format!("{}::check_message(bytes)?", IO));
+        gen_new_with_depth().with_semi(format!("{}::check_message(bytes)?", IO));
     if !fields.is_empty() {
         let arms: Vec<String> = fields
             .iter()
@@ -82,11 +82,15 @@ fn gen_construction(
     ImplBlock::from(ref_type.clone())
         .with_generic("'a")
         .with_comment(" Construction")
+        .with_function(gen_new_of_level())
         .with_function(new)
         .with_function(gen_new_unchecked("ref", "&'a [u8]"))
 }
 
 /// Generates the statements validating the `value` bytes of the `tag` with the scalar `size`.
+///
+/// # Note
+/// - The value is in a message or a variant, which is a level, so it can nest `depth - 1` levels.
 pub(crate) fn gen_value_check(typing: Typing<'_>, tag: &TypeTag, size: Option<usize>) -> String {
     match (tag, size) {
         (TypeTag::Special(SpecialType::String), _) => format!("{}::check_utf8(value)?;", IO),
@@ -112,17 +116,21 @@ pub(crate) fn gen_value_check(typing: Typing<'_>, tag: &TypeTag, size: Option<us
         (_, Some(size)) => format!("{}::check_exact_len(value, {})?;", IO, size),
         (TypeTag::List(_), None) if tag.is_bytes() => String::default(),
         (TypeTag::List(element), None) => format!(
-            "{}::<{}>::new(value)?;",
+            "{}::<{}>::new_with_depth(value, depth - 1)?;",
             LIST_REF,
             typing.rust_type(element)
         ),
         (TypeTag::Map { key, value }, None) => format!(
-            "{}::<{}, {}>::new(value)?;",
+            "{}::<{}, {}>::new_with_depth(value, depth - 1)?;",
             MAP_REF,
             typing.rust_type(key),
             typing.rust_type(value)
         ),
-        (_, None) => format!("{}::new(value)?;", generated_path(tag, "Ref")),
+        (_, None) => format!(
+            "<{} as {}::Element>::check(value, depth - 1)?;",
+            typing.rust_type(tag),
+            IO
+        ),
     }
 }
 

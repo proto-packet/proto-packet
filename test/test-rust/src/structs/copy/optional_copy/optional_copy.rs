@@ -172,7 +172,7 @@ impl proto_packet::io::Element for OptionalCopy {
     type Ref<'a> = super::OptionalCopyRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::OptionalCopyRef::new(bytes).map(|_| ())
     }
 

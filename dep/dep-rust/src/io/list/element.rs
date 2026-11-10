@@ -34,11 +34,11 @@ pub trait Element: Sized {
     where
         Self: 'a;
 
-    /// Checks the `bytes` are a valid element.
+    /// Checks the `bytes` are a valid element, which can nest the `depth` of levels.
     ///
     /// # Errors
     /// Returns an error if the `bytes` are not a valid element.
-    fn check(bytes: &[u8]) -> Result<(), DecodeError>;
+    fn check(bytes: &[u8], depth: usize) -> Result<(), DecodeError>;
 
     /// Reads the element from its `bytes`.
     ///

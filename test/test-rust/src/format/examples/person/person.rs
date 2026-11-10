@@ -147,8 +147,8 @@ impl proto_packet::io::Element for Person {
     type Ref<'a> = super::PersonRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
-        super::PersonRef::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> Result<(), proto_packet::io::DecodeError> {
+        super::PersonRef::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::PersonRef<'_> {

@@ -119,7 +119,7 @@ impl proto_packet::io::Element for Local {
     type Ref<'a> = super::LocalRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::LocalRef::new(bytes).map(|_| ())
     }
 

@@ -14,25 +14,42 @@ impl<'a> MapKindsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 21)?;
         proto_packet::io::check_tail_ends(bytes, 0, 5, 21)?;
         proto_packet::io::check_unused_bits(bytes[20], 1)?;
-        proto_packet::io::MapRef::<u32, bool>::new(proto_packet::io::check_tail_entry(
-            bytes, 0, 0, 6, 21, 4,
-        )?)?;
-        proto_packet::io::MapRef::<crate::format::examples::Color, String>::new(
+        proto_packet::io::MapRef::<u32, bool>::new_with_depth(
+            proto_packet::io::check_tail_entry(bytes, 0, 0, 6, 21, 4)?,
+            depth - 1,
+        )?;
+        proto_packet::io::MapRef::<crate::format::examples::Color, String>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 1, 6, 21, 4)?,
+            depth - 1,
         )?;
-        proto_packet::io::MapRef::<crate::format::examples::Point, crate::format::examples::Entry>::new(proto_packet::io::check_tail_entry(bytes, 0, 2, 6, 21, 8)?)?;
-        proto_packet::io::MapRef::<String, proto_packet::types::Bytes>::new(
+        proto_packet::io::MapRef::<crate::format::examples::Point, crate::format::examples::Entry>::new_with_depth(proto_packet::io::check_tail_entry(bytes, 0, 2, 6, 21, 8)?, depth - 1)?;
+        proto_packet::io::MapRef::<String, proto_packet::types::Bytes>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 3, 6, 21, 4)?,
+            depth - 1,
         )?;
-        proto_packet::io::MapRef::<u8, std::collections::BTreeMap<u8, u8>>::new(
+        proto_packet::io::MapRef::<u8, std::collections::BTreeMap<u8, u8>>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 4, 6, 21, 4)?,
+            depth - 1,
         )?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 20, 0) } {
-            proto_packet::io::MapRef::<i64, proto_packet::types::Float64>::new(
+            proto_packet::io::MapRef::<i64, proto_packet::types::Float64>::new_with_depth(
                 proto_packet::io::check_tail_entry(bytes, 0, 5, 6, 21, 8)?,
+                depth - 1,
             )?;
         } else {
             proto_packet::io::check_tail_absent(bytes, 0, 5, 6, 21)?;

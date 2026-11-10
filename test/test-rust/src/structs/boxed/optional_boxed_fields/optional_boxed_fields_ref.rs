@@ -14,6 +14,18 @@ impl<'a> OptionalBoxedFieldsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 19)?;
         proto_packet::io::check_tail_ends(bytes, 0, 2, 19)?;
         proto_packet::io::check_unused_bits(bytes[18], 4)?;
@@ -23,16 +35,18 @@ impl<'a> OptionalBoxedFieldsRef<'a> {
             proto_packet::io::check_absent(&bytes[8..16])?;
         }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 18, 1) } {
-            crate::types::PersonRef::new(proto_packet::io::check_tail_entry(
-                bytes, 0, 0, 3, 19, 1,
-            )?)?;
+            crate::types::PersonRef::new_with_depth(
+                proto_packet::io::check_tail_entry(bytes, 0, 0, 3, 19, 1)?,
+                depth - 1,
+            )?;
         } else {
             proto_packet::io::check_tail_absent(bytes, 0, 0, 3, 19)?;
         }
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 18, 2) } {
-            crate::types::LabelRef::new(proto_packet::io::check_tail_entry(
-                bytes, 0, 1, 3, 19, 1,
-            )?)?;
+            crate::types::LabelRef::new_with_depth(
+                proto_packet::io::check_tail_entry(bytes, 0, 1, 3, 19, 1)?,
+                depth - 1,
+            )?;
         } else {
             proto_packet::io::check_tail_absent(bytes, 0, 1, 3, 19)?;
         }
@@ -40,9 +54,10 @@ impl<'a> OptionalBoxedFieldsRef<'a> {
             proto_packet::io::read_u16_unchecked(bytes, 16)
         })?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 18, 3) } {
-            crate::types::ShapeRef::new(proto_packet::io::check_tail_entry(
-                bytes, 0, 2, 3, 19, 1,
-            )?)?;
+            crate::types::ShapeRef::new_with_depth(
+                proto_packet::io::check_tail_entry(bytes, 0, 2, 3, 19, 1)?,
+                depth - 1,
+            )?;
         } else {
             proto_packet::io::check_tail_absent(bytes, 0, 2, 3, 19)?;
         }

@@ -199,8 +199,8 @@ impl proto_packet::io::Element for Option {
     type Ref<'a> = super::OptionRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> std::result::Result<(), proto_packet::io::DecodeError> {
-        super::OptionRef::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> std::result::Result<(), proto_packet::io::DecodeError> {
+        super::OptionRef::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::OptionRef<'_> {

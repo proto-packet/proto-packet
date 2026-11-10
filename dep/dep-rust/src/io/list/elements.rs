@@ -15,7 +15,7 @@ macro_rules! impl_integer {
             type Ref<'a> = $type;
             type View<'a> = $type;
 
-            fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+            fn check(_bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
                 Ok(())
             }
 
@@ -67,7 +67,7 @@ impl Element for u8 {
     type Ref<'a> = u8;
     type View<'a> = u8;
 
-    fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+    fn check(_bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
         Ok(())
     }
 
@@ -111,7 +111,7 @@ impl Element for bool {
     type Ref<'a> = bool;
     type View<'a> = bool;
 
-    fn check(bytes: &[u8]) -> Result<(), DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
         check_bool(bytes[0])
     }
 
@@ -151,7 +151,7 @@ impl Element for String {
     type Ref<'a> = &'a str;
     type View<'a> = &'a str;
 
-    fn check(bytes: &[u8]) -> Result<(), DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
         check_utf8(bytes)
     }
 
@@ -198,8 +198,8 @@ where
     where
         T: 'a;
 
-    fn check(bytes: &[u8]) -> Result<(), DecodeError> {
-        ListRef::<T>::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> Result<(), DecodeError> {
+        ListRef::<T>::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> ListRef<'_, T> {
@@ -245,7 +245,7 @@ macro_rules! impl_float {
             type Ref<'a> = crate::types::$type;
             type View<'a> = crate::types::$type;
 
-            fn check(bytes: &[u8]) -> Result<(), DecodeError> {
+            fn check(bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
                 let bits: &[u8; size_of::<$bits>()] =
                     bytes.first_chunk().expect("a float of its size");
                 crate::io::$check(<$bits>::from_le_bytes(*bits))
@@ -296,7 +296,7 @@ impl Element for crate::types::Uuid {
     type Ref<'a> = crate::types::Uuid;
     type View<'a> = crate::types::Uuid;
 
-    fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+    fn check(_bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
         Ok(())
     }
 
@@ -340,7 +340,7 @@ macro_rules! impl_time {
             type Ref<'a> = crate::types::$type;
             type View<'a> = crate::types::$type;
 
-            fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+            fn check(_bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
                 Ok(())
             }
 
@@ -395,7 +395,7 @@ impl<const S: u8> Element for crate::types::Decimal<S> {
     type Ref<'a> = crate::types::Decimal<S>;
     type View<'a> = crate::types::Decimal<S>;
 
-    fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+    fn check(_bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
         Ok(())
     }
 
@@ -438,7 +438,7 @@ impl Element for crate::types::Bytes {
     type Ref<'a> = &'a [u8];
     type View<'a> = &'a [u8];
 
-    fn check(_bytes: &[u8]) -> Result<(), DecodeError> {
+    fn check(_bytes: &[u8], _depth: usize) -> Result<(), DecodeError> {
         Ok(())
     }
 

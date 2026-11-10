@@ -1,6 +1,6 @@
 use crate::io::list::element::list_alignment;
 use crate::io::list::list_write::{elements_encoded_len, encode_elements};
-use crate::io::{DecodeError, Element, ListRef, align_up, check_padding, write_end};
+use crate::io::{DecodeError, Element, ListRef, MAX_DEPTH, align_up, check_padding, write_end};
 use crate::io::{write_padding, write_zeros};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -45,6 +45,17 @@ where
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
+        Self::new_with_depth(bytes, MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, whose keys & values can nest the `depth` of levels.
+    ///
+    /// # Note
+    /// - A map is not a level, so its keys & values can nest every level it can.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(bytes: &'a [u8], depth: usize) -> Result<Self, DecodeError> {
         let map: Self = Self {
             bytes,
             key: PhantomData,
@@ -67,8 +78,8 @@ where
         }
         check_padding(&bytes[4..keys_start])?;
         check_padding(&bytes[keys_end..values_start])?;
-        let keys: ListRef<K> = ListRef::new(&bytes[keys_start..keys_end])?;
-        let values: ListRef<V> = ListRef::new(&bytes[values_start..])?;
+        let keys: ListRef<K> = ListRef::new_with_depth(&bytes[keys_start..keys_end], depth)?;
+        let values: ListRef<V> = ListRef::new_with_depth(&bytes[values_start..], depth)?;
         if keys.len() != values.len() {
             return Err(DecodeError::InvalidMap);
         }
@@ -364,8 +375,8 @@ where
         K: 'a,
         V: 'a;
 
-    fn check(bytes: &[u8]) -> Result<(), DecodeError> {
-        MapRef::<K, V>::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> Result<(), DecodeError> {
+        MapRef::<K, V>::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> MapRef<'_, K, V> {

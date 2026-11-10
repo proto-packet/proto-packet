@@ -128,7 +128,7 @@ impl proto_packet::io::Element for Before {
     type Ref<'a> = super::BeforeRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::BeforeRef::new(bytes).map(|_| ())
     }
 

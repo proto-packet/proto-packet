@@ -119,7 +119,7 @@ impl proto_packet::io::Element for MoveStruct {
     type Ref<'a> = super::MoveStructRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::MoveStructRef::new(bytes).map(|_| ())
     }
 

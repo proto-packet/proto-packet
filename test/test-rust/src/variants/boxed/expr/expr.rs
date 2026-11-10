@@ -215,8 +215,8 @@ impl proto_packet::io::Element for Expr {
     type Ref<'a> = super::ExprRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
-        super::ExprRef::new(bytes).map(|_| ())
+    fn check(bytes: &[u8], depth: usize) -> Result<(), proto_packet::io::DecodeError> {
+        super::ExprRef::new_with_depth(bytes, depth).map(|_| ())
     }
 
     unsafe fn read_unchecked(bytes: &[u8]) -> super::ExprRef<'_> {

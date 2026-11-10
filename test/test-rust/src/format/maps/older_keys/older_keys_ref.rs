@@ -14,13 +14,27 @@ impl<'a> OlderKeysRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 4)?;
         proto_packet::io::check_tail_ends(bytes, 0, 1, 4)?;
-        proto_packet::io::MapRef::<crate::format::maps::OlderKey, u8>::new(
+        proto_packet::io::MapRef::<crate::format::maps::OlderKey, u8>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 0, 2, 4, 4)?,
+            depth - 1,
         )?;
-        proto_packet::io::MapRef::<crate::format::variants::OlderCases, u8>::new(
+        proto_packet::io::MapRef::<crate::format::variants::OlderCases, u8>::new_with_depth(
             proto_packet::io::check_tail_entry(bytes, 0, 1, 2, 4, 4)?,
+            depth - 1,
         )?;
         Ok(Self { bytes })
     }

@@ -1,5 +1,5 @@
 use crate::io::list::element::stride;
-use crate::io::{DecodeError, Element, ListIter, align_up, check_padding};
+use crate::io::{DecodeError, Element, ListIter, MAX_DEPTH, align_up, check_padding};
 use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
@@ -28,9 +28,20 @@ where
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, DecodeError> {
+        Self::new_with_depth(bytes, MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, whose elements can nest the `depth` of levels.
+    ///
+    /// # Note
+    /// - A list is not a level, so its elements can nest every level it can.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(bytes: &'a [u8], depth: usize) -> Result<Self, DecodeError> {
         match T::SIZE {
-            Some(size) => Self::check_fixed(bytes, size)?,
-            None => Self::check_variable(bytes)?,
+            Some(size) => Self::check_fixed(bytes, size, depth)?,
+            None => Self::check_variable(bytes, depth)?,
         }
         Ok(Self {
             bytes,
@@ -51,7 +62,7 @@ where
     }
 
     /// Checks the `bytes` of a list of elements of the fixed `size`.
-    fn check_fixed(bytes: &[u8], size: usize) -> Result<(), DecodeError> {
+    fn check_fixed(bytes: &[u8], size: usize, depth: usize) -> Result<(), DecodeError> {
         if bytes.is_empty() {
             return Ok(());
         }
@@ -66,13 +77,13 @@ where
             if start > 0 {
                 check_padding(&bytes[start - (stride - size)..start])?;
             }
-            T::check(&bytes[start..start + size])?;
+            T::check(&bytes[start..start + size], depth)?;
         }
         Ok(())
     }
 
     /// Checks the `bytes` of a list of variable-size elements.
-    fn check_variable(bytes: &[u8]) -> Result<(), DecodeError> {
+    fn check_variable(bytes: &[u8], depth: usize) -> Result<(), DecodeError> {
         if bytes.is_empty() {
             return Ok(());
         }
@@ -108,7 +119,7 @@ where
                 return Err(DecodeError::InvalidEndTable);
             }
             check_padding(&bytes[previous..start])?;
-            T::check(&bytes[start..end])?;
+            T::check(&bytes[start..end], depth)?;
             previous = end;
         }
         Ok(())

@@ -155,7 +155,7 @@ impl proto_packet::io::Element for FloatFields {
     type Ref<'a> = super::FloatFieldsRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::FloatFieldsRef::new(bytes).map(|_| ())
     }
 

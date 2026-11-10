@@ -14,13 +14,26 @@ impl<'a> StringsRef<'a> {
     /// # Errors
     /// Returns an error if the `bytes` are not a valid encoding.
     pub fn new(bytes: &'a [u8]) -> Result<Self, proto_packet::io::DecodeError> {
+        Self::new_with_depth(bytes, proto_packet::io::MAX_DEPTH)
+    }
+
+    /// Creates a new ref of the `bytes`, which can nest the `depth` of levels.
+    ///
+    /// # Errors
+    /// Returns an error if the `bytes` are not a valid encoding.
+    pub fn new_with_depth(
+        bytes: &'a [u8],
+        depth: usize,
+    ) -> Result<Self, proto_packet::io::DecodeError> {
+        proto_packet::io::check_depth(depth)?;
         proto_packet::io::check_len(bytes, 14)?;
         proto_packet::io::check_tail_ends(bytes, 0, 3, 14)?;
         proto_packet::io::check_unused_bits(bytes[13], 1)?;
         proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(bytes, 0, 0, 4, 14, 1)?)?;
-        crate::format::examples::EntryRef::new(proto_packet::io::check_tail_entry(
-            bytes, 0, 1, 4, 14, 8,
-        )?)?;
+        crate::format::examples::EntryRef::new_with_depth(
+            proto_packet::io::check_tail_entry(bytes, 0, 1, 4, 14, 8)?,
+            depth - 1,
+        )?;
         if unsafe { proto_packet::io::read_bit_unchecked(bytes, 13, 0) } {
             proto_packet::io::check_utf8(proto_packet::io::check_tail_entry(
                 bytes, 0, 2, 4, 14, 1,

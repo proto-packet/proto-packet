@@ -82,7 +82,7 @@ impl proto_packet::io::Element for EmptyStruct {
     type Ref<'a> = super::EmptyStructRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::EmptyStructRef::new(bytes).map(|_| ())
     }
 

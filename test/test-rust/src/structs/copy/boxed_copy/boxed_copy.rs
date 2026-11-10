@@ -126,7 +126,7 @@ impl proto_packet::io::Element for BoxedCopy {
     type Ref<'a> = super::BoxedCopyRef<'a>;
     type View<'a> = &'a Self;
 
-    fn check(bytes: &[u8]) -> Result<(), proto_packet::io::DecodeError> {
+    fn check(bytes: &[u8], _depth: usize) -> Result<(), proto_packet::io::DecodeError> {
         super::BoxedCopyRef::new(bytes).map(|_| ())
     }
 
