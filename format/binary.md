@@ -2,7 +2,7 @@
 
 This document specifies the ProtoPacket binary format.
 
-TODO: some of the types below don't exist yet.
+TODO: the `f16` & `f128` types don't exist yet.
 
 ## Base Types
 
