@@ -21,6 +21,9 @@ pub enum TypeTagTree {
         key: Box<TypeTagTree>,
         value: Box<TypeTagTree>,
     },
+
+    /// A decimal with the `scale` count of fraction digits, with its whole span. (ex: `decimal<2>`)
+    Decimal { span: Span, scale: Span },
 }
 
 impl TypeTagTree {
@@ -31,7 +34,7 @@ impl TypeTagTree {
         match self {
             Self::Name(name) => name.span(),
             Self::List { brackets, element } => brackets.combine(element.span()),
-            Self::Map { span, .. } => *span,
+            Self::Map { span, .. } | Self::Decimal { span, .. } => *span,
         }
     }
 }
@@ -47,19 +50,35 @@ pub fn parse_type_tag(p: &mut Parser<'_, Kind>) -> Result<TypeTagTree, ParseErro
             element: Box::new(element),
         });
     }
-    if is_map(p) {
+    if is_generic(p, "map") {
         return parse_map(p);
+    }
+    if is_generic(p, "decimal") {
+        return parse_decimal(p);
     }
     let name: NameTree = parse_name(p, ParseErrorReason::ExpectedTypeTag)?;
     Ok(TypeTagTree::Name(name))
 }
 
-/// Checks if a map is next.
+/// Checks if the generic type with the `keyword` is next. (ex: `map`)
 ///
 /// # Note
-/// - The `map` is only a keyword before a `<`, so it is a mod name in `map.Foo`.
-fn is_map(p: &Parser<'_, Kind>) -> bool {
-    p.check_text(Kind::Ident, "map") && p.lookahead(1).is_some_and(|next| next.kind() == Kind::Less)
+/// - It is only a keyword before a `<`, so `map` is a mod name in `map.Foo`.
+fn is_generic(p: &Parser<'_, Kind>, keyword: &str) -> bool {
+    p.check_text(Kind::Ident, keyword)
+        && p.lookahead(1).is_some_and(|next| next.kind() == Kind::Less)
+}
+
+/// Parses a decimal.
+fn parse_decimal(p: &mut Parser<'_, Kind>) -> Result<TypeTagTree, ParseError> {
+    let keyword: Span = expect(p, Kind::Ident, ParseErrorReason::ExpectedTypeTag)?;
+    expect(p, Kind::Less, ParseErrorReason::ExpectedTypeTag)?;
+    let scale: Span = expect(p, Kind::Integer, ParseErrorReason::ExpectedDecimalScale)?;
+    let close: Span = expect_end(p, Kind::Greater, ParseErrorReason::ExpectedCloseAngle)?;
+    Ok(TypeTagTree::Decimal {
+        span: keyword.combine(close),
+        scale,
+    })
 }
 
 /// Parses a map.

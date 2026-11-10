@@ -49,6 +49,9 @@ pub enum ParseErrorReason {
     /// Expected a `>`. (reported at the token before it)
     ExpectedCloseAngle,
 
+    /// Expected the count of fraction digits of a decimal. (ex: the `2` of `decimal<2>`)
+    ExpectedDecimalScale,
+
     /// Expected a `:`.
     ExpectedColon,
 
@@ -96,6 +99,7 @@ impl ParseErrorReason {
             Self::ExpectedCloseBracket => "expected a `]` after this",
             Self::ExpectedComma => "expected a `,` after this",
             Self::ExpectedCloseAngle => "expected a `>` after this",
+            Self::ExpectedDecimalScale => "expected a count of fraction digits",
             Self::ExpectedColon => "expected a `:`",
             Self::ExpectedSemicolon => "expected a `;` after this",
             Self::ExpectedEqual => "expected a `=`",
@@ -128,6 +132,7 @@ impl ParseErrorReason {
             Self::ExpectedCloseBracket => "P_EXPECTED_CLOSE_BRACKET",
             Self::ExpectedComma => "P_EXPECTED_COMMA",
             Self::ExpectedCloseAngle => "P_EXPECTED_CLOSE_ANGLE",
+            Self::ExpectedDecimalScale => "P_EXPECTED_DECIMAL_SCALE",
             Self::ExpectedColon => "P_EXPECTED_COLON",
             Self::ExpectedSemicolon => "P_EXPECTED_SEMICOLON",
             Self::ExpectedEqual => "P_EXPECTED_EQUAL",

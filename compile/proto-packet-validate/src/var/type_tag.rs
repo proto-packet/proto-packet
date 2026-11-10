@@ -15,6 +15,7 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
             key: Box::new(validate_type_tag(key, source)?),
             value: Box::new(validate_type_tag(value, source)?),
         }),
+        TypeTagTree::Decimal { .. } => todo!(),
     }
 }
 
