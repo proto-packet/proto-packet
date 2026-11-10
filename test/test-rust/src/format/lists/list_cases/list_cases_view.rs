@@ -21,6 +21,114 @@ pub trait ListCasesView {
 
     /// Gets the value of the case: `Number`.
     fn as_number(&self) -> Option<u32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if let Some(value) = self.as_blob() {
+            return 2 + value.len();
+        }
+        if let Some(value) = self.as_numbers() {
+            return 2 + proto_packet::io::list_view_len(
+                value,
+                <u32 as proto_packet::io::Element>::SIZE,
+                <u32 as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+        }
+        if let Some(value) = self.as_texts() {
+            return 2 + proto_packet::io::list_view_len(
+                value,
+                <String as proto_packet::io::Element>::SIZE,
+                <String as proto_packet::io::Element>::ALIGNMENT,
+                |item| item.len(),
+            );
+        }
+        if let Some(value) = self.as_points() {
+            return 2 + proto_packet::io::list_view_len(
+                value,
+                <crate::format::examples::Point as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Point as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::examples::PointView::encoded_len,
+            );
+        }
+        if self.as_number().is_some() {
+            return 6;
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_blob() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            out.extend_from_slice(value);
+            return;
+        }
+        if let Some(value) = self.as_numbers() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            proto_packet::io::write_list_view(
+                value,
+                out,
+                <u32 as proto_packet::io::Element>::SIZE,
+                <u32 as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            return;
+        }
+        if let Some(value) = self.as_texts() {
+            out.extend_from_slice(&3_u16.to_le_bytes());
+            proto_packet::io::write_list_view(
+                value,
+                out,
+                <String as proto_packet::io::Element>::SIZE,
+                <String as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+            return;
+        }
+        if let Some(value) = self.as_points() {
+            out.extend_from_slice(&4_u16.to_le_bytes());
+            proto_packet::io::write_list_view(
+                value,
+                out,
+                <crate::format::examples::Point as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Point as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::examples::PointView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            return;
+        }
+        if let Some(value) = self.as_number() {
+            out.extend_from_slice(&5_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: ListCasesView> ListCasesView for &V {
@@ -49,6 +157,14 @@ impl<V: ListCasesView> ListCasesView for &V {
 
     fn as_number(&self) -> Option<u32> {
         (**self).as_number()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -79,6 +195,14 @@ impl<V: ListCasesView> ListCasesView for &mut V {
     fn as_number(&self) -> Option<u32> {
         (**self).as_number()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl ListCasesView for super::ListCases {
@@ -107,6 +231,14 @@ impl ListCasesView for super::ListCases {
 
     fn as_number(&self) -> Option<u32> {
         self.as_number()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::ListCases::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::ListCases::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -137,6 +269,19 @@ impl ListCasesView for super::ListCasesRef<'_> {
     fn as_number(&self) -> Option<u32> {
         self.as_number()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl ListCasesView for super::ListCasesBuf {
@@ -166,6 +311,14 @@ impl ListCasesView for super::ListCasesBuf {
     fn as_number(&self) -> Option<u32> {
         self.as_ref().as_number()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ListCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl ListCasesView for super::ListCasesMut<'_> {
@@ -194,5 +347,13 @@ impl ListCasesView for super::ListCasesMut<'_> {
 
     fn as_number(&self) -> Option<u32> {
         self.as_ref().as_number()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ListCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

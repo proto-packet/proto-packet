@@ -4,11 +4,47 @@
 pub trait AfterView {
     /// Gets the field: `value`.
     fn value(&self) -> u32;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        4
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(&self.value().to_le_bytes());
+    }
 }
 
 impl<V: AfterView> AfterView for &V {
     fn value(&self) -> u32 {
         (**self).value()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -16,11 +52,27 @@ impl<V: AfterView> AfterView for &mut V {
     fn value(&self) -> u32 {
         (**self).value()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl AfterView for super::After {
     fn value(&self) -> u32 {
         self.value()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::After::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::After::encode_to(self, out);
     }
 }
 
@@ -28,16 +80,40 @@ impl AfterView for super::AfterRef<'_> {
     fn value(&self) -> u32 {
         self.value()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl AfterView for super::AfterBuf {
     fn value(&self) -> u32 {
         self.as_ref().value()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        AfterView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl AfterView for super::AfterMut<'_> {
     fn value(&self) -> u32 {
         self.as_ref().value()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        AfterView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

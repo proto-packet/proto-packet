@@ -16,6 +16,47 @@ pub trait FixedKindsView {
 
     /// Gets the field: `maybe_color`.
     fn maybe_color(&self) -> Option<crate::format::examples::Color>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        37
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.id().as_bytes());
+        crate::format::examples::PointView::encode_to_with_depth(&self.point(), out, 0);
+        match self.maybe_point() {
+            Some(value) => crate::format::examples::PointView::encode_to_with_depth(&value, out, 0),
+            None => proto_packet::io::write_zeros(out, 8),
+        }
+        out.extend_from_slice(&self.color().tag_number().to_le_bytes());
+        out.extend_from_slice(
+            &self
+                .maybe_color()
+                .map_or(0, |value| value.tag_number())
+                .to_le_bytes(),
+        );
+        out.push(u8::from(self.maybe_point().is_some()));
+    }
 }
 
 impl<V: FixedKindsView> FixedKindsView for &V {
@@ -37,6 +78,14 @@ impl<V: FixedKindsView> FixedKindsView for &V {
 
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
         (**self).maybe_color()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -60,6 +109,14 @@ impl<V: FixedKindsView> FixedKindsView for &mut V {
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
         (**self).maybe_color()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl FixedKindsView for super::FixedKinds {
@@ -81,6 +138,14 @@ impl FixedKindsView for super::FixedKinds {
 
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
         self.maybe_color()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::FixedKinds::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::FixedKinds::encode_to(self, out);
     }
 }
 
@@ -104,6 +169,14 @@ impl FixedKindsView for super::FixedKindsRef<'_> {
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
         self.maybe_color()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl FixedKindsView for super::FixedKindsBuf {
@@ -126,6 +199,14 @@ impl FixedKindsView for super::FixedKindsBuf {
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
         self.as_ref().maybe_color()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        FixedKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl FixedKindsView for super::FixedKindsMut<'_> {
@@ -147,5 +228,13 @@ impl FixedKindsView for super::FixedKindsMut<'_> {
 
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
         self.as_ref().maybe_color()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        FixedKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

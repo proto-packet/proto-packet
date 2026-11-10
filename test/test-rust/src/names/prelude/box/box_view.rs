@@ -10,6 +10,51 @@ pub trait BoxView {
 
     /// Gets the value of the case: `Text`.
     fn as_text(&self) -> Option<&str>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if let Some(value) = self.as_inner() {
+            return 2 + crate::names::prelude::BoxView::encoded_len(&value);
+        }
+        if let Some(value) = self.as_text() {
+            return 2 + value.len();
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_inner() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            crate::names::prelude::BoxView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_text() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            out.extend_from_slice(value.as_bytes());
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: BoxView> BoxView for &V {
@@ -23,6 +68,14 @@ impl<V: BoxView> BoxView for &V {
 
     fn as_text(&self) -> Option<&str> {
         (**self).as_text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +91,14 @@ impl<V: BoxView> BoxView for &mut V {
     fn as_text(&self) -> Option<&str> {
         (**self).as_text()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl BoxView for super::Box {
@@ -51,6 +112,14 @@ impl BoxView for super::Box {
 
     fn as_text(&self) -> Option<&str> {
         self.as_text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Box::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Box::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -66,6 +135,19 @@ impl BoxView for super::BoxRef<'_> {
     fn as_text(&self) -> Option<&str> {
         self.as_text()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl BoxView for super::BoxBuf {
@@ -80,6 +162,14 @@ impl BoxView for super::BoxBuf {
     fn as_text(&self) -> Option<&str> {
         self.as_ref().as_text()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        BoxView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl BoxView for super::BoxMut<'_> {
@@ -93,5 +183,13 @@ impl BoxView for super::BoxMut<'_> {
 
     fn as_text(&self) -> Option<&str> {
         self.as_ref().as_text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        BoxView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

@@ -10,6 +10,76 @@ pub trait AbsentChildView {
 
     /// Gets the field: `text`.
     fn text(&self) -> &str;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 9;
+        if let Some(value) = self.first() {
+            {
+                let size: usize = crate::format::examples::EntryView::encoded_len(&value);
+                if size > 0 {
+                    len = proto_packet::io::align_up(len, 8) + size;
+                }
+            }
+        }
+        {
+            let size: usize = crate::format::examples::EntryView::encoded_len(&self.second());
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        len += self.text().len();
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 8);
+        out.push(u8::from(self.first().is_some()));
+        if let Some(value) = self.first() {
+            {
+                let before: usize = out.len();
+                proto_packet::io::write_padding(out, start, 8);
+                let padded: usize = out.len();
+                crate::format::examples::EntryView::encode_to_with_depth(&value, out, depth - 1);
+                proto_packet::io::trim_padding(out, before, padded);
+            }
+        }
+        proto_packet::io::write_end(out, start, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            crate::format::examples::EntryView::encode_to_with_depth(
+                &self.second(),
+                out,
+                depth - 1,
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 4, start);
+        out.extend_from_slice(self.text().as_bytes());
+    }
 }
 
 impl<V: AbsentChildView> AbsentChildView for &V {
@@ -23,6 +93,14 @@ impl<V: AbsentChildView> AbsentChildView for &V {
 
     fn text(&self) -> &str {
         (**self).text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +116,14 @@ impl<V: AbsentChildView> AbsentChildView for &mut V {
     fn text(&self) -> &str {
         (**self).text()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl AbsentChildView for super::AbsentChild {
@@ -51,6 +137,14 @@ impl AbsentChildView for super::AbsentChild {
 
     fn text(&self) -> &str {
         self.text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::AbsentChild::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::AbsentChild::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -66,6 +160,19 @@ impl AbsentChildView for super::AbsentChildRef<'_> {
     fn text(&self) -> &str {
         self.text()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl AbsentChildView for super::AbsentChildBuf {
@@ -80,6 +187,14 @@ impl AbsentChildView for super::AbsentChildBuf {
     fn text(&self) -> &str {
         self.as_ref().text()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        AbsentChildView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl AbsentChildView for super::AbsentChildMut<'_> {
@@ -93,5 +208,13 @@ impl AbsentChildView for super::AbsentChildMut<'_> {
 
     fn text(&self) -> &str {
         self.as_ref().text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        AbsentChildView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

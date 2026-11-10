@@ -49,6 +49,155 @@ pub trait AllCasesView {
 
     /// Gets the value of the case: `Price`.
     fn as_price(&self) -> Option<proto_packet::types::Decimal<2>>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if self.as_flag().is_some() {
+            return 3;
+        }
+        if self.as_byte().is_some() {
+            return 3;
+        }
+        if self.as_large().is_some() {
+            return 18;
+        }
+        if self.as_id().is_some() {
+            return 18;
+        }
+        if self.as_color().is_some() {
+            return 4;
+        }
+        if let Some(value) = self.as_text() {
+            return 2 + value.len();
+        }
+        if let Some(value) = self.as_point() {
+            return 2 + crate::format::examples::PointView::encoded_len(&value);
+        }
+        if let Some(value) = self.as_entry() {
+            return 2 + crate::format::examples::EntryView::encoded_len(&value);
+        }
+        if let Some(value) = self.as_item() {
+            return 2 + crate::format::messages::ItemView::encoded_len(&value);
+        }
+        if let Some(value) = self.as_shape() {
+            return 2 + crate::format::variants::ShapeView::encoded_len(&value);
+        }
+        if self.as_boxed_color().is_some() {
+            return 4;
+        }
+        if self.as_signed().is_some() {
+            return 10;
+        }
+        if self.as_float().is_some() {
+            return 10;
+        }
+        if self.as_at().is_some() {
+            return 10;
+        }
+        if self.as_price().is_some() {
+            return 10;
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_flag() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            out.push(u8::from(value));
+            return;
+        }
+        if let Some(value) = self.as_byte() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_large() {
+            out.extend_from_slice(&3_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_id() {
+            out.extend_from_slice(&4_u16.to_le_bytes());
+            out.extend_from_slice(value.as_bytes());
+            return;
+        }
+        if let Some(value) = self.as_color() {
+            out.extend_from_slice(&5_u16.to_le_bytes());
+            out.extend_from_slice(&value.tag_number().to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_text() {
+            out.extend_from_slice(&6_u16.to_le_bytes());
+            out.extend_from_slice(value.as_bytes());
+            return;
+        }
+        if let Some(value) = self.as_point() {
+            out.extend_from_slice(&7_u16.to_le_bytes());
+            crate::format::examples::PointView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_entry() {
+            out.extend_from_slice(&8_u16.to_le_bytes());
+            crate::format::examples::EntryView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_item() {
+            out.extend_from_slice(&9_u16.to_le_bytes());
+            crate::format::messages::ItemView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_shape() {
+            out.extend_from_slice(&10_u16.to_le_bytes());
+            crate::format::variants::ShapeView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_boxed_color() {
+            out.extend_from_slice(&11_u16.to_le_bytes());
+            out.extend_from_slice(&value.tag_number().to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_signed() {
+            out.extend_from_slice(&12_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_float() {
+            out.extend_from_slice(&13_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_at() {
+            out.extend_from_slice(&14_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_price() {
+            out.extend_from_slice(&15_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: AllCasesView> AllCasesView for &V {
@@ -114,6 +263,14 @@ impl<V: AllCasesView> AllCasesView for &V {
 
     fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
         (**self).as_price()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -181,6 +338,14 @@ impl<V: AllCasesView> AllCasesView for &mut V {
     fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
         (**self).as_price()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl AllCasesView for super::AllCases {
@@ -246,6 +411,14 @@ impl AllCasesView for super::AllCases {
 
     fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.as_price()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::AllCases::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::AllCases::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -313,6 +486,19 @@ impl AllCasesView for super::AllCasesRef<'_> {
     fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.as_price()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl AllCasesView for super::AllCasesBuf {
@@ -379,6 +565,14 @@ impl AllCasesView for super::AllCasesBuf {
     fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.as_ref().as_price()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        AllCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl AllCasesView for super::AllCasesMut<'_> {
@@ -444,5 +638,13 @@ impl AllCasesView for super::AllCasesMut<'_> {
 
     fn as_price(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.as_ref().as_price()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        AllCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

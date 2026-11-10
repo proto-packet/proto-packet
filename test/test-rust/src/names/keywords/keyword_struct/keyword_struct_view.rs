@@ -10,6 +10,39 @@ pub trait KeywordStructView {
 
     /// Gets the field: `self`.
     fn self_(&self) -> u32;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 8;
+        len += self.r#match().len();
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        out.extend_from_slice(&self.r#type().to_le_bytes());
+        out.extend_from_slice(&self.self_().to_le_bytes());
+        out.extend_from_slice(self.r#match().as_bytes());
+    }
 }
 
 impl<V: KeywordStructView> KeywordStructView for &V {
@@ -23,6 +56,14 @@ impl<V: KeywordStructView> KeywordStructView for &V {
 
     fn self_(&self) -> u32 {
         (**self).self_()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +79,14 @@ impl<V: KeywordStructView> KeywordStructView for &mut V {
     fn self_(&self) -> u32 {
         (**self).self_()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl KeywordStructView for super::KeywordStruct {
@@ -51,6 +100,14 @@ impl KeywordStructView for super::KeywordStruct {
 
     fn self_(&self) -> u32 {
         self.self_()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::KeywordStruct::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::KeywordStruct::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -66,6 +123,19 @@ impl KeywordStructView for super::KeywordStructRef<'_> {
     fn self_(&self) -> u32 {
         self.self_()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl KeywordStructView for super::KeywordStructBuf {
@@ -80,6 +150,14 @@ impl KeywordStructView for super::KeywordStructBuf {
     fn self_(&self) -> u32 {
         self.as_ref().self_()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        KeywordStructView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl KeywordStructView for super::KeywordStructMut<'_> {
@@ -93,5 +171,13 @@ impl KeywordStructView for super::KeywordStructMut<'_> {
 
     fn self_(&self) -> u32 {
         self.as_ref().self_()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        KeywordStructView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

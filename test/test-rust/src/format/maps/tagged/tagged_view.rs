@@ -7,6 +7,38 @@ pub trait TaggedView {
 
     /// Gets the field: `key`.
     fn key(&self) -> impl crate::format::maps::NewerKeyView;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 8;
+        len += crate::format::maps::NewerKeyView::encoded_len(&self.key());
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        out.extend_from_slice(&self.id().to_le_bytes());
+        crate::format::maps::NewerKeyView::encode_to_with_depth(&self.key(), out, depth - 1);
+    }
 }
 
 impl<V: TaggedView> TaggedView for &V {
@@ -16,6 +48,14 @@ impl<V: TaggedView> TaggedView for &V {
 
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
         (**self).key()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +67,14 @@ impl<V: TaggedView> TaggedView for &mut V {
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
         (**self).key()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl TaggedView for super::Tagged {
@@ -36,6 +84,14 @@ impl TaggedView for super::Tagged {
 
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
         self.key()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Tagged::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Tagged::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -47,6 +103,19 @@ impl TaggedView for super::TaggedRef<'_> {
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
         self.key()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl TaggedView for super::TaggedBuf {
@@ -57,6 +126,14 @@ impl TaggedView for super::TaggedBuf {
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
         self.as_ref().key()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        TaggedView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl TaggedView for super::TaggedMut<'_> {
@@ -66,5 +143,13 @@ impl TaggedView for super::TaggedMut<'_> {
 
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
         self.as_ref().key()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        TaggedView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

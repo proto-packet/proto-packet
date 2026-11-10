@@ -10,6 +10,74 @@ pub trait WithCasesView {
 
     /// Gets the field: `id`.
     fn id(&self) -> Option<u32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if let Some(value) = self.shape() {
+            count += 1;
+            values += crate::format::variants::ShapeView::encoded_len(&value);
+        }
+        if let Some(value) = self.older() {
+            count += 1;
+            values += crate::format::variants::OlderCasesView::encoded_len(&value);
+        }
+        if self.id().is_some() {
+            count += 1;
+            values += 4;
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.shape().is_some())
+            + usize::from(self.older().is_some())
+            + usize::from(self.id().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.shape() {
+            crate::format::variants::ShapeView::encode_to_with_depth(
+                &value,
+                writer.field(1),
+                depth - 1,
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.older() {
+            crate::format::variants::OlderCasesView::encode_to_with_depth(
+                &value,
+                writer.field(2),
+                depth - 1,
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.id() {
+            writer.field(3).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: WithCasesView> WithCasesView for &V {
@@ -23,6 +91,14 @@ impl<V: WithCasesView> WithCasesView for &V {
 
     fn id(&self) -> Option<u32> {
         (**self).id()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +114,14 @@ impl<V: WithCasesView> WithCasesView for &mut V {
     fn id(&self) -> Option<u32> {
         (**self).id()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl WithCasesView for super::WithCases {
@@ -51,6 +135,14 @@ impl WithCasesView for super::WithCases {
 
     fn id(&self) -> Option<u32> {
         self.id()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::WithCases::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::WithCases::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -66,6 +158,19 @@ impl WithCasesView for super::WithCasesRef<'_> {
     fn id(&self) -> Option<u32> {
         self.id()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl WithCasesView for super::WithCasesBuf {
@@ -80,6 +185,14 @@ impl WithCasesView for super::WithCasesBuf {
     fn id(&self) -> Option<u32> {
         self.as_ref().id()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        WithCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl WithCasesView for super::WithCasesMut<'_> {
@@ -93,5 +206,13 @@ impl WithCasesView for super::WithCasesMut<'_> {
 
     fn id(&self) -> Option<u32> {
         self.as_ref().id()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        WithCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

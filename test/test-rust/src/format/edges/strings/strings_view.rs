@@ -16,6 +16,65 @@ pub trait StringsView {
 
     /// Gets the field: `third`.
     fn third(&self) -> &str;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 14;
+        len += self.first().len();
+        {
+            let size: usize = crate::format::examples::EntryView::encoded_len(&self.entry());
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        if let Some(value) = self.second() {
+            len += value.len();
+        }
+        len += self.third().len();
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 12);
+        out.extend_from_slice(&self.number().to_le_bytes());
+        out.push(u8::from(self.second().is_some()));
+        out.extend_from_slice(self.first().as_bytes());
+        proto_packet::io::write_end(out, start, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            crate::format::examples::EntryView::encode_to_with_depth(&self.entry(), out, depth - 1);
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 4, start);
+        if let Some(value) = self.second() {
+            out.extend_from_slice(value.as_bytes());
+        }
+        proto_packet::io::write_end(out, start + 8, start);
+        out.extend_from_slice(self.third().as_bytes());
+    }
 }
 
 impl<V: StringsView> StringsView for &V {
@@ -37,6 +96,14 @@ impl<V: StringsView> StringsView for &V {
 
     fn third(&self) -> &str {
         (**self).third()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -60,6 +127,14 @@ impl<V: StringsView> StringsView for &mut V {
     fn third(&self) -> &str {
         (**self).third()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl StringsView for super::Strings {
@@ -81,6 +156,14 @@ impl StringsView for super::Strings {
 
     fn third(&self) -> &str {
         self.third()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Strings::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Strings::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -104,6 +187,19 @@ impl StringsView for super::StringsRef<'_> {
     fn third(&self) -> &str {
         self.third()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl StringsView for super::StringsBuf {
@@ -126,6 +222,14 @@ impl StringsView for super::StringsBuf {
     fn third(&self) -> &str {
         self.as_ref().third()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        StringsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl StringsView for super::StringsMut<'_> {
@@ -147,5 +251,13 @@ impl StringsView for super::StringsMut<'_> {
 
     fn third(&self) -> &str {
         self.as_ref().third()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        StringsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

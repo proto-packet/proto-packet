@@ -16,6 +16,50 @@ pub trait OptView {
 
     /// Gets the field: `e`.
     fn e(&self) -> Option<crate::format::examples::Color>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 7;
+        if let Some(value) = self.d() {
+            len += value.len();
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        out.extend_from_slice(&self.b().unwrap_or_default().to_le_bytes());
+        out.extend_from_slice(&self.e().map_or(0, |value| value.tag_number()).to_le_bytes());
+        out.push(
+            u8::from(self.a())
+                | (u8::from(self.b().is_some()) << 1)
+                | (u8::from(self.c().is_some()) << 2)
+                | (u8::from(self.c().unwrap_or_default()) << 3)
+                | (u8::from(self.d().is_some()) << 4),
+        );
+        if let Some(value) = self.d() {
+            out.extend_from_slice(value.as_bytes());
+        }
+    }
 }
 
 impl<V: OptView> OptView for &V {
@@ -37,6 +81,14 @@ impl<V: OptView> OptView for &V {
 
     fn e(&self) -> Option<crate::format::examples::Color> {
         (**self).e()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -60,6 +112,14 @@ impl<V: OptView> OptView for &mut V {
     fn e(&self) -> Option<crate::format::examples::Color> {
         (**self).e()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl OptView for super::Opt {
@@ -81,6 +141,14 @@ impl OptView for super::Opt {
 
     fn e(&self) -> Option<crate::format::examples::Color> {
         self.e()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Opt::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Opt::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -104,6 +172,19 @@ impl OptView for super::OptRef<'_> {
     fn e(&self) -> Option<crate::format::examples::Color> {
         self.e()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl OptView for super::OptBuf {
@@ -126,6 +207,14 @@ impl OptView for super::OptBuf {
     fn e(&self) -> Option<crate::format::examples::Color> {
         self.as_ref().e()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        OptView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl OptView for super::OptMut<'_> {
@@ -147,5 +236,13 @@ impl OptView for super::OptMut<'_> {
 
     fn e(&self) -> Option<crate::format::examples::Color> {
         self.as_ref().e()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        OptView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

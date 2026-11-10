@@ -4,11 +4,61 @@
 pub trait GreetRequestView {
     /// Gets the field: `name`.
     fn name(&self) -> Option<&str>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if let Some(value) = self.name() {
+            count += 1;
+            values += value.len();
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.name().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.name() {
+            writer.field(1).extend_from_slice(value.as_bytes());
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: GreetRequestView> GreetRequestView for &V {
     fn name(&self) -> Option<&str> {
         (**self).name()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -16,11 +66,27 @@ impl<V: GreetRequestView> GreetRequestView for &mut V {
     fn name(&self) -> Option<&str> {
         (**self).name()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl GreetRequestView for super::GreetRequest {
     fn name(&self) -> Option<&str> {
         self.name()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::GreetRequest::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::GreetRequest::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -28,16 +94,45 @@ impl GreetRequestView for super::GreetRequestRef<'_> {
     fn name(&self) -> Option<&str> {
         self.name()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl GreetRequestView for super::GreetRequestBuf {
     fn name(&self) -> Option<&str> {
         self.as_ref().name()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        GreetRequestView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl GreetRequestView for super::GreetRequestMut<'_> {
     fn name(&self) -> Option<&str> {
         self.as_ref().name()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        GreetRequestView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

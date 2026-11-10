@@ -2,6 +2,9 @@ use crate::rust::fields::Field;
 use crate::rust::gen_buf::buf_name;
 use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
+use crate::rust::gen_view_encoding::{
+    ViewEncoding, ViewForm, WithViewFunctions, gen_view_functions, gen_view_overrides,
+};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::typing::Typing;
 use crate::rust::values::view_value_type;
@@ -30,6 +33,7 @@ pub(crate) fn gen_view(
     schema_name: &str,
     fields: &[Field<'_>],
     type_name: &str,
+    encoding: &ViewEncoding,
 ) -> String {
     let name: String = view_name(schema_name);
     let ref_type: RustType = RustType::from(format!("super::{}", ref_name(schema_name)))
@@ -38,46 +42,51 @@ pub(crate) fn gen_view(
         .with_generic(RustType::from("'_"));
     let buf_type: String = format!("super::{}", buf_name(schema_name));
     let generic: String = format!("V: {}", name);
+    let forward = |getter: &str| format!("(**self).{}", getter);
+    let own = |getter: &str| format!("self.{}", getter);
+    let encoded = |getter: &str| format!("self.as_ref().{}", getter);
+    let overrides = |form: ViewForm<'_>| gen_view_overrides(form, encoding.is_level);
+    let native: String = format!("super::{}", type_name);
     Block::default()
-        .with_statement(gen_trait(typing, schema_name, fields, &name, type_name))
+        .with_statement(gen_trait(
+            typing,
+            schema_name,
+            fields,
+            &name,
+            type_name,
+            encoding,
+        ))
         .with_statement(EmptyLine::default())
         .with_statement(
-            gen_impl(typing, fields, &name, "&V", |getter| {
-                format!("(**self).{}", getter)
-            })
-            .with_generic(generic.as_str()),
+            gen_impl(typing, fields, &name, "&V", forward)
+                .with_functions(overrides(ViewForm::Reference))
+                .with_generic(generic.as_str()),
         )
         .with_statement(EmptyLine::default())
         .with_statement(
-            gen_impl(typing, fields, &name, "&mut V", |getter| {
-                format!("(**self).{}", getter)
-            })
-            .with_generic(generic.as_str()),
+            gen_impl(typing, fields, &name, "&mut V", forward)
+                .with_functions(overrides(ViewForm::Reference))
+                .with_generic(generic.as_str()),
         )
         .with_statement(EmptyLine::default())
-        .with_statement(gen_impl(
-            typing,
-            fields,
-            &name,
-            format!("super::{}", type_name).as_str(),
-            |getter| format!("self.{}", getter),
-        ))
+        .with_statement(
+            gen_impl(typing, fields, &name, native.as_str(), own)
+                .with_functions(overrides(ViewForm::Native(type_name))),
+        )
         .with_statement(EmptyLine::default())
-        .with_statement(gen_impl(typing, fields, &name, ref_type, |getter| {
-            format!("self.{}", getter)
-        }))
+        .with_statement(
+            gen_impl(typing, fields, &name, ref_type, own).with_functions(overrides(ViewForm::Ref)),
+        )
         .with_statement(EmptyLine::default())
-        .with_statement(gen_impl(
-            typing,
-            fields,
-            &name,
-            buf_type.as_str(),
-            |getter| format!("self.as_ref().{}", getter),
-        ))
+        .with_statement(
+            gen_impl(typing, fields, &name, buf_type.as_str(), encoded)
+                .with_functions(overrides(ViewForm::Encoded(&name))),
+        )
         .with_statement(EmptyLine::default())
-        .with_statement(gen_impl(typing, fields, &name, mut_type, |getter| {
-            format!("self.as_ref().{}", getter)
-        }))
+        .with_statement(
+            gen_impl(typing, fields, &name, mut_type, encoded)
+                .with_functions(overrides(ViewForm::Encoded(&name))),
+        )
         .to_code()
 }
 
@@ -88,6 +97,7 @@ fn gen_trait(
     fields: &[Field<'_>],
     name: &str,
     type_name: &str,
+    encoding: &ViewEncoding,
 ) -> Trait {
     let mut result: Trait = Trait::from(name).with_comment(format!(
         " The fields of any form of [{}](super::{}).",
@@ -104,6 +114,9 @@ fn gen_trait(
         let signature_dec: SignatureDec = SignatureDec::from(gen_signature(typing, *field))
             .with_comment(format!(" Gets the field: `{}`.", field.name));
         result.add_signature_dec(signature_dec);
+    }
+    for function in gen_view_functions(encoding) {
+        result.add_function(function);
     }
     result
 }

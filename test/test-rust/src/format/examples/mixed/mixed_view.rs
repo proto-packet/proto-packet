@@ -13,6 +13,37 @@ pub trait MixedView {
 
     /// Gets the field: `d`.
     fn d(&self) -> bool;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        12
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(&self.b().to_le_bytes());
+        out.extend_from_slice(&self.c().to_le_bytes());
+        out.extend_from_slice(&self.a().to_le_bytes());
+        out.push(u8::from(self.d()));
+    }
 }
 
 impl<V: MixedView> MixedView for &V {
@@ -30,6 +61,14 @@ impl<V: MixedView> MixedView for &V {
 
     fn d(&self) -> bool {
         (**self).d()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -49,6 +88,14 @@ impl<V: MixedView> MixedView for &mut V {
     fn d(&self) -> bool {
         (**self).d()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl MixedView for super::Mixed {
@@ -66,6 +113,14 @@ impl MixedView for super::Mixed {
 
     fn d(&self) -> bool {
         self.d()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Mixed::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::Mixed::encode_to(self, out);
     }
 }
 
@@ -85,6 +140,14 @@ impl MixedView for super::MixedRef<'_> {
     fn d(&self) -> bool {
         self.d()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl MixedView for super::MixedBuf {
@@ -103,6 +166,14 @@ impl MixedView for super::MixedBuf {
     fn d(&self) -> bool {
         self.as_ref().d()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        MixedView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl MixedView for super::MixedMut<'_> {
@@ -120,5 +191,13 @@ impl MixedView for super::MixedMut<'_> {
 
     fn d(&self) -> bool {
         self.as_ref().d()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        MixedView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

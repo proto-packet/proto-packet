@@ -31,6 +31,113 @@ pub trait TimeKindsView {
         Key = proto_packet::types::Date,
         Value = proto_packet::types::Duration,
     >;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 49;
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.days(),
+                <proto_packet::types::Date as proto_packet::io::Element>::SIZE,
+                <proto_packet::types::Date as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::map_view_len::<
+                proto_packet::types::Date,
+                proto_packet::types::Duration,
+                _,
+                _,
+                _,
+                _,
+            >(
+                self.spans(),
+                |_| 0,
+                |_| 0,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        out.extend_from_slice(&self.at().to_le_bytes());
+        out.extend_from_slice(&self.micro().to_le_bytes());
+        out.extend_from_slice(&self.nano().to_le_bytes());
+        out.extend_from_slice(&self.span().to_le_bytes());
+        out.extend_from_slice(&self.maybe().unwrap_or_default().to_le_bytes());
+        out.extend_from_slice(&self.day().to_le_bytes());
+        proto_packet::io::write_zeros(out, 4);
+        out.push(u8::from(self.maybe().is_some()));
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.days(),
+                out,
+                <proto_packet::types::Date as proto_packet::io::Element>::SIZE,
+                <proto_packet::types::Date as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 44, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<
+                proto_packet::types::Date,
+                proto_packet::types::Duration,
+                _,
+                _,
+                _,
+            >(
+                self.spans(),
+                out,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+    }
 }
 
 impl<V: TimeKindsView> TimeKindsView for &V {
@@ -70,6 +177,14 @@ impl<V: TimeKindsView> TimeKindsView for &V {
         Value = proto_packet::types::Duration,
     > {
         (**self).spans()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -111,6 +226,14 @@ impl<V: TimeKindsView> TimeKindsView for &mut V {
     > {
         (**self).spans()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl TimeKindsView for super::TimeKinds {
@@ -150,6 +273,14 @@ impl TimeKindsView for super::TimeKinds {
         Value = proto_packet::types::Duration,
     > {
         self.spans()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::TimeKinds::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::TimeKinds::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -191,6 +322,19 @@ impl TimeKindsView for super::TimeKindsRef<'_> {
     > {
         self.spans()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl TimeKindsView for super::TimeKindsBuf {
@@ -231,6 +375,14 @@ impl TimeKindsView for super::TimeKindsBuf {
     > {
         self.as_ref().spans()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        TimeKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl TimeKindsView for super::TimeKindsMut<'_> {
@@ -270,5 +422,13 @@ impl TimeKindsView for super::TimeKindsMut<'_> {
         Value = proto_packet::types::Duration,
     > {
         self.as_ref().spans()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        TimeKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

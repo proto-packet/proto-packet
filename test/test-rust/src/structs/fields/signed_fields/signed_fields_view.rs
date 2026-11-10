@@ -16,6 +16,38 @@ pub trait SignedFieldsView {
 
     /// Gets the field: `signed128`.
     fn signed128(&self) -> i128;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        31
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(&self.signed64().to_le_bytes());
+        out.extend_from_slice(&self.signed128().to_le_bytes());
+        out.extend_from_slice(&self.signed32().to_le_bytes());
+        out.extend_from_slice(&self.signed16().to_le_bytes());
+        out.extend_from_slice(&self.signed8().to_le_bytes());
+    }
 }
 
 impl<V: SignedFieldsView> SignedFieldsView for &V {
@@ -37,6 +69,14 @@ impl<V: SignedFieldsView> SignedFieldsView for &V {
 
     fn signed128(&self) -> i128 {
         (**self).signed128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -60,6 +100,14 @@ impl<V: SignedFieldsView> SignedFieldsView for &mut V {
     fn signed128(&self) -> i128 {
         (**self).signed128()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl SignedFieldsView for super::SignedFields {
@@ -81,6 +129,14 @@ impl SignedFieldsView for super::SignedFields {
 
     fn signed128(&self) -> i128 {
         self.signed128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::SignedFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::SignedFields::encode_to(self, out);
     }
 }
 
@@ -104,6 +160,14 @@ impl SignedFieldsView for super::SignedFieldsRef<'_> {
     fn signed128(&self) -> i128 {
         self.signed128()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl SignedFieldsView for super::SignedFieldsBuf {
@@ -126,6 +190,14 @@ impl SignedFieldsView for super::SignedFieldsBuf {
     fn signed128(&self) -> i128 {
         self.as_ref().signed128()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        SignedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl SignedFieldsView for super::SignedFieldsMut<'_> {
@@ -147,5 +219,13 @@ impl SignedFieldsView for super::SignedFieldsMut<'_> {
 
     fn signed128(&self) -> i128 {
         self.as_ref().signed128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        SignedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

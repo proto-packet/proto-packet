@@ -7,6 +7,43 @@ pub trait OlderCasesView {
 
     /// Gets the value of the case: `Text`.
     fn as_text(&self) -> Option<&str>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if let Some(value) = self.as_text() {
+            return 2 + value.len();
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_text() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            out.extend_from_slice(value.as_bytes());
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: OlderCasesView> OlderCasesView for &V {
@@ -16,6 +53,14 @@ impl<V: OlderCasesView> OlderCasesView for &V {
 
     fn as_text(&self) -> Option<&str> {
         (**self).as_text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +72,14 @@ impl<V: OlderCasesView> OlderCasesView for &mut V {
     fn as_text(&self) -> Option<&str> {
         (**self).as_text()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl OlderCasesView for super::OlderCases {
@@ -36,6 +89,14 @@ impl OlderCasesView for super::OlderCases {
 
     fn as_text(&self) -> Option<&str> {
         self.as_text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::OlderCases::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::OlderCases::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -47,6 +108,19 @@ impl OlderCasesView for super::OlderCasesRef<'_> {
     fn as_text(&self) -> Option<&str> {
         self.as_text()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl OlderCasesView for super::OlderCasesBuf {
@@ -57,6 +131,14 @@ impl OlderCasesView for super::OlderCasesBuf {
     fn as_text(&self) -> Option<&str> {
         self.as_ref().as_text()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        OlderCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl OlderCasesView for super::OlderCasesMut<'_> {
@@ -66,5 +148,13 @@ impl OlderCasesView for super::OlderCasesMut<'_> {
 
     fn as_text(&self) -> Option<&str> {
         self.as_ref().as_text()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        OlderCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

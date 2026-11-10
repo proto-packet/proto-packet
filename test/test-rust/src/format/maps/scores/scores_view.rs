@@ -4,11 +4,78 @@
 pub trait ScoresView {
     /// Gets the field: `scores`.
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 0;
+        {
+            let size: usize = proto_packet::io::map_view_len::<String, u32, _, _, _, _>(
+                self.scores(),
+                |item| item.len(),
+                |_| 0,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<String, u32, _, _, _>(
+                self.scores(),
+                out,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+    }
 }
 
 impl<V: ScoresView> ScoresView for &V {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
         (**self).scores()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -16,11 +83,27 @@ impl<V: ScoresView> ScoresView for &mut V {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
         (**self).scores()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl ScoresView for super::Scores {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
         self.scores()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Scores::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Scores::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -28,16 +111,45 @@ impl ScoresView for super::ScoresRef<'_> {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
         self.scores()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl ScoresView for super::ScoresBuf {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
         self.as_ref().scores()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ScoresView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl ScoresView for super::ScoresMut<'_> {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
         self.as_ref().scores()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ScoresView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

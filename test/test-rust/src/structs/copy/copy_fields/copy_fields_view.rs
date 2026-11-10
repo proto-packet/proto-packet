@@ -13,6 +13,37 @@ pub trait CopyFieldsView {
 
     /// Gets the field: `color`.
     fn color(&self) -> crate::types::Color;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        30
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.id().as_bytes());
+        out.extend_from_slice(&self.count().to_le_bytes());
+        crate::types::PointView::encode_to_with_depth(&self.point(), out, 0);
+        out.extend_from_slice(&self.color().tag_number().to_le_bytes());
+    }
 }
 
 impl<V: CopyFieldsView> CopyFieldsView for &V {
@@ -30,6 +61,14 @@ impl<V: CopyFieldsView> CopyFieldsView for &V {
 
     fn color(&self) -> crate::types::Color {
         (**self).color()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -49,6 +88,14 @@ impl<V: CopyFieldsView> CopyFieldsView for &mut V {
     fn color(&self) -> crate::types::Color {
         (**self).color()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl CopyFieldsView for super::CopyFields {
@@ -66,6 +113,14 @@ impl CopyFieldsView for super::CopyFields {
 
     fn color(&self) -> crate::types::Color {
         self.color()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::CopyFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::CopyFields::encode_to(self, out);
     }
 }
 
@@ -85,6 +140,14 @@ impl CopyFieldsView for super::CopyFieldsRef<'_> {
     fn color(&self) -> crate::types::Color {
         self.color()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl CopyFieldsView for super::CopyFieldsBuf {
@@ -103,6 +166,14 @@ impl CopyFieldsView for super::CopyFieldsBuf {
     fn color(&self) -> crate::types::Color {
         self.as_ref().color()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        CopyFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl CopyFieldsView for super::CopyFieldsMut<'_> {
@@ -120,5 +191,13 @@ impl CopyFieldsView for super::CopyFieldsMut<'_> {
 
     fn color(&self) -> crate::types::Color {
         self.as_ref().color()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        CopyFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

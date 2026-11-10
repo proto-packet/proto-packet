@@ -25,6 +25,158 @@ pub trait WithListsView {
     fn children(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::lists::WithListsView>>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if let Some(value) = self.bytes() {
+            count += 1;
+            values += value.len();
+        }
+        if let Some(value) = self.numbers() {
+            count += 1;
+            values += proto_packet::io::list_view_len(
+                value,
+                <u32 as proto_packet::io::Element>::SIZE,
+                <u32 as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+        }
+        if let Some(value) = self.texts() {
+            count += 1;
+            values += proto_packet::io::list_view_len(
+                value,
+                <String as proto_packet::io::Element>::SIZE,
+                <String as proto_packet::io::Element>::ALIGNMENT,
+                |item| item.len(),
+            );
+        }
+        if let Some(value) = self.points() {
+            count += 1;
+            values += proto_packet::io::list_view_len(
+                value,
+                <crate::format::examples::Point as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Point as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::examples::PointView::encoded_len,
+            );
+        }
+        if let Some(value) = self.entries() {
+            count += 1;
+            values += proto_packet::io::list_view_len(
+                value,
+                <crate::format::examples::Entry as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Entry as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::examples::EntryView::encoded_len,
+            );
+        }
+        if let Some(value) = self.children() {
+            count += 1;
+            values += proto_packet::io::list_view_len(
+                value,
+                <crate::format::lists::WithLists as proto_packet::io::Element>::SIZE,
+                <crate::format::lists::WithLists as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::lists::WithListsView::encoded_len,
+            );
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.bytes().is_some())
+            + usize::from(self.numbers().is_some())
+            + usize::from(self.texts().is_some())
+            + usize::from(self.points().is_some())
+            + usize::from(self.entries().is_some())
+            + usize::from(self.children().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.bytes() {
+            writer.field(1).extend_from_slice(value);
+            writer.end_field();
+        }
+        if let Some(value) = self.numbers() {
+            proto_packet::io::write_list_view(
+                value,
+                writer.field(2),
+                <u32 as proto_packet::io::Element>::SIZE,
+                <u32 as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.texts() {
+            proto_packet::io::write_list_view(
+                value,
+                writer.field(3),
+                <String as proto_packet::io::Element>::SIZE,
+                <String as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.points() {
+            proto_packet::io::write_list_view(
+                value,
+                writer.field(4),
+                <crate::format::examples::Point as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Point as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::examples::PointView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.entries() {
+            proto_packet::io::write_list_view(
+                value,
+                writer.field(5),
+                <crate::format::examples::Entry as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Entry as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::examples::EntryView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.children() {
+            proto_packet::io::write_list_view(
+                value,
+                writer.field(6),
+                <crate::format::lists::WithLists as proto_packet::io::Element>::SIZE,
+                <crate::format::lists::WithLists as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::lists::WithListsView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: WithListsView> WithListsView for &V {
@@ -59,6 +211,14 @@ impl<V: WithListsView> WithListsView for &V {
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::lists::WithListsView>>
     {
         (**self).children()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -95,6 +255,14 @@ impl<V: WithListsView> WithListsView for &mut V {
     {
         (**self).children()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl WithListsView for super::WithLists {
@@ -129,6 +297,14 @@ impl WithListsView for super::WithLists {
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::lists::WithListsView>>
     {
         self.children()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::WithLists::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::WithLists::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -165,6 +341,19 @@ impl WithListsView for super::WithListsRef<'_> {
     {
         self.children()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl WithListsView for super::WithListsBuf {
@@ -200,6 +389,14 @@ impl WithListsView for super::WithListsBuf {
     {
         self.as_ref().children()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        WithListsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl WithListsView for super::WithListsMut<'_> {
@@ -234,5 +431,13 @@ impl WithListsView for super::WithListsMut<'_> {
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::lists::WithListsView>>
     {
         self.as_ref().children()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        WithListsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

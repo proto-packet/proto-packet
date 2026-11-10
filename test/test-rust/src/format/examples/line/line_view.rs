@@ -10,6 +10,36 @@ pub trait LineView {
 
     /// Gets the field: `width`.
     fn width(&self) -> u8;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        17
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        crate::format::examples::PointView::encode_to_with_depth(&self.start(), out, 0);
+        crate::format::examples::PointView::encode_to_with_depth(&self.end(), out, 0);
+        out.extend_from_slice(&self.width().to_le_bytes());
+    }
 }
 
 impl<V: LineView> LineView for &V {
@@ -23,6 +53,14 @@ impl<V: LineView> LineView for &V {
 
     fn width(&self) -> u8 {
         (**self).width()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +76,14 @@ impl<V: LineView> LineView for &mut V {
     fn width(&self) -> u8 {
         (**self).width()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl LineView for super::Line {
@@ -51,6 +97,14 @@ impl LineView for super::Line {
 
     fn width(&self) -> u8 {
         self.width()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Line::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::Line::encode_to(self, out);
     }
 }
 
@@ -66,6 +120,14 @@ impl LineView for super::LineRef<'_> {
     fn width(&self) -> u8 {
         self.width()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl LineView for super::LineBuf {
@@ -80,6 +142,14 @@ impl LineView for super::LineBuf {
     fn width(&self) -> u8 {
         self.as_ref().width()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LineView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl LineView for super::LineMut<'_> {
@@ -93,5 +163,13 @@ impl LineView for super::LineMut<'_> {
 
     fn width(&self) -> u8 {
         self.as_ref().width()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LineView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

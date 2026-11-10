@@ -4,11 +4,75 @@
 pub trait TextsView {
     /// Gets the field: `texts`.
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 0;
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.texts(),
+                <String as proto_packet::io::Element>::SIZE,
+                <String as proto_packet::io::Element>::ALIGNMENT,
+                |item| item.len(),
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.texts(),
+                out,
+                <String as proto_packet::io::Element>::SIZE,
+                <String as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+    }
 }
 
 impl<V: TextsView> TextsView for &V {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
         (**self).texts()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -16,11 +80,27 @@ impl<V: TextsView> TextsView for &mut V {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
         (**self).texts()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl TextsView for super::Texts {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
         self.texts()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Texts::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Texts::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -28,16 +108,45 @@ impl TextsView for super::TextsRef<'_> {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
         self.texts()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl TextsView for super::TextsBuf {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
         self.as_ref().texts()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        TextsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl TextsView for super::TextsMut<'_> {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
         self.as_ref().texts()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        TextsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

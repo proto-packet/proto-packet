@@ -4,6 +4,10 @@ use crate::rust::gen_struct_ref::{generated_path, ref_name};
 use crate::rust::gen_variant::Case;
 use crate::rust::gen_variant_mut::gen_setter_signature;
 use crate::rust::gen_view::view_name;
+use crate::rust::gen_view_encoding::{
+    ViewEncoding, ViewForm, WithViewFunctions, gen_variant_view_encoding, gen_view_functions,
+    gen_view_overrides,
+};
 use crate::rust::gen_view_mut::{Form, view_mut_name};
 use crate::rust::naming::is_upper_camel_case;
 use crate::rust::typing::Typing;
@@ -52,40 +56,50 @@ pub(crate) fn gen_variant_view(
                 .with_comment(format!(" Gets the value of the case: `{}`.", case.name)),
         );
     }
+    let encoding: ViewEncoding = gen_variant_view_encoding(typing, cases);
+    for function in gen_view_functions(&encoding) {
+        result.add_function(function);
+    }
 
     let forward = |call: &str| format!("(**self).{}", call);
     let own = |call: &str| format!("self.{}", call);
     let encoded = |call: &str| format!("self.as_ref().{}", call);
+    let overrides = |form: ViewForm<'_>| gen_view_overrides(form, true);
+    let native: String = format!("super::{}", type_name);
     Block::default()
         .with_statement(result)
         .with_statement(EmptyLine::default())
         .with_statement(
-            gen_view_impl(typing, cases, &name, "&V", forward).with_generic(generic.as_str()),
+            gen_view_impl(typing, cases, &name, "&V", forward)
+                .with_functions(overrides(ViewForm::Reference))
+                .with_generic(generic.as_str()),
         )
         .with_statement(EmptyLine::default())
         .with_statement(
-            gen_view_impl(typing, cases, &name, "&mut V", forward).with_generic(generic.as_str()),
+            gen_view_impl(typing, cases, &name, "&mut V", forward)
+                .with_functions(overrides(ViewForm::Reference))
+                .with_generic(generic.as_str()),
         )
         .with_statement(EmptyLine::default())
-        .with_statement(gen_view_impl(
-            typing,
-            cases,
-            &name,
-            format!("super::{}", type_name).as_str(),
-            own,
-        ))
+        .with_statement(
+            gen_view_impl(typing, cases, &name, native.as_str(), own)
+                .with_functions(overrides(ViewForm::Native(type_name))),
+        )
         .with_statement(EmptyLine::default())
-        .with_statement(gen_view_impl(typing, cases, &name, ref_type, own))
+        .with_statement(
+            gen_view_impl(typing, cases, &name, ref_type, own)
+                .with_functions(overrides(ViewForm::Ref)),
+        )
         .with_statement(EmptyLine::default())
-        .with_statement(gen_view_impl(
-            typing,
-            cases,
-            &name,
-            buf_type.as_str(),
-            encoded,
-        ))
+        .with_statement(
+            gen_view_impl(typing, cases, &name, buf_type.as_str(), encoded)
+                .with_functions(overrides(ViewForm::Encoded(&name))),
+        )
         .with_statement(EmptyLine::default())
-        .with_statement(gen_view_impl(typing, cases, &name, mut_type, encoded))
+        .with_statement(
+            gen_view_impl(typing, cases, &name, mut_type, encoded)
+                .with_functions(overrides(ViewForm::Encoded(&name))),
+        )
         .to_code()
 }
 

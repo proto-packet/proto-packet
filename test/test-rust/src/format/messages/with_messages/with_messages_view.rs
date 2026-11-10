@@ -13,6 +13,51 @@ pub trait WithMessagesView {
 
     /// Gets the field: `maybe`.
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 17;
+        len += self.before().len();
+        len += crate::format::messages::ItemView::encoded_len(&self.item());
+        if let Some(value) = self.maybe() {
+            len += crate::format::messages::ItemView::encoded_len(&value);
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        out.extend_from_slice(&self.number().to_le_bytes());
+        proto_packet::io::write_zeros(out, 8);
+        out.push(u8::from(self.maybe().is_some()));
+        out.extend_from_slice(self.before().as_bytes());
+        proto_packet::io::write_end(out, start + 8, start);
+        crate::format::messages::ItemView::encode_to_with_depth(&self.item(), out, depth - 1);
+        proto_packet::io::write_end(out, start + 12, start);
+        if let Some(value) = self.maybe() {
+            crate::format::messages::ItemView::encode_to_with_depth(&value, out, depth - 1);
+        }
+    }
 }
 
 impl<V: WithMessagesView> WithMessagesView for &V {
@@ -30,6 +75,14 @@ impl<V: WithMessagesView> WithMessagesView for &V {
 
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
         (**self).maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -49,6 +102,14 @@ impl<V: WithMessagesView> WithMessagesView for &mut V {
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
         (**self).maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl WithMessagesView for super::WithMessages {
@@ -66,6 +127,14 @@ impl WithMessagesView for super::WithMessages {
 
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
         self.maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::WithMessages::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::WithMessages::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -85,6 +154,19 @@ impl WithMessagesView for super::WithMessagesRef<'_> {
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
         self.maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl WithMessagesView for super::WithMessagesBuf {
@@ -103,6 +185,14 @@ impl WithMessagesView for super::WithMessagesBuf {
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
         self.as_ref().maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        WithMessagesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl WithMessagesView for super::WithMessagesMut<'_> {
@@ -120,5 +210,13 @@ impl WithMessagesView for super::WithMessagesMut<'_> {
 
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
         self.as_ref().maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        WithMessagesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

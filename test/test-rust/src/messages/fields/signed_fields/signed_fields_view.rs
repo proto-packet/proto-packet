@@ -16,6 +16,84 @@ pub trait SignedFieldsView {
 
     /// Gets the field: `signed128`.
     fn signed128(&self) -> Option<i128>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if self.signed8().is_some() {
+            count += 1;
+            values += 1;
+        }
+        if self.signed16().is_some() {
+            count += 1;
+            values += 2;
+        }
+        if self.signed32().is_some() {
+            count += 1;
+            values += 4;
+        }
+        if self.signed64().is_some() {
+            count += 1;
+            values += 8;
+        }
+        if self.signed128().is_some() {
+            count += 1;
+            values += 16;
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.signed8().is_some())
+            + usize::from(self.signed16().is_some())
+            + usize::from(self.signed32().is_some())
+            + usize::from(self.signed64().is_some())
+            + usize::from(self.signed128().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.signed8() {
+            writer.field(1).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.signed16() {
+            writer.field(2).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.signed32() {
+            writer.field(3).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.signed64() {
+            writer.field(4).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.signed128() {
+            writer.field(5).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: SignedFieldsView> SignedFieldsView for &V {
@@ -37,6 +115,14 @@ impl<V: SignedFieldsView> SignedFieldsView for &V {
 
     fn signed128(&self) -> Option<i128> {
         (**self).signed128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -60,6 +146,14 @@ impl<V: SignedFieldsView> SignedFieldsView for &mut V {
     fn signed128(&self) -> Option<i128> {
         (**self).signed128()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl SignedFieldsView for super::SignedFields {
@@ -81,6 +175,14 @@ impl SignedFieldsView for super::SignedFields {
 
     fn signed128(&self) -> Option<i128> {
         self.signed128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::SignedFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::SignedFields::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -104,6 +206,19 @@ impl SignedFieldsView for super::SignedFieldsRef<'_> {
     fn signed128(&self) -> Option<i128> {
         self.signed128()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl SignedFieldsView for super::SignedFieldsBuf {
@@ -126,6 +241,14 @@ impl SignedFieldsView for super::SignedFieldsBuf {
     fn signed128(&self) -> Option<i128> {
         self.as_ref().signed128()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        SignedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl SignedFieldsView for super::SignedFieldsMut<'_> {
@@ -147,5 +270,13 @@ impl SignedFieldsView for super::SignedFieldsMut<'_> {
 
     fn signed128(&self) -> Option<i128> {
         self.as_ref().signed128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        SignedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

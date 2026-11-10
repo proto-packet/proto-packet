@@ -18,6 +18,7 @@ use crate::rust::gen_struct::{
 use crate::rust::gen_struct_mut::{check_mut_names, is_struct, mut_name};
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::gen_view::{gen_view, view_name};
+use crate::rust::gen_view_encoding::gen_message_view_encoding;
 use crate::rust::gen_view_mut::{gen_view_mut, view_mut_name};
 use crate::rust::message_encoding::{TaggedField, gen_message_encoding};
 use crate::rust::naming::{ident, is_upper_camel_case};
@@ -192,7 +193,13 @@ pub fn gen_message(
         },
         TypeFile {
             suffix: "_view",
-            code: gen_view(typing, schema_name, &fields, &type_name),
+            code: gen_view(
+                typing,
+                schema_name,
+                &fields,
+                &type_name,
+                &gen_message_view_encoding(typing, &tagged),
+            ),
         },
         TypeFile {
             suffix: "_view_mut",

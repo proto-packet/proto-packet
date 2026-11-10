@@ -7,6 +7,56 @@ pub trait EdgeTagsView {
 
     /// Gets the field: `max`.
     fn max(&self) -> Option<u32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if self.min().is_some() {
+            count += 1;
+            values += 4;
+        }
+        if self.max().is_some() {
+            count += 1;
+            values += 4;
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.min().is_some()) + usize::from(self.max().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.min() {
+            writer.field(1).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.max() {
+            writer.field(65535).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: EdgeTagsView> EdgeTagsView for &V {
@@ -16,6 +66,14 @@ impl<V: EdgeTagsView> EdgeTagsView for &V {
 
     fn max(&self) -> Option<u32> {
         (**self).max()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +85,14 @@ impl<V: EdgeTagsView> EdgeTagsView for &mut V {
     fn max(&self) -> Option<u32> {
         (**self).max()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl EdgeTagsView for super::EdgeTags {
@@ -36,6 +102,14 @@ impl EdgeTagsView for super::EdgeTags {
 
     fn max(&self) -> Option<u32> {
         self.max()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::EdgeTags::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::EdgeTags::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -47,6 +121,19 @@ impl EdgeTagsView for super::EdgeTagsRef<'_> {
     fn max(&self) -> Option<u32> {
         self.max()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl EdgeTagsView for super::EdgeTagsBuf {
@@ -57,6 +144,14 @@ impl EdgeTagsView for super::EdgeTagsBuf {
     fn max(&self) -> Option<u32> {
         self.as_ref().max()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        EdgeTagsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl EdgeTagsView for super::EdgeTagsMut<'_> {
@@ -66,5 +161,13 @@ impl EdgeTagsView for super::EdgeTagsMut<'_> {
 
     fn max(&self) -> Option<u32> {
         self.as_ref().max()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        EdgeTagsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

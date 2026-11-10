@@ -13,6 +13,59 @@ pub trait UnorderedTagsView {
 
     /// Gets the value of the case: `Two`.
     fn as_two(&self) -> Option<u32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if self.as_three().is_some() {
+            return 6;
+        }
+        if self.as_one().is_some() {
+            return 6;
+        }
+        if self.as_two().is_some() {
+            return 6;
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_three() {
+            out.extend_from_slice(&3_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_one() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_two() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: UnorderedTagsView> UnorderedTagsView for &V {
@@ -30,6 +83,14 @@ impl<V: UnorderedTagsView> UnorderedTagsView for &V {
 
     fn as_two(&self) -> Option<u32> {
         (**self).as_two()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -49,6 +110,14 @@ impl<V: UnorderedTagsView> UnorderedTagsView for &mut V {
     fn as_two(&self) -> Option<u32> {
         (**self).as_two()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl UnorderedTagsView for super::UnorderedTags {
@@ -66,6 +135,14 @@ impl UnorderedTagsView for super::UnorderedTags {
 
     fn as_two(&self) -> Option<u32> {
         self.as_two()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::UnorderedTags::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::UnorderedTags::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -85,6 +162,19 @@ impl UnorderedTagsView for super::UnorderedTagsRef<'_> {
     fn as_two(&self) -> Option<u32> {
         self.as_two()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl UnorderedTagsView for super::UnorderedTagsBuf {
@@ -103,6 +193,14 @@ impl UnorderedTagsView for super::UnorderedTagsBuf {
     fn as_two(&self) -> Option<u32> {
         self.as_ref().as_two()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        UnorderedTagsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl UnorderedTagsView for super::UnorderedTagsMut<'_> {
@@ -120,5 +218,13 @@ impl UnorderedTagsView for super::UnorderedTagsMut<'_> {
 
     fn as_two(&self) -> Option<u32> {
         self.as_ref().as_two()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        UnorderedTagsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

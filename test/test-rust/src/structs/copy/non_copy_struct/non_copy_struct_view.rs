@@ -4,11 +4,50 @@
 pub trait NonCopyStructView {
     /// Gets the field: `person`.
     fn person(&self) -> impl crate::types::PersonView;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 0;
+        len += crate::types::PersonView::encoded_len(&self.person());
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        crate::types::PersonView::encode_to_with_depth(&self.person(), out, depth - 1);
+    }
 }
 
 impl<V: NonCopyStructView> NonCopyStructView for &V {
     fn person(&self) -> impl crate::types::PersonView {
         (**self).person()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -16,11 +55,27 @@ impl<V: NonCopyStructView> NonCopyStructView for &mut V {
     fn person(&self) -> impl crate::types::PersonView {
         (**self).person()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl NonCopyStructView for super::NonCopyStruct {
     fn person(&self) -> impl crate::types::PersonView {
         self.person()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::NonCopyStruct::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::NonCopyStruct::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -28,16 +83,45 @@ impl NonCopyStructView for super::NonCopyStructRef<'_> {
     fn person(&self) -> impl crate::types::PersonView {
         self.person()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl NonCopyStructView for super::NonCopyStructBuf {
     fn person(&self) -> impl crate::types::PersonView {
         self.as_ref().person()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NonCopyStructView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl NonCopyStructView for super::NonCopyStructMut<'_> {
     fn person(&self) -> impl crate::types::PersonView {
         self.as_ref().person()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NonCopyStructView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

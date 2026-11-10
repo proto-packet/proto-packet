@@ -30,6 +30,7 @@ mod gen_variant_mut;
 mod gen_variant_ref;
 mod gen_variant_view;
 mod gen_view;
+mod gen_view_encoding;
 mod gen_view_mut;
 mod generate;
 mod message_encoding;

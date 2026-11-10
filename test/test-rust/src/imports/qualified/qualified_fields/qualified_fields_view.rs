@@ -16,6 +16,38 @@ pub trait QualifiedFieldsView {
 
     /// Gets the field: `local`.
     fn local(&self) -> impl crate::imports::qualified::LocalView;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        24
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        crate::types::PointView::encode_to_with_depth(&self.point(), out, 0);
+        crate::mods::parent::child::ChildView::encode_to_with_depth(&self.child(), out, 0);
+        crate::names::r#move::MoveStructView::encode_to_with_depth(&self.raw(), out, 0);
+        crate::names::r#type::self_::SelfStructView::encode_to_with_depth(&self.non_raw(), out, 0);
+        crate::imports::qualified::LocalView::encode_to_with_depth(&self.local(), out, 0);
+    }
 }
 
 impl<V: QualifiedFieldsView> QualifiedFieldsView for &V {
@@ -37,6 +69,14 @@ impl<V: QualifiedFieldsView> QualifiedFieldsView for &V {
 
     fn local(&self) -> impl crate::imports::qualified::LocalView {
         (**self).local()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -60,6 +100,14 @@ impl<V: QualifiedFieldsView> QualifiedFieldsView for &mut V {
     fn local(&self) -> impl crate::imports::qualified::LocalView {
         (**self).local()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl QualifiedFieldsView for super::QualifiedFields {
@@ -81,6 +129,14 @@ impl QualifiedFieldsView for super::QualifiedFields {
 
     fn local(&self) -> impl crate::imports::qualified::LocalView {
         self.local()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::QualifiedFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::QualifiedFields::encode_to(self, out);
     }
 }
 
@@ -104,6 +160,14 @@ impl QualifiedFieldsView for super::QualifiedFieldsRef<'_> {
     fn local(&self) -> impl crate::imports::qualified::LocalView {
         self.local()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl QualifiedFieldsView for super::QualifiedFieldsBuf {
@@ -126,6 +190,14 @@ impl QualifiedFieldsView for super::QualifiedFieldsBuf {
     fn local(&self) -> impl crate::imports::qualified::LocalView {
         self.as_ref().local()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        QualifiedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl QualifiedFieldsView for super::QualifiedFieldsMut<'_> {
@@ -147,5 +219,13 @@ impl QualifiedFieldsView for super::QualifiedFieldsMut<'_> {
 
     fn local(&self) -> impl crate::imports::qualified::LocalView {
         self.as_ref().local()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        QualifiedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

@@ -10,6 +10,51 @@ pub trait ShapeView {
 
     /// Gets the value of the case: `Square`.
     fn as_square(&self) -> Option<impl crate::types::PointView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if self.as_circle().is_some() {
+            return 6;
+        }
+        if let Some(value) = self.as_square() {
+            return 2 + crate::types::PointView::encoded_len(&value);
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_circle() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_square() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            crate::types::PointView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: ShapeView> ShapeView for &V {
@@ -23,6 +68,14 @@ impl<V: ShapeView> ShapeView for &V {
 
     fn as_square(&self) -> Option<impl crate::types::PointView> {
         (**self).as_square()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +91,14 @@ impl<V: ShapeView> ShapeView for &mut V {
     fn as_square(&self) -> Option<impl crate::types::PointView> {
         (**self).as_square()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl ShapeView for super::Shape {
@@ -51,6 +112,14 @@ impl ShapeView for super::Shape {
 
     fn as_square(&self) -> Option<impl crate::types::PointView> {
         self.as_square()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Shape::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Shape::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -66,6 +135,19 @@ impl ShapeView for super::ShapeRef<'_> {
     fn as_square(&self) -> Option<impl crate::types::PointView> {
         self.as_square()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl ShapeView for super::ShapeBuf {
@@ -80,6 +162,14 @@ impl ShapeView for super::ShapeBuf {
     fn as_square(&self) -> Option<impl crate::types::PointView> {
         self.as_ref().as_square()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ShapeView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl ShapeView for super::ShapeMut<'_> {
@@ -93,5 +183,13 @@ impl ShapeView for super::ShapeMut<'_> {
 
     fn as_square(&self) -> Option<impl crate::types::PointView> {
         self.as_ref().as_square()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ShapeView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

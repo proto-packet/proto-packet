@@ -16,6 +16,86 @@ pub trait NamedFieldsView {
 
     /// Gets the field: `shape`.
     fn shape(&self) -> Option<impl crate::types::ShapeView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if let Some(value) = self.point() {
+            count += 1;
+            values += crate::types::PointView::encoded_len(&value);
+        }
+        if let Some(value) = self.person() {
+            count += 1;
+            values += crate::types::PersonView::encoded_len(&value);
+        }
+        if let Some(value) = self.label() {
+            count += 1;
+            values += crate::types::LabelView::encoded_len(&value);
+        }
+        if self.color().is_some() {
+            count += 1;
+            values += 2;
+        }
+        if let Some(value) = self.shape() {
+            count += 1;
+            values += crate::types::ShapeView::encoded_len(&value);
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.point().is_some())
+            + usize::from(self.person().is_some())
+            + usize::from(self.label().is_some())
+            + usize::from(self.color().is_some())
+            + usize::from(self.shape().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.point() {
+            crate::types::PointView::encode_to_with_depth(&value, writer.field(1), depth - 1);
+            writer.end_field();
+        }
+        if let Some(value) = self.person() {
+            crate::types::PersonView::encode_to_with_depth(&value, writer.field(2), depth - 1);
+            writer.end_field();
+        }
+        if let Some(value) = self.label() {
+            crate::types::LabelView::encode_to_with_depth(&value, writer.field(3), depth - 1);
+            writer.end_field();
+        }
+        if let Some(value) = self.color() {
+            writer
+                .field(4)
+                .extend_from_slice(&value.tag_number().to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.shape() {
+            crate::types::ShapeView::encode_to_with_depth(&value, writer.field(5), depth - 1);
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: NamedFieldsView> NamedFieldsView for &V {
@@ -37,6 +117,14 @@ impl<V: NamedFieldsView> NamedFieldsView for &V {
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
         (**self).shape()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -60,6 +148,14 @@ impl<V: NamedFieldsView> NamedFieldsView for &mut V {
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
         (**self).shape()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl NamedFieldsView for super::NamedFields {
@@ -81,6 +177,14 @@ impl NamedFieldsView for super::NamedFields {
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
         self.shape()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::NamedFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::NamedFields::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -104,6 +208,19 @@ impl NamedFieldsView for super::NamedFieldsRef<'_> {
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
         self.shape()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl NamedFieldsView for super::NamedFieldsBuf {
@@ -126,6 +243,14 @@ impl NamedFieldsView for super::NamedFieldsBuf {
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
         self.as_ref().shape()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NamedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl NamedFieldsView for super::NamedFieldsMut<'_> {
@@ -147,5 +272,13 @@ impl NamedFieldsView for super::NamedFieldsMut<'_> {
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
         self.as_ref().shape()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NamedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

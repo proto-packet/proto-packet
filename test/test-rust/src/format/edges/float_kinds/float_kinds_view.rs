@@ -10,6 +10,37 @@ pub trait FloatKindsView {
 
     /// Gets the field: `c`.
     fn c(&self) -> Option<proto_packet::types::Float32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        17
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(&self.b().to_le_bytes());
+        out.extend_from_slice(&self.a().to_le_bytes());
+        out.extend_from_slice(&self.c().unwrap_or_default().to_le_bytes());
+        out.push(u8::from(self.c().is_some()));
+    }
 }
 
 impl<V: FloatKindsView> FloatKindsView for &V {
@@ -23,6 +54,14 @@ impl<V: FloatKindsView> FloatKindsView for &V {
 
     fn c(&self) -> Option<proto_packet::types::Float32> {
         (**self).c()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +77,14 @@ impl<V: FloatKindsView> FloatKindsView for &mut V {
     fn c(&self) -> Option<proto_packet::types::Float32> {
         (**self).c()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl FloatKindsView for super::FloatKinds {
@@ -51,6 +98,14 @@ impl FloatKindsView for super::FloatKinds {
 
     fn c(&self) -> Option<proto_packet::types::Float32> {
         self.c()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::FloatKinds::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::FloatKinds::encode_to(self, out);
     }
 }
 
@@ -66,6 +121,14 @@ impl FloatKindsView for super::FloatKindsRef<'_> {
     fn c(&self) -> Option<proto_packet::types::Float32> {
         self.c()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl FloatKindsView for super::FloatKindsBuf {
@@ -80,6 +143,14 @@ impl FloatKindsView for super::FloatKindsBuf {
     fn c(&self) -> Option<proto_packet::types::Float32> {
         self.as_ref().c()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        FloatKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl FloatKindsView for super::FloatKindsMut<'_> {
@@ -93,5 +164,13 @@ impl FloatKindsView for super::FloatKindsMut<'_> {
 
     fn c(&self) -> Option<proto_packet::types::Float32> {
         self.as_ref().c()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        FloatKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

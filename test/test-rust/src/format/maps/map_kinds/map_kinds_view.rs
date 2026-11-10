@@ -39,6 +39,274 @@ pub trait MapKindsView {
     fn maybe(
         &self,
     ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 21;
+        {
+            let size: usize = proto_packet::io::map_view_len::<u32, bool, _, _, _, _>(
+                self.by_number(),
+                |_| 0,
+                |_| 0,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::map_view_len::<
+                crate::format::examples::Color,
+                String,
+                _,
+                _,
+                _,
+                _,
+            >(
+                self.by_color(),
+                |_| 0,
+                |item| item.len(),
+                |item, out| {
+                    out.extend_from_slice(&item.tag_number().to_le_bytes());
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::map_view_len::<
+                crate::format::examples::Point,
+                crate::format::examples::Entry,
+                _,
+                _,
+                _,
+                _,
+            >(
+                self.by_point(),
+                crate::format::examples::PointView::encoded_len,
+                crate::format::examples::EntryView::encoded_len,
+                |item, out| {
+                    crate::format::examples::PointView::encode_to_with_depth(item, out, usize::MAX);
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize =
+                proto_packet::io::map_view_len::<String, proto_packet::types::Bytes, _, _, _, _>(
+                    self.lists(),
+                    |item| item.len(),
+                    |item| item.len(),
+                    |item, out| {
+                        out.extend_from_slice(item.as_bytes());
+                    },
+                );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::map_view_len::<
+                u8,
+                std::collections::BTreeMap<u8, u8>,
+                _,
+                _,
+                _,
+                _,
+            >(
+                self.maps(),
+                |_| 0,
+                |item| {
+                    proto_packet::io::map_view_len::<u8, u8, _, _, _, _>(
+                        *item,
+                        |_| 0,
+                        |_| 0,
+                        |item, out| {
+                            out.extend_from_slice(&item.to_le_bytes());
+                        },
+                    )
+                },
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        if let Some(value) = self.maybe() {
+            {
+                let size: usize = proto_packet::io::map_view_len::<
+                    i64,
+                    proto_packet::types::Float64,
+                    _,
+                    _,
+                    _,
+                    _,
+                >(
+                    value,
+                    |_| 0,
+                    |_| 0,
+                    |item, out| {
+                        out.extend_from_slice(&item.to_le_bytes());
+                    },
+                );
+                if size > 0 {
+                    len = proto_packet::io::align_up(len, 8) + size;
+                }
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 20);
+        out.push(u8::from(self.maybe().is_some()));
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<u32, bool, _, _, _>(
+                self.by_number(),
+                out,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+                |item, out| {
+                    out.push(u8::from(*item));
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<crate::format::examples::Color, String, _, _, _>(
+                self.by_color(),
+                out,
+                |item, out| {
+                    out.extend_from_slice(&item.tag_number().to_le_bytes());
+                },
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 4, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<
+                crate::format::examples::Point,
+                crate::format::examples::Entry,
+                _,
+                _,
+                _,
+            >(
+                self.by_point(),
+                out,
+                |item, out| {
+                    crate::format::examples::PointView::encode_to_with_depth(item, out, depth - 1);
+                },
+                |item, out| {
+                    crate::format::examples::EntryView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 8, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<String, proto_packet::types::Bytes, _, _, _>(
+                self.lists(),
+                out,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+                |item, out| {
+                    out.extend_from_slice(item);
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 12, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<u8, std::collections::BTreeMap<u8, u8>, _, _, _>(
+                self.maps(),
+                out,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+                |item, out| {
+                    proto_packet::io::write_map_view::<u8, u8, _, _, _>(
+                        *item,
+                        out,
+                        |item, out| {
+                            out.extend_from_slice(&item.to_le_bytes());
+                        },
+                        |item, out| {
+                            out.extend_from_slice(&item.to_le_bytes());
+                        },
+                    );
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 16, start);
+        if let Some(value) = self.maybe() {
+            {
+                let before: usize = out.len();
+                proto_packet::io::write_padding(out, start, 8);
+                let padded: usize = out.len();
+                proto_packet::io::write_map_view::<i64, proto_packet::types::Float64, _, _, _>(
+                    value,
+                    out,
+                    |item, out| {
+                        out.extend_from_slice(&item.to_le_bytes());
+                    },
+                    |item, out| {
+                        out.extend_from_slice(&item.to_le_bytes());
+                    },
+                );
+                proto_packet::io::trim_padding(out, before, padded);
+            }
+        }
+    }
 }
 
 impl<V: MapKindsView> MapKindsView for &V {
@@ -85,6 +353,14 @@ impl<V: MapKindsView> MapKindsView for &V {
     ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>
     {
         (**self).maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -133,6 +409,14 @@ impl<V: MapKindsView> MapKindsView for &mut V {
     {
         (**self).maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl MapKindsView for super::MapKinds {
@@ -179,6 +463,14 @@ impl MapKindsView for super::MapKinds {
     ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>
     {
         self.maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::MapKinds::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::MapKinds::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -227,6 +519,19 @@ impl MapKindsView for super::MapKindsRef<'_> {
     {
         self.maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl MapKindsView for super::MapKindsBuf {
@@ -274,6 +579,14 @@ impl MapKindsView for super::MapKindsBuf {
     {
         self.as_ref().maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        MapKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl MapKindsView for super::MapKindsMut<'_> {
@@ -320,5 +633,13 @@ impl MapKindsView for super::MapKindsMut<'_> {
     ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>
     {
         self.as_ref().maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        MapKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

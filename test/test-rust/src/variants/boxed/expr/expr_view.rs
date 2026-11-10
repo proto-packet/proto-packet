@@ -13,6 +13,59 @@ pub trait ExprView {
 
     /// Gets the value of the case: `Add`.
     fn as_add(&self) -> Option<impl crate::variants::boxed::SumView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if self.as_number().is_some() {
+            return 10;
+        }
+        if let Some(value) = self.as_negate() {
+            return 2 + crate::variants::boxed::ExprView::encoded_len(&value);
+        }
+        if let Some(value) = self.as_add() {
+            return 2 + crate::variants::boxed::SumView::encoded_len(&value);
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_number() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_negate() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            crate::variants::boxed::ExprView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_add() {
+            out.extend_from_slice(&3_u16.to_le_bytes());
+            crate::variants::boxed::SumView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: ExprView> ExprView for &V {
@@ -30,6 +83,14 @@ impl<V: ExprView> ExprView for &V {
 
     fn as_add(&self) -> Option<impl crate::variants::boxed::SumView> {
         (**self).as_add()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -49,6 +110,14 @@ impl<V: ExprView> ExprView for &mut V {
     fn as_add(&self) -> Option<impl crate::variants::boxed::SumView> {
         (**self).as_add()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl ExprView for super::Expr {
@@ -66,6 +135,14 @@ impl ExprView for super::Expr {
 
     fn as_add(&self) -> Option<impl crate::variants::boxed::SumView> {
         self.as_add()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Expr::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Expr::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -85,6 +162,19 @@ impl ExprView for super::ExprRef<'_> {
     fn as_add(&self) -> Option<impl crate::variants::boxed::SumView> {
         self.as_add()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl ExprView for super::ExprBuf {
@@ -103,6 +193,14 @@ impl ExprView for super::ExprBuf {
     fn as_add(&self) -> Option<impl crate::variants::boxed::SumView> {
         self.as_ref().as_add()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ExprView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl ExprView for super::ExprMut<'_> {
@@ -120,5 +218,13 @@ impl ExprView for super::ExprMut<'_> {
 
     fn as_add(&self) -> Option<impl crate::variants::boxed::SumView> {
         self.as_ref().as_add()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ExprView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

@@ -28,6 +28,44 @@ pub trait NineBitsView {
 
     /// Gets the field: `i`.
     fn i(&self) -> bool;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        2
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.push(
+            u8::from(self.a())
+                | (u8::from(self.b()) << 1)
+                | (u8::from(self.c()) << 2)
+                | (u8::from(self.d()) << 3)
+                | (u8::from(self.e()) << 4)
+                | (u8::from(self.f()) << 5)
+                | (u8::from(self.g()) << 6)
+                | (u8::from(self.h()) << 7),
+        );
+        out.push(u8::from(self.i()));
+    }
 }
 
 impl<V: NineBitsView> NineBitsView for &V {
@@ -65,6 +103,14 @@ impl<V: NineBitsView> NineBitsView for &V {
 
     fn i(&self) -> bool {
         (**self).i()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -104,6 +150,14 @@ impl<V: NineBitsView> NineBitsView for &mut V {
     fn i(&self) -> bool {
         (**self).i()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl NineBitsView for super::NineBits {
@@ -141,6 +195,14 @@ impl NineBitsView for super::NineBits {
 
     fn i(&self) -> bool {
         self.i()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::NineBits::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::NineBits::encode_to(self, out);
     }
 }
 
@@ -180,6 +242,14 @@ impl NineBitsView for super::NineBitsRef<'_> {
     fn i(&self) -> bool {
         self.i()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl NineBitsView for super::NineBitsBuf {
@@ -218,6 +288,14 @@ impl NineBitsView for super::NineBitsBuf {
     fn i(&self) -> bool {
         self.as_ref().i()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NineBitsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl NineBitsView for super::NineBitsMut<'_> {
@@ -255,5 +333,13 @@ impl NineBitsView for super::NineBitsMut<'_> {
 
     fn i(&self) -> bool {
         self.as_ref().i()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NineBitsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

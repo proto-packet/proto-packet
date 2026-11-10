@@ -11,6 +11,104 @@ pub trait WithMapsView {
     ) -> Option<
         impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
     >;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if let Some(value) = self.scores() {
+            count += 1;
+            values += proto_packet::io::map_view_len::<String, u32, _, _, _, _>(
+                value,
+                |item| item.len(),
+                |_| 0,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+        }
+        if let Some(value) = self.rounds() {
+            count += 1;
+            values += proto_packet::io::list_view_len(
+                value,
+                <std::collections::BTreeMap<u8, u8> as proto_packet::io::Element>::SIZE,
+                <std::collections::BTreeMap<u8, u8> as proto_packet::io::Element>::ALIGNMENT,
+                |item| {
+                    proto_packet::io::map_view_len::<u8, u8, _, _, _, _>(
+                        *item,
+                        |_| 0,
+                        |_| 0,
+                        |item, out| {
+                            out.extend_from_slice(&item.to_le_bytes());
+                        },
+                    )
+                },
+            );
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize =
+            usize::from(self.scores().is_some()) + usize::from(self.rounds().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.scores() {
+            proto_packet::io::write_map_view::<String, u32, _, _, _>(
+                value,
+                writer.field(1),
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.rounds() {
+            proto_packet::io::write_list_view(
+                value,
+                writer.field(2),
+                <std::collections::BTreeMap<u8, u8> as proto_packet::io::Element>::SIZE,
+                <std::collections::BTreeMap<u8, u8> as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    proto_packet::io::write_map_view::<u8, u8, _, _, _>(
+                        *item,
+                        out,
+                        |item, out| {
+                            out.extend_from_slice(&item.to_le_bytes());
+                        },
+                        |item, out| {
+                            out.extend_from_slice(&item.to_le_bytes());
+                        },
+                    );
+                },
+            );
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: WithMapsView> WithMapsView for &V {
@@ -24,6 +122,14 @@ impl<V: WithMapsView> WithMapsView for &V {
         impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
     > {
         (**self).rounds()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -39,6 +145,14 @@ impl<V: WithMapsView> WithMapsView for &mut V {
     > {
         (**self).rounds()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl WithMapsView for super::WithMaps {
@@ -52,6 +166,14 @@ impl WithMapsView for super::WithMaps {
         impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
     > {
         self.rounds()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::WithMaps::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::WithMaps::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -67,6 +189,19 @@ impl WithMapsView for super::WithMapsRef<'_> {
     > {
         self.rounds()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl WithMapsView for super::WithMapsBuf {
@@ -81,6 +216,14 @@ impl WithMapsView for super::WithMapsBuf {
     > {
         self.as_ref().rounds()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        WithMapsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl WithMapsView for super::WithMapsMut<'_> {
@@ -94,5 +237,13 @@ impl WithMapsView for super::WithMapsMut<'_> {
         impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
     > {
         self.as_ref().rounds()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        WithMapsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

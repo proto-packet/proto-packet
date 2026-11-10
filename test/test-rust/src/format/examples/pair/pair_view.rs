@@ -10,6 +10,71 @@ pub trait PairView {
 
     /// Gets the field: `note`.
     fn note(&self) -> &str;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 8;
+        {
+            let size: usize = crate::format::examples::EntryView::encoded_len(&self.first());
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize = crate::format::examples::EntryView::encoded_len(&self.second());
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        len += self.note().len();
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 8);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            crate::format::examples::EntryView::encode_to_with_depth(&self.first(), out, depth - 1);
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            crate::format::examples::EntryView::encode_to_with_depth(
+                &self.second(),
+                out,
+                depth - 1,
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 4, start);
+        out.extend_from_slice(self.note().as_bytes());
+    }
 }
 
 impl<V: PairView> PairView for &V {
@@ -23,6 +88,14 @@ impl<V: PairView> PairView for &V {
 
     fn note(&self) -> &str {
         (**self).note()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +111,14 @@ impl<V: PairView> PairView for &mut V {
     fn note(&self) -> &str {
         (**self).note()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl PairView for super::Pair {
@@ -51,6 +132,14 @@ impl PairView for super::Pair {
 
     fn note(&self) -> &str {
         self.note()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Pair::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Pair::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -66,6 +155,19 @@ impl PairView for super::PairRef<'_> {
     fn note(&self) -> &str {
         self.note()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl PairView for super::PairBuf {
@@ -80,6 +182,14 @@ impl PairView for super::PairBuf {
     fn note(&self) -> &str {
         self.as_ref().note()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        PairView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl PairView for super::PairMut<'_> {
@@ -93,5 +203,13 @@ impl PairView for super::PairMut<'_> {
 
     fn note(&self) -> &str {
         self.as_ref().note()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        PairView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

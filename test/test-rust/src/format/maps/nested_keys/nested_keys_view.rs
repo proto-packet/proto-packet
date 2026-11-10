@@ -19,6 +19,147 @@ pub trait NestedKeysView {
         Key = impl proto_packet::io::ListView<Item = impl crate::format::maps::NewerKeyView>,
         Value = u8,
     >;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 4;
+        {
+            let size: usize = proto_packet::io::map_view_len::<
+                crate::format::maps::Tagged,
+                crate::format::examples::Entry,
+                _,
+                _,
+                _,
+                _,
+            >(
+                self.by_struct(),
+                crate::format::maps::TaggedView::encoded_len,
+                crate::format::examples::EntryView::encoded_len,
+                |item, out| {
+                    crate::format::maps::TaggedView::encode_to_with_depth(item, out, usize::MAX);
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::map_view_len::<
+                Vec<crate::format::maps::NewerKey>,
+                u8,
+                _,
+                _,
+                _,
+                _,
+            >(
+                self.by_list(),
+                |item| {
+                    proto_packet::io::list_view_len(
+                        *item,
+                        <crate::format::maps::NewerKey as proto_packet::io::Element>::SIZE,
+                        <crate::format::maps::NewerKey as proto_packet::io::Element>::ALIGNMENT,
+                        crate::format::maps::NewerKeyView::encoded_len,
+                    )
+                },
+                |_| 0,
+                |item, out| {
+                    proto_packet::io::write_list_view(
+                        *item,
+                        out,
+                        <crate::format::maps::NewerKey as proto_packet::io::Element>::SIZE,
+                        <crate::format::maps::NewerKey as proto_packet::io::Element>::ALIGNMENT,
+                        |item, out| {
+                            crate::format::maps::NewerKeyView::encode_to_with_depth(
+                                item,
+                                out,
+                                usize::MAX,
+                            );
+                        },
+                    );
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 4);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<
+                crate::format::maps::Tagged,
+                crate::format::examples::Entry,
+                _,
+                _,
+                _,
+            >(
+                self.by_struct(),
+                out,
+                |item, out| {
+                    crate::format::maps::TaggedView::encode_to_with_depth(item, out, depth - 1);
+                },
+                |item, out| {
+                    crate::format::examples::EntryView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<Vec<crate::format::maps::NewerKey>, u8, _, _, _>(
+                self.by_list(),
+                out,
+                |item, out| {
+                    proto_packet::io::write_list_view(
+                        *item,
+                        out,
+                        <crate::format::maps::NewerKey as proto_packet::io::Element>::SIZE,
+                        <crate::format::maps::NewerKey as proto_packet::io::Element>::ALIGNMENT,
+                        |item, out| {
+                            crate::format::maps::NewerKeyView::encode_to_with_depth(
+                                item,
+                                out,
+                                depth - 1,
+                            );
+                        },
+                    );
+                },
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+    }
 }
 
 impl<V: NestedKeysView> NestedKeysView for &V {
@@ -40,6 +181,14 @@ impl<V: NestedKeysView> NestedKeysView for &V {
         Value = u8,
     > {
         (**self).by_list()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -63,6 +212,14 @@ impl<V: NestedKeysView> NestedKeysView for &mut V {
     > {
         (**self).by_list()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl NestedKeysView for super::NestedKeys {
@@ -84,6 +241,14 @@ impl NestedKeysView for super::NestedKeys {
         Value = u8,
     > {
         self.by_list()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::NestedKeys::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::NestedKeys::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -107,6 +272,19 @@ impl NestedKeysView for super::NestedKeysRef<'_> {
     > {
         self.by_list()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl NestedKeysView for super::NestedKeysBuf {
@@ -129,6 +307,14 @@ impl NestedKeysView for super::NestedKeysBuf {
     > {
         self.as_ref().by_list()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NestedKeysView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl NestedKeysView for super::NestedKeysMut<'_> {
@@ -150,5 +336,13 @@ impl NestedKeysView for super::NestedKeysMut<'_> {
         Value = u8,
     > {
         self.as_ref().by_list()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NestedKeysView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

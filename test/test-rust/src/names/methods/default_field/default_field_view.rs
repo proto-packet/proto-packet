@@ -4,11 +4,47 @@
 pub trait DefaultFieldView {
     /// Gets the field: `default`.
     fn default(&self) -> u32;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        4
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(&self.default().to_le_bytes());
+    }
 }
 
 impl<V: DefaultFieldView> DefaultFieldView for &V {
     fn default(&self) -> u32 {
         (**self).default()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -16,11 +52,27 @@ impl<V: DefaultFieldView> DefaultFieldView for &mut V {
     fn default(&self) -> u32 {
         (**self).default()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl DefaultFieldView for super::DefaultField {
     fn default(&self) -> u32 {
         self.default()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::DefaultField::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::DefaultField::encode_to(self, out);
     }
 }
 
@@ -28,16 +80,40 @@ impl DefaultFieldView for super::DefaultFieldRef<'_> {
     fn default(&self) -> u32 {
         self.default()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl DefaultFieldView for super::DefaultFieldBuf {
     fn default(&self) -> u32 {
         self.as_ref().default()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        DefaultFieldView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl DefaultFieldView for super::DefaultFieldMut<'_> {
     fn default(&self) -> u32 {
         self.as_ref().default()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        DefaultFieldView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

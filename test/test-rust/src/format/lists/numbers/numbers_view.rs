@@ -7,6 +7,63 @@ pub trait NumbersView {
 
     /// Gets the field: `values`.
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 1;
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.values(),
+                <u32 as proto_packet::io::Element>::SIZE,
+                <u32 as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        out.extend_from_slice(&self.count().to_le_bytes());
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.values(),
+                out,
+                <u32 as proto_packet::io::Element>::SIZE,
+                <u32 as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+    }
 }
 
 impl<V: NumbersView> NumbersView for &V {
@@ -16,6 +73,14 @@ impl<V: NumbersView> NumbersView for &V {
 
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
         (**self).values()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +92,14 @@ impl<V: NumbersView> NumbersView for &mut V {
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
         (**self).values()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl NumbersView for super::Numbers {
@@ -36,6 +109,14 @@ impl NumbersView for super::Numbers {
 
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
         self.values()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Numbers::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Numbers::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -47,6 +128,19 @@ impl NumbersView for super::NumbersRef<'_> {
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
         self.values()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl NumbersView for super::NumbersBuf {
@@ -57,6 +151,14 @@ impl NumbersView for super::NumbersBuf {
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
         self.as_ref().values()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NumbersView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl NumbersView for super::NumbersMut<'_> {
@@ -66,5 +168,13 @@ impl NumbersView for super::NumbersMut<'_> {
 
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
         self.as_ref().values()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NumbersView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

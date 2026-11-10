@@ -10,6 +10,36 @@ pub trait OuterView {
 
     /// Gets the field: `y`.
     fn y(&self) -> u8;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        17
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        crate::format::examples::MixedView::encode_to_with_depth(&self.m(), out, 0);
+        out.extend_from_slice(&self.x().to_le_bytes());
+        out.extend_from_slice(&self.y().to_le_bytes());
+    }
 }
 
 impl<V: OuterView> OuterView for &V {
@@ -23,6 +53,14 @@ impl<V: OuterView> OuterView for &V {
 
     fn y(&self) -> u8 {
         (**self).y()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +76,14 @@ impl<V: OuterView> OuterView for &mut V {
     fn y(&self) -> u8 {
         (**self).y()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl OuterView for super::Outer {
@@ -51,6 +97,14 @@ impl OuterView for super::Outer {
 
     fn y(&self) -> u8 {
         self.y()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Outer::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::Outer::encode_to(self, out);
     }
 }
 
@@ -66,6 +120,14 @@ impl OuterView for super::OuterRef<'_> {
     fn y(&self) -> u8 {
         self.y()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl OuterView for super::OuterBuf {
@@ -80,6 +142,14 @@ impl OuterView for super::OuterBuf {
     fn y(&self) -> u8 {
         self.as_ref().y()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        OuterView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl OuterView for super::OuterMut<'_> {
@@ -93,5 +163,13 @@ impl OuterView for super::OuterMut<'_> {
 
     fn y(&self) -> u8 {
         self.as_ref().y()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        OuterView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

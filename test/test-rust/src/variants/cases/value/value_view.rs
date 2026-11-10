@@ -31,6 +31,107 @@ pub trait ValueView {
 
     /// Gets the value of the case: `Shape`.
     fn as_shape(&self) -> Option<impl crate::types::ShapeView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if self.as_boolean().is_some() {
+            return 3;
+        }
+        if self.as_unsigned64().is_some() {
+            return 10;
+        }
+        if self.as_id().is_some() {
+            return 18;
+        }
+        if let Some(value) = self.as_text() {
+            return 2 + value.len();
+        }
+        if let Some(value) = self.as_point() {
+            return 2 + crate::types::PointView::encoded_len(&value);
+        }
+        if let Some(value) = self.as_person() {
+            return 2 + crate::types::PersonView::encoded_len(&value);
+        }
+        if let Some(value) = self.as_label() {
+            return 2 + crate::types::LabelView::encoded_len(&value);
+        }
+        if self.as_color().is_some() {
+            return 4;
+        }
+        if let Some(value) = self.as_shape() {
+            return 2 + crate::types::ShapeView::encoded_len(&value);
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_boolean() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            out.push(u8::from(value));
+            return;
+        }
+        if let Some(value) = self.as_unsigned64() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_id() {
+            out.extend_from_slice(&3_u16.to_le_bytes());
+            out.extend_from_slice(value.as_bytes());
+            return;
+        }
+        if let Some(value) = self.as_text() {
+            out.extend_from_slice(&4_u16.to_le_bytes());
+            out.extend_from_slice(value.as_bytes());
+            return;
+        }
+        if let Some(value) = self.as_point() {
+            out.extend_from_slice(&5_u16.to_le_bytes());
+            crate::types::PointView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_person() {
+            out.extend_from_slice(&6_u16.to_le_bytes());
+            crate::types::PersonView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_label() {
+            out.extend_from_slice(&7_u16.to_le_bytes());
+            crate::types::LabelView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        if let Some(value) = self.as_color() {
+            out.extend_from_slice(&8_u16.to_le_bytes());
+            out.extend_from_slice(&value.tag_number().to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_shape() {
+            out.extend_from_slice(&9_u16.to_le_bytes());
+            crate::types::ShapeView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: ValueView> ValueView for &V {
@@ -72,6 +173,14 @@ impl<V: ValueView> ValueView for &V {
 
     fn as_shape(&self) -> Option<impl crate::types::ShapeView> {
         (**self).as_shape()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -115,6 +224,14 @@ impl<V: ValueView> ValueView for &mut V {
     fn as_shape(&self) -> Option<impl crate::types::ShapeView> {
         (**self).as_shape()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl ValueView for super::Value {
@@ -156,6 +273,14 @@ impl ValueView for super::Value {
 
     fn as_shape(&self) -> Option<impl crate::types::ShapeView> {
         self.as_shape()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Value::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Value::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -199,6 +324,19 @@ impl ValueView for super::ValueRef<'_> {
     fn as_shape(&self) -> Option<impl crate::types::ShapeView> {
         self.as_shape()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl ValueView for super::ValueBuf {
@@ -241,6 +379,14 @@ impl ValueView for super::ValueBuf {
     fn as_shape(&self) -> Option<impl crate::types::ShapeView> {
         self.as_ref().as_shape()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ValueView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl ValueView for super::ValueMut<'_> {
@@ -282,5 +428,13 @@ impl ValueView for super::ValueMut<'_> {
 
     fn as_shape(&self) -> Option<impl crate::types::ShapeView> {
         self.as_ref().as_shape()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ValueView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

@@ -45,6 +45,330 @@ pub trait ListKindsView {
 
     /// Gets the field: `maybe`.
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 45;
+        len += self.bytes().len();
+        len += proto_packet::io::list_view_len(
+            self.flags(),
+            <bool as proto_packet::io::Element>::SIZE,
+            <bool as proto_packet::io::Element>::ALIGNMENT,
+            |_| 0,
+        );
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.signed(),
+                <i64 as proto_packet::io::Element>::SIZE,
+                <i64 as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.floats(),
+                <proto_packet::types::Float64 as proto_packet::io::Element>::SIZE,
+                <proto_packet::types::Float64 as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.ids(),
+                <proto_packet::types::Uuid as proto_packet::io::Element>::SIZE,
+                <proto_packet::types::Uuid as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.colors(),
+                <crate::format::examples::Color as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Color as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 2) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.texts(),
+                <String as proto_packet::io::Element>::SIZE,
+                <String as proto_packet::io::Element>::ALIGNMENT,
+                |item| item.len(),
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.points(),
+                <crate::format::examples::Point as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Point as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::examples::PointView::encoded_len,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.entries(),
+                <crate::format::examples::Entry as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Entry as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::examples::EntryView::encoded_len,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.items(),
+                <crate::format::messages::Item as proto_packet::io::Element>::SIZE,
+                <crate::format::messages::Item as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::messages::ItemView::encoded_len,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.shapes(),
+                <crate::format::variants::Shape as proto_packet::io::Element>::SIZE,
+                <crate::format::variants::Shape as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::variants::ShapeView::encoded_len,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        if let Some(value) = self.maybe() {
+            {
+                let size: usize = proto_packet::io::list_view_len(
+                    value,
+                    <u16 as proto_packet::io::Element>::SIZE,
+                    <u16 as proto_packet::io::Element>::ALIGNMENT,
+                    |_| 0,
+                );
+                if size > 0 {
+                    len = proto_packet::io::align_up(len, 2) + size;
+                }
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        proto_packet::io::write_zeros(out, 44);
+        out.push(u8::from(self.maybe().is_some()));
+        out.extend_from_slice(self.bytes());
+        proto_packet::io::write_end(out, start, start);
+        proto_packet::io::write_list_view(
+            self.flags(),
+            out,
+            <bool as proto_packet::io::Element>::SIZE,
+            <bool as proto_packet::io::Element>::ALIGNMENT,
+            |item, out| {
+                out.push(u8::from(*item));
+            },
+        );
+        proto_packet::io::write_end(out, start + 4, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.signed(),
+                out,
+                <i64 as proto_packet::io::Element>::SIZE,
+                <i64 as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 8, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.floats(),
+                out,
+                <proto_packet::types::Float64 as proto_packet::io::Element>::SIZE,
+                <proto_packet::types::Float64 as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 12, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.ids(),
+                out,
+                <proto_packet::types::Uuid as proto_packet::io::Element>::SIZE,
+                <proto_packet::types::Uuid as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 16, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 2);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.colors(),
+                out,
+                <crate::format::examples::Color as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Color as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(&item.tag_number().to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 20, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.texts(),
+                out,
+                <String as proto_packet::io::Element>::SIZE,
+                <String as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 24, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.points(),
+                out,
+                <crate::format::examples::Point as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Point as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::examples::PointView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 28, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.entries(),
+                out,
+                <crate::format::examples::Entry as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Entry as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::examples::EntryView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 32, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.items(),
+                out,
+                <crate::format::messages::Item as proto_packet::io::Element>::SIZE,
+                <crate::format::messages::Item as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::messages::ItemView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 36, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.shapes(),
+                out,
+                <crate::format::variants::Shape as proto_packet::io::Element>::SIZE,
+                <crate::format::variants::Shape as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::variants::ShapeView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 40, start);
+        if let Some(value) = self.maybe() {
+            {
+                let before: usize = out.len();
+                proto_packet::io::write_padding(out, start, 2);
+                let padded: usize = out.len();
+                proto_packet::io::write_list_view(
+                    value,
+                    out,
+                    <u16 as proto_packet::io::Element>::SIZE,
+                    <u16 as proto_packet::io::Element>::ALIGNMENT,
+                    |item, out| {
+                        out.extend_from_slice(&item.to_le_bytes());
+                    },
+                );
+                proto_packet::io::trim_padding(out, before, padded);
+            }
+        }
+    }
 }
 
 impl<V: ListKindsView> ListKindsView for &V {
@@ -102,6 +426,14 @@ impl<V: ListKindsView> ListKindsView for &V {
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
         (**self).maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -161,6 +493,14 @@ impl<V: ListKindsView> ListKindsView for &mut V {
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
         (**self).maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl ListKindsView for super::ListKinds {
@@ -218,6 +558,14 @@ impl ListKindsView for super::ListKinds {
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
         self.maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::ListKinds::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::ListKinds::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -277,6 +625,19 @@ impl ListKindsView for super::ListKindsRef<'_> {
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
         self.maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl ListKindsView for super::ListKindsBuf {
@@ -335,6 +696,14 @@ impl ListKindsView for super::ListKindsBuf {
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
         self.as_ref().maybe()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ListKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl ListKindsView for super::ListKindsMut<'_> {
@@ -392,5 +761,13 @@ impl ListKindsView for super::ListKindsMut<'_> {
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
         self.as_ref().maybe()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ListKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

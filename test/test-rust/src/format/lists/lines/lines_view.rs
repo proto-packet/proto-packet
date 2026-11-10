@@ -6,6 +6,62 @@ pub trait LinesView {
     fn lines(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 0;
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.lines(),
+                <crate::format::examples::Line as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Line as proto_packet::io::Element>::ALIGNMENT,
+                crate::format::examples::LineView::encoded_len,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 4) + size;
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 4);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.lines(),
+                out,
+                <crate::format::examples::Line as proto_packet::io::Element>::SIZE,
+                <crate::format::examples::Line as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    crate::format::examples::LineView::encode_to_with_depth(item, out, depth - 1);
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+    }
 }
 
 impl<V: LinesView> LinesView for &V {
@@ -13,6 +69,14 @@ impl<V: LinesView> LinesView for &V {
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
         (**self).lines()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -22,6 +86,14 @@ impl<V: LinesView> LinesView for &mut V {
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
         (**self).lines()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl LinesView for super::Lines {
@@ -29,6 +101,14 @@ impl LinesView for super::Lines {
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
         self.lines()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Lines::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Lines::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -38,6 +118,19 @@ impl LinesView for super::LinesRef<'_> {
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
         self.lines()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl LinesView for super::LinesBuf {
@@ -46,6 +139,14 @@ impl LinesView for super::LinesBuf {
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
         self.as_ref().lines()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LinesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl LinesView for super::LinesMut<'_> {
@@ -53,5 +154,13 @@ impl LinesView for super::LinesMut<'_> {
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
         self.as_ref().lines()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LinesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

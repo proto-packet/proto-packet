@@ -4,11 +4,47 @@
 pub trait NestedCopyView {
     /// Gets the field: `fields`.
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        30
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        crate::structs::copy::CopyFieldsView::encode_to_with_depth(&self.fields(), out, 0);
+    }
 }
 
 impl<V: NestedCopyView> NestedCopyView for &V {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
         (**self).fields()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -16,11 +52,27 @@ impl<V: NestedCopyView> NestedCopyView for &mut V {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
         (**self).fields()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl NestedCopyView for super::NestedCopy {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
         self.fields()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::NestedCopy::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::NestedCopy::encode_to(self, out);
     }
 }
 
@@ -28,16 +80,40 @@ impl NestedCopyView for super::NestedCopyRef<'_> {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
         self.fields()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl NestedCopyView for super::NestedCopyBuf {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
         self.as_ref().fields()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NestedCopyView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl NestedCopyView for super::NestedCopyMut<'_> {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
         self.as_ref().fields()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NestedCopyView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

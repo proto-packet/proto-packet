@@ -7,6 +7,43 @@ pub trait LoopStructView {
 
     /// Gets the field: `next`.
     fn next(&self) -> Option<impl crate::format::messages::LoopMessageView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 9;
+        if let Some(value) = self.next() {
+            len += crate::format::messages::LoopMessageView::encoded_len(&value);
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        out.extend_from_slice(&self.value().to_le_bytes());
+        out.push(u8::from(self.next().is_some()));
+        if let Some(value) = self.next() {
+            crate::format::messages::LoopMessageView::encode_to_with_depth(&value, out, depth - 1);
+        }
+    }
 }
 
 impl<V: LoopStructView> LoopStructView for &V {
@@ -16,6 +53,14 @@ impl<V: LoopStructView> LoopStructView for &V {
 
     fn next(&self) -> Option<impl crate::format::messages::LoopMessageView> {
         (**self).next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +72,14 @@ impl<V: LoopStructView> LoopStructView for &mut V {
     fn next(&self) -> Option<impl crate::format::messages::LoopMessageView> {
         (**self).next()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl LoopStructView for super::LoopStruct {
@@ -36,6 +89,14 @@ impl LoopStructView for super::LoopStruct {
 
     fn next(&self) -> Option<impl crate::format::messages::LoopMessageView> {
         self.next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::LoopStruct::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::LoopStruct::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -47,6 +108,19 @@ impl LoopStructView for super::LoopStructRef<'_> {
     fn next(&self) -> Option<impl crate::format::messages::LoopMessageView> {
         self.next()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl LoopStructView for super::LoopStructBuf {
@@ -57,6 +131,14 @@ impl LoopStructView for super::LoopStructBuf {
     fn next(&self) -> Option<impl crate::format::messages::LoopMessageView> {
         self.as_ref().next()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LoopStructView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl LoopStructView for super::LoopStructMut<'_> {
@@ -66,5 +148,13 @@ impl LoopStructView for super::LoopStructMut<'_> {
 
     fn next(&self) -> Option<impl crate::format::messages::LoopMessageView> {
         self.as_ref().next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LoopStructView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

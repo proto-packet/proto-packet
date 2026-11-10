@@ -19,6 +19,93 @@ pub trait PrimitiveFieldsView {
 
     /// Gets the field: `unsigned128`.
     fn unsigned128(&self) -> Option<u128>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if self.boolean().is_some() {
+            count += 1;
+            values += 1;
+        }
+        if self.unsigned8().is_some() {
+            count += 1;
+            values += 1;
+        }
+        if self.unsigned16().is_some() {
+            count += 1;
+            values += 2;
+        }
+        if self.unsigned32().is_some() {
+            count += 1;
+            values += 4;
+        }
+        if self.unsigned64().is_some() {
+            count += 1;
+            values += 8;
+        }
+        if self.unsigned128().is_some() {
+            count += 1;
+            values += 16;
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.boolean().is_some())
+            + usize::from(self.unsigned8().is_some())
+            + usize::from(self.unsigned16().is_some())
+            + usize::from(self.unsigned32().is_some())
+            + usize::from(self.unsigned64().is_some())
+            + usize::from(self.unsigned128().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.boolean() {
+            writer.field(1).push(u8::from(value));
+            writer.end_field();
+        }
+        if let Some(value) = self.unsigned8() {
+            writer.field(2).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.unsigned16() {
+            writer.field(3).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.unsigned32() {
+            writer.field(4).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.unsigned64() {
+            writer.field(5).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.unsigned128() {
+            writer.field(6).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &V {
@@ -44,6 +131,14 @@ impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &V {
 
     fn unsigned128(&self) -> Option<u128> {
         (**self).unsigned128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -71,6 +166,14 @@ impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &mut V {
     fn unsigned128(&self) -> Option<u128> {
         (**self).unsigned128()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl PrimitiveFieldsView for super::PrimitiveFields {
@@ -96,6 +199,14 @@ impl PrimitiveFieldsView for super::PrimitiveFields {
 
     fn unsigned128(&self) -> Option<u128> {
         self.unsigned128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::PrimitiveFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::PrimitiveFields::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -123,6 +234,19 @@ impl PrimitiveFieldsView for super::PrimitiveFieldsRef<'_> {
     fn unsigned128(&self) -> Option<u128> {
         self.unsigned128()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl PrimitiveFieldsView for super::PrimitiveFieldsBuf {
@@ -149,6 +273,14 @@ impl PrimitiveFieldsView for super::PrimitiveFieldsBuf {
     fn unsigned128(&self) -> Option<u128> {
         self.as_ref().unsigned128()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        PrimitiveFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl PrimitiveFieldsView for super::PrimitiveFieldsMut<'_> {
@@ -174,5 +306,13 @@ impl PrimitiveFieldsView for super::PrimitiveFieldsMut<'_> {
 
     fn unsigned128(&self) -> Option<u128> {
         self.as_ref().unsigned128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        PrimitiveFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

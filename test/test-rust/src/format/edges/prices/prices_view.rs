@@ -21,6 +21,105 @@ pub trait PricesView {
     fn named(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 37;
+        {
+            let size: usize = proto_packet::io::list_view_len(
+                self.list(),
+                <proto_packet::types::Decimal<2> as proto_packet::io::Element>::SIZE,
+                <proto_packet::types::Decimal<2> as proto_packet::io::Element>::ALIGNMENT,
+                |_| 0,
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        {
+            let size: usize = proto_packet::io::map_view_len::<
+                String,
+                proto_packet::types::Decimal<2>,
+                _,
+                _,
+                _,
+                _,
+            >(
+                self.named(),
+                |item| item.len(),
+                |_| 0,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+            if size > 0 {
+                len = proto_packet::io::align_up(len, 8) + size;
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        out.extend_from_slice(&self.price().to_le_bytes());
+        out.extend_from_slice(&self.rate().to_le_bytes());
+        out.extend_from_slice(&self.count().to_le_bytes());
+        out.extend_from_slice(&self.maybe().unwrap_or_default().to_le_bytes());
+        proto_packet::io::write_zeros(out, 4);
+        out.push(u8::from(self.maybe().is_some()));
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_list_view(
+                self.list(),
+                out,
+                <proto_packet::types::Decimal<2> as proto_packet::io::Element>::SIZE,
+                <proto_packet::types::Decimal<2> as proto_packet::io::Element>::ALIGNMENT,
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+        proto_packet::io::write_end(out, start + 32, start);
+        {
+            let before: usize = out.len();
+            proto_packet::io::write_padding(out, start, 8);
+            let padded: usize = out.len();
+            proto_packet::io::write_map_view::<String, proto_packet::types::Decimal<2>, _, _, _>(
+                self.named(),
+                out,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            proto_packet::io::trim_padding(out, before, padded);
+        }
+    }
 }
 
 impl<V: PricesView> PricesView for &V {
@@ -49,6 +148,14 @@ impl<V: PricesView> PricesView for &V {
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
     {
         (**self).named()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -79,6 +186,14 @@ impl<V: PricesView> PricesView for &mut V {
     {
         (**self).named()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl PricesView for super::Prices {
@@ -107,6 +222,14 @@ impl PricesView for super::Prices {
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
     {
         self.named()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::Prices::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::Prices::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -137,6 +260,19 @@ impl PricesView for super::PricesRef<'_> {
     {
         self.named()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl PricesView for super::PricesBuf {
@@ -166,6 +302,14 @@ impl PricesView for super::PricesBuf {
     {
         self.as_ref().named()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        PricesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl PricesView for super::PricesMut<'_> {
@@ -194,5 +338,13 @@ impl PricesView for super::PricesMut<'_> {
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
     {
         self.as_ref().named()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        PricesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

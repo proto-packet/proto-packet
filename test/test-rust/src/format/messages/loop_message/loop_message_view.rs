@@ -7,6 +7,60 @@ pub trait LoopMessageView {
 
     /// Gets the field: `next`.
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if self.value().is_some() {
+            count += 1;
+            values += 4;
+        }
+        if let Some(value) = self.next() {
+            count += 1;
+            values += crate::format::messages::LoopStructView::encoded_len(&value);
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.value().is_some()) + usize::from(self.next().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.value() {
+            writer.field(1).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.next() {
+            crate::format::messages::LoopStructView::encode_to_with_depth(
+                &value,
+                writer.field(2),
+                depth - 1,
+            );
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: LoopMessageView> LoopMessageView for &V {
@@ -16,6 +70,14 @@ impl<V: LoopMessageView> LoopMessageView for &V {
 
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
         (**self).next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +89,14 @@ impl<V: LoopMessageView> LoopMessageView for &mut V {
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
         (**self).next()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl LoopMessageView for super::LoopMessage {
@@ -36,6 +106,14 @@ impl LoopMessageView for super::LoopMessage {
 
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
         self.next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::LoopMessage::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::LoopMessage::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -47,6 +125,19 @@ impl LoopMessageView for super::LoopMessageRef<'_> {
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
         self.next()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl LoopMessageView for super::LoopMessageBuf {
@@ -57,6 +148,14 @@ impl LoopMessageView for super::LoopMessageBuf {
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
         self.as_ref().next()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LoopMessageView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl LoopMessageView for super::LoopMessageMut<'_> {
@@ -66,5 +165,13 @@ impl LoopMessageView for super::LoopMessageMut<'_> {
 
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
         self.as_ref().next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LoopMessageView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

@@ -19,6 +19,39 @@ pub trait PrimitiveFieldsView {
 
     /// Gets the field: `unsigned128`.
     fn unsigned128(&self) -> u128;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        32
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(&self.unsigned64().to_le_bytes());
+        out.extend_from_slice(&self.unsigned128().to_le_bytes());
+        out.extend_from_slice(&self.unsigned32().to_le_bytes());
+        out.extend_from_slice(&self.unsigned16().to_le_bytes());
+        out.extend_from_slice(&self.unsigned8().to_le_bytes());
+        out.push(u8::from(self.boolean()));
+    }
 }
 
 impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &V {
@@ -44,6 +77,14 @@ impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &V {
 
     fn unsigned128(&self) -> u128 {
         (**self).unsigned128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -71,6 +112,14 @@ impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &mut V {
     fn unsigned128(&self) -> u128 {
         (**self).unsigned128()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl PrimitiveFieldsView for super::PrimitiveFields {
@@ -96,6 +145,14 @@ impl PrimitiveFieldsView for super::PrimitiveFields {
 
     fn unsigned128(&self) -> u128 {
         self.unsigned128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::PrimitiveFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::PrimitiveFields::encode_to(self, out);
     }
 }
 
@@ -123,6 +180,14 @@ impl PrimitiveFieldsView for super::PrimitiveFieldsRef<'_> {
     fn unsigned128(&self) -> u128 {
         self.unsigned128()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl PrimitiveFieldsView for super::PrimitiveFieldsBuf {
@@ -149,6 +214,14 @@ impl PrimitiveFieldsView for super::PrimitiveFieldsBuf {
     fn unsigned128(&self) -> u128 {
         self.as_ref().unsigned128()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        PrimitiveFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl PrimitiveFieldsView for super::PrimitiveFieldsMut<'_> {
@@ -174,5 +247,13 @@ impl PrimitiveFieldsView for super::PrimitiveFieldsMut<'_> {
 
     fn unsigned128(&self) -> u128 {
         self.as_ref().unsigned128()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        PrimitiveFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

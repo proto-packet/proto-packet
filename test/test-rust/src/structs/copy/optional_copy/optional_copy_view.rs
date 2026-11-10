@@ -7,6 +7,39 @@ pub trait OptionalCopyView {
 
     /// Gets the field: `point`.
     fn point(&self) -> Option<impl crate::types::PointView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        13
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(&self.count().unwrap_or_default().to_le_bytes());
+        match self.point() {
+            Some(value) => crate::types::PointView::encode_to_with_depth(&value, out, 0),
+            None => proto_packet::io::write_zeros(out, 8),
+        }
+        out.push(u8::from(self.count().is_some()) | (u8::from(self.point().is_some()) << 1));
+    }
 }
 
 impl<V: OptionalCopyView> OptionalCopyView for &V {
@@ -16,6 +49,14 @@ impl<V: OptionalCopyView> OptionalCopyView for &V {
 
     fn point(&self) -> Option<impl crate::types::PointView> {
         (**self).point()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +68,14 @@ impl<V: OptionalCopyView> OptionalCopyView for &mut V {
     fn point(&self) -> Option<impl crate::types::PointView> {
         (**self).point()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl OptionalCopyView for super::OptionalCopy {
@@ -36,6 +85,14 @@ impl OptionalCopyView for super::OptionalCopy {
 
     fn point(&self) -> Option<impl crate::types::PointView> {
         self.point()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::OptionalCopy::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::OptionalCopy::encode_to(self, out);
     }
 }
 
@@ -47,6 +104,14 @@ impl OptionalCopyView for super::OptionalCopyRef<'_> {
     fn point(&self) -> Option<impl crate::types::PointView> {
         self.point()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl OptionalCopyView for super::OptionalCopyBuf {
@@ -57,6 +122,14 @@ impl OptionalCopyView for super::OptionalCopyBuf {
     fn point(&self) -> Option<impl crate::types::PointView> {
         self.as_ref().point()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        OptionalCopyView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl OptionalCopyView for super::OptionalCopyMut<'_> {
@@ -66,5 +139,13 @@ impl OptionalCopyView for super::OptionalCopyMut<'_> {
 
     fn point(&self) -> Option<impl crate::types::PointView> {
         self.as_ref().point()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        OptionalCopyView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

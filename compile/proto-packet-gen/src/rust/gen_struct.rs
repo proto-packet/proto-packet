@@ -12,6 +12,7 @@ use crate::rust::gen_struct_mut::{
 };
 use crate::rust::gen_struct_ref::{can_be_invalid, gen_struct_ref, ref_name};
 use crate::rust::gen_view::{gen_view, view_name};
+use crate::rust::gen_view_encoding::gen_struct_view_encoding;
 use crate::rust::gen_view_mut::{gen_view_mut, view_mut_name};
 use crate::rust::naming::{ident, is_upper_camel_case};
 use crate::rust::prelude::{Prelude, PreludeName};
@@ -169,7 +170,13 @@ pub fn gen_struct(
         },
         TypeFile {
             suffix: "_view",
-            code: gen_view(typing, schema_name, &fields, &type_name),
+            code: gen_view(
+                typing,
+                schema_name,
+                &fields,
+                &type_name,
+                &gen_struct_view_encoding(typing, &fields, &layout),
+            ),
         },
         TypeFile {
             suffix: "_view_mut",

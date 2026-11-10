@@ -7,6 +7,35 @@ pub trait FloatFieldsView {
 
     /// Gets the field: `float64`.
     fn float64(&self) -> proto_packet::types::Float64;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        12
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(&self.float64().to_le_bytes());
+        out.extend_from_slice(&self.float32().to_le_bytes());
+    }
 }
 
 impl<V: FloatFieldsView> FloatFieldsView for &V {
@@ -16,6 +45,14 @@ impl<V: FloatFieldsView> FloatFieldsView for &V {
 
     fn float64(&self) -> proto_packet::types::Float64 {
         (**self).float64()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +64,14 @@ impl<V: FloatFieldsView> FloatFieldsView for &mut V {
     fn float64(&self) -> proto_packet::types::Float64 {
         (**self).float64()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl FloatFieldsView for super::FloatFields {
@@ -36,6 +81,14 @@ impl FloatFieldsView for super::FloatFields {
 
     fn float64(&self) -> proto_packet::types::Float64 {
         self.float64()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::FloatFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::FloatFields::encode_to(self, out);
     }
 }
 
@@ -47,6 +100,14 @@ impl FloatFieldsView for super::FloatFieldsRef<'_> {
     fn float64(&self) -> proto_packet::types::Float64 {
         self.float64()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl FloatFieldsView for super::FloatFieldsBuf {
@@ -57,6 +118,14 @@ impl FloatFieldsView for super::FloatFieldsBuf {
     fn float64(&self) -> proto_packet::types::Float64 {
         self.as_ref().float64()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        FloatFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl FloatFieldsView for super::FloatFieldsMut<'_> {
@@ -66,5 +135,13 @@ impl FloatFieldsView for super::FloatFieldsMut<'_> {
 
     fn float64(&self) -> proto_packet::types::Float64 {
         self.as_ref().float64()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        FloatFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

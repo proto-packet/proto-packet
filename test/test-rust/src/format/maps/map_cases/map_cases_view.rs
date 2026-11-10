@@ -10,6 +10,67 @@ pub trait MapCasesView {
 
     /// Gets the value of the case: `Number`.
     fn as_number(&self) -> Option<u32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if let Some(value) = self.as_scores() {
+            return 2 + proto_packet::io::map_view_len::<String, u32, _, _, _, _>(
+                value,
+                |item| item.len(),
+                |_| 0,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+            );
+        }
+        if self.as_number().is_some() {
+            return 6;
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_scores() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            proto_packet::io::write_map_view::<String, u32, _, _, _>(
+                value,
+                out,
+                |item, out| {
+                    out.extend_from_slice(item.as_bytes());
+                },
+                |item, out| {
+                    out.extend_from_slice(&item.to_le_bytes());
+                },
+            );
+            return;
+        }
+        if let Some(value) = self.as_number() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: MapCasesView> MapCasesView for &V {
@@ -23,6 +84,14 @@ impl<V: MapCasesView> MapCasesView for &V {
 
     fn as_number(&self) -> Option<u32> {
         (**self).as_number()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -38,6 +107,14 @@ impl<V: MapCasesView> MapCasesView for &mut V {
     fn as_number(&self) -> Option<u32> {
         (**self).as_number()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl MapCasesView for super::MapCases {
@@ -51,6 +128,14 @@ impl MapCasesView for super::MapCases {
 
     fn as_number(&self) -> Option<u32> {
         self.as_number()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::MapCases::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::MapCases::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -66,6 +151,19 @@ impl MapCasesView for super::MapCasesRef<'_> {
     fn as_number(&self) -> Option<u32> {
         self.as_number()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl MapCasesView for super::MapCasesBuf {
@@ -80,6 +178,14 @@ impl MapCasesView for super::MapCasesBuf {
     fn as_number(&self) -> Option<u32> {
         self.as_ref().as_number()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        MapCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl MapCasesView for super::MapCasesMut<'_> {
@@ -93,5 +199,13 @@ impl MapCasesView for super::MapCasesMut<'_> {
 
     fn as_number(&self) -> Option<u32> {
         self.as_ref().as_number()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        MapCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

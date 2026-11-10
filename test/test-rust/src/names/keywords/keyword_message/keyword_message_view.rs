@@ -7,6 +7,57 @@ pub trait KeywordMessageView {
 
     /// Gets the field: `self`.
     fn self_(&self) -> Option<u32>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if self.r#type().is_some() {
+            count += 1;
+            values += 4;
+        }
+        if self.self_().is_some() {
+            count += 1;
+            values += 4;
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize =
+            usize::from(self.r#type().is_some()) + usize::from(self.self_().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.r#type() {
+            writer.field(1).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.self_() {
+            writer.field(2).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: KeywordMessageView> KeywordMessageView for &V {
@@ -16,6 +67,14 @@ impl<V: KeywordMessageView> KeywordMessageView for &V {
 
     fn self_(&self) -> Option<u32> {
         (**self).self_()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +86,14 @@ impl<V: KeywordMessageView> KeywordMessageView for &mut V {
     fn self_(&self) -> Option<u32> {
         (**self).self_()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl KeywordMessageView for super::KeywordMessage {
@@ -36,6 +103,14 @@ impl KeywordMessageView for super::KeywordMessage {
 
     fn self_(&self) -> Option<u32> {
         self.self_()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::KeywordMessage::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::KeywordMessage::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -47,6 +122,19 @@ impl KeywordMessageView for super::KeywordMessageRef<'_> {
     fn self_(&self) -> Option<u32> {
         self.self_()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl KeywordMessageView for super::KeywordMessageBuf {
@@ -57,6 +145,14 @@ impl KeywordMessageView for super::KeywordMessageBuf {
     fn self_(&self) -> Option<u32> {
         self.as_ref().self_()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        KeywordMessageView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl KeywordMessageView for super::KeywordMessageMut<'_> {
@@ -66,5 +162,13 @@ impl KeywordMessageView for super::KeywordMessageMut<'_> {
 
     fn self_(&self) -> Option<u32> {
         self.as_ref().self_()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        KeywordMessageView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

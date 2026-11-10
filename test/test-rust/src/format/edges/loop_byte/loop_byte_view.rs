@@ -7,6 +7,55 @@ pub trait LoopByteView {
 
     /// Gets the field: `next`.
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut len: usize = 2;
+        if let Some(value) = self.next() {
+            {
+                let size: usize = crate::format::edges::LoopLongView::encoded_len(&value);
+                if size > 0 {
+                    len = proto_packet::io::align_up(len, 8) + size;
+                }
+            }
+        }
+        len
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let start: usize = out.len();
+        out.extend_from_slice(&self.value().to_le_bytes());
+        out.push(u8::from(self.next().is_some()));
+        if let Some(value) = self.next() {
+            {
+                let before: usize = out.len();
+                proto_packet::io::write_padding(out, start, 8);
+                let padded: usize = out.len();
+                crate::format::edges::LoopLongView::encode_to_with_depth(&value, out, depth - 1);
+                proto_packet::io::trim_padding(out, before, padded);
+            }
+        }
+    }
 }
 
 impl<V: LoopByteView> LoopByteView for &V {
@@ -16,6 +65,14 @@ impl<V: LoopByteView> LoopByteView for &V {
 
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
         (**self).next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +84,14 @@ impl<V: LoopByteView> LoopByteView for &mut V {
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
         (**self).next()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl LoopByteView for super::LoopByte {
@@ -36,6 +101,14 @@ impl LoopByteView for super::LoopByte {
 
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
         self.next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::LoopByte::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::LoopByte::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -47,6 +120,19 @@ impl LoopByteView for super::LoopByteRef<'_> {
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
         self.next()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl LoopByteView for super::LoopByteBuf {
@@ -57,6 +143,14 @@ impl LoopByteView for super::LoopByteBuf {
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
         self.as_ref().next()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LoopByteView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl LoopByteView for super::LoopByteMut<'_> {
@@ -66,5 +160,13 @@ impl LoopByteView for super::LoopByteMut<'_> {
 
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
         self.as_ref().next()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        LoopByteView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

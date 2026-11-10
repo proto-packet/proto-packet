@@ -13,6 +13,59 @@ pub trait NewerCasesView {
 
     /// Gets the value of the case: `Point`.
     fn as_point(&self) -> Option<impl crate::format::examples::PointView>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        if self.as_number().is_some() {
+            return 10;
+        }
+        if let Some(value) = self.as_text() {
+            return 2 + value.len();
+        }
+        if let Some(value) = self.as_point() {
+            return 2 + crate::format::examples::PointView::encoded_len(&value);
+        }
+        panic!("a view of an unknown case has no encoding")
+    }
+
+    /// Encodes the variant.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        if let Some(value) = self.as_number() {
+            out.extend_from_slice(&1_u16.to_le_bytes());
+            out.extend_from_slice(&value.to_le_bytes());
+            return;
+        }
+        if let Some(value) = self.as_text() {
+            out.extend_from_slice(&2_u16.to_le_bytes());
+            out.extend_from_slice(value.as_bytes());
+            return;
+        }
+        if let Some(value) = self.as_point() {
+            out.extend_from_slice(&3_u16.to_le_bytes());
+            crate::format::examples::PointView::encode_to_with_depth(&value, out, depth - 1);
+            return;
+        }
+        panic!("a view of an unknown case has no encoding");
+    }
 }
 
 impl<V: NewerCasesView> NewerCasesView for &V {
@@ -30,6 +83,14 @@ impl<V: NewerCasesView> NewerCasesView for &V {
 
     fn as_point(&self) -> Option<impl crate::format::examples::PointView> {
         (**self).as_point()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -49,6 +110,14 @@ impl<V: NewerCasesView> NewerCasesView for &mut V {
     fn as_point(&self) -> Option<impl crate::format::examples::PointView> {
         (**self).as_point()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl NewerCasesView for super::NewerCases {
@@ -66,6 +135,14 @@ impl NewerCasesView for super::NewerCases {
 
     fn as_point(&self) -> Option<impl crate::format::examples::PointView> {
         self.as_point()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::NewerCases::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::NewerCases::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -85,6 +162,19 @@ impl NewerCasesView for super::NewerCasesRef<'_> {
     fn as_point(&self) -> Option<impl crate::format::examples::PointView> {
         self.as_point()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl NewerCasesView for super::NewerCasesBuf {
@@ -103,6 +193,14 @@ impl NewerCasesView for super::NewerCasesBuf {
     fn as_point(&self) -> Option<impl crate::format::examples::PointView> {
         self.as_ref().as_point()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NewerCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl NewerCasesView for super::NewerCasesMut<'_> {
@@ -120,5 +218,13 @@ impl NewerCasesView for super::NewerCasesMut<'_> {
 
     fn as_point(&self) -> Option<impl crate::format::examples::PointView> {
         self.as_ref().as_point()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        NewerCasesView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

@@ -7,6 +7,35 @@ pub trait ImportedFieldsView {
 
     /// Gets the field: `child`.
     fn child(&self) -> impl crate::mods::parent::child::ChildView;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        12
+    }
+
+    /// Encodes the struct.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        crate::types::PointView::encode_to_with_depth(&self.point(), out, 0);
+        crate::mods::parent::child::ChildView::encode_to_with_depth(&self.child(), out, 0);
+    }
 }
 
 impl<V: ImportedFieldsView> ImportedFieldsView for &V {
@@ -16,6 +45,14 @@ impl<V: ImportedFieldsView> ImportedFieldsView for &V {
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
         (**self).child()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -27,6 +64,14 @@ impl<V: ImportedFieldsView> ImportedFieldsView for &mut V {
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
         (**self).child()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl ImportedFieldsView for super::ImportedFields {
@@ -36,6 +81,14 @@ impl ImportedFieldsView for super::ImportedFields {
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
         self.child()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::ImportedFields::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        super::ImportedFields::encode_to(self, out);
     }
 }
 
@@ -47,6 +100,14 @@ impl ImportedFieldsView for super::ImportedFieldsRef<'_> {
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
         self.child()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, _depth: usize) {
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl ImportedFieldsView for super::ImportedFieldsBuf {
@@ -57,6 +118,14 @@ impl ImportedFieldsView for super::ImportedFieldsBuf {
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
         self.as_ref().child()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ImportedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl ImportedFieldsView for super::ImportedFieldsMut<'_> {
@@ -66,5 +135,13 @@ impl ImportedFieldsView for super::ImportedFieldsMut<'_> {
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
         self.as_ref().child()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        ImportedFieldsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }

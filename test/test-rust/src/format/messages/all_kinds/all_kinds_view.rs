@@ -43,6 +43,181 @@ pub trait AllKindsView {
 
     /// Gets the field: `price`.
     fn price(&self) -> Option<proto_packet::types::Decimal<2>>;
+
+    /// Gets the length of the encoding, in bytes.
+    fn encoded_len(&self) -> usize {
+        let mut count: usize = 0;
+        let mut values: usize = 0;
+        if self.flag().is_some() {
+            count += 1;
+            values += 1;
+        }
+        if self.byte().is_some() {
+            count += 1;
+            values += 1;
+        }
+        if self.large().is_some() {
+            count += 1;
+            values += 16;
+        }
+        if self.id().is_some() {
+            count += 1;
+            values += 16;
+        }
+        if self.color().is_some() {
+            count += 1;
+            values += 2;
+        }
+        if let Some(value) = self.text() {
+            count += 1;
+            values += value.len();
+        }
+        if let Some(value) = self.point() {
+            count += 1;
+            values += crate::format::examples::PointView::encoded_len(&value);
+        }
+        if let Some(value) = self.entry() {
+            count += 1;
+            values += crate::format::examples::EntryView::encoded_len(&value);
+        }
+        if let Some(value) = self.item() {
+            count += 1;
+            values += crate::format::messages::ItemView::encoded_len(&value);
+        }
+        if self.boxed_color().is_some() {
+            count += 1;
+            values += 2;
+        }
+        if self.signed().is_some() {
+            count += 1;
+            values += 8;
+        }
+        if self.float().is_some() {
+            count += 1;
+            values += 8;
+        }
+        if self.at().is_some() {
+            count += 1;
+            values += 8;
+        }
+        if self.price().is_some() {
+            count += 1;
+            values += 8;
+        }
+        proto_packet::io::message_index_len(count) + values
+    }
+
+    /// Encodes the message.
+    ///
+    /// # Note
+    /// - Any type with the getters is written, with no native value in between.
+    fn encode(&self) -> Vec<u8> {
+        let mut out: Vec<u8> = Vec::with_capacity(self.encoded_len());
+        self.encode_to(&mut out);
+        out
+    }
+
+    /// Appends the encoding of the message to the `out` bytes.
+    fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message can't be written.
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
+        let known: usize = usize::from(self.flag().is_some())
+            + usize::from(self.byte().is_some())
+            + usize::from(self.large().is_some())
+            + usize::from(self.id().is_some())
+            + usize::from(self.color().is_some())
+            + usize::from(self.text().is_some())
+            + usize::from(self.point().is_some())
+            + usize::from(self.entry().is_some())
+            + usize::from(self.item().is_some())
+            + usize::from(self.boxed_color().is_some())
+            + usize::from(self.signed().is_some())
+            + usize::from(self.float().is_some())
+            + usize::from(self.at().is_some())
+            + usize::from(self.price().is_some());
+        let mut writer: proto_packet::io::MessageWriter =
+            proto_packet::io::MessageWriter::new(out, known, &[]);
+        if let Some(value) = self.flag() {
+            writer.field(1).push(u8::from(value));
+            writer.end_field();
+        }
+        if let Some(value) = self.byte() {
+            writer.field(2).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.large() {
+            writer.field(3).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.id() {
+            writer.field(4).extend_from_slice(value.as_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.color() {
+            writer
+                .field(5)
+                .extend_from_slice(&value.tag_number().to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.text() {
+            writer.field(6).extend_from_slice(value.as_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.point() {
+            crate::format::examples::PointView::encode_to_with_depth(
+                &value,
+                writer.field(7),
+                depth - 1,
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.entry() {
+            crate::format::examples::EntryView::encode_to_with_depth(
+                &value,
+                writer.field(8),
+                depth - 1,
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.item() {
+            crate::format::messages::ItemView::encode_to_with_depth(
+                &value,
+                writer.field(9),
+                depth - 1,
+            );
+            writer.end_field();
+        }
+        if let Some(value) = self.boxed_color() {
+            writer
+                .field(10)
+                .extend_from_slice(&value.tag_number().to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.signed() {
+            writer.field(11).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.float() {
+            writer.field(12).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.at() {
+            writer.field(13).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        if let Some(value) = self.price() {
+            writer.field(14).extend_from_slice(&value.to_le_bytes());
+            writer.end_field();
+        }
+        writer.finish();
+    }
 }
 
 impl<V: AllKindsView> AllKindsView for &V {
@@ -100,6 +275,14 @@ impl<V: AllKindsView> AllKindsView for &V {
 
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
         (**self).price()
+    }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
     }
 }
 
@@ -159,6 +342,14 @@ impl<V: AllKindsView> AllKindsView for &mut V {
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
         (**self).price()
     }
+
+    fn encoded_len(&self) -> usize {
+        (**self).encoded_len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        (**self).encode_to_with_depth(out, depth);
+    }
 }
 
 impl AllKindsView for super::AllKinds {
@@ -216,6 +407,14 @@ impl AllKindsView for super::AllKinds {
 
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.price()
+    }
+
+    fn encoded_len(&self) -> usize {
+        super::AllKinds::encoded_len(self)
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        super::AllKinds::encode_to_with_depth(self, out, depth);
     }
 }
 
@@ -275,6 +474,19 @@ impl AllKindsView for super::AllKindsRef<'_> {
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.price()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        if depth < proto_packet::io::MAX_DEPTH
+            && Self::new_with_depth(self.as_bytes(), depth).is_err()
+        {
+            proto_packet::io::assert_depth(0);
+        }
+        out.extend_from_slice(self.as_bytes());
+    }
 }
 
 impl AllKindsView for super::AllKindsBuf {
@@ -333,6 +545,14 @@ impl AllKindsView for super::AllKindsBuf {
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.as_ref().price()
     }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        AllKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
+    }
 }
 
 impl AllKindsView for super::AllKindsMut<'_> {
@@ -390,5 +610,13 @@ impl AllKindsView for super::AllKindsMut<'_> {
 
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.as_ref().price()
+    }
+
+    fn encoded_len(&self) -> usize {
+        self.as_bytes().len()
+    }
+
+    fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        AllKindsView::encode_to_with_depth(&self.as_ref(), out, depth);
     }
 }
