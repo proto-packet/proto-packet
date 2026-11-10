@@ -19,6 +19,18 @@ pub trait TimeKindsView {
 
     /// Gets the field: `maybe`.
     fn maybe(&self) -> Option<proto_packet::types::Timestamp>;
+
+    /// Gets the field: `days`.
+    fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date>;
+
+    /// Gets the field: `spans`.
+    fn spans(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet::types::Date,
+        Key = proto_packet::types::Date,
+        Value = proto_packet::types::Duration,
+    >;
 }
 
 impl<V: TimeKindsView> TimeKindsView for &V {
@@ -44,6 +56,20 @@ impl<V: TimeKindsView> TimeKindsView for &V {
 
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
         (**self).maybe()
+    }
+
+    fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
+        (**self).days()
+    }
+
+    fn spans(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet::types::Date,
+        Key = proto_packet::types::Date,
+        Value = proto_packet::types::Duration,
+    > {
+        (**self).spans()
     }
 }
 
@@ -71,6 +97,20 @@ impl<V: TimeKindsView> TimeKindsView for &mut V {
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
         (**self).maybe()
     }
+
+    fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
+        (**self).days()
+    }
+
+    fn spans(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet::types::Date,
+        Key = proto_packet::types::Date,
+        Value = proto_packet::types::Duration,
+    > {
+        (**self).spans()
+    }
 }
 
 impl TimeKindsView for super::TimeKinds {
@@ -96,6 +136,20 @@ impl TimeKindsView for super::TimeKinds {
 
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
         self.maybe()
+    }
+
+    fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
+        self.days()
+    }
+
+    fn spans(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet::types::Date,
+        Key = proto_packet::types::Date,
+        Value = proto_packet::types::Duration,
+    > {
+        self.spans()
     }
 }
 
@@ -123,6 +177,20 @@ impl TimeKindsView for super::TimeKindsRef<'_> {
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
         self.maybe()
     }
+
+    fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
+        self.days()
+    }
+
+    fn spans(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet::types::Date,
+        Key = proto_packet::types::Date,
+        Value = proto_packet::types::Duration,
+    > {
+        self.spans()
+    }
 }
 
 impl TimeKindsView for super::TimeKindsBuf {
@@ -149,6 +217,20 @@ impl TimeKindsView for super::TimeKindsBuf {
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
         self.as_ref().maybe()
     }
+
+    fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
+        self.as_ref().days()
+    }
+
+    fn spans(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet::types::Date,
+        Key = proto_packet::types::Date,
+        Value = proto_packet::types::Duration,
+    > {
+        self.as_ref().spans()
+    }
 }
 
 impl TimeKindsView for super::TimeKindsMut<'_> {
@@ -174,5 +256,19 @@ impl TimeKindsView for super::TimeKindsMut<'_> {
 
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
         self.as_ref().maybe()
+    }
+
+    fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
+        self.as_ref().days()
+    }
+
+    fn spans(
+        &self,
+    ) -> impl proto_packet::io::MapView<
+        proto_packet::types::Date,
+        Key = proto_packet::types::Date,
+        Value = proto_packet::types::Duration,
+    > {
+        self.as_ref().spans()
     }
 }

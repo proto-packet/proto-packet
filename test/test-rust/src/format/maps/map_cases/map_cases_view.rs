@@ -5,6 +5,9 @@ pub trait MapCasesView {
     /// Gets the tag number of the case.
     fn tag_number(&self) -> u16;
 
+    /// Gets the value of the case: `Scores`.
+    fn as_scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>>;
+
     /// Gets the value of the case: `Number`.
     fn as_number(&self) -> Option<u32>;
 }
@@ -12,6 +15,10 @@ pub trait MapCasesView {
 impl<V: MapCasesView> MapCasesView for &V {
     fn tag_number(&self) -> u16 {
         (**self).tag_number()
+    }
+
+    fn as_scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
+        (**self).as_scores()
     }
 
     fn as_number(&self) -> Option<u32> {
@@ -24,6 +31,10 @@ impl<V: MapCasesView> MapCasesView for &mut V {
         (**self).tag_number()
     }
 
+    fn as_scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
+        (**self).as_scores()
+    }
+
     fn as_number(&self) -> Option<u32> {
         (**self).as_number()
     }
@@ -32,6 +43,10 @@ impl<V: MapCasesView> MapCasesView for &mut V {
 impl MapCasesView for super::MapCases {
     fn tag_number(&self) -> u16 {
         self.tag_number()
+    }
+
+    fn as_scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
+        self.as_scores()
     }
 
     fn as_number(&self) -> Option<u32> {
@@ -44,6 +59,10 @@ impl MapCasesView for super::MapCasesRef<'_> {
         self.tag_number()
     }
 
+    fn as_scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
+        self.as_scores()
+    }
+
     fn as_number(&self) -> Option<u32> {
         self.as_number()
     }
@@ -54,6 +73,10 @@ impl MapCasesView for super::MapCasesBuf {
         self.as_ref().tag_number()
     }
 
+    fn as_scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
+        self.as_ref().as_scores()
+    }
+
     fn as_number(&self) -> Option<u32> {
         self.as_ref().as_number()
     }
@@ -62,6 +85,10 @@ impl MapCasesView for super::MapCasesBuf {
 impl MapCasesView for super::MapCasesMut<'_> {
     fn tag_number(&self) -> u16 {
         self.as_ref().tag_number()
+    }
+
+    fn as_scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
+        self.as_ref().as_scores()
     }
 
     fn as_number(&self) -> Option<u32> {

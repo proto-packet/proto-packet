@@ -132,7 +132,7 @@ pub fn gen_struct(
         layout.alignment,
         can_be_invalid(typing, &fields, &layout),
     ));
-    let view_fields: Vec<Field> = view_fields(&fields);
+    let view_mut_fields: Vec<Field> = view_mut_fields(&fields);
     Ok(vec![
         TypeFile {
             suffix: "",
@@ -156,11 +156,11 @@ pub fn gen_struct(
         },
         TypeFile {
             suffix: "_view",
-            code: gen_view(typing, schema_name, &view_fields, &type_name),
+            code: gen_view(typing, schema_name, &fields, &type_name),
         },
         TypeFile {
             suffix: "_view_mut",
-            code: gen_view_mut(typing, schema_name, &view_fields, &type_name, false),
+            code: gen_view_mut(typing, schema_name, &view_mut_fields, &type_name, false),
         },
     ])
 }
@@ -188,11 +188,11 @@ where
     Ok(())
 }
 
-/// Gets the `fields` that the `View` & `ViewMut` traits have.
+/// Gets the `fields` that the `ViewMut` trait has.
 ///
 /// # Note
-/// - A list has no type that every form shares, so the traits leave it out.
-pub(crate) fn view_fields<'a>(fields: &[Field<'a>]) -> Vec<Field<'a>> {
+/// - A list or a map can't change its length in place, so the trait leaves it out.
+pub(crate) fn view_mut_fields<'a>(fields: &[Field<'a>]) -> Vec<Field<'a>> {
     fields
         .iter()
         .copied()

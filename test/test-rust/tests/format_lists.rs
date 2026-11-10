@@ -1,12 +1,14 @@
 mod common;
 
 use common::{ID, assert_json};
-use proto_packet::io::{DecodeError, ListRef};
+use proto_packet::io::{DecodeError, ListRef, ListView};
 use proto_packet::types::{Bytes, Float64};
-use proto_packet_test::format::examples::{Color, Entry, Line, Point};
+use proto_packet_test::format::examples::{Color, Entry, EntryView, Line, Point, PointView};
 use proto_packet_test::format::lists::{
-    Lines, ListCases, ListCasesCase, ListCasesRef, ListKinds, ListKindsRef, Nested, NestedRef,
-    Numbers, NumbersRef, Texts, TextsRef, WithLists, WithListsRef,
+    Lines, ListCases, ListCasesBuf, ListCasesCase, ListCasesRef, ListCasesView, ListKinds,
+    ListKindsBuf, ListKindsMut, ListKindsRef, ListKindsView, Nested, NestedRef, NestedView,
+    Numbers, NumbersBuf, NumbersMut, NumbersRef, NumbersView, Texts, TextsRef, TextsView,
+    WithLists, WithListsRef, WithListsView,
 };
 use proto_packet_test::format::messages::Item;
 use proto_packet_test::format::variants::Shape;
@@ -428,4 +430,116 @@ fn lists_are_arrays_in_json() {
     let value: ListKinds = list_kinds();
     let json: String = serde_json::to_string(&value).unwrap();
     assert_eq!(serde_json::from_str::<ListKinds>(&json).unwrap(), value);
+}
+
+/// Gets the sum of the count & the values of any form of the numbers.
+fn sum<N: NumbersView>(numbers: &N) -> u32 {
+    let values = numbers.values();
+    u32::from(numbers.count()) + values.iter().sum::<u32>() + values.len() as u32
+}
+
+/// Gets the texts of any form, joined.
+fn join<T: TextsView>(texts: &T) -> String {
+    texts.texts().iter().collect::<Vec<&str>>().join(",")
+}
+
+/// Gets the length of each row of any form.
+fn row_lens<N: NestedView>(nested: &N) -> Vec<usize> {
+    nested.rows().iter().map(<[u8]>::len).collect()
+}
+
+/// Reads a list of each kind from any form.
+fn digest<K: ListKindsView>(kinds: &K) -> String {
+    let points: u32 = kinds
+        .points()
+        .iter()
+        .map(|point| point.x() + point.y())
+        .sum();
+    let entries: Vec<String> = kinds
+        .entries()
+        .iter()
+        .map(|entry| format!("{}{}", entry.id(), entry.text()))
+        .collect();
+    format!(
+        "{:?} {} {:?} {} {} {:?} {:?} {:?}",
+        kinds.bytes(),
+        kinds.flags().len(),
+        kinds.signed().get(0),
+        points,
+        entries.join("+"),
+        kinds.texts().get(1),
+        kinds.colors().iter().collect::<Vec<Color>>(),
+        kinds.maybe().map(|maybe| maybe.iter().sum::<u16>()),
+    )
+}
+
+#[test]
+fn views_read_lists_of_every_form() {
+    let value: Numbers = Numbers::new(7, vec![1, 2]);
+    let mut bytes: Vec<u8> = value.encode();
+    assert_eq!(sum(&value), 12);
+    assert_eq!(sum(&&value), 12);
+    assert_eq!(sum(&NumbersRef::new(&bytes).unwrap()), 12);
+    assert_eq!(sum(&NumbersBuf::from(&value)), 12);
+    assert_eq!(sum(&NumbersMut::new(&mut bytes).unwrap()), 12);
+
+    assert_eq!(join(&texts()), "hi,,yo!");
+    assert_eq!(join(&TextsRef::new(&texts_bytes()).unwrap()), "hi,,yo!");
+}
+
+#[test]
+fn views_read_nested_lists() {
+    let value: Nested = Nested::new(vec![
+        Bytes::from([1, 2]),
+        Bytes::default(),
+        Bytes::from([3]),
+    ]);
+    let bytes: Vec<u8> = value.encode();
+    assert_eq!(row_lens(&value), [2, 0, 1]);
+    assert_eq!(row_lens(&NestedRef::new(&bytes).unwrap()), [2, 0, 1]);
+}
+
+#[test]
+fn views_read_lists_of_every_kind() {
+    let value: ListKinds = list_kinds();
+    let mut bytes: Vec<u8> = value.encode();
+    let expected: String = digest(&value);
+    assert_eq!(
+        expected,
+        "[1, 2, 3] 2 Some(-1) 10 5five+6 Some(\"bc\") [Red] Some(23)"
+    );
+    assert_eq!(digest(&ListKindsRef::new(&bytes).unwrap()), expected);
+    assert_eq!(digest(&ListKindsBuf::from(&value)), expected);
+    assert_eq!(digest(&ListKindsMut::new(&mut bytes).unwrap()), expected);
+}
+
+/// Gets the count of the numbers of any form of the cases.
+fn numbers_len<C: ListCasesView>(cases: &C) -> Option<usize> {
+    cases.as_numbers().map(|numbers| numbers.len())
+}
+
+/// Gets the count of the lists of any form of the message.
+fn list_lens<W: WithListsView>(message: &W) -> (Option<usize>, Option<usize>) {
+    (
+        message.bytes().map(<[u8]>::len),
+        message.children().map(|children| children.len()),
+    )
+}
+
+#[test]
+fn views_read_the_lists_of_variants_and_messages() {
+    let value: ListCases = ListCases::Numbers(vec![7, 6]);
+    assert_eq!(numbers_len(&value), Some(2));
+    assert_eq!(numbers_len(&ListCasesBuf::from(&value)), Some(2));
+    assert_eq!(numbers_len(&ListCases::Number(1)), None);
+
+    let message: WithLists = WithLists::default()
+        .with_bytes(Bytes::from([1]))
+        .with_children(vec![WithLists::default(), WithLists::default()]);
+    let bytes: Vec<u8> = message.encode();
+    assert_eq!(list_lens(&message), (Some(1), Some(2)));
+    assert_eq!(
+        list_lens(&WithListsRef::new(&bytes).unwrap()),
+        (Some(1), Some(2))
+    );
 }

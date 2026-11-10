@@ -13,6 +13,14 @@ pub trait PricesView {
 
     /// Gets the field: `maybe`.
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>>;
+
+    /// Gets the field: `list`.
+    fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>>;
+
+    /// Gets the field: `named`.
+    fn named(
+        &self,
+    ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>;
 }
 
 impl<V: PricesView> PricesView for &V {
@@ -30,6 +38,17 @@ impl<V: PricesView> PricesView for &V {
 
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
         (**self).maybe()
+    }
+
+    fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
+        (**self).list()
+    }
+
+    fn named(
+        &self,
+    ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
+    {
+        (**self).named()
     }
 }
 
@@ -49,6 +68,17 @@ impl<V: PricesView> PricesView for &mut V {
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
         (**self).maybe()
     }
+
+    fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
+        (**self).list()
+    }
+
+    fn named(
+        &self,
+    ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
+    {
+        (**self).named()
+    }
 }
 
 impl PricesView for super::Prices {
@@ -66,6 +96,17 @@ impl PricesView for super::Prices {
 
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.maybe()
+    }
+
+    fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
+        self.list()
+    }
+
+    fn named(
+        &self,
+    ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
+    {
+        self.named()
     }
 }
 
@@ -85,6 +126,17 @@ impl PricesView for super::PricesRef<'_> {
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.maybe()
     }
+
+    fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
+        self.list()
+    }
+
+    fn named(
+        &self,
+    ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
+    {
+        self.named()
+    }
 }
 
 impl PricesView for super::PricesBuf {
@@ -103,6 +155,17 @@ impl PricesView for super::PricesBuf {
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.as_ref().maybe()
     }
+
+    fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
+        self.as_ref().list()
+    }
+
+    fn named(
+        &self,
+    ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
+    {
+        self.as_ref().named()
+    }
 }
 
 impl PricesView for super::PricesMut<'_> {
@@ -120,5 +183,16 @@ impl PricesView for super::PricesMut<'_> {
 
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
         self.as_ref().maybe()
+    }
+
+    fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
+        self.as_ref().list()
+    }
+
+    fn named(
+        &self,
+    ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
+    {
+        self.as_ref().named()
     }
 }

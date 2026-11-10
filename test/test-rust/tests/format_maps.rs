@@ -1,11 +1,12 @@
 mod common;
 
 use common::assert_json;
-use proto_packet::io::{DecodeError, MapRef};
+use proto_packet::io::{DecodeError, MapRef, MapView};
 use proto_packet::types::{Bytes, Float64};
-use proto_packet_test::format::examples::{Color, Entry, Point};
+use proto_packet_test::format::examples::{Color, Entry, EntryView, Point, PointView};
 use proto_packet_test::format::maps::{
-    MapCases, MapCasesRef, MapKinds, MapKindsRef, Scores, ScoresRef, WithMaps, WithMapsRef,
+    MapCases, MapCasesRef, MapCasesView, MapKinds, MapKindsBuf, MapKindsRef, MapKindsView, Scores,
+    ScoresBuf, ScoresMut, ScoresRef, ScoresView, WithMaps, WithMapsRef,
 };
 use std::collections::BTreeMap;
 
@@ -243,4 +244,83 @@ fn simple_keys_are_text_in_json() {
 #[test]
 fn struct_keys_are_not_json() {
     assert!(serde_json::to_string(&map_kinds()).is_err());
+}
+
+/// Gets the score of the `name` & the entries of any form of the scores.
+fn read_scores<S: ScoresView>(scores: &S, name: &str) -> (Option<u32>, String, usize) {
+    let map = scores.scores();
+    let entries: Vec<String> = map
+        .iter()
+        .map(|(name, score)| format!("{}={}", name, score))
+        .collect();
+    (map.get(&name.to_string()), entries.join(","), map.len())
+}
+
+#[test]
+fn views_read_maps_of_every_form() {
+    let value: Scores = Scores::new(scores());
+    let mut bytes: Vec<u8> = scores_bytes();
+    let expected = (Some(2), "a=1,bc=2".to_string(), 2);
+    assert_eq!(read_scores(&value, "bc"), expected);
+    assert_eq!(read_scores(&&value, "bc"), expected);
+    assert_eq!(
+        read_scores(&ScoresRef::new(&bytes).unwrap(), "bc"),
+        expected
+    );
+    assert_eq!(read_scores(&ScoresBuf::from(&value), "bc"), expected);
+    assert_eq!(
+        read_scores(&ScoresMut::new(&mut bytes).unwrap(), "bc"),
+        expected
+    );
+    assert_eq!(read_scores(&value, "b").0, None);
+    assert_eq!(
+        read_scores(&ScoresRef::new(&scores_bytes()).unwrap(), "zz").0,
+        None
+    );
+}
+
+/// Reads a map of each kind from any form.
+fn digest<K: MapKindsView>(kinds: &K) -> String {
+    let points: Vec<String> = kinds
+        .by_point()
+        .iter()
+        .map(|(point, entry)| format!("{},{}:{}{}", point.x(), point.y(), entry.id(), entry.text()))
+        .collect();
+    let inner: Option<u8> = kinds.maps().get(&1).and_then(|inner| inner.get(&2));
+    format!(
+        "{:?} {:?} {} {:?} {:?} {:?}",
+        kinds.by_number().get(&7),
+        kinds.by_color().get(&Color::Red),
+        points.join(";"),
+        kinds.lists().get(&"a".to_string()),
+        inner,
+        kinds.maybe().map(|maybe| maybe.len()),
+    )
+}
+
+#[test]
+fn views_read_maps_of_every_kind() {
+    let value: MapKinds = map_kinds();
+    let bytes: Vec<u8> = value.encode();
+    let expected: String = digest(&value);
+    assert_eq!(
+        expected,
+        "Some(false) Some(\"red\") 1,2:3three;1,3:4 Some([1, 2]) Some(3) Some(2)"
+    );
+    assert_eq!(digest(&MapKindsRef::new(&bytes).unwrap()), expected);
+    assert_eq!(digest(&MapKindsBuf::from(&value)), expected);
+}
+
+/// Gets the count of the scores of any form of the cases.
+fn scores_len<C: MapCasesView>(cases: &C) -> Option<usize> {
+    cases.as_scores().map(|scores| scores.len())
+}
+
+#[test]
+fn views_read_the_maps_of_variants() {
+    let value: MapCases = MapCases::Scores(scores());
+    let bytes: Vec<u8> = value.encode();
+    assert_eq!(scores_len(&value), Some(2));
+    assert_eq!(scores_len(&MapCasesRef::new(&bytes).unwrap()), Some(2));
+    assert_eq!(scores_len(&MapCases::Number(1)), None);
 }

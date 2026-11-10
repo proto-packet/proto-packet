@@ -181,7 +181,7 @@ pub fn gen_variant(
     ] {
         check_type_name(project, mod_path, &name)?;
     }
-    let view_cases: Vec<Case> = cases
+    let view_mut_cases: Vec<Case> = cases
         .iter()
         .copied()
         .filter(|case| !case.tag.is_collection())
@@ -219,11 +219,11 @@ pub fn gen_variant(
         },
         TypeFile {
             suffix: "_view",
-            code: gen_variant_view(typing, schema_name, &view_cases, &type_name),
+            code: gen_variant_view(typing, schema_name, &cases, &type_name),
         },
         TypeFile {
             suffix: "_view_mut",
-            code: gen_variant_view_mut(typing, schema_name, &view_cases, &type_name),
+            code: gen_variant_view_mut(typing, schema_name, &view_mut_cases, &type_name),
         },
     ])
 }

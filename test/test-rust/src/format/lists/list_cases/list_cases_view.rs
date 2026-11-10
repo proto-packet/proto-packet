@@ -5,6 +5,20 @@ pub trait ListCasesView {
     /// Gets the tag number of the case.
     fn tag_number(&self) -> u16;
 
+    /// Gets the value of the case: `Blob`.
+    fn as_blob(&self) -> Option<&[u8]>;
+
+    /// Gets the value of the case: `Numbers`.
+    fn as_numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>>;
+
+    /// Gets the value of the case: `Texts`.
+    fn as_texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>>;
+
+    /// Gets the value of the case: `Points`.
+    fn as_points(
+        &self,
+    ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>;
+
     /// Gets the value of the case: `Number`.
     fn as_number(&self) -> Option<u32>;
 }
@@ -12,6 +26,25 @@ pub trait ListCasesView {
 impl<V: ListCasesView> ListCasesView for &V {
     fn tag_number(&self) -> u16 {
         (**self).tag_number()
+    }
+
+    fn as_blob(&self) -> Option<&[u8]> {
+        (**self).as_blob()
+    }
+
+    fn as_numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
+        (**self).as_numbers()
+    }
+
+    fn as_texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
+        (**self).as_texts()
+    }
+
+    fn as_points(
+        &self,
+    ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
+    {
+        (**self).as_points()
     }
 
     fn as_number(&self) -> Option<u32> {
@@ -24,6 +57,25 @@ impl<V: ListCasesView> ListCasesView for &mut V {
         (**self).tag_number()
     }
 
+    fn as_blob(&self) -> Option<&[u8]> {
+        (**self).as_blob()
+    }
+
+    fn as_numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
+        (**self).as_numbers()
+    }
+
+    fn as_texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
+        (**self).as_texts()
+    }
+
+    fn as_points(
+        &self,
+    ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
+    {
+        (**self).as_points()
+    }
+
     fn as_number(&self) -> Option<u32> {
         (**self).as_number()
     }
@@ -32,6 +84,25 @@ impl<V: ListCasesView> ListCasesView for &mut V {
 impl ListCasesView for super::ListCases {
     fn tag_number(&self) -> u16 {
         self.tag_number()
+    }
+
+    fn as_blob(&self) -> Option<&[u8]> {
+        self.as_blob()
+    }
+
+    fn as_numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
+        self.as_numbers()
+    }
+
+    fn as_texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
+        self.as_texts()
+    }
+
+    fn as_points(
+        &self,
+    ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
+    {
+        self.as_points()
     }
 
     fn as_number(&self) -> Option<u32> {
@@ -44,6 +115,25 @@ impl ListCasesView for super::ListCasesRef<'_> {
         self.tag_number()
     }
 
+    fn as_blob(&self) -> Option<&[u8]> {
+        self.as_blob()
+    }
+
+    fn as_numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
+        self.as_numbers()
+    }
+
+    fn as_texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
+        self.as_texts()
+    }
+
+    fn as_points(
+        &self,
+    ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
+    {
+        self.as_points()
+    }
+
     fn as_number(&self) -> Option<u32> {
         self.as_number()
     }
@@ -54,6 +144,25 @@ impl ListCasesView for super::ListCasesBuf {
         self.as_ref().tag_number()
     }
 
+    fn as_blob(&self) -> Option<&[u8]> {
+        self.as_ref().as_blob()
+    }
+
+    fn as_numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
+        self.as_ref().as_numbers()
+    }
+
+    fn as_texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
+        self.as_ref().as_texts()
+    }
+
+    fn as_points(
+        &self,
+    ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
+    {
+        self.as_ref().as_points()
+    }
+
     fn as_number(&self) -> Option<u32> {
         self.as_ref().as_number()
     }
@@ -62,6 +171,25 @@ impl ListCasesView for super::ListCasesBuf {
 impl ListCasesView for super::ListCasesMut<'_> {
     fn tag_number(&self) -> u16 {
         self.as_ref().tag_number()
+    }
+
+    fn as_blob(&self) -> Option<&[u8]> {
+        self.as_ref().as_blob()
+    }
+
+    fn as_numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
+        self.as_ref().as_numbers()
+    }
+
+    fn as_texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
+        self.as_ref().as_texts()
+    }
+
+    fn as_points(
+        &self,
+    ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
+    {
+        self.as_ref().as_points()
     }
 
     fn as_number(&self) -> Option<u32> {

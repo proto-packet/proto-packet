@@ -17,6 +17,12 @@ pub(crate) const LIST_REF: &str = "proto_packet::io::ListRef";
 /// The type of a map read from its bytes.
 pub(crate) const MAP_REF: &str = "proto_packet::io::MapRef";
 
+/// The trait of any form of a list.
+const LIST_VIEW: &str = "proto_packet::io::ListView";
+
+/// The trait of any form of a map.
+const MAP_VIEW: &str = "proto_packet::io::MapView";
+
 /// Gets the Rust type of the `primitive`.
 ///
 /// # Note
@@ -82,11 +88,28 @@ pub(crate) fn setter_value_type(tag: &TypeTag) -> String {
 }
 
 /// Gets the type of a value of the `tag`, read from a `View` trait.
+///
+/// # Note
+/// - A nested type, a list or a map is an `impl` of its view trait, since each form has its own
+///   type for it.
 pub(crate) fn view_value_type(typing: Typing<'_>, tag: &TypeTag) -> String {
     match tag {
         TypeTag::Named(_) if !typing.is_enum(tag) => {
             format!("impl {}", generated_path(tag, "View"))
         }
+        TypeTag::List(_) if tag.is_bytes() => "&[u8]".to_string(),
+        TypeTag::List(element) => format!(
+            "impl {}<Item = {}>",
+            LIST_VIEW,
+            view_value_type(typing, element)
+        ),
+        TypeTag::Map { key, value } => format!(
+            "impl {}<{}, Key = {}, Value = {}>",
+            MAP_VIEW,
+            typing.rust_type(key),
+            view_value_type(typing, key),
+            view_value_type(typing, value)
+        ),
         _ => setter_value_type(tag),
     }
 }

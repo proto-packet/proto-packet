@@ -4,11 +4,18 @@
 pub trait NumbersView {
     /// Gets the field: `count`.
     fn count(&self) -> u8;
+
+    /// Gets the field: `values`.
+    fn values(&self) -> impl proto_packet::io::ListView<Item = u32>;
 }
 
 impl<V: NumbersView> NumbersView for &V {
     fn count(&self) -> u8 {
         (**self).count()
+    }
+
+    fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
+        (**self).values()
     }
 }
 
@@ -16,11 +23,19 @@ impl<V: NumbersView> NumbersView for &mut V {
     fn count(&self) -> u8 {
         (**self).count()
     }
+
+    fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
+        (**self).values()
+    }
 }
 
 impl NumbersView for super::Numbers {
     fn count(&self) -> u8 {
         self.count()
+    }
+
+    fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
+        self.values()
     }
 }
 
@@ -28,16 +43,28 @@ impl NumbersView for super::NumbersRef<'_> {
     fn count(&self) -> u8 {
         self.count()
     }
+
+    fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
+        self.values()
+    }
 }
 
 impl NumbersView for super::NumbersBuf {
     fn count(&self) -> u8 {
         self.as_ref().count()
     }
+
+    fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
+        self.as_ref().values()
+    }
 }
 
 impl NumbersView for super::NumbersMut<'_> {
     fn count(&self) -> u8 {
         self.as_ref().count()
+    }
+
+    fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
+        self.as_ref().values()
     }
 }
