@@ -506,3 +506,15 @@ fn keys_with_a_message_inside_are_ordered_by_their_bytes() {
         assert_eq!(nested.by_list().get_by_key(key), Some(*number));
     }
 }
+
+#[test]
+fn encoded_maps_are_equal_by_their_bytes() {
+    let bytes: Vec<u8> = scores_bytes();
+    let (scores, same): (ScoresRef, ScoresRef) = (
+        ScoresRef::new(&bytes).unwrap(),
+        ScoresRef::new(&bytes).unwrap(),
+    );
+    assert_eq!(scores.scores(), same.scores());
+    let other: Vec<u8> = Scores::new(BTreeMap::from([("a".to_string(), 2)])).encode();
+    assert_ne!(scores.scores(), ScoresRef::new(&other).unwrap().scores());
+}

@@ -9,11 +9,11 @@ use proto_packet_test::format::edges::{
     NineBitsMut, NineBitsRef, SignedKinds, SignedKindsMut, SignedKindsRef, Strings, StringsMut,
 };
 use proto_packet_test::format::examples::{
-    Color, Entry, EntryView, EntryViewMut, Line, LineBuf, LineMut, LineRef, LineView, LineViewMut,
-    Mixed, MixedMut, MixedRef, Opt, OptBuf, OptMut, OptRef, OptView, OptViewMut, Outer, OuterRef,
-    Padded, PaddedRef, Pair, PairBuf, PairMut, PairRef, PairView, PairViewMut, Person, PersonBuf,
-    PersonMut, PersonRef, PersonViewMut, Point, PointBuf, PointMut, PointRef, PointView,
-    PointViewMut,
+    Color, Entry, EntryBuf, EntryRef, EntryView, EntryViewMut, Line, LineBuf, LineMut, LineRef,
+    LineView, LineViewMut, Mixed, MixedMut, MixedRef, Opt, OptBuf, OptMut, OptRef, OptView,
+    OptViewMut, Outer, OuterRef, Padded, PaddedRef, Pair, PairBuf, PairMut, PairRef, PairView,
+    PairViewMut, Person, PersonBuf, PersonMut, PersonRef, PersonViewMut, Point, PointBuf, PointMut,
+    PointRef, PointView, PointViewMut,
 };
 use proto_packet_test::structs::boxed::{
     ListNode, ListNodeBuf, ListNodeMut, ListNodeRef, ListNodeView, ListNodeViewMut,
@@ -1122,4 +1122,51 @@ fn the_encoding_check_finds_a_second_encoding() {
         [value, _] => Some(vec![*value, 0]),
         _ => None,
     });
+}
+
+#[test]
+fn encoded_forms_are_equal_by_their_bytes() {
+    use std::collections::HashSet;
+
+    let entry: Entry = Entry::new(7, "hi".to_string());
+    let other: Entry = Entry::new(7, "ho".to_string());
+    let (bytes, other_bytes): (Vec<u8>, Vec<u8>) = (entry.encode(), other.encode());
+    let entry_ref: EntryRef = EntryRef::new(&bytes).unwrap();
+    let other_ref: EntryRef = EntryRef::new(&other_bytes).unwrap();
+    let (buf, other_buf): (EntryBuf, EntryBuf) = (EntryBuf::from(&entry), EntryBuf::from(&other));
+
+    assert_eq!(entry_ref, EntryRef::new(&bytes.clone()).unwrap());
+    assert_ne!(entry_ref, other_ref);
+    assert_eq!(buf, EntryBuf::from(&entry));
+    assert_ne!(buf, other_buf);
+
+    let refs: HashSet<EntryRef> = [entry_ref, other_ref, entry_ref].into_iter().collect();
+    assert_eq!(refs.len(), 2);
+    let bufs: HashSet<EntryBuf> = [buf.clone(), other_buf.clone(), buf.clone()]
+        .into_iter()
+        .collect();
+    assert_eq!(bufs.len(), 2);
+}
+
+#[test]
+fn forms_are_equal_across_forms() {
+    let entry: Entry = Entry::new(7, "hi".to_string());
+    let other: Entry = Entry::new(7, "hi!".to_string());
+    let (bytes, other_bytes): (Vec<u8>, Vec<u8>) = (entry.encode(), other.encode());
+    let entry_ref: EntryRef = EntryRef::new(&bytes).unwrap();
+    let other_ref: EntryRef = EntryRef::new(&other_bytes).unwrap();
+    let (buf, other_buf): (EntryBuf, EntryBuf) = (EntryBuf::from(&entry), EntryBuf::from(&other));
+
+    assert!(entry == entry_ref && entry_ref == entry);
+    assert!(entry == buf && buf == entry);
+    assert!(entry_ref == buf && buf == entry_ref);
+    assert!(entry != other_ref && other_ref != entry);
+    assert!(entry != other_buf && other_buf != entry);
+    assert!(entry_ref != other_buf && other_buf != entry_ref);
+
+    let point: Point = Point::new(1, 2);
+    let bytes: Vec<u8> = point.encode();
+    let buf: PointBuf = PointBuf::from(&point);
+    assert!(point == PointRef::new(&bytes).unwrap() && point == buf);
+    assert!(Point::new(1, 3) != PointRef::new(&bytes).unwrap());
 }

@@ -548,3 +548,15 @@ fn views_read_the_lists_of_variants_and_messages() {
         (Some(1), Some(2))
     );
 }
+
+#[test]
+fn encoded_lists_are_equal_by_their_bytes() {
+    let bytes: Vec<u8> = texts_bytes();
+    let (texts, same): (TextsRef, TextsRef) = (
+        TextsRef::new(&bytes).unwrap(),
+        TextsRef::new(&bytes).unwrap(),
+    );
+    assert_eq!(texts.texts(), same.texts());
+    let other: Vec<u8> = Texts::new(vec!["hi".to_string()]).encode();
+    assert_ne!(texts.texts(), TextsRef::new(&other).unwrap().texts());
+}

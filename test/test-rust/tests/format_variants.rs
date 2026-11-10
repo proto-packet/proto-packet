@@ -681,3 +681,21 @@ fn older_readers_have_one_encoding_of_newer_bytes() {
         });
     }
 }
+
+#[test]
+fn forms_are_equal_across_forms() {
+    let shape: Shape = Shape::Square(Point::new(1, 2));
+    let bytes: Vec<u8> = shape.encode();
+    let shape_ref: ShapeRef = ShapeRef::new(&bytes).unwrap();
+    let buf: ShapeBuf = ShapeBuf::from(&shape);
+    assert!(shape == shape_ref && shape_ref == shape);
+    assert!(shape == buf && buf == shape && buf == shape_ref && shape_ref == buf);
+    assert!(Shape::Circle(1) != shape_ref && Shape::Circle(1) != buf);
+
+    // an older reader keeps the case it doesn't know, so its forms are still equal
+    let unknown: Vec<u8> = unknown_bytes();
+    let older: OlderCases = OlderCases::decode(&unknown).unwrap();
+    let older_ref: OlderCasesRef = OlderCasesRef::new(&unknown).unwrap();
+    assert!(older == older_ref && older_ref == older);
+    assert!(OlderCases::Text("a".to_string()) != older_ref);
+}

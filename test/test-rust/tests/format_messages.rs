@@ -702,3 +702,23 @@ fn older_readers_have_one_encoding_of_newer_bytes() {
         Some(older.encode())
     });
 }
+
+#[test]
+fn forms_are_equal_across_forms() {
+    let bytes: Vec<u8> = newer().encode();
+    let newer_ref: NewerRef = NewerRef::new(&bytes).unwrap();
+    assert!(newer() == newer_ref && newer_ref == newer());
+    assert!(newer().with_age(37) != newer_ref);
+    assert_eq!(newer_ref, NewerRef::new(&bytes.clone()).unwrap());
+
+    // an older reader keeps the fields it doesn't know, so its forms are still equal
+    let older: Older = Older::decode(&bytes).unwrap();
+    let older_ref: OlderRef = OlderRef::new(&bytes).unwrap();
+    assert!(older == older_ref && older_ref == older);
+    assert!(older.clone().with_age(37) != older_ref);
+
+    let item: Item = Item::default().with_id(7);
+    let buf: ItemBuf = ItemBuf::from(&item);
+    assert!(item == buf && buf == item && buf == buf.as_ref() && buf.as_ref() == buf);
+    assert!(Item::default() != buf);
+}
