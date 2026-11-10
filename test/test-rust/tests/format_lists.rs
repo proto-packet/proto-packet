@@ -713,3 +713,48 @@ fn lists_of_large_integers_are_text_in_json() {
         list_kinds()
     );
 }
+
+#[test]
+fn rejects_text_split_inside_a_character() {
+    // the texts of a list are checked as one run of text, so each must start on a character
+    let whole: Vec<u8> = Texts::new(vec!["é".to_string()]).encode();
+    assert_eq!(whole, [1, 0, 0, 0, 0xC3, 0xA9]);
+    assert_eq!(Texts::decode(&whole), Ok(Texts::new(vec!["é".to_string()])));
+
+    // the two bytes of "é" as two texts
+    let split: Vec<u8> = [&[2, 0, 0, 0][..], &[9, 0, 0, 0], &[0xC3], &[0xA9]].concat();
+    assert_eq!(Texts::decode(&split), Err(DecodeError::InvalidUtf8));
+
+    // the two bytes of "é" around an empty text
+    let around: Vec<u8> = [
+        &[3, 0, 0, 0][..],
+        &[13, 0, 0, 0, 13, 0, 0, 0],
+        &[0xC3],
+        &[0xA9],
+    ]
+    .concat();
+    assert_eq!(Texts::decode(&around), Err(DecodeError::InvalidUtf8));
+
+    // a text that ends inside a character, & a byte that is never valid
+    let cut: Vec<u8> = [&[2, 0, 0, 0][..], &[9, 0, 0, 0], &[0xC3], b"a"].concat();
+    assert_eq!(Texts::decode(&cut), Err(DecodeError::InvalidUtf8));
+    let invalid: Vec<u8> = [&[2, 0, 0, 0][..], &[9, 0, 0, 0], b"a", &[0xFF]].concat();
+    assert_eq!(Texts::decode(&invalid), Err(DecodeError::InvalidUtf8));
+}
+
+#[test]
+fn texts_that_are_not_ascii_round_trip() {
+    let value: Texts = Texts::new(vec![
+        "é".to_string(),
+        String::default(),
+        "日本語".to_string(),
+        "a".to_string(),
+    ]);
+    let bytes: Vec<u8> = value.encode();
+    assert_encoding!(Texts, value, &bytes);
+    let texts: TextsRef = TextsRef::new(&bytes).unwrap();
+    assert_eq!(
+        texts.texts().iter().collect::<Vec<&str>>(),
+        ["é", "", "日本語", "a"]
+    );
+}
