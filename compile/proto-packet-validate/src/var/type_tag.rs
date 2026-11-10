@@ -11,7 +11,10 @@ pub fn validate_type_tag(tree: &TypeTagTree, source: &str) -> Result<TypeTag, Va
         TypeTagTree::List { element, .. } => {
             Ok(TypeTag::List(Box::new(validate_type_tag(element, source)?)))
         }
-        TypeTagTree::Map { .. } => todo!(),
+        TypeTagTree::Map { key, value, .. } => Ok(TypeTag::Map {
+            key: Box::new(validate_type_tag(key, source)?),
+            value: Box::new(validate_type_tag(value, source)?),
+        }),
     }
 }
 
