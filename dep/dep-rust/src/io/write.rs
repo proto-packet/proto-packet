@@ -15,6 +15,18 @@ pub fn write_padding(out: &mut Vec<u8>, start: usize, alignment: usize) {
     out.resize(start + align_up(out.len() - start, alignment), 0);
 }
 
+/// Removes the padding written before an entry, if the entry then wrote nothing.
+///
+/// The `out` bytes had the `before` length before the padding, & the `padded` length after it.
+///
+/// # Note
+/// - An empty entry has no padding before it.
+pub fn trim_padding(out: &mut Vec<u8>, before: usize, padded: usize) {
+    if out.len() == padded {
+        out.truncate(before);
+    }
+}
+
 /// Writes the end offset of the tail entry that ends at the end of the `out` bytes, for the tail at
 /// the `tail`, to the end table item at the `offset`.
 ///

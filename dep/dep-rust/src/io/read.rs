@@ -50,6 +50,7 @@ pub unsafe fn read_bit_unchecked(bytes: &[u8], offset: usize, bit: u8) -> bool {
 /// - The end table at the `table` has the end of each of the `count` of entries but the last.
 /// - The entry starts at the next multiple of its `alignment` after the entry before it, or after
 ///   the `header`.
+/// - An empty entry has no padding before it.
 /// - The last entry ends where the `bytes` end.
 ///
 /// # Safety
@@ -73,7 +74,11 @@ pub(crate) unsafe fn tail_entry_range_unchecked(
     } else {
         unsafe { read_u32_unchecked(bytes, table + index * 4) as usize }
     };
-    align_up(previous, alignment)..end
+    if end == previous {
+        end..end
+    } else {
+        align_up(previous, alignment)..end
+    }
 }
 
 /// Reads the entry at the `index` of a struct's tail.

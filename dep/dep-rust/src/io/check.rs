@@ -131,7 +131,7 @@ pub fn check_tail_ends(
 /// The end table at the `table` must be valid, so check it first. The `count` is of the entries.
 ///
 /// # Errors
-/// Returns an error if the entry starts after it ends, once its padding is counted.
+/// Returns an error if the padding before the entry reaches its end, or is not zeros.
 pub fn check_tail_entry(
     bytes: &[u8],
     table: usize,
@@ -142,10 +142,13 @@ pub fn check_tail_entry(
 ) -> Result<&[u8], DecodeError> {
     let range: Range<usize> =
         unsafe { tail_entry_range_unchecked(bytes, table, index, count, header, alignment) };
-    if range.start > range.end {
+    let previous: usize = tail_entry_previous(bytes, table, index, header);
+    if range.end == previous {
+        return Ok(&bytes[range]);
+    }
+    if range.start >= range.end {
         return Err(DecodeError::InvalidEndTable);
     }
-    let previous: usize = tail_entry_previous(bytes, table, index, header);
     check_padding(&bytes[previous..range.start])?;
     Ok(&bytes[range])
 }

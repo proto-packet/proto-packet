@@ -1,5 +1,5 @@
 use crate::io::list::element::stride;
-use crate::io::{Element, align_up, write_end, write_padding, write_zeros};
+use crate::io::{Element, align_up, trim_padding, write_end, write_padding, write_zeros};
 
 /// Gets the length of the encoding of the `list`, in bytes.
 #[must_use]
@@ -12,9 +12,12 @@ where
     }
     match T::SIZE {
         Some(size) => (list.len() - 1) * stride::<T>(size) + size,
-        None => list.iter().fold(list.len() * 4, |len, element| {
-            align_up(len, T::ALIGNMENT) + element.encoded_len()
-        }),
+        None => list
+            .iter()
+            .fold(list.len() * 4, |len, element| match element.encoded_len() {
+                0 => len,
+                size => align_up(len, T::ALIGNMENT) + size,
+            }),
     }
 }
 
@@ -39,8 +42,11 @@ where
         out.extend_from_slice(&count.to_le_bytes());
         write_zeros(out, (list.len() - 1) * 4);
         for (index, element) in list.iter().enumerate() {
+            let before: usize = out.len();
             write_padding(out, start, T::ALIGNMENT);
+            let padded: usize = out.len();
             element.encode_to(out);
+            trim_padding(out, before, padded);
             if index + 1 < list.len() {
                 write_end(out, start + 4 + index * 4, start);
             }

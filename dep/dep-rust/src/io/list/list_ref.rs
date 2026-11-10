@@ -9,6 +9,7 @@ use std::ops::Range;
 /// # Note
 /// - Fixed-size elements are back to back, so their count comes from the length of the bytes.
 /// - Variable-size elements follow their count & an end for each element but the last.
+/// - An empty element has no padding before it.
 pub struct ListRef<'a, T> {
     bytes: &'a [u8],
     element: PhantomData<T>,
@@ -93,8 +94,15 @@ where
                 Some(end) => u32::from_le_bytes(*end) as usize,
                 None => bytes.len(),
             };
-            let start: usize = align_up(previous, T::ALIGNMENT);
-            if end < previous || end > bytes.len() || start > end {
+            if end < previous || end > bytes.len() {
+                return Err(DecodeError::InvalidEndTable);
+            }
+            let start: usize = if end == previous {
+                end
+            } else {
+                align_up(previous, T::ALIGNMENT)
+            };
+            if start > end || (start == end && end != previous) {
                 return Err(DecodeError::InvalidEndTable);
             }
             check_padding(&bytes[previous..start])?;
@@ -187,7 +195,11 @@ where
         } else {
             unsafe { crate::io::read_u32_unchecked(self.bytes, 4 + index * 4) as usize }
         };
-        align_up(previous, T::ALIGNMENT)..end
+        if end == previous {
+            end..end
+        } else {
+            align_up(previous, T::ALIGNMENT)..end
+        }
     }
 }
 
