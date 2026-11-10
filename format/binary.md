@@ -530,13 +530,20 @@ search. Any type can be a key.
 | `uuid`, `string` | By bytes.                                                 |
 | enum             | By tag number.                                            |
 | struct           | By the fields, in declaration order.                      |
-| message          | By the fields, in tag number order. Absent is first.      |
-| variant          | By tag number, then by the value.                         |
 | list             | By the elements. A list comes after the lists it extends. |
 | map              | By the entries, each a key then its value.                |
+| message, variant | By its encoded bytes.                                     |
 
-A message's unknown fields are compared last, by tag number & then by their bytes. An unknown case
-of a variant is compared by its bytes.
+A key with a message or a variant inside it is ordered by its encoded bytes too. (ex: a struct with
+a message field, or a list of variants)
+
+Two readers can know different fields & cases of a message or a variant, so its bytes are the only
+order they share. This order isn't by value:
+
+```text
+{ a: 256 }  =  01 00 01 00 00 01 00 00    first
+{ a: 1 }    =  01 00 01 00 01 00 00 00    second
+```
 
 ### Validation
 
