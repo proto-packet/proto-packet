@@ -578,5 +578,20 @@ compared without decoding them. Unknown fields & cases are compared as their byt
 - An alignment is 1, 2, 4 or 8.
 - A struct is at most `u32::MAX` bytes, & so are the `values` of a message.
 - A list of variable-size elements is at most `u32::MAX` elements & `u32::MAX` bytes.
+- A value nests at most 64 levels deep.
 
-todo -- nothing limits how deep values nest. (see [Recursive Types](../FUTURE.md#recursive-types))
+### Depth
+
+A message, a variant & a struct with a variable tail are each a level. A list, a map & a fixed-size
+struct aren't. Readers reject a value with more than 64 levels:
+
+```text
+message Node { children: []Node = 1; }
+
+Node              level 1
+  children[0]     level 2
+    children[0]   level 3
+```
+
+A reader follows a value inward to check it, so the limit bounds the stack it uses on bytes it can't
+trust. A reader can't count the levels inside a field or a case it doesn't know.
