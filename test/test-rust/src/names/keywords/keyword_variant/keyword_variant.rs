@@ -112,7 +112,19 @@ impl KeywordVariant {
     }
 
     /// Appends the encoding of the variant to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the variant nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         match self {
             Self::Unrecognized(case) => {
                 out.extend_from_slice(&case.tag_number.to_le_bytes());
@@ -182,8 +194,8 @@ impl proto_packet::io::Element for KeywordVariant {
         KeywordVariant::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        KeywordVariant::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        KeywordVariant::encode_to_with_depth(self, out, depth);
     }
 }
 

@@ -166,7 +166,7 @@ impl proto_packet::io::Element for Point {
         Point::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         Point::encode_to(self, out);
     }
 }

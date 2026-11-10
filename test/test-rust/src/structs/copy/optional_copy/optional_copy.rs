@@ -192,7 +192,7 @@ impl proto_packet::io::Element for OptionalCopy {
         OptionalCopy::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         OptionalCopy::encode_to(self, out);
     }
 }

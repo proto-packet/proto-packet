@@ -215,7 +215,7 @@ impl proto_packet::io::Element for Line {
         Line::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         Line::encode_to(self, out);
     }
 }

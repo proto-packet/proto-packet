@@ -236,7 +236,7 @@ impl proto_packet::io::Element for CopyFields {
         CopyFields::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         CopyFields::encode_to(self, out);
     }
 }

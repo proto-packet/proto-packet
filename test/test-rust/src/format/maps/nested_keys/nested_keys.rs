@@ -153,14 +153,26 @@ impl NestedKeys {
     }
 
     /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the struct nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         let start: usize = out.len();
         proto_packet::io::write_zeros(out, 4);
         {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 8);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.by_struct, out);
+            proto_packet::io::encode_map(&self.by_struct, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
         proto_packet::io::write_end(out, start, start);
@@ -168,7 +180,7 @@ impl NestedKeys {
             let before: usize = out.len();
             proto_packet::io::write_padding(out, start, 4);
             let padded: usize = out.len();
-            proto_packet::io::encode_map(&self.by_list, out);
+            proto_packet::io::encode_map(&self.by_list, out, depth - 1);
             proto_packet::io::trim_padding(out, before, padded);
         }
     }
@@ -227,7 +239,7 @@ impl proto_packet::io::Element for NestedKeys {
         NestedKeys::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        NestedKeys::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        NestedKeys::encode_to_with_depth(self, out, depth);
     }
 }

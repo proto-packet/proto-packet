@@ -362,7 +362,19 @@ impl AllCases {
     }
 
     /// Appends the encoding of the variant to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the variant nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         match self {
             Self::Unrecognized(case) => {
                 out.extend_from_slice(&case.tag_number.to_le_bytes());
@@ -394,19 +406,35 @@ impl AllCases {
             }
             Self::Point(value) => {
                 out.extend_from_slice(&7_u16.to_le_bytes());
-                value.encode_to(out);
+                <crate::format::examples::Point as proto_packet::io::Element>::encode_to(
+                    value,
+                    out,
+                    depth - 1,
+                );
             }
             Self::Entry(value) => {
                 out.extend_from_slice(&8_u16.to_le_bytes());
-                value.encode_to(out);
+                <crate::format::examples::Entry as proto_packet::io::Element>::encode_to(
+                    value,
+                    out,
+                    depth - 1,
+                );
             }
             Self::Item(value) => {
                 out.extend_from_slice(&9_u16.to_le_bytes());
-                value.encode_to(out);
+                <crate::format::messages::Item as proto_packet::io::Element>::encode_to(
+                    value,
+                    out,
+                    depth - 1,
+                );
             }
             Self::Shape(value) => {
                 out.extend_from_slice(&10_u16.to_le_bytes());
-                value.encode_to(out);
+                <crate::format::variants::Shape as proto_packet::io::Element>::encode_to(
+                    value,
+                    out,
+                    depth - 1,
+                );
             }
             Self::BoxedColor(value) => {
                 out.extend_from_slice(&11_u16.to_le_bytes());
@@ -485,8 +513,8 @@ impl proto_packet::io::Element for AllCases {
         AllCases::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        AllCases::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        AllCases::encode_to_with_depth(self, out, depth);
     }
 }
 

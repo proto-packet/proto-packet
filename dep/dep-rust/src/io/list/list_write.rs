@@ -29,17 +29,18 @@ where
     }
 }
 
-/// Appends the encoding of the `list` to the `out` bytes.
+/// Appends the encoding of the `list` to the `out` bytes, with elements that can nest the `depth`
+/// of levels.
 ///
 /// # Panics
-/// Panics if the count or an end offset does not fit in a `u32`.
-pub fn encode_list<T>(list: &[T], out: &mut Vec<u8>)
+/// Panics if the count or an end offset does not fit in a `u32`, or an element nests deeper.
+pub fn encode_list<T>(list: &[T], out: &mut Vec<u8>, depth: usize)
 where
     T: Element,
 {
     match T::SIZE {
         Some(size) if stride::<T>(size) == size => T::encode_all_to(list, out),
-        _ => encode_elements(list.iter(), out),
+        _ => encode_elements(list.iter(), out, depth),
     }
 }
 
@@ -50,8 +51,9 @@ where
 ///   length.
 ///
 /// # Panics
-/// Panics if the count or an end offset does not fit in a `u32`.
-pub(crate) fn encode_elements<'t, T, I>(elements: I, out: &mut Vec<u8>)
+/// Panics if the count or an end offset does not fit in a `u32`, or an element nests deeper than
+/// the `depth` of levels.
+pub(crate) fn encode_elements<'t, T, I>(elements: I, out: &mut Vec<u8>, depth: usize)
 where
     T: Element + 't,
     I: ExactSizeIterator<Item = &'t T>,
@@ -64,7 +66,7 @@ where
     if T::SIZE.is_some() {
         for element in elements {
             write_padding(out, start, T::ALIGNMENT);
-            element.encode_to(out);
+            element.encode_to(out, depth);
         }
         return;
     }
@@ -75,7 +77,7 @@ where
         let before: usize = out.len();
         write_padding(out, start, T::ALIGNMENT);
         let padded: usize = out.len();
-        element.encode_to(out);
+        element.encode_to(out, depth);
         trim_padding(out, before, padded);
         if index + 1 < count {
             write_end(out, start + 4 + index * 4, start);

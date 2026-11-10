@@ -21,11 +21,14 @@ pub(crate) fn gen_encoding(
     fields: &[Field<'_>],
     layout: &StructLayout,
 ) -> ImplBlock {
-    ImplBlock::from(type_name)
+    let mut block: ImplBlock = ImplBlock::from(type_name)
         .with_comment(" Encoding")
         .with_function(gen_encoded_len(fields, layout))
-        .with_function(gen_encode(typing, "struct"))
-        .with_function(gen_encode_to(typing, fields, layout))
+        .with_function(gen_encode(typing, "struct"));
+    if !layout.is_fixed() {
+        block.add_function(gen_encode_to_of_level(typing, "struct"));
+    }
+    block.with_function(gen_encode_to(typing, fields, layout))
 }
 
 /// Generates the function getting the length of the encoding.
@@ -114,13 +117,13 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout
                 format!("out.extend_from_slice({}.as_bytes());", value)
             } else if field.tag.is_collection() {
                 format!(
-                    "{}::encode_{}({}, out);",
+                    "{}::encode_{}({}, out, depth - 1);",
                     IO,
                     collection(field.tag),
                     gen_list(field, value)
                 )
             } else {
-                format!("{}.encode_to(out);", value)
+                format!("{}.encode_to_with_depth(out, depth - 1);", value)
             };
             if entry.alignment > 1 {
                 format!(
@@ -141,6 +144,13 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout
             statements.push(format!("{}::write_end(out, {}, start);", IO, item));
         }
     }
+    if !layout.is_fixed() {
+        let mut function: Function = gen_encode_to_with_depth(typing, "struct");
+        for statement in statements {
+            function.add_literal(statement);
+        }
+        return function;
+    }
     let out: &str = if statements.is_empty() { "_out" } else { "out" };
     let signature: Signature = Signature::from("encode_to")
         .with_receiver(Receiver::Borrowed)
@@ -152,6 +162,51 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[Field<'_>], layout: &StructLayout
         function.add_literal(statement);
     }
     function
+}
+
+/// Generates the function appending the encoding of a type of the `kind` that is a level.
+///
+/// # Note
+/// - A message, a variant & a struct with a variable tail are each a level.
+pub(crate) fn gen_encode_to_of_level(typing: Typing<'_>, kind: &str) -> Function {
+    let signature: Signature = Signature::from("encode_to")
+        .with_receiver(Receiver::Borrowed)
+        .with_param(Var::from(("out", format!("&mut {}", bytes_type(typing)))));
+    Function::from(signature)
+        .with_comment(format!(
+            " Appends the encoding of the {} to the `out` bytes.",
+            kind
+        ))
+        .with_comment("")
+        .with_comment(" # Panics")
+        .with_comment(format!(
+            " Panics if the {} nests deeper than a value can nest.",
+            kind
+        ))
+        .with_access(Access::Public)
+        .with_semi(format!("self.encode_to_with_depth(out, {}::MAX_DEPTH)", IO))
+}
+
+/// Generates the start of the function appending the encoding of a type of the `kind` that is a
+/// level, with the `depth` of levels left.
+///
+/// # Note
+/// - The values of the type can nest one level less, which is `depth - 1`.
+pub(crate) fn gen_encode_to_with_depth(typing: Typing<'_>, kind: &str) -> Function {
+    let signature: Signature = Signature::from("encode_to_with_depth")
+        .with_receiver(Receiver::Borrowed)
+        .with_param(Var::from(("out", format!("&mut {}", bytes_type(typing)))))
+        .with_param(Var::from(("depth", "usize")));
+    Function::from(signature)
+        .with_comment(format!(
+            " Appends the encoding of the {} to the `out` bytes, which can nest the `depth` of levels.",
+            kind
+        ))
+        .with_comment("")
+        .with_comment(" # Panics")
+        .with_comment(format!(" Panics if the {} nests deeper.", kind))
+        .with_access(Access::Public)
+        .with_semi(format!("{}::assert_depth(depth)", IO))
 }
 
 /// Generates the statements appending the `unit` of the fixed block.

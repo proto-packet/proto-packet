@@ -19,6 +19,7 @@ pub(crate) fn gen_element(
     can_be_invalid: bool,
     ordered_by_bytes: bool,
 ) -> String {
+    let is_fixed: bool = size.is_some();
     let check: String = match size {
         Some(_) => format!(
             "fn check(bytes: &[u8], _depth: usize) -> {result}<(), {io}::DecodeError> {{
@@ -40,6 +41,23 @@ pub(crate) fn gen_element(
     let size: String = match size {
         Some(size) => format!("Some({})", size),
         None => "None".to_string(),
+    };
+    let encode_to: String = if is_fixed {
+        format!(
+            "fn encode_to(&self, out: &mut {vec}<u8>, _depth: usize) {{
+        {type_name}::encode_to(self, out);
+    }}",
+            vec = prelude.path(PreludeName::Vec),
+            type_name = type_name
+        )
+    } else {
+        format!(
+            "fn encode_to(&self, out: &mut {vec}<u8>, depth: usize) {{
+        {type_name}::encode_to_with_depth(self, out, depth);
+    }}",
+            vec = prelude.path(PreludeName::Vec),
+            type_name = type_name
+        )
     };
     let (ordered, cmp_refs): (&str, String) = if ordered_by_bytes {
         (
@@ -82,16 +100,14 @@ pub(crate) fn gen_element(
         {type_name}::encoded_len(self)
     }}
 
-    fn encode_to(&self, out: &mut {vec}<u8>) {{
-        {type_name}::encode_to(self, out);
-    }}
+    {encode_to}
 }}
 ",
         io = IO,
         type_name = type_name,
         ref_name = ref_name,
+        encode_to = encode_to,
         option = prelude.path(PreludeName::Option),
-        vec = prelude.path(PreludeName::Vec),
         size = size,
         alignment = alignment,
         can_be_invalid = can_be_invalid,
@@ -134,7 +150,7 @@ pub(crate) fn gen_enum_element(prelude: Prelude, type_name: &str) -> String {
         2
     }}
 
-    fn encode_to(&self, out: &mut {vec}<u8>) {{
+    fn encode_to(&self, out: &mut {vec}<u8>, _depth: usize) {{
         out.extend_from_slice(&self.tag_number().to_le_bytes());
     }}
 }}

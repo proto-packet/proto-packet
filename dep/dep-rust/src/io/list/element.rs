@@ -55,8 +55,11 @@ pub trait Element: Sized {
     /// Gets the length of the encoding, in bytes.
     fn encoded_len(&self) -> usize;
 
-    /// Appends the encoding to the `out` bytes.
-    fn encode_to(&self, out: &mut Vec<u8>);
+    /// Appends the encoding to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the element nests deeper.
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize);
 
     /// Compares two read elements, in the order of the keys of a map.
     ///
@@ -80,7 +83,7 @@ pub trait Element: Sized {
     {
         if Self::ORDERED_BY_BYTES {
             let mut bytes: Vec<u8> = Vec::with_capacity(self.encoded_len());
-            self.encode_to(&mut bytes);
+            self.encode_to(&mut bytes, usize::MAX);
             Self::cmp_refs(unsafe { Self::read_unchecked(&bytes) }, other)
         } else {
             self.cmp(&Self::decode(other))
@@ -91,9 +94,10 @@ pub trait Element: Sized {
     ///
     /// # Note
     /// - A type overrides this when its elements can be copied in one block. (ex: `u8`)
+    /// - A fixed-size element is not a level, so it needs no depth.
     fn encode_all_to(elements: &[Self], out: &mut Vec<u8>) {
         for element in elements {
-            element.encode_to(out);
+            element.encode_to(out, 0);
         }
     }
 }

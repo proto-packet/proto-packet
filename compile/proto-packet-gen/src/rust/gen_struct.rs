@@ -31,11 +31,12 @@ use proto_packet_tree::{
 const CONSTRUCTOR: &str = "new";
 
 /// The names of the generated methods of a struct & its `Ref` type.
-const METHODS: [&str; 10] = [
+const METHODS: [&str; 11] = [
     CONSTRUCTOR,
     "encoded_len",
     "encode",
     "encode_to",
+    "encode_to_with_depth",
     "decode",
     "decode_unchecked",
     "new_unchecked",

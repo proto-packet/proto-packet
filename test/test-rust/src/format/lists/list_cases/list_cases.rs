@@ -172,7 +172,19 @@ impl ListCases {
     }
 
     /// Appends the encoding of the variant to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the variant nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the variant to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the variant nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         match self {
             Self::Unrecognized(case) => {
                 out.extend_from_slice(&case.tag_number.to_le_bytes());
@@ -184,15 +196,15 @@ impl ListCases {
             }
             Self::Numbers(value) => {
                 out.extend_from_slice(&2_u16.to_le_bytes());
-                proto_packet::io::encode_list(value, out);
+                proto_packet::io::encode_list(value, out, depth - 1);
             }
             Self::Texts(value) => {
                 out.extend_from_slice(&3_u16.to_le_bytes());
-                proto_packet::io::encode_list(value, out);
+                proto_packet::io::encode_list(value, out, depth - 1);
             }
             Self::Points(value) => {
                 out.extend_from_slice(&4_u16.to_le_bytes());
-                proto_packet::io::encode_list(value, out);
+                proto_packet::io::encode_list(value, out, depth - 1);
             }
             Self::Number(value) => {
                 out.extend_from_slice(&5_u16.to_le_bytes());
@@ -255,8 +267,8 @@ impl proto_packet::io::Element for ListCases {
         ListCases::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        ListCases::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        ListCases::encode_to_with_depth(self, out, depth);
     }
 }
 

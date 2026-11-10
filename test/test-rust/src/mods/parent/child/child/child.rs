@@ -139,7 +139,7 @@ impl proto_packet::io::Element for Child {
         Child::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         Child::encode_to(self, out);
     }
 }

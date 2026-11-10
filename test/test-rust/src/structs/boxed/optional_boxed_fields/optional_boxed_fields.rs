@@ -275,7 +275,19 @@ impl OptionalBoxedFields {
     }
 
     /// Appends the encoding of the struct to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the struct nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the struct to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the struct nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         let start: usize = out.len();
         proto_packet::io::write_zeros(out, 8);
         match &self.point {
@@ -296,15 +308,15 @@ impl OptionalBoxedFields {
                 | (u8::from(self.shape.is_some()) << 3),
         );
         if let Some(value) = &self.person {
-            value.encode_to(out);
+            value.encode_to_with_depth(out, depth - 1);
         }
         proto_packet::io::write_end(out, start, start);
         if let Some(value) = &self.label {
-            value.encode_to(out);
+            value.encode_to_with_depth(out, depth - 1);
         }
         proto_packet::io::write_end(out, start + 4, start);
         if let Some(value) = &self.shape {
-            value.encode_to(out);
+            value.encode_to_with_depth(out, depth - 1);
         }
     }
 }
@@ -365,7 +377,7 @@ impl proto_packet::io::Element for OptionalBoxedFields {
         OptionalBoxedFields::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        OptionalBoxedFields::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        OptionalBoxedFields::encode_to_with_depth(self, out, depth);
     }
 }

@@ -303,7 +303,19 @@ impl WithLists {
     }
 
     /// Appends the encoding of the message to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         let known: usize = usize::from(self.bytes.is_some())
             + usize::from(self.numbers.is_some())
             + usize::from(self.texts.is_some())
@@ -317,23 +329,23 @@ impl WithLists {
             writer.end_field();
         }
         if let Some(value) = &self.numbers {
-            proto_packet::io::encode_list(value, writer.field(2));
+            proto_packet::io::encode_list(value, writer.field(2), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.texts {
-            proto_packet::io::encode_list(value, writer.field(3));
+            proto_packet::io::encode_list(value, writer.field(3), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.points {
-            proto_packet::io::encode_list(value, writer.field(4));
+            proto_packet::io::encode_list(value, writer.field(4), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.entries {
-            proto_packet::io::encode_list(value, writer.field(5));
+            proto_packet::io::encode_list(value, writer.field(5), depth - 1);
             writer.end_field();
         }
         if let Some(value) = &self.children {
-            proto_packet::io::encode_list(value, writer.field(6));
+            proto_packet::io::encode_list(value, writer.field(6), depth - 1);
             writer.end_field();
         }
         writer.finish();
@@ -393,8 +405,8 @@ impl proto_packet::io::Element for WithLists {
         WithLists::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        WithLists::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        WithLists::encode_to_with_depth(self, out, depth);
     }
 }
 

@@ -206,7 +206,7 @@ impl proto_packet::io::Element for FloatKinds {
         FloatKinds::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         FloatKinds::encode_to(self, out);
     }
 }

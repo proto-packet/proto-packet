@@ -1,12 +1,11 @@
-use crate::rust::encoding::{IO, gen_encode};
+use crate::rust::encoding::{IO, gen_encode, gen_encode_to_of_level, gen_encode_to_with_depth};
 use crate::rust::fields::Field;
 use crate::rust::naming::ident;
-use crate::rust::prelude::PreludeName;
 use crate::rust::typing::Typing;
 use code_gen::WithStatements;
 use code_gen::rust::{
-    Access, Function, ImplBlock, Receiver, Signature, Var, WithAccess, WithAttributes,
-    WithComments, WithFunctions, WithReceiver, WithResult, WithVarParams,
+    Access, Function, ImplBlock, Receiver, Signature, WithAccess, WithAttributes, WithComments,
+    WithFunctions, WithReceiver, WithResult,
 };
 use proto_packet_tree::{PrimitiveType, TypeTag};
 
@@ -28,6 +27,7 @@ pub(crate) fn gen_message_encoding(
         .with_comment(" Encoding")
         .with_function(gen_encoded_len(fields))
         .with_function(gen_encode(typing, "message"))
+        .with_function(gen_encode_to_of_level(typing, "message"))
         .with_function(gen_encode_to(typing, fields))
 }
 
@@ -89,10 +89,6 @@ pub(crate) fn collection(tag: &TypeTag) -> &'static str {
 
 /// Generates the function appending the encoding to the `out` bytes.
 fn gen_encode_to(typing: Typing<'_>, fields: &[TaggedField<'_>]) -> Function {
-    let param: String = format!("&mut {}<u8>", typing.prelude(PreludeName::Vec));
-    let signature: Signature = Signature::from("encode_to")
-        .with_receiver(Receiver::Borrowed)
-        .with_param(Var::from(("out", param.as_str())));
     let known: Vec<String> = fields
         .iter()
         .map(|tagged| format!("usize::from(self.{}.is_some())", ident(&tagged.field.name)))
@@ -103,9 +99,7 @@ fn gen_encode_to(typing: Typing<'_>, fields: &[TaggedField<'_>]) -> Function {
         known.join(" + ")
     };
     let binding: &str = if fields.is_empty() { "" } else { "mut " };
-    let mut function: Function = Function::from(signature)
-        .with_comment(" Appends the encoding of the message to the `out` bytes.")
-        .with_access(Access::Public)
+    let mut function: Function = gen_encode_to_with_depth(typing, "message")
         .with_semi(format!("let known: usize = {}", known))
         .with_semi(format!(
             "let {}writer: {}::MessageWriter = {}::MessageWriter::new(out, known, &self.unknown_fields)",
@@ -140,11 +134,16 @@ pub(crate) fn gen_value_write(typing: Typing<'_>, tag: &TypeTag, out: &str) -> S
             "{}.extend_from_slice(&value.tag_number().to_le_bytes());",
             out
         ),
-        TypeTag::Named(_) => format!("value.encode_to({});", out),
+        TypeTag::Named(_) => format!(
+            "<{} as {}::Element>::encode_to(value, {}, depth - 1);",
+            typing.rust_type(tag),
+            IO,
+            out
+        ),
         TypeTag::List(_) if tag.is_bytes() => {
             format!("{}.extend_from_slice(value.as_bytes());", out)
         }
-        TypeTag::List(_) => format!("{}::encode_list(value, {});", IO, out),
-        TypeTag::Map { .. } => format!("{}::encode_map(value, {});", IO, out),
+        TypeTag::List(_) => format!("{}::encode_list(value, {}, depth - 1);", IO, out),
+        TypeTag::Map { .. } => format!("{}::encode_map(value, {}, depth - 1);", IO, out),
     }
 }

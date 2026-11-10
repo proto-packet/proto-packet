@@ -210,7 +210,7 @@ impl proto_packet::io::Element for Padded {
         Padded::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         Padded::encode_to(self, out);
     }
 }

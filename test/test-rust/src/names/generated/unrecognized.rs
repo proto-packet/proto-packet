@@ -128,7 +128,7 @@ impl proto_packet::io::Element for Unrecognized {
         2
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         out.extend_from_slice(&self.tag_number().to_le_bytes());
     }
 }

@@ -144,7 +144,7 @@ impl proto_packet::io::Element for HTTPServer {
         HTTPServer::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         HTTPServer::encode_to(self, out);
     }
 }

@@ -214,7 +214,7 @@ where
     pub fn get_by_key(self, key: &K) -> Option<V::Ref<'a>> {
         if K::ORDERED_BY_BYTES {
             let mut bytes: Vec<u8> = Vec::with_capacity(key.encoded_len());
-            key.encode_to(&mut bytes);
+            key.encode_to(&mut bytes, usize::MAX);
             return self.get(unsafe { K::read_unchecked(&bytes) });
         }
         let keys: ListRef<'a, K> = self.keys();
@@ -274,15 +274,16 @@ where
     entries_encoded_len(map.keys(), map.values())
 }
 
-/// Appends the encoding of the `map` to the `out` bytes.
+/// Appends the encoding of the `map` to the `out` bytes, with keys & values that can nest the
+/// `depth` of levels.
 ///
 /// # Note
 /// - A map has its keys in increasing order, so its entries are written as they are.
 /// - Keys that are ordered by their bytes are sorted first, since the map has another order.
 ///
 /// # Panics
-/// Panics if a count or an end offset does not fit in a `u32`.
-pub fn encode_map<K, V>(map: &BTreeMap<K, V>, out: &mut Vec<u8>)
+/// Panics if a count or an end offset does not fit in a `u32`, or a key or a value nests deeper.
+pub fn encode_map<K, V>(map: &BTreeMap<K, V>, out: &mut Vec<u8>, depth: usize)
 where
     K: Element,
     V: Element,
@@ -294,9 +295,9 @@ where
         let entries: Vec<(&K, &V)> = entries_by_key_bytes(map);
         let keys = entries.iter().map(|entry| entry.0);
         let values = entries.iter().map(|entry| entry.1);
-        encode_entries(keys, values, out);
+        encode_entries(keys, values, out, depth);
     } else {
-        encode_entries(map.keys(), map.values(), out);
+        encode_entries(map.keys(), map.values(), out, depth);
     }
 }
 
@@ -320,7 +321,7 @@ where
     let mut entries: Vec<(Range<usize>, &K, &V)> = Vec::with_capacity(map.len());
     for (key, value) in map {
         let start: usize = bytes.len();
-        key.encode_to(&mut bytes);
+        key.encode_to(&mut bytes, usize::MAX);
         entries.push((start..bytes.len(), key, value));
     }
     entries.sort_unstable_by(|a, b| bytes[a.0.clone()].cmp(&bytes[b.0.clone()]));
@@ -343,7 +344,7 @@ where
 }
 
 /// Appends the encoding of a map of the `keys` & their `values` to the `out` bytes.
-fn encode_entries<'m, K, V, KI, VI>(keys: KI, values: VI, out: &mut Vec<u8>)
+fn encode_entries<'m, K, V, KI, VI>(keys: KI, values: VI, out: &mut Vec<u8>, depth: usize)
 where
     K: Element + 'm,
     V: Element + 'm,
@@ -353,10 +354,10 @@ where
     let start: usize = out.len();
     write_zeros(out, 4);
     write_padding(out, start, list_alignment::<K>());
-    encode_elements(keys, out);
+    encode_elements(keys, out, depth);
     write_end(out, start, start);
     write_padding(out, start, list_alignment::<V>());
-    encode_elements(values, out);
+    encode_elements(values, out, depth);
 }
 
 impl<K, V> Element for BTreeMap<K, V>
@@ -406,7 +407,7 @@ where
         map_encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        encode_map(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        encode_map(self, out, depth);
     }
 }

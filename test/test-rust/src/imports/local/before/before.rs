@@ -148,7 +148,7 @@ impl proto_packet::io::Element for Before {
         Before::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         Before::encode_to(self, out);
     }
 }

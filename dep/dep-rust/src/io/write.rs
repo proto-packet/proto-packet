@@ -9,6 +9,18 @@ pub fn write_zeros(out: &mut Vec<u8>, count: usize) {
     out.resize(out.len() + count, 0);
 }
 
+/// Asserts a value that is a level can be written, with the `depth` of levels left.
+///
+/// # Panics
+/// Panics if no level is left.
+pub fn assert_depth(depth: usize) {
+    assert!(
+        depth > 0,
+        "the value nests deeper than {} levels",
+        crate::io::MAX_DEPTH
+    );
+}
+
 /// Pads the `out` bytes with zeros, so the bytes after the `start` are a multiple of the
 /// `alignment`.
 pub fn write_padding(out: &mut Vec<u8>, start: usize, alignment: usize) {

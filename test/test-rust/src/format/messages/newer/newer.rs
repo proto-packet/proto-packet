@@ -271,7 +271,19 @@ impl Newer {
     }
 
     /// Appends the encoding of the message to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         let known: usize = usize::from(self.id.is_some())
             + usize::from(self.name.is_some())
             + usize::from(self.nickname.is_some())
@@ -296,7 +308,11 @@ impl Newer {
             writer.end_field();
         }
         if let Some(value) = &self.entry {
-            value.encode_to(writer.field(5));
+            <crate::format::examples::Entry as proto_packet::io::Element>::encode_to(
+                value,
+                writer.field(5),
+                depth - 1,
+            );
             writer.end_field();
         }
         writer.finish();
@@ -356,8 +372,8 @@ impl proto_packet::io::Element for Newer {
         Newer::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        Newer::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        Newer::encode_to_with_depth(self, out, depth);
     }
 }
 

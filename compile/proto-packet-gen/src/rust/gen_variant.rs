@@ -3,7 +3,7 @@ use crate::layout::scalar_size;
 use crate::rust::TypeFile;
 use crate::rust::derives::add_derives;
 use crate::rust::docs::add_docs;
-use crate::rust::encoding::{IO, gen_encode};
+use crate::rust::encoding::{IO, gen_encode, gen_encode_to_of_level, gen_encode_to_with_depth};
 use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_element::gen_element;
 use crate::rust::gen_eq::gen_native_eq;
@@ -446,8 +446,6 @@ fn gen_accessor(typing: Typing<'_>, case: Case<'_>) -> Function {
 
 /// Generates the impl block encoding the variant with the `type_name`.
 fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> ImplBlock {
-    let bytes: String = format!("{}<u8>", typing.prelude(PreludeName::Vec));
-
     let mut arms: Vec<String> =
         vec!["Self::Unrecognized(case) => 2 + case.bytes.len(),".to_string()];
     for case in cases {
@@ -489,18 +487,14 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
             gen_value_write(typing, case.tag, "out")
         ));
     }
-    let signature: Signature = Signature::from("encode_to")
-        .with_receiver(Receiver::Borrowed)
-        .with_param(Var::from(("out", format!("&mut {}", bytes).as_str())));
-    let encode_to: Function = Function::from(signature)
-        .with_comment(" Appends the encoding of the variant to the `out` bytes.")
-        .with_access(Access::Public)
+    let encode_to: Function = gen_encode_to_with_depth(typing, "variant")
         .with_literal(format!("match self {{ {} }}", arms.join(" ")));
 
     ImplBlock::from(type_name)
         .with_comment(" Encoding")
         .with_function(encoded_len)
         .with_function(gen_encode(typing, "variant"))
+        .with_function(gen_encode_to_of_level(typing, "variant"))
         .with_function(encode_to)
 }
 

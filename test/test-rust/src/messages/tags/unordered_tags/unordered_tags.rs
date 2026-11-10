@@ -189,7 +189,19 @@ impl UnorderedTags {
     }
 
     /// Appends the encoding of the message to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         let known: usize = usize::from(self.one.is_some())
             + usize::from(self.two.is_some())
             + usize::from(self.three.is_some());
@@ -267,8 +279,8 @@ impl proto_packet::io::Element for UnorderedTags {
         UnorderedTags::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        UnorderedTags::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        UnorderedTags::encode_to_with_depth(self, out, depth);
     }
 }
 

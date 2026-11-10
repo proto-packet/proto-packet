@@ -625,7 +625,19 @@ impl AllKinds {
     }
 
     /// Appends the encoding of the message to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         let known: usize = usize::from(self.flag.is_some())
             + usize::from(self.byte.is_some())
             + usize::from(self.large.is_some())
@@ -669,15 +681,27 @@ impl AllKinds {
             writer.end_field();
         }
         if let Some(value) = &self.point {
-            value.encode_to(writer.field(7));
+            <crate::format::examples::Point as proto_packet::io::Element>::encode_to(
+                value,
+                writer.field(7),
+                depth - 1,
+            );
             writer.end_field();
         }
         if let Some(value) = &self.entry {
-            value.encode_to(writer.field(8));
+            <crate::format::examples::Entry as proto_packet::io::Element>::encode_to(
+                value,
+                writer.field(8),
+                depth - 1,
+            );
             writer.end_field();
         }
         if let Some(value) = &self.item {
-            value.encode_to(writer.field(9));
+            <crate::format::messages::Item as proto_packet::io::Element>::encode_to(
+                value,
+                writer.field(9),
+                depth - 1,
+            );
             writer.end_field();
         }
         if let Some(value) = &self.boxed_color {
@@ -759,8 +783,8 @@ impl proto_packet::io::Element for AllKinds {
         AllKinds::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        AllKinds::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        AllKinds::encode_to_with_depth(self, out, depth);
     }
 }
 

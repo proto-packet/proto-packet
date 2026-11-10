@@ -181,7 +181,7 @@ impl proto_packet::io::Element for ImportedFields {
         ImportedFields::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         ImportedFields::encode_to(self, out);
     }
 }

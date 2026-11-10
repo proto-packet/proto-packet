@@ -302,7 +302,7 @@ impl proto_packet::io::Element for FixedKinds {
         FixedKinds::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         FixedKinds::encode_to(self, out);
     }
 }

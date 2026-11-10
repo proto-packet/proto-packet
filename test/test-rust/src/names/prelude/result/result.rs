@@ -142,7 +142,7 @@ impl proto_packet::io::Element for Result {
         Result::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut std::vec::Vec<u8>) {
+    fn encode_to(&self, out: &mut std::vec::Vec<u8>, _depth: usize) {
         Result::encode_to(self, out);
     }
 }

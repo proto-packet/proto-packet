@@ -139,7 +139,7 @@ impl proto_packet::io::Element for MoveStruct {
         MoveStruct::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         MoveStruct::encode_to(self, out);
     }
 }

@@ -157,7 +157,19 @@ impl LoopMessage {
     }
 
     /// Appends the encoding of the message to the `out` bytes.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper than a value can nest.
     pub fn encode_to(&self, out: &mut Vec<u8>) {
+        self.encode_to_with_depth(out, proto_packet::io::MAX_DEPTH);
+    }
+
+    /// Appends the encoding of the message to the `out` bytes, which can nest the `depth` of levels.
+    ///
+    /// # Panics
+    /// Panics if the message nests deeper.
+    pub fn encode_to_with_depth(&self, out: &mut Vec<u8>, depth: usize) {
+        proto_packet::io::assert_depth(depth);
         let known: usize = usize::from(self.value.is_some()) + usize::from(self.next.is_some());
         let mut writer: proto_packet::io::MessageWriter =
             proto_packet::io::MessageWriter::new(out, known, &self.unknown_fields);
@@ -166,7 +178,11 @@ impl LoopMessage {
             writer.end_field();
         }
         if let Some(value) = &self.next {
-            value.encode_to(writer.field(2));
+            <crate::format::messages::LoopStruct as proto_packet::io::Element>::encode_to(
+                value,
+                writer.field(2),
+                depth - 1,
+            );
             writer.end_field();
         }
         writer.finish();
@@ -226,8 +242,8 @@ impl proto_packet::io::Element for LoopMessage {
         LoopMessage::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        LoopMessage::encode_to(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        LoopMessage::encode_to_with_depth(self, out, depth);
     }
 }
 

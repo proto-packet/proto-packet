@@ -39,7 +39,7 @@ macro_rules! impl_integer {
                 size_of::<$type>()
             }
 
-            fn encode_to(&self, out: &mut Vec<u8>) {
+            fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
                 out.extend_from_slice(&self.to_le_bytes());
             }
 
@@ -91,7 +91,7 @@ impl Element for u8 {
         1
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         out.push(*self);
     }
 
@@ -135,7 +135,7 @@ impl Element for bool {
         1
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         out.push(u8::from(*self));
     }
 
@@ -175,7 +175,7 @@ impl Element for String {
         self.len()
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         out.extend_from_slice(self.as_bytes());
     }
 
@@ -229,8 +229,8 @@ where
         list_encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
-        encode_list(self, out);
+    fn encode_to(&self, out: &mut Vec<u8>, depth: usize) {
+        encode_list(self, out, depth);
     }
 }
 
@@ -272,7 +272,7 @@ macro_rules! impl_float {
                 size_of::<$bits>()
             }
 
-            fn encode_to(&self, out: &mut Vec<u8>) {
+            fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
                 out.extend_from_slice(&self.to_le_bytes());
             }
 
@@ -320,7 +320,7 @@ impl Element for crate::types::Uuid {
         16
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         out.extend_from_slice(self.as_bytes());
     }
 
@@ -365,7 +365,7 @@ macro_rules! impl_time {
                 size_of::<$int>()
             }
 
-            fn encode_to(&self, out: &mut Vec<u8>) {
+            fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
                 out.extend_from_slice(&self.to_le_bytes());
             }
 
@@ -421,7 +421,7 @@ impl<const S: u8> Element for crate::types::Decimal<S> {
         8
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         out.extend_from_slice(&self.to_le_bytes());
     }
 
@@ -462,7 +462,7 @@ impl Element for crate::types::Bytes {
         self.len()
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         out.extend_from_slice(self.as_bytes());
     }
 

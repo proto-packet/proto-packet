@@ -259,7 +259,7 @@ impl proto_packet::io::Element for SignedFields {
         SignedFields::encoded_len(self)
     }
 
-    fn encode_to(&self, out: &mut Vec<u8>) {
+    fn encode_to(&self, out: &mut Vec<u8>, _depth: usize) {
         SignedFields::encode_to(self, out);
     }
 }
