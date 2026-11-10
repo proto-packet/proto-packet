@@ -16,3 +16,7 @@ proto-packet-validate = { workspace = true }
 
 clap = { workspace = true, features = ["derive"] }
 clerr = { workspace = true }
+
+[[bin]]
+name = "packet"
+path = "src/main.rs"

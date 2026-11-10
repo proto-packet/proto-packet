@@ -8,7 +8,7 @@ use std::process::ExitCode;
 
 /// The ProtoPacket compiler.
 #[derive(Parser)]
-#[command(name = "proto-packet", version)]
+#[command(name = "packet", version)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
