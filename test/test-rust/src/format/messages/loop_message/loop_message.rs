@@ -11,7 +11,7 @@
 ///     next: box format.messages.LoopStruct = 2;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct LoopMessage {
     value: Option<u32>,
     next: Option<Box<crate::format::messages::LoopStruct>>,
@@ -79,6 +79,21 @@ impl LoopMessage {
     #[must_use]
     pub fn next_mut(&mut self) -> Option<&mut crate::format::messages::LoopStruct> {
         self.next.as_deref_mut()
+    }
+}
+
+impl Ord for LoopMessage {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.value
+            .cmp(&other.value)
+            .then_with(|| self.next.cmp(&other.next))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for LoopMessage {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

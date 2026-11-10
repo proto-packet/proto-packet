@@ -8,7 +8,7 @@
 ///     greeting: string = 1;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct GreetResponse {
     greeting: Option<String>,
     unknown_fields: Vec<proto_packet::io::UnknownField>,
@@ -40,6 +40,20 @@ impl GreetResponse {
     {
         self.set_greeting(greeting);
         self
+    }
+}
+
+impl Ord for GreetResponse {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.greeting
+            .cmp(&other.greeting)
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for GreetResponse {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

@@ -11,7 +11,7 @@
 ///     max: u32 = 65535;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct EdgeTags {
     min: Option<u32>,
     max: Option<u32>,
@@ -73,6 +73,21 @@ impl EdgeTags {
     {
         self.set_max(max);
         self
+    }
+}
+
+impl Ord for EdgeTags {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.min
+            .cmp(&other.min)
+            .then_with(|| self.max.cmp(&other.max))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for EdgeTags {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

@@ -23,7 +23,7 @@
 ///     unsigned128: u128 = 6;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct PrimitiveFields {
     boolean: Option<bool>,
     unsigned8: Option<u8>,
@@ -205,6 +205,25 @@ impl PrimitiveFields {
     {
         self.set_unsigned128(unsigned128);
         self
+    }
+}
+
+impl Ord for PrimitiveFields {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.boolean
+            .cmp(&other.boolean)
+            .then_with(|| self.unsigned8.cmp(&other.unsigned8))
+            .then_with(|| self.unsigned16.cmp(&other.unsigned16))
+            .then_with(|| self.unsigned32.cmp(&other.unsigned32))
+            .then_with(|| self.unsigned64.cmp(&other.unsigned64))
+            .then_with(|| self.unsigned128.cmp(&other.unsigned128))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for PrimitiveFields {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

@@ -19,6 +19,7 @@ mod gen_json;
 mod gen_message;
 mod gen_message_mut;
 mod gen_message_ref;
+mod gen_ord;
 mod gen_service;
 mod gen_struct;
 mod gen_struct_mut;

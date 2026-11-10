@@ -47,3 +47,12 @@ fn boxed_json() {
         r#"{"var":"Add","val":{"left":{"var":"Number","val":1},"right":{"var":"Negate","val":{"var":"Number","val":2}}}}"#,
     );
 }
+
+#[test]
+fn variants_are_ordered_by_tag_number() {
+    use proto_packet_test::variants::cases::UnorderedTags;
+
+    assert!(UnorderedTags::One(9) < UnorderedTags::Two(0));
+    assert!(UnorderedTags::Two(9) < UnorderedTags::Three(0));
+    assert!(UnorderedTags::One(1) < UnorderedTags::One(2));
+}

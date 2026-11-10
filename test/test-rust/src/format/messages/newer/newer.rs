@@ -20,7 +20,7 @@
 ///     entry: format.examples.Entry = 5;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct Newer {
     id: Option<u64>,
     name: Option<String>,
@@ -178,6 +178,24 @@ impl Newer {
     #[must_use]
     pub fn entry_mut(&mut self) -> Option<&mut crate::format::examples::Entry> {
         self.entry.as_mut()
+    }
+}
+
+impl Ord for Newer {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.id
+            .cmp(&other.id)
+            .then_with(|| self.name.cmp(&other.name))
+            .then_with(|| self.nickname.cmp(&other.nickname))
+            .then_with(|| self.age.cmp(&other.age))
+            .then_with(|| self.entry.cmp(&other.entry))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for Newer {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

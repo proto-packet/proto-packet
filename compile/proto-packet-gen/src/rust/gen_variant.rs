@@ -7,6 +7,7 @@ use crate::rust::encoding::{IO, gen_encode};
 use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_element::gen_element;
 use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
+use crate::rust::gen_ord::gen_variant_ord;
 use crate::rust::gen_struct::{check_list_elements, check_type_name, gen_decoding};
 use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
@@ -143,6 +144,13 @@ pub fn gen_variant(
     }
     let schema_name: String = variant.type_name().to_string();
     let schema_name: &str = &schema_name;
+    let idents: Vec<String> = cases.iter().map(|case| case.ident()).collect();
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_variant_ord(
+        Prelude::new(&type_name),
+        &type_name,
+        &idents,
+    ));
     block.add_statement(EmptyLine::default());
     block.add_statement(gen_encoding(typing, &type_name, &cases));
     block.add_statement(EmptyLine::default());
@@ -255,7 +263,7 @@ fn check_case_names(
 fn gen_dec(typing: Typing<'_>, variant: &Variant, type_name: &str) -> RustEnum {
     let mut result: RustEnum = RustEnum::from(type_name);
     add_docs(&mut result, variant.comments());
-    add_derives(&mut result, false, true, false);
+    add_derives(&mut result, false, false, false);
     let is_camel_case: bool = is_upper_camel_case(&variant.type_name())
         && variant
             .cases()

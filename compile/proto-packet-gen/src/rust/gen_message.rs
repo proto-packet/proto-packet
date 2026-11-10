@@ -10,6 +10,7 @@ use crate::rust::gen_element::gen_element;
 use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
 use crate::rust::gen_message_mut::{gen_message_buf_accessors, gen_message_mut};
 use crate::rust::gen_message_ref::gen_message_ref;
+use crate::rust::gen_ord::gen_message_ord;
 use crate::rust::gen_struct::{
     check_list_elements, check_type_name, gen_accessor, gen_decoding, view_fields,
 };
@@ -119,6 +120,16 @@ pub fn gen_message(
         .collect();
     let schema_name: String = message.type_name().to_string();
     let schema_name: &str = &schema_name;
+    let ordered: Vec<String> = tagged
+        .iter()
+        .map(|tagged| ident(&tagged.field.name))
+        .collect();
+    block.add_statement(EmptyLine::default());
+    block.add_literal(gen_message_ord(
+        Prelude::new(&type_name),
+        &type_name,
+        &ordered,
+    ));
     block.add_statement(EmptyLine::default());
     block.add_statement(gen_unknown_fields(typing, &type_name));
     block.add_statement(EmptyLine::default());
@@ -232,7 +243,7 @@ fn gen_dec(typing: Typing<'_>, message: &Message, fields: &[Field<'_>]) -> RustS
         message.comments(),
         &lines,
     );
-    add_derives(&mut result, false, true, true);
+    add_derives(&mut result, false, false, true);
     if !is_upper_camel_case(&message.type_name()) {
         result.add_attribute("allow(non_camel_case_types)");
     }

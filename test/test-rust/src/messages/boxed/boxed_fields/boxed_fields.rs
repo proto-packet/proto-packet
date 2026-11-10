@@ -14,7 +14,7 @@
 ///     shape: box types.Shape = 3;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct BoxedFields {
     point: Option<Box<crate::types::Point>>,
     label: Option<Box<crate::types::Label>>,
@@ -124,6 +124,22 @@ impl BoxedFields {
     #[must_use]
     pub fn shape_mut(&mut self) -> Option<&mut crate::types::Shape> {
         self.shape.as_deref_mut()
+    }
+}
+
+impl Ord for BoxedFields {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.point
+            .cmp(&other.point)
+            .then_with(|| self.label.cmp(&other.label))
+            .then_with(|| self.shape.cmp(&other.shape))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for BoxedFields {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

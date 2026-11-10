@@ -11,7 +11,7 @@
 ///     reply: box messages.boxed.Comment = 2;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct Comment {
     text: Option<String>,
     reply: Option<Box<crate::messages::boxed::Comment>>,
@@ -79,6 +79,21 @@ impl Comment {
     #[must_use]
     pub fn reply_mut(&mut self) -> Option<&mut crate::messages::boxed::Comment> {
         self.reply.as_deref_mut()
+    }
+}
+
+impl Ord for Comment {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.text
+            .cmp(&other.text)
+            .then_with(|| self.reply.cmp(&other.reply))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for Comment {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

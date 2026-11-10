@@ -23,7 +23,7 @@
 ///     children: []format.lists.WithLists = 6;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WithLists {
     bytes: Option<proto_packet::types::Bytes>,
     numbers: Option<Vec<u32>>,
@@ -205,6 +205,25 @@ impl WithLists {
     {
         self.set_children(children);
         self
+    }
+}
+
+impl Ord for WithLists {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.bytes
+            .cmp(&other.bytes)
+            .then_with(|| self.numbers.cmp(&other.numbers))
+            .then_with(|| self.texts.cmp(&other.texts))
+            .then_with(|| self.points.cmp(&other.points))
+            .then_with(|| self.entries.cmp(&other.entries))
+            .then_with(|| self.children.cmp(&other.children))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for WithLists {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

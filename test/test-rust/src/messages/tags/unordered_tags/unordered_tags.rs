@@ -14,7 +14,7 @@
 ///     two: u32 = 2;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct UnorderedTags {
     three: Option<u32>,
     one: Option<u32>,
@@ -106,6 +106,22 @@ impl UnorderedTags {
     {
         self.set_two(two);
         self
+    }
+}
+
+impl Ord for UnorderedTags {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.one
+            .cmp(&other.one)
+            .then_with(|| self.two.cmp(&other.two))
+            .then_with(|| self.three.cmp(&other.three))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for UnorderedTags {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

@@ -8,7 +8,7 @@
 ///     text: string = 1;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct String {
     text: std::option::Option<std::string::String>,
     unknown_fields: std::vec::Vec<proto_packet::io::UnknownField>,
@@ -40,6 +40,20 @@ impl String {
     {
         self.set_text(text);
         self
+    }
+}
+
+impl std::cmp::Ord for String {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.text
+            .cmp(&other.text)
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl std::cmp::PartialOrd for String {
+    fn partial_cmp(&self, other: &Self) -> std::option::Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

@@ -11,7 +11,7 @@
 ///     rounds: []map<u8, u8> = 2;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WithMaps {
     scores: Option<std::collections::BTreeMap<String, u32>>,
     rounds: Option<Vec<std::collections::BTreeMap<u8, u8>>>,
@@ -73,6 +73,21 @@ impl WithMaps {
     {
         self.set_rounds(rounds);
         self
+    }
+}
+
+impl Ord for WithMaps {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.scores
+            .cmp(&other.scores)
+            .then_with(|| self.rounds.cmp(&other.rounds))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for WithMaps {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

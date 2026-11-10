@@ -20,7 +20,7 @@
 ///     signed128: i128 = 5;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct SignedFields {
     signed8: Option<i8>,
     signed16: Option<i16>,
@@ -172,6 +172,24 @@ impl SignedFields {
     {
         self.set_signed128(signed128);
         self
+    }
+}
+
+impl Ord for SignedFields {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.signed8
+            .cmp(&other.signed8)
+            .then_with(|| self.signed16.cmp(&other.signed16))
+            .then_with(|| self.signed32.cmp(&other.signed32))
+            .then_with(|| self.signed64.cmp(&other.signed64))
+            .then_with(|| self.signed128.cmp(&other.signed128))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for SignedFields {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

@@ -11,7 +11,7 @@
 ///     id: u32 = 5;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct Item {
     text: Option<String>,
     id: Option<u32>,
@@ -73,6 +73,21 @@ impl Item {
     {
         self.set_id(id);
         self
+    }
+}
+
+impl Ord for Item {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.text
+            .cmp(&other.text)
+            .then_with(|| self.id.cmp(&other.id))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for Item {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

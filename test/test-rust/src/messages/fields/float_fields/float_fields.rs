@@ -11,7 +11,7 @@
 ///     float64: f64 = 2;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct FloatFields {
     float32: Option<proto_packet::types::Float32>,
     float64: Option<proto_packet::types::Float64>,
@@ -73,6 +73,21 @@ impl FloatFields {
     {
         self.set_float64(float64);
         self
+    }
+}
+
+impl Ord for FloatFields {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.float32
+            .cmp(&other.float32)
+            .then_with(|| self.float64.cmp(&other.float64))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for FloatFields {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

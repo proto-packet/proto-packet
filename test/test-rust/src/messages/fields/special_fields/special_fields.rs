@@ -11,7 +11,7 @@
 ///     text: string = 2;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct SpecialFields {
     id: Option<proto_packet::types::Uuid>,
     text: Option<String>,
@@ -73,6 +73,21 @@ impl SpecialFields {
     {
         self.set_text(text);
         self
+    }
+}
+
+impl Ord for SpecialFields {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.id
+            .cmp(&other.id)
+            .then_with(|| self.text.cmp(&other.text))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for SpecialFields {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

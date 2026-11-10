@@ -5,9 +5,21 @@
 /// message EmptyMessage {
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct EmptyMessage {
     unknown_fields: Vec<proto_packet::io::UnknownField>,
+}
+
+impl Ord for EmptyMessage {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.unknown_fields.cmp(&other.unknown_fields)
+    }
+}
+
+impl PartialOrd for EmptyMessage {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl EmptyMessage {

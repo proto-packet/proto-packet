@@ -11,7 +11,7 @@
 ///     self: u32 = 2;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct KeywordMessage {
     r#type: Option<u32>,
     self_: Option<u32>,
@@ -73,6 +73,21 @@ impl KeywordMessage {
     {
         self.set_self(self_);
         self
+    }
+}
+
+impl Ord for KeywordMessage {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.r#type
+            .cmp(&other.r#type)
+            .then_with(|| self.self_.cmp(&other.self_))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for KeywordMessage {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

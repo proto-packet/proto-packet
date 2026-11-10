@@ -86,3 +86,20 @@ fn boxed_copy_fields() {
     assert_eq!(boxed.set_point(None), Some(Point::new(1, 2)));
     assert_eq!(boxed.point(), None);
 }
+
+#[test]
+fn messages_are_ordered_by_tag_number() {
+    use proto_packet_test::messages::tags::UnorderedTags;
+
+    let low: UnorderedTags = UnorderedTags::default()
+        .with_one(0)
+        .with_two(9)
+        .with_three(9);
+    let high: UnorderedTags = UnorderedTags::default()
+        .with_one(1)
+        .with_two(0)
+        .with_three(0);
+    assert!(low < high);
+    assert!(UnorderedTags::default() < UnorderedTags::default().with_one(0));
+    assert!(UnorderedTags::default().with_three(9) < UnorderedTags::default().with_one(0));
+}

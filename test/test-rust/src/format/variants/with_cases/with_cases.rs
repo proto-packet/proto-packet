@@ -14,7 +14,7 @@
 ///     id: u32 = 3;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct WithCases {
     shape: Option<crate::format::variants::Shape>,
     older: Option<crate::format::variants::OlderCases>,
@@ -118,6 +118,22 @@ impl WithCases {
     {
         self.set_id(id);
         self
+    }
+}
+
+impl Ord for WithCases {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.shape
+            .cmp(&other.shape)
+            .then_with(|| self.older.cmp(&other.older))
+            .then_with(|| self.id.cmp(&other.id))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for WithCases {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

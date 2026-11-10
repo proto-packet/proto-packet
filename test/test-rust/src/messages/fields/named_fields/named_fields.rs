@@ -20,7 +20,7 @@
 ///     shape: types.Shape = 5;
 /// }
 /// ```
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct NamedFields {
     point: Option<crate::types::Point>,
     person: Option<crate::types::Person>,
@@ -196,6 +196,24 @@ impl NamedFields {
     #[must_use]
     pub fn shape_mut(&mut self) -> Option<&mut crate::types::Shape> {
         self.shape.as_mut()
+    }
+}
+
+impl Ord for NamedFields {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.point
+            .cmp(&other.point)
+            .then_with(|| self.person.cmp(&other.person))
+            .then_with(|| self.label.cmp(&other.label))
+            .then_with(|| self.color.cmp(&other.color))
+            .then_with(|| self.shape.cmp(&other.shape))
+            .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
+    }
+}
+
+impl PartialOrd for NamedFields {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

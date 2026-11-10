@@ -263,6 +263,15 @@ fn rejects_bool_bytes_above_1() {
 }
 
 #[test]
+fn unknown_cases_are_ordered_by_tag_number() {
+    let before: OlderCases = OlderCases::decode(&NewerCases::Number(5).encode()).unwrap();
+    let known: OlderCases = OlderCases::Text(String::default());
+    let after: OlderCases = OlderCases::decode(&unknown_bytes()).unwrap();
+    assert!(before.tag_number() < known.tag_number());
+    assert!(before < known && known < after);
+}
+
+#[test]
 fn unknown_cases_are_not_validated() {
     OlderCases::decode(&[9, 0, 0xFF, 0xFF]).unwrap();
 }
