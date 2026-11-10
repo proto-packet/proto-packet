@@ -82,6 +82,14 @@ The lists & the maps are missing from some of the generated code.
 - A reader checks the order of the keys of a map by decoding them, unless the key is a number, a
   `bool`, a `uuid` or a `string`. (`dep/dep-rust/src/io/list/element.rs`)
 
+### Decimals
+
+A `decimal<S>` is an `i64` of units, so it holds about 18 digits. (`dep/dep-rust/src/types/decimal.rs`)
+
+- It can only be added & subtracted. Multiplying & dividing need a rounding rule.
+- There is no larger decimal. (ex: an `i128` of units, for 38 digits)
+- Two scales can't be converted to each other.
+
 ### Recursive Types
 
 A `Ref` type validates its nested values by recursion, so a struct, message or variant that contains
