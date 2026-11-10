@@ -58,6 +58,25 @@ message WithLists {
     children: []WithLists = 6;
 }
 
+// A variant with lists.
+variant ListCases {
+
+    // The bytes.
+    Blob: []u8 = 1;
+
+    // The numbers.
+    Numbers: []u32 = 2;
+
+    // The strings.
+    Texts: []string = 3;
+
+    // The fixed structs.
+    Points: []Point = 4;
+
+    // A number, so a case has a setter in place.
+    Number: u32 = 5;
+}
+
 // A struct with a list of each kind of element.
 struct ListKinds {
 

@@ -7,7 +7,7 @@ use crate::rust::encoding::{IO, gen_encode};
 use crate::rust::gen_buf::{buf_name, gen_buf};
 use crate::rust::gen_element::gen_element;
 use crate::rust::gen_json::{SERDE, TYPES, gen_serde_impls};
-use crate::rust::gen_struct::{check_type_name, gen_decoding};
+use crate::rust::gen_struct::{check_list_elements, check_type_name, gen_decoding};
 use crate::rust::gen_struct_mut::mut_name;
 use crate::rust::gen_struct_ref::ref_name;
 use crate::rust::gen_variant_mut::{gen_variant_buf_accessors, gen_variant_mut};
@@ -119,6 +119,11 @@ pub fn gen_variant(
         &format!("{}.{}", mod_path, variant.type_name()),
         &cases,
     )?;
+    check_list_elements(
+        project,
+        &format!("{}.{}", mod_path, variant.type_name()),
+        cases.iter().map(|case| (case.name.value(), case.tag)),
+    )?;
 
     let inception: &str = if snake_case(&variant.type_name()) == "unrecognized" {
         "#[allow(clippy::module_inception)]\n"
@@ -167,6 +172,11 @@ pub fn gen_variant(
     ] {
         check_type_name(project, mod_path, &name)?;
     }
+    let view_cases: Vec<Case> = cases
+        .iter()
+        .copied()
+        .filter(|case| !case.tag.is_list())
+        .collect();
     Ok(vec![
         TypeFile {
             suffix: "",
@@ -200,11 +210,11 @@ pub fn gen_variant(
         },
         TypeFile {
             suffix: "_view",
-            code: gen_variant_view(typing, schema_name, &cases, &type_name),
+            code: gen_variant_view(typing, schema_name, &view_cases, &type_name),
         },
         TypeFile {
             suffix: "_view_mut",
-            code: gen_variant_view_mut(typing, schema_name, &cases, &type_name),
+            code: gen_variant_view_mut(typing, schema_name, &view_cases, &type_name),
         },
     ])
 }
@@ -342,6 +352,11 @@ fn gen_getter(typing: Typing<'_>, case: Case<'_>) -> Function {
     let value_type: RustType = typing.rust_type(case.tag);
     let (result, value): (String, String) = if case.tag.is_string() {
         ("&str".to_string(), "value.as_str()".to_string())
+    } else if let TypeTag::List(element) = case.tag {
+        (
+            format!("&[{}]", typing.rust_type(element)),
+            "value.as_slice()".to_string(),
+        )
     } else if case.is_nested(typing) {
         let value: &str = if case.is_boxed { "&**value" } else { "value" };
         (format!("&{}", value_type), value.to_string())
@@ -418,6 +433,11 @@ fn gen_encoding(typing: Typing<'_>, type_name: &str, cases: &[Case<'_>]) -> Impl
             None if case.tag.is_string() => {
                 format!("Self::{}(value) => 2 + value.len(),", case.ident())
             }
+            None if case.tag.is_list() => format!(
+                "Self::{}(value) => 2 + {}::list_encoded_len(value),",
+                case.ident(),
+                IO
+            ),
             None => format!("Self::{}(value) => 2 + value.encoded_len(),", case.ident()),
         });
     }

@@ -5,8 +5,8 @@ use proto_packet::io::{DecodeError, ListRef};
 use proto_packet::types::Float64;
 use proto_packet_test::format::examples::{Color, Entry, Line, Point};
 use proto_packet_test::format::lists::{
-    Lines, ListKinds, ListKindsRef, Nested, NestedRef, Numbers, NumbersRef, Texts, TextsRef,
-    WithLists, WithListsRef,
+    Lines, ListCases, ListCasesCase, ListCasesRef, ListKinds, ListKindsRef, Nested, NestedRef,
+    Numbers, NumbersRef, Texts, TextsRef, WithLists, WithListsRef,
 };
 use proto_packet_test::format::messages::Item;
 use proto_packet_test::format::variants::Shape;
@@ -320,6 +320,61 @@ fn messages_hold_lists_of_every_kind() {
 fn messages_reject_invalid_lists() {
     let bytes: [u8; 7] = [1, 0, 2, 0, 7, 0, 0];
     assert_eq!(WithLists::decode(&bytes), Err(DecodeError::InvalidList));
+}
+
+#[test]
+fn variants_hold_lists() {
+    assert_encoding!(
+        ListCases,
+        ListCases::Numbers(vec![7, 6]),
+        &[2, 0, 7, 0, 0, 0, 6, 0, 0, 0]
+    );
+    assert_encoding!(ListCases, ListCases::Blob(Vec::default()), &[1, 0]);
+    assert_encoding!(
+        ListCases,
+        ListCases::Texts(vec!["hi".to_string()]),
+        &[3, 0, 1, 0, 0, 0, b'h', b'i']
+    );
+
+    let value: ListCases = ListCases::Points(vec![Point::new(1, 2), Point::new(3, 4)]);
+    let bytes: Vec<u8> = value.encode();
+    assert_encoding!(ListCases, value.clone(), &bytes);
+    assert_eq!(
+        value.as_points(),
+        Some(&[Point::new(1, 2), Point::new(3, 4)][..])
+    );
+    assert_eq!(value.as_numbers(), None);
+
+    let view: ListCasesRef = ListCasesRef::new(&bytes).unwrap();
+    assert_eq!(view.as_points().unwrap().get(1).unwrap().y(), 4);
+    match view.case() {
+        ListCasesCase::Points(points) => assert_eq!(points.len(), 2),
+        other => panic!("{:?}", other),
+    }
+}
+
+#[test]
+fn variants_reject_invalid_lists() {
+    assert_eq!(
+        ListCases::decode(&[2, 0, 7, 0, 0]),
+        Err(DecodeError::InvalidList)
+    );
+    assert_eq!(
+        ListCases::decode(&[3, 0, 1, 0, 0, 0, 0xFF]),
+        Err(DecodeError::InvalidUtf8)
+    );
+}
+
+#[test]
+fn variant_lists_are_arrays_in_json() {
+    assert_json(
+        &ListCases::Numbers(vec![7, 6]),
+        r#"{"var":"Numbers","val":[7,6]}"#,
+    );
+    assert_eq!(
+        serde_json::from_str::<ListCases>(r#"{"val":["a","b"],"var":"Texts"}"#).unwrap(),
+        ListCases::Texts(vec!["a".to_string(), "b".to_string()])
+    );
 }
 
 #[test]
