@@ -1,6 +1,7 @@
 use crate::io::list::element::stride;
 use crate::io::{DecodeError, Element, ListIter, align_up, check_padding};
 use std::fmt::{Debug, Formatter};
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::Range;
 
@@ -10,6 +11,7 @@ use std::ops::Range;
 /// - Fixed-size elements are back to back, so their count comes from the length of the bytes.
 /// - Variable-size elements follow their count & an end for each element but the last.
 /// - An empty element has no padding before it.
+/// - A list has one encoding, so two lists are equal when their bytes are.
 pub struct ListRef<'a, T> {
     bytes: &'a [u8],
     element: PhantomData<T>,
@@ -118,6 +120,20 @@ impl<T> Copy for ListRef<'_, T> {}
 impl<T> Clone for ListRef<'_, T> {
     fn clone(&self) -> Self {
         *self
+    }
+}
+
+impl<T> Eq for ListRef<'_, T> {}
+
+impl<T> PartialEq for ListRef<'_, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.bytes == other.bytes
+    }
+}
+
+impl<T> Hash for ListRef<'_, T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.bytes.hash(state);
     }
 }
 

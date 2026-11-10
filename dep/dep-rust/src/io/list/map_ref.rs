@@ -5,6 +5,7 @@ use crate::io::{write_padding, write_zeros};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fmt::{Debug, Formatter};
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::Range;
 
@@ -13,6 +14,7 @@ use std::ops::Range;
 /// # Note
 /// - A map is the end of its keys, its keys as a list, then its values as a list.
 /// - The keys are strictly increasing, so a key is found by a binary search.
+/// - A map has one encoding, so two maps are equal when their bytes are.
 pub struct MapRef<'a, K, V> {
     bytes: &'a [u8],
     key: PhantomData<K>,
@@ -105,6 +107,20 @@ impl<K, V> Copy for MapRef<'_, K, V> {}
 impl<K, V> Clone for MapRef<'_, K, V> {
     fn clone(&self) -> Self {
         *self
+    }
+}
+
+impl<K, V> Eq for MapRef<'_, K, V> {}
+
+impl<K, V> PartialEq for MapRef<'_, K, V> {
+    fn eq(&self, other: &Self) -> bool {
+        self.bytes == other.bytes
+    }
+}
+
+impl<K, V> Hash for MapRef<'_, K, V> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.bytes.hash(state);
     }
 }
 
