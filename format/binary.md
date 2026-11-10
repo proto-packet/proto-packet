@@ -13,6 +13,8 @@ Primitives:
   stored with the sign bit clear & only the top fraction bit set, so every NaN has the same bytes.
   (ex: `0x7FC00000` for an `f32`) `-0.0` is stored as it is, so it is a different value than `0.0`.
 - The `bool` type is a single bit in a struct & a single byte in a message or variant.
+- The `decimal<S>` type is stored as an `i64`. It is the number times 10 to the `S`, so it is exact.
+  (ex: `1.50` as a `decimal<2>` is 150) The scale `S` is from 0 to 18.
 
 Special Types:
 - The `uuid` type is stored as 16 bytes, in the order of its string form.
@@ -58,6 +60,7 @@ declared, except that struct fields go after the others.
 |-----------------------------------------------------------------------|----------|-----------|
 | `u128`, `i128`, `f128`, `uuid`                                        | 16       | 8         |
 | `u64`, `i64`, `f64`, `timestamp`, `microtime`, `nanotime`, `duration` | 8        | 8         |
+| `decimal<S>`                                                          | 8        | 8         |
 | `u32`, `i32`, `f32`, `date`                                           | 4        | 4         |
 | `u16`, `i16`, `f16`, enums                                            | 2        | 2         |
 | `u8`, `i8`                                                            | 1        | 1         |
