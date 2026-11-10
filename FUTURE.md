@@ -75,8 +75,6 @@ The lists & the maps are missing from some of the generated code.
   own type for one. (ex: a `ListView` trait that `&[T]` & `ListRef` both have) (`gen_struct.rs`)
 - The `Mut` types have no method for a list or map field or case, so one is only read in place.
   (`gen_struct_mut.rs`, `gen_message_mut.rs` & `gen_variant_mut.rs`)
-- A `[]u8` is an array of numbers in JSON, which is several times the size of the bytes. (ex:
-  base-64 text, like the unknown fields)
 - A map with a key that is a struct, message, variant, list or map fails to write as JSON, since a
   JSON key is text. (ex: an array of the entries)
 - A reader checks the order of the keys of a map by decoding them, unless the key is a number, a
