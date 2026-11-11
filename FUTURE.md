@@ -109,3 +109,23 @@ The config's `schema_extension` isn't validated, & schema files are matched by t
 paths. An extension of `.yml` reads the project's own `config.yml` as a schema, & one without a dot
 (ex: `pps`) turns `a.pps` into the mod name `a.`, giving a confusing name error.
 (`proto-packet-compile/src/read.rs`)
+
+## Editors
+
+### Language Server
+
+The language server only reports the errors of a schema file. (`proto-packet-lsp`)
+
+- A file is checked alone, so an unknown type or a bad import isn't reported. The server doesn't
+  know the source folder of the project, & a project without a config file doesn't mark it. (ex: a
+  setting of the plugin, or the nearest folder with a config file)
+- The checks stop at the first error of a file, as the compiler does. (ex: report every error of a
+  file, & keep checking a file that is half typed)
+- There is no go to definition, hover or completion. Only the parse tree has the positions they
+  need.
+
+### JetBrains Plugin
+
+- The compiler is only looked for on the `PATH` & in `~/.cargo/bin`. (ex: a setting for its path)
+- Only the `.pps` files are schema files, whatever the `schema_extension` of the config is.
+- The plugin isn't published, so it is installed from its zip file.
