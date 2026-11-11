@@ -42,16 +42,6 @@ Some schema names generate Rust that doesn't compile, or that hides other items.
 - The errors for a conflict with a child mod name the Rust folder, not the schema mod path: empty at
   the root, & `self_` instead of `self`. (`generate.rs`)
 
-### Doc Comments
-
-The comments of enums, variants, services & their members are copied into the rustdoc unchanged, so
-rustdoc reads them as Markdown. (`docs.rs`)
-
-- An indented line after a blank comment line becomes a code block, & so a doctest that fails
-  `cargo test` on the generated crate. (ex: `// Line one.`, `//`, `//     foo bar baz`)
-- Ordinary text can fail `cargo doc` with `-D warnings`. (ex: `Vec<u32>` is an unclosed HTML tag, &
-  `[Thing]` a broken intra-doc link)
-
 ### Variant `u128` & `i128` Cases
 
 A variant is `{"var": ..., "val": ...}` in JSON. When `val` comes before `var`, the value is buffered
