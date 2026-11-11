@@ -20,3 +20,125 @@ service S {
     // A call named like a prelude trait method. (`AsRef::as_ref`)
     as_ref: u32 returns u32;
 }
+
+// A struct with `Copy` fields named like trait methods.
+struct MethodFields {
+
+    // A field named like the method `clone`.
+    clone: u32;
+
+    // A field named like the method `eq`.
+    eq: u32;
+
+    // A field named like the method `cmp`.
+    cmp: u32;
+
+    // A field named like the method `max`.
+    max: u32;
+
+    // A field named like the method `min`.
+    min: u32;
+
+    // A field named like the method `hash`.
+    hash: u32;
+
+    // A field named like the method `fmt`.
+    fmt: u32;
+
+    // A field named like the method `from`.
+    from: u32;
+
+    // A field named like the method `into`.
+    into: u32;
+
+    // A field named like the method `try_into`.
+    try_into: u32;
+
+    // A field named like the method `to_owned`.
+    to_owned: u32;
+
+    // A field named like the method `as_ref`.
+    as_ref: u32;
+
+    // A field named like the method `into_iter`.
+    into_iter: u32;
+
+    // A field named like the method `from_str`.
+    from_str: u32;
+}
+
+// A struct with text fields named like trait methods. (their getters return references)
+struct MethodTexts {
+
+    // A field named like the method `clone`.
+    clone: string;
+
+    // A field named like the method `as_ref`.
+    as_ref: string;
+
+    // A field named like the method `borrow`.
+    borrow: string;
+
+    // A field named like the method `deref`.
+    deref: string;
+
+    // A field named like the method `into`.
+    into: string;
+
+    // A field named like the method `to_string`.
+    to_string: string;
+}
+
+// A message with fields named like trait methods.
+message MethodMessage {
+
+    // A field named like the method `clone`.
+    clone: u32 = 1;
+
+    // A field named like the method `cmp`.
+    cmp: u32 = 2;
+
+    // A field named like the method `into`.
+    into: string = 3;
+
+    // A field named like the method `try_into`.
+    try_into: u32 = 4;
+
+    // A field named like the method `as_ref`.
+    as_ref: string = 5;
+
+    // A field named like the method `from_str`.
+    from_str: u32 = 6;
+}
+
+// A message that nests the types with fields named like trait methods.
+message MethodNest {
+
+    // A struct field.
+    fields: MethodFields = 1;
+
+    // A struct field with text.
+    texts: MethodTexts = 2;
+
+    // A message field.
+    message: MethodMessage = 3;
+
+    // A list field.
+    list: []MethodMessage = 4;
+
+    // A map field with a struct key.
+    keyed: map<MethodFields, MethodTexts> = 5;
+}
+
+// A variant of the types with fields named like trait methods.
+variant MethodCases {
+
+    // A struct case.
+    Fields: MethodFields = 1;
+
+    // A struct case with text.
+    Texts: MethodTexts = 2;
+
+    // A message case.
+    Message: MethodMessage = 3;
+}
