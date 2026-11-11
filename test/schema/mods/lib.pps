@@ -1,0 +1,6 @@
+// A struct in a mod named like the file of the root mod. (`lib.rs`)
+struct NestedLib {
+
+    // The value.
+    value: u32;
+}

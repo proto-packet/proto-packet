@@ -1,0 +1,6 @@
+// A struct in a root mod named like the file of any other mod. (`mod.rs`)
+struct RootMod {
+
+    // The value.
+    value: u32;
+}

@@ -5,6 +5,7 @@ pub mod enums;
 pub mod format;
 pub mod imports;
 pub mod messages;
+pub mod r#mod;
 pub mod mods;
 pub mod names;
 pub mod services;
