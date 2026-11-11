@@ -40,7 +40,14 @@ macro_rules! impl_time {
                 self.$field.to_le_bytes()
             }
         }
+    };
+}
 
+/// Implements the text of a time type that holds one integer, for its display & its JSON.
+///
+/// The text is the integer in the `$field`. A `Date` has its own, as a calendar date.
+macro_rules! impl_time_text {
+    ($name:ident, $field:ident, $int:ty) => {
         impl std::fmt::Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 std::fmt::Display::fmt(&self.$field, f)
@@ -141,3 +148,4 @@ macro_rules! impl_system_time {
 
 pub(crate) use impl_system_time;
 pub(crate) use impl_time;
+pub(crate) use impl_time_text;

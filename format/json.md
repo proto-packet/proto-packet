@@ -10,7 +10,8 @@ This document specifies the JSON form of ProtoPacket values.
 | `u64`, `u128`   | A string of the number.                                        |
 | `i64`, `i128`   | A string of the number.                                        |
 | `f32`, `f64`    | A string of the number, or of a name if it isn't finite.       |
-| time types      | A string of the integer the time is stored as.                 |
+| `date`          | A string of its ISO 8601 calendar date.                        |
+| other times     | A string of the integer the time is stored as.                 |
 | `decimal<S>`    | A string of the number, with all `S` of its fraction digits.   |
 | `uuid`          | A string, in its string form.                                  |
 | `string`        | A string.                                                      |
@@ -32,7 +33,8 @@ Many JSON parsers read a plain number as a float, which can't hold every number.
 strings, & readers reject a plain number for one.
 
 - A `u64`, `i64`, `u128` or `i128` is its digits. (ex: `"18446744073709551615"`)
-- A time is the integer it is stored as. (ex: `"1700000000000"` for a `timestamp`)
+- A time other than a `date` is the integer it is stored as. (ex: `"1700000000000"` for a
+  `timestamp`)
 - A float is the shortest number that reads back as the same float. (ex: `"1.5"`) A float that
   isn't finite is `"NaN"`, `"Infinity"` or `"-Infinity"`.
 - A decimal has all `S` of its fraction digits. (ex: `"1.50"`) A reader takes fewer fraction digits
@@ -40,6 +42,12 @@ strings, & readers reject a plain number for one.
 
 The number in the string is written as JSON writes a number. It has no `+` before it, no leading
 zeros, no space & a digit on each side of a `.`. Only a float can have an exponent. (ex: `"1e-7"`)
+
+## Dates
+
+A `date` is its ISO 8601 calendar date, since it has no precision to lose & people read it. (ex:
+`"2026-11-11"`) A year before 0 or after 9999 has a sign & at least 4 digits. (ex: `"-0001-01-01"`,
+`"+10000-01-01"`) A date that isn't a day of the calendar is rejected.
 
 ## Bytes
 

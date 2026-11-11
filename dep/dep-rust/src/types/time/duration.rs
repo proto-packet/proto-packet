@@ -1,5 +1,5 @@
 use crate::types::TimeRangeError;
-use crate::types::time::impl_time::impl_time;
+use crate::types::time::impl_time::{impl_time, impl_time_text};
 
 /// A span of time, as nanoseconds.
 ///
@@ -11,6 +11,7 @@ pub struct Duration {
 }
 
 impl_time!(Duration, nanos, i64);
+impl_time_text!(Duration, nanos, i64);
 
 impl TryFrom<std::time::Duration> for Duration {
     type Error = TimeRangeError;

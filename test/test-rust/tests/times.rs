@@ -183,7 +183,7 @@ fn times_are_text_in_json() {
     value.set_spans(BTreeMap::from([(Date::new(7), Duration::new(8))]));
     assert_json(
         &value,
-        r#"{"at":"1","micro":"2","nano":"3","day":"-4","span":"-5","days":["6"],"spans":{"7":"8"}}"#,
+        r#"{"at":"1","micro":"2","nano":"3","day":"1969-12-28","span":"-5","days":["1970-01-07"],"spans":{"1970-01-08":"8"}}"#,
     );
     assert_json(
         &AllCases::At(Timestamp::new(7)),
@@ -208,6 +208,31 @@ fn json_rejects_invalid_times() {
         r#"{"var":"At","val":"9223372036854775808"}"#, // out of range
     ] {
         assert!(serde_json::from_str::<AllCases>(json).is_err(), "{}", json);
+    }
+}
+
+#[test]
+fn dates_are_iso_8601_text() {
+    for (date, text) in [
+        (Date::from_ymd(2026, 11, 11), "2026-11-11"),
+        (Date::from_ymd(0, 1, 1), "0000-01-01"),
+        (Date::from_ymd(-1, 12, 31), "-0001-12-31"),
+        (Date::from_ymd(10_000, 1, 1), "+10000-01-01"),
+    ] {
+        let date: Date = date.expect("a valid date");
+        assert_eq!(date.to_string(), text);
+        assert_eq!(Date::parse(text), Some(date));
+    }
+    for text in [
+        "2026-11-31",       // no such day
+        "2026-1-11",        // a short month
+        "26-11-11",         // a short year
+        "+2026-11",         // no day
+        "2026-11-11T00:00", // a time
+        "20403",            // the days
+        "",
+    ] {
+        assert_eq!(Date::parse(text), None, "{}", text);
     }
 }
 

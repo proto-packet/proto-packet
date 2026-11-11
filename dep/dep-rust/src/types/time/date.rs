@@ -5,6 +5,8 @@ use crate::types::time::impl_time::impl_time;
 /// # Note
 /// - It has no time zone.
 /// - The calendar is the proleptic Gregorian calendar.
+/// - Its text is its ISO 8601 calendar date. (ex: `2026-11-11`) A year before 0 or after 9999 has a
+///   sign & at least 4 digits. (ex: `-0001-01-01`, `+10000-01-01`)
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 pub struct Date {
     days: i32,
@@ -71,5 +73,85 @@ impl Date {
             2 => 28,
             _ => 31,
         }
+    }
+}
+
+impl Date {
+    //! Text
+
+    /// Parses the date from its ISO 8601 `text`. (none if it isn't one, or there is no such day)
+    #[must_use]
+    pub fn parse(text: &str) -> Option<Self> {
+        let (signed, rest) = match text.as_bytes().first()? {
+            b'+' | b'-' => (true, &text[1..]),
+            _ => (false, text),
+        };
+        let mut parts = rest.split('-');
+        let (year, month, day) = (parts.next()?, parts.next()?, parts.next()?);
+        let digits = |part: &str, length: usize| {
+            part.len() == length && part.bytes().all(|b| b.is_ascii_digit())
+        };
+        let year_ok: bool = match signed {
+            true => year.len() >= 4 && year.bytes().all(|b| b.is_ascii_digit()),
+            false => digits(year, 4),
+        };
+        if parts.next().is_some() || !year_ok || !digits(month, 2) || !digits(day, 2) {
+            return None;
+        }
+        let year: i32 = match text.starts_with('-') {
+            true => -year.parse::<i32>().ok()?,
+            false => year.parse().ok()?,
+        };
+        Self::from_ymd(year, month.parse().ok()?, day.parse().ok()?)
+    }
+}
+
+impl std::fmt::Display for Date {
+    /// Writes the date's ISO 8601 calendar date.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (year, month, day) = self.to_ymd();
+        match year {
+            0..=9999 => write!(f, "{year:04}-{month:02}-{day:02}"),
+            ..0 => write!(f, "-{:04}-{month:02}-{day:02}", year.unsigned_abs()),
+            _ => write!(f, "+{year:04}-{month:02}-{day:02}"),
+        }
+    }
+}
+
+impl serde::Serialize for Date {
+    /// Serializes the date as its ISO 8601 calendar date.
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.collect_str(self)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Date {
+    /// Deserializes the date from its ISO 8601 calendar date.
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct DateVisitor;
+
+        impl serde::de::Visitor<'_> for DateVisitor {
+            type Value = Date;
+
+            fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("an ISO 8601 calendar date")
+            }
+
+            fn visit_str<E>(self, text: &str) -> Result<Date, E>
+            where
+                E: serde::de::Error,
+            {
+                Date::parse(text)
+                    .ok_or_else(|| E::invalid_value(serde::de::Unexpected::Str(text), &self))
+            }
+        }
+
+        deserializer.deserialize_str(DateVisitor)
     }
 }

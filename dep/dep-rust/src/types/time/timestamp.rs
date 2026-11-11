@@ -1,4 +1,4 @@
-use crate::types::time::impl_time::{impl_system_time, impl_time};
+use crate::types::time::impl_time::{impl_system_time, impl_time, impl_time_text};
 
 /// A time, as the milliseconds since the epoch.
 ///
@@ -10,4 +10,5 @@ pub struct Timestamp {
 }
 
 impl_time!(Timestamp, millis, i64);
+impl_time_text!(Timestamp, millis, i64);
 impl_system_time!(Timestamp, millis, 1_000_000);

@@ -1,4 +1,4 @@
-use crate::types::time::impl_time::{impl_system_time, impl_time};
+use crate::types::time::impl_time::{impl_system_time, impl_time, impl_time_text};
 
 /// A time, as the nanoseconds since the epoch.
 ///
@@ -11,4 +11,5 @@ pub struct Nanotime {
 }
 
 impl_time!(Nanotime, nanos, i64);
+impl_time_text!(Nanotime, nanos, i64);
 impl_system_time!(Nanotime, nanos, 1);
