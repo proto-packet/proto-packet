@@ -113,7 +113,7 @@ pub trait WithMapsView {
 
 impl<V: WithMapsView> WithMapsView for &V {
     fn scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
-        (**self).scores()
+        <V as WithMapsView>::scores(self)
     }
 
     fn rounds(
@@ -121,7 +121,7 @@ impl<V: WithMapsView> WithMapsView for &V {
     ) -> Option<
         impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
     > {
-        (**self).rounds()
+        <V as WithMapsView>::rounds(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -135,7 +135,7 @@ impl<V: WithMapsView> WithMapsView for &V {
 
 impl<V: WithMapsView> WithMapsView for &mut V {
     fn scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
-        (**self).scores()
+        <V as WithMapsView>::scores(self)
     }
 
     fn rounds(
@@ -143,7 +143,7 @@ impl<V: WithMapsView> WithMapsView for &mut V {
     ) -> Option<
         impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
     > {
-        (**self).rounds()
+        <V as WithMapsView>::rounds(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -206,7 +206,7 @@ impl WithMapsView for super::WithMapsRef<'_> {
 
 impl WithMapsView for super::WithMapsBuf {
     fn scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
-        self.as_ref().scores()
+        super::WithMapsRef::scores(&self.as_ref())
     }
 
     fn rounds(
@@ -214,7 +214,7 @@ impl WithMapsView for super::WithMapsBuf {
     ) -> Option<
         impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
     > {
-        self.as_ref().rounds()
+        super::WithMapsRef::rounds(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -228,7 +228,7 @@ impl WithMapsView for super::WithMapsBuf {
 
 impl WithMapsView for super::WithMapsMut<'_> {
     fn scores(&self) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = u32>> {
-        self.as_ref().scores()
+        super::WithMapsRef::scores(&self.as_ref())
     }
 
     fn rounds(
@@ -236,7 +236,7 @@ impl WithMapsView for super::WithMapsMut<'_> {
     ) -> Option<
         impl proto_packet::io::ListView<Item = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>>,
     > {
-        self.as_ref().rounds()
+        super::WithMapsRef::rounds(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

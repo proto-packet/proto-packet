@@ -84,16 +84,15 @@ impl Comment {
 
 impl Ord for Comment {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.text
-            .cmp(&other.text)
-            .then_with(|| self.reply.cmp(&other.reply))
+        Ord::cmp(&self.text, &other.text)
+            .then_with(|| Ord::cmp(&self.reply, &other.reply))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for Comment {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

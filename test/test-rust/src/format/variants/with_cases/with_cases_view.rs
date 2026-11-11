@@ -82,15 +82,15 @@ pub trait WithCasesView {
 
 impl<V: WithCasesView> WithCasesView for &V {
     fn shape(&self) -> Option<impl crate::format::variants::ShapeView> {
-        (**self).shape()
+        <V as WithCasesView>::shape(self)
     }
 
     fn older(&self) -> Option<impl crate::format::variants::OlderCasesView> {
-        (**self).older()
+        <V as WithCasesView>::older(self)
     }
 
     fn id(&self) -> Option<u32> {
-        (**self).id()
+        <V as WithCasesView>::id(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -104,15 +104,15 @@ impl<V: WithCasesView> WithCasesView for &V {
 
 impl<V: WithCasesView> WithCasesView for &mut V {
     fn shape(&self) -> Option<impl crate::format::variants::ShapeView> {
-        (**self).shape()
+        <V as WithCasesView>::shape(self)
     }
 
     fn older(&self) -> Option<impl crate::format::variants::OlderCasesView> {
-        (**self).older()
+        <V as WithCasesView>::older(self)
     }
 
     fn id(&self) -> Option<u32> {
-        (**self).id()
+        <V as WithCasesView>::id(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -175,15 +175,15 @@ impl WithCasesView for super::WithCasesRef<'_> {
 
 impl WithCasesView for super::WithCasesBuf {
     fn shape(&self) -> Option<impl crate::format::variants::ShapeView> {
-        self.as_ref().shape()
+        super::WithCasesRef::shape(&self.as_ref())
     }
 
     fn older(&self) -> Option<impl crate::format::variants::OlderCasesView> {
-        self.as_ref().older()
+        super::WithCasesRef::older(&self.as_ref())
     }
 
     fn id(&self) -> Option<u32> {
-        self.as_ref().id()
+        super::WithCasesRef::id(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -197,15 +197,15 @@ impl WithCasesView for super::WithCasesBuf {
 
 impl WithCasesView for super::WithCasesMut<'_> {
     fn shape(&self) -> Option<impl crate::format::variants::ShapeView> {
-        self.as_ref().shape()
+        super::WithCasesRef::shape(&self.as_ref())
     }
 
     fn older(&self) -> Option<impl crate::format::variants::OlderCasesView> {
-        self.as_ref().older()
+        super::WithCasesRef::older(&self.as_ref())
     }
 
     fn id(&self) -> Option<u32> {
-        self.as_ref().id()
+        super::WithCasesRef::id(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -68,11 +68,11 @@ pub trait NumbersView {
 
 impl<V: NumbersView> NumbersView for &V {
     fn count(&self) -> u8 {
-        (**self).count()
+        <V as NumbersView>::count(self)
     }
 
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
-        (**self).values()
+        <V as NumbersView>::values(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -86,11 +86,11 @@ impl<V: NumbersView> NumbersView for &V {
 
 impl<V: NumbersView> NumbersView for &mut V {
     fn count(&self) -> u8 {
-        (**self).count()
+        <V as NumbersView>::count(self)
     }
 
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
-        (**self).values()
+        <V as NumbersView>::values(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -145,11 +145,11 @@ impl NumbersView for super::NumbersRef<'_> {
 
 impl NumbersView for super::NumbersBuf {
     fn count(&self) -> u8 {
-        self.as_ref().count()
+        super::NumbersRef::count(&self.as_ref())
     }
 
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
-        self.as_ref().values()
+        super::NumbersRef::values(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -163,11 +163,11 @@ impl NumbersView for super::NumbersBuf {
 
 impl NumbersView for super::NumbersMut<'_> {
     fn count(&self) -> u8 {
-        self.as_ref().count()
+        super::NumbersRef::count(&self.as_ref())
     }
 
     fn values(&self) -> impl proto_packet::io::ListView<Item = u32> {
-        self.as_ref().values()
+        super::NumbersRef::values(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

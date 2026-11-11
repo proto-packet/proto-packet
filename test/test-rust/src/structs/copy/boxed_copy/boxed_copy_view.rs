@@ -36,7 +36,7 @@ pub trait BoxedCopyView {
 
 impl<V: BoxedCopyView> BoxedCopyView for &V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as BoxedCopyView>::point(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: BoxedCopyView> BoxedCopyView for &V {
 
 impl<V: BoxedCopyView> BoxedCopyView for &mut V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as BoxedCopyView>::point(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl BoxedCopyView for super::BoxedCopyRef<'_> {
 
 impl BoxedCopyView for super::BoxedCopyBuf {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::BoxedCopyRef::point(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl BoxedCopyView for super::BoxedCopyBuf {
 
 impl BoxedCopyView for super::BoxedCopyMut<'_> {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::BoxedCopyRef::point(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

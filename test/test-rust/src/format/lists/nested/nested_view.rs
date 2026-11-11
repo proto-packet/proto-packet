@@ -64,7 +64,7 @@ pub trait NestedView {
 
 impl<V: NestedView> NestedView for &V {
     fn rows(&self) -> impl proto_packet::io::ListView<Item = &[u8]> {
-        (**self).rows()
+        <V as NestedView>::rows(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -78,7 +78,7 @@ impl<V: NestedView> NestedView for &V {
 
 impl<V: NestedView> NestedView for &mut V {
     fn rows(&self) -> impl proto_packet::io::ListView<Item = &[u8]> {
-        (**self).rows()
+        <V as NestedView>::rows(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -125,7 +125,7 @@ impl NestedView for super::NestedRef<'_> {
 
 impl NestedView for super::NestedBuf {
     fn rows(&self) -> impl proto_packet::io::ListView<Item = &[u8]> {
-        self.as_ref().rows()
+        super::NestedRef::rows(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -139,7 +139,7 @@ impl NestedView for super::NestedBuf {
 
 impl NestedView for super::NestedMut<'_> {
     fn rows(&self) -> impl proto_packet::io::ListView<Item = &[u8]> {
-        self.as_ref().rows()
+        super::NestedRef::rows(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

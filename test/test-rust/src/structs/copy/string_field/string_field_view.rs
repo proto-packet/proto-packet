@@ -39,7 +39,7 @@ pub trait StringFieldView {
 
 impl<V: StringFieldView> StringFieldView for &V {
     fn text(&self) -> &str {
-        (**self).text()
+        <V as StringFieldView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -53,7 +53,7 @@ impl<V: StringFieldView> StringFieldView for &V {
 
 impl<V: StringFieldView> StringFieldView for &mut V {
     fn text(&self) -> &str {
-        (**self).text()
+        <V as StringFieldView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -100,7 +100,7 @@ impl StringFieldView for super::StringFieldRef<'_> {
 
 impl StringFieldView for super::StringFieldBuf {
     fn text(&self) -> &str {
-        self.as_ref().text()
+        super::StringFieldRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -114,7 +114,7 @@ impl StringFieldView for super::StringFieldBuf {
 
 impl StringFieldView for super::StringFieldMut<'_> {
     fn text(&self) -> &str {
-        self.as_ref().text()
+        super::StringFieldRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

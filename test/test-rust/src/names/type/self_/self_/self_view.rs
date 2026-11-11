@@ -36,7 +36,7 @@ pub trait SelfView {
 
 impl<V: SelfView> SelfView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as SelfView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: SelfView> SelfView for &V {
 
 impl<V: SelfView> SelfView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as SelfView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl SelfView for super::SelfRef<'_> {
 
 impl SelfView for super::SelfBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::SelfRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl SelfView for super::SelfBuf {
 
 impl SelfView for super::SelfMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::SelfRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -50,7 +50,7 @@ pub trait MarkdownMessageView {
 
 impl<V: MarkdownMessageView> MarkdownMessageView for &V {
     fn only(&self) -> Option<u32> {
-        (**self).only()
+        <V as MarkdownMessageView>::only(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -64,7 +64,7 @@ impl<V: MarkdownMessageView> MarkdownMessageView for &V {
 
 impl<V: MarkdownMessageView> MarkdownMessageView for &mut V {
     fn only(&self) -> Option<u32> {
-        (**self).only()
+        <V as MarkdownMessageView>::only(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -111,7 +111,7 @@ impl MarkdownMessageView for super::MarkdownMessageRef<'_> {
 
 impl MarkdownMessageView for super::MarkdownMessageBuf {
     fn only(&self) -> Option<u32> {
-        self.as_ref().only()
+        super::MarkdownMessageRef::only(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -125,7 +125,7 @@ impl MarkdownMessageView for super::MarkdownMessageBuf {
 
 impl MarkdownMessageView for super::MarkdownMessageMut<'_> {
     fn only(&self) -> Option<u32> {
-        self.as_ref().only()
+        super::MarkdownMessageRef::only(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

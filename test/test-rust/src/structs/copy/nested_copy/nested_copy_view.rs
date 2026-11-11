@@ -36,7 +36,7 @@ pub trait NestedCopyView {
 
 impl<V: NestedCopyView> NestedCopyView for &V {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
-        (**self).fields()
+        <V as NestedCopyView>::fields(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: NestedCopyView> NestedCopyView for &V {
 
 impl<V: NestedCopyView> NestedCopyView for &mut V {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
-        (**self).fields()
+        <V as NestedCopyView>::fields(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl NestedCopyView for super::NestedCopyRef<'_> {
 
 impl NestedCopyView for super::NestedCopyBuf {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
-        self.as_ref().fields()
+        super::NestedCopyRef::fields(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl NestedCopyView for super::NestedCopyBuf {
 
 impl NestedCopyView for super::NestedCopyMut<'_> {
     fn fields(&self) -> impl crate::structs::copy::CopyFieldsView {
-        self.as_ref().fields()
+        super::NestedCopyRef::fields(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

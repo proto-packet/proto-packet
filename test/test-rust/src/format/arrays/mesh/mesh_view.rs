@@ -53,15 +53,15 @@ pub trait MeshView {
 
 impl<V: MeshView> MeshView for &V {
     fn id(&self) -> u32 {
-        (**self).id()
+        <V as MeshView>::id(self)
     }
 
     fn origin(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float32> {
-        (**self).origin()
+        <V as MeshView>::origin(self)
     }
 
     fn tag(&self) -> &[u8; 4] {
-        (**self).tag()
+        <V as MeshView>::tag(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -75,15 +75,15 @@ impl<V: MeshView> MeshView for &V {
 
 impl<V: MeshView> MeshView for &mut V {
     fn id(&self) -> u32 {
-        (**self).id()
+        <V as MeshView>::id(self)
     }
 
     fn origin(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float32> {
-        (**self).origin()
+        <V as MeshView>::origin(self)
     }
 
     fn tag(&self) -> &[u8; 4] {
-        (**self).tag()
+        <V as MeshView>::tag(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -141,15 +141,15 @@ impl MeshView for super::MeshRef<'_> {
 
 impl MeshView for super::MeshBuf {
     fn id(&self) -> u32 {
-        self.as_ref().id()
+        super::MeshRef::id(&self.as_ref())
     }
 
     fn origin(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float32> {
-        self.as_ref().origin()
+        super::MeshRef::origin(&self.as_ref())
     }
 
     fn tag(&self) -> &[u8; 4] {
-        self.as_ref().tag()
+        super::MeshRef::tag(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -163,15 +163,15 @@ impl MeshView for super::MeshBuf {
 
 impl MeshView for super::MeshMut<'_> {
     fn id(&self) -> u32 {
-        self.as_ref().id()
+        super::MeshRef::id(&self.as_ref())
     }
 
     fn origin(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float32> {
-        self.as_ref().origin()
+        super::MeshRef::origin(&self.as_ref())
     }
 
     fn tag(&self) -> &[u8; 4] {
-        self.as_ref().tag()
+        super::MeshRef::tag(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

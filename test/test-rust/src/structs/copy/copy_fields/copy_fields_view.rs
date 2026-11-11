@@ -48,19 +48,19 @@ pub trait CopyFieldsView {
 
 impl<V: CopyFieldsView> CopyFieldsView for &V {
     fn count(&self) -> u32 {
-        (**self).count()
+        <V as CopyFieldsView>::count(self)
     }
 
     fn id(&self) -> proto_packet::types::Uuid {
-        (**self).id()
+        <V as CopyFieldsView>::id(self)
     }
 
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as CopyFieldsView>::point(self)
     }
 
     fn color(&self) -> crate::types::Color {
-        (**self).color()
+        <V as CopyFieldsView>::color(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -74,19 +74,19 @@ impl<V: CopyFieldsView> CopyFieldsView for &V {
 
 impl<V: CopyFieldsView> CopyFieldsView for &mut V {
     fn count(&self) -> u32 {
-        (**self).count()
+        <V as CopyFieldsView>::count(self)
     }
 
     fn id(&self) -> proto_packet::types::Uuid {
-        (**self).id()
+        <V as CopyFieldsView>::id(self)
     }
 
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as CopyFieldsView>::point(self)
     }
 
     fn color(&self) -> crate::types::Color {
-        (**self).color()
+        <V as CopyFieldsView>::color(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -152,19 +152,19 @@ impl CopyFieldsView for super::CopyFieldsRef<'_> {
 
 impl CopyFieldsView for super::CopyFieldsBuf {
     fn count(&self) -> u32 {
-        self.as_ref().count()
+        super::CopyFieldsRef::count(&self.as_ref())
     }
 
     fn id(&self) -> proto_packet::types::Uuid {
-        self.as_ref().id()
+        super::CopyFieldsRef::id(&self.as_ref())
     }
 
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::CopyFieldsRef::point(&self.as_ref())
     }
 
     fn color(&self) -> crate::types::Color {
-        self.as_ref().color()
+        super::CopyFieldsRef::color(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -178,19 +178,19 @@ impl CopyFieldsView for super::CopyFieldsBuf {
 
 impl CopyFieldsView for super::CopyFieldsMut<'_> {
     fn count(&self) -> u32 {
-        self.as_ref().count()
+        super::CopyFieldsRef::count(&self.as_ref())
     }
 
     fn id(&self) -> proto_packet::types::Uuid {
-        self.as_ref().id()
+        super::CopyFieldsRef::id(&self.as_ref())
     }
 
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::CopyFieldsRef::point(&self.as_ref())
     }
 
     fn color(&self) -> crate::types::Color {
-        self.as_ref().color()
+        super::CopyFieldsRef::color(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

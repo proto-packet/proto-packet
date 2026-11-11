@@ -50,7 +50,7 @@ pub trait GreetResponseView {
 
 impl<V: GreetResponseView> GreetResponseView for &V {
     fn greeting(&self) -> Option<&str> {
-        (**self).greeting()
+        <V as GreetResponseView>::greeting(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -64,7 +64,7 @@ impl<V: GreetResponseView> GreetResponseView for &V {
 
 impl<V: GreetResponseView> GreetResponseView for &mut V {
     fn greeting(&self) -> Option<&str> {
-        (**self).greeting()
+        <V as GreetResponseView>::greeting(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -111,7 +111,7 @@ impl GreetResponseView for super::GreetResponseRef<'_> {
 
 impl GreetResponseView for super::GreetResponseBuf {
     fn greeting(&self) -> Option<&str> {
-        self.as_ref().greeting()
+        super::GreetResponseRef::greeting(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -125,7 +125,7 @@ impl GreetResponseView for super::GreetResponseBuf {
 
 impl GreetResponseView for super::GreetResponseMut<'_> {
     fn greeting(&self) -> Option<&str> {
-        self.as_ref().greeting()
+        super::GreetResponseRef::greeting(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

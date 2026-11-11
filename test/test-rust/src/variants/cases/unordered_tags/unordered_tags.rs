@@ -92,9 +92,9 @@ impl UnorderedTags {
 impl Ord for UnorderedTags {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Three(a), Self::Three(b)) => a.cmp(b),
-            (Self::One(a), Self::One(b)) => a.cmp(b),
-            (Self::Two(a), Self::Two(b)) => a.cmp(b),
+            (Self::Three(a), Self::Three(b)) => Ord::cmp(a, b),
+            (Self::One(a), Self::One(b)) => Ord::cmp(a, b),
+            (Self::Two(a), Self::Two(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -103,7 +103,7 @@ impl Ord for UnorderedTags {
 
 impl PartialOrd for UnorderedTags {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

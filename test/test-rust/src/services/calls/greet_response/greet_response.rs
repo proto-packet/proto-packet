@@ -45,15 +45,14 @@ impl GreetResponse {
 
 impl Ord for GreetResponse {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.greeting
-            .cmp(&other.greeting)
+        Ord::cmp(&self.greeting, &other.greeting)
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for GreetResponse {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

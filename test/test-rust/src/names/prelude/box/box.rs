@@ -92,8 +92,8 @@ impl Box {
 impl std::cmp::Ord for Box {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Inner(a), Self::Inner(b)) => a.cmp(b),
-            (Self::Text(a), Self::Text(b)) => a.cmp(b),
+            (Self::Inner(a), Self::Inner(b)) => std::cmp::Ord::cmp(a, b),
+            (Self::Text(a), Self::Text(b)) => std::cmp::Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -102,7 +102,7 @@ impl std::cmp::Ord for Box {
 
 impl std::cmp::PartialOrd for Box {
     fn partial_cmp(&self, other: &Self) -> std::option::Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(std::cmp::Ord::cmp(self, other))
     }
 }
 

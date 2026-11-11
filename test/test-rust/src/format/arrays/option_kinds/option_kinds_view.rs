@@ -229,42 +229,42 @@ impl<V: OptionKindsView> OptionKindsView for &V {
     fn colors(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<crate::format::arrays::Shade>> {
-        (**self).colors()
+        <V as OptionKindsView>::colors(self)
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::PointView>>
     {
-        (**self).points()
+        <V as OptionKindsView>::points(self)
     }
 
     fn shades(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<crate::format::arrays::Shade>> {
-        (**self).shades()
+        <V as OptionKindsView>::shades(self)
     }
 
     fn entries(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::EntryView>>
     {
-        (**self).entries()
+        <V as OptionKindsView>::entries(self)
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = Option<bool>> {
-        (**self).flags()
+        <V as OptionKindsView>::flags(self)
     }
 
     fn names(&self) -> impl proto_packet::io::MapView<u8, Key = u8, Value = Option<&str>> {
-        (**self).names()
+        <V as OptionKindsView>::names(self)
     }
 
     fn by_name(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = Option<crate::format::arrays::Shade>>
     {
-        (**self).by_name()
+        <V as OptionKindsView>::by_name(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -280,42 +280,42 @@ impl<V: OptionKindsView> OptionKindsView for &mut V {
     fn colors(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<crate::format::arrays::Shade>> {
-        (**self).colors()
+        <V as OptionKindsView>::colors(self)
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::PointView>>
     {
-        (**self).points()
+        <V as OptionKindsView>::points(self)
     }
 
     fn shades(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<crate::format::arrays::Shade>> {
-        (**self).shades()
+        <V as OptionKindsView>::shades(self)
     }
 
     fn entries(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::EntryView>>
     {
-        (**self).entries()
+        <V as OptionKindsView>::entries(self)
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = Option<bool>> {
-        (**self).flags()
+        <V as OptionKindsView>::flags(self)
     }
 
     fn names(&self) -> impl proto_packet::io::MapView<u8, Key = u8, Value = Option<&str>> {
-        (**self).names()
+        <V as OptionKindsView>::names(self)
     }
 
     fn by_name(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = Option<crate::format::arrays::Shade>>
     {
-        (**self).by_name()
+        <V as OptionKindsView>::by_name(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -438,42 +438,42 @@ impl OptionKindsView for super::OptionKindsBuf {
     fn colors(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<crate::format::arrays::Shade>> {
-        self.as_ref().colors()
+        super::OptionKindsRef::colors(&self.as_ref())
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::PointView>>
     {
-        self.as_ref().points()
+        super::OptionKindsRef::points(&self.as_ref())
     }
 
     fn shades(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<crate::format::arrays::Shade>> {
-        self.as_ref().shades()
+        super::OptionKindsRef::shades(&self.as_ref())
     }
 
     fn entries(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::EntryView>>
     {
-        self.as_ref().entries()
+        super::OptionKindsRef::entries(&self.as_ref())
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = Option<bool>> {
-        self.as_ref().flags()
+        super::OptionKindsRef::flags(&self.as_ref())
     }
 
     fn names(&self) -> impl proto_packet::io::MapView<u8, Key = u8, Value = Option<&str>> {
-        self.as_ref().names()
+        super::OptionKindsRef::names(&self.as_ref())
     }
 
     fn by_name(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = Option<crate::format::arrays::Shade>>
     {
-        self.as_ref().by_name()
+        super::OptionKindsRef::by_name(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -489,42 +489,42 @@ impl OptionKindsView for super::OptionKindsMut<'_> {
     fn colors(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<crate::format::arrays::Shade>> {
-        self.as_ref().colors()
+        super::OptionKindsRef::colors(&self.as_ref())
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::PointView>>
     {
-        self.as_ref().points()
+        super::OptionKindsRef::points(&self.as_ref())
     }
 
     fn shades(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<crate::format::arrays::Shade>> {
-        self.as_ref().shades()
+        super::OptionKindsRef::shades(&self.as_ref())
     }
 
     fn entries(
         &self,
     ) -> impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::EntryView>>
     {
-        self.as_ref().entries()
+        super::OptionKindsRef::entries(&self.as_ref())
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = Option<bool>> {
-        self.as_ref().flags()
+        super::OptionKindsRef::flags(&self.as_ref())
     }
 
     fn names(&self) -> impl proto_packet::io::MapView<u8, Key = u8, Value = Option<&str>> {
-        self.as_ref().names()
+        super::OptionKindsRef::names(&self.as_ref())
     }
 
     fn by_name(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = Option<crate::format::arrays::Shade>>
     {
-        self.as_ref().by_name()
+        super::OptionKindsRef::by_name(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -65,11 +65,11 @@ pub trait CommentView {
 
 impl<V: CommentView> CommentView for &V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as CommentView>::text(self)
     }
 
     fn reply(&self) -> Option<impl crate::messages::boxed::CommentView> {
-        (**self).reply()
+        <V as CommentView>::reply(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -83,11 +83,11 @@ impl<V: CommentView> CommentView for &V {
 
 impl<V: CommentView> CommentView for &mut V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as CommentView>::text(self)
     }
 
     fn reply(&self) -> Option<impl crate::messages::boxed::CommentView> {
-        (**self).reply()
+        <V as CommentView>::reply(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -142,11 +142,11 @@ impl CommentView for super::CommentRef<'_> {
 
 impl CommentView for super::CommentBuf {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::CommentRef::text(&self.as_ref())
     }
 
     fn reply(&self) -> Option<impl crate::messages::boxed::CommentView> {
-        self.as_ref().reply()
+        super::CommentRef::reply(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -160,11 +160,11 @@ impl CommentView for super::CommentBuf {
 
 impl CommentView for super::CommentMut<'_> {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::CommentRef::text(&self.as_ref())
     }
 
     fn reply(&self) -> Option<impl crate::messages::boxed::CommentView> {
-        self.as_ref().reply()
+        super::CommentRef::reply(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -139,7 +139,7 @@ impl<V: NewerKeysView> NewerKeysView for &V {
         Key = impl crate::format::maps::NewerKeyView,
         Value = u8,
     > {
-        (**self).by_message()
+        <V as NewerKeysView>::by_message(self)
     }
 
     fn by_variant(
@@ -149,7 +149,7 @@ impl<V: NewerKeysView> NewerKeysView for &V {
         Key = impl crate::format::variants::NewerCasesView,
         Value = u8,
     > {
-        (**self).by_variant()
+        <V as NewerKeysView>::by_variant(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -169,7 +169,7 @@ impl<V: NewerKeysView> NewerKeysView for &mut V {
         Key = impl crate::format::maps::NewerKeyView,
         Value = u8,
     > {
-        (**self).by_message()
+        <V as NewerKeysView>::by_message(self)
     }
 
     fn by_variant(
@@ -179,7 +179,7 @@ impl<V: NewerKeysView> NewerKeysView for &mut V {
         Key = impl crate::format::variants::NewerCasesView,
         Value = u8,
     > {
-        (**self).by_variant()
+        <V as NewerKeysView>::by_variant(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -264,7 +264,7 @@ impl NewerKeysView for super::NewerKeysBuf {
         Key = impl crate::format::maps::NewerKeyView,
         Value = u8,
     > {
-        self.as_ref().by_message()
+        super::NewerKeysRef::by_message(&self.as_ref())
     }
 
     fn by_variant(
@@ -274,7 +274,7 @@ impl NewerKeysView for super::NewerKeysBuf {
         Key = impl crate::format::variants::NewerCasesView,
         Value = u8,
     > {
-        self.as_ref().by_variant()
+        super::NewerKeysRef::by_variant(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -294,7 +294,7 @@ impl NewerKeysView for super::NewerKeysMut<'_> {
         Key = impl crate::format::maps::NewerKeyView,
         Value = u8,
     > {
-        self.as_ref().by_message()
+        super::NewerKeysRef::by_message(&self.as_ref())
     }
 
     fn by_variant(
@@ -304,7 +304,7 @@ impl NewerKeysView for super::NewerKeysMut<'_> {
         Key = impl crate::format::variants::NewerCasesView,
         Value = u8,
     > {
-        self.as_ref().by_variant()
+        super::NewerKeysRef::by_variant(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

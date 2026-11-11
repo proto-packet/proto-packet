@@ -87,15 +87,14 @@ impl MarkdownMessage {
 
 impl Ord for MarkdownMessage {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.only
-            .cmp(&other.only)
+        Ord::cmp(&self.only, &other.only)
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for MarkdownMessage {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

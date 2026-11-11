@@ -346,6 +346,7 @@ fn gen_getter(
     } else {
         value_type
     };
+    let is_trait_shaped: bool = field.is_trait_shaped(&result);
     let signature: Signature = Signature::from(ident(&field.name))
         .with_receiver(Receiver::Borrowed)
         .with_result(result);
@@ -354,6 +355,9 @@ fn gen_getter(
         .with_attribute("must_use")
         .with_access(Access::Public)
         .with_literal(gen_read(typing, field, field_layout, layout));
+    if is_trait_shaped {
+        function.add_attribute("allow(clippy::should_implement_trait)");
+    }
     if field.is_non_snake_case() {
         function.add_attribute("allow(non_snake_case)");
     }

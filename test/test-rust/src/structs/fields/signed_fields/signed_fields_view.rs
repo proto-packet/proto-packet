@@ -52,23 +52,23 @@ pub trait SignedFieldsView {
 
 impl<V: SignedFieldsView> SignedFieldsView for &V {
     fn signed8(&self) -> i8 {
-        (**self).signed8()
+        <V as SignedFieldsView>::signed8(self)
     }
 
     fn signed16(&self) -> i16 {
-        (**self).signed16()
+        <V as SignedFieldsView>::signed16(self)
     }
 
     fn signed32(&self) -> i32 {
-        (**self).signed32()
+        <V as SignedFieldsView>::signed32(self)
     }
 
     fn signed64(&self) -> i64 {
-        (**self).signed64()
+        <V as SignedFieldsView>::signed64(self)
     }
 
     fn signed128(&self) -> i128 {
-        (**self).signed128()
+        <V as SignedFieldsView>::signed128(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -82,23 +82,23 @@ impl<V: SignedFieldsView> SignedFieldsView for &V {
 
 impl<V: SignedFieldsView> SignedFieldsView for &mut V {
     fn signed8(&self) -> i8 {
-        (**self).signed8()
+        <V as SignedFieldsView>::signed8(self)
     }
 
     fn signed16(&self) -> i16 {
-        (**self).signed16()
+        <V as SignedFieldsView>::signed16(self)
     }
 
     fn signed32(&self) -> i32 {
-        (**self).signed32()
+        <V as SignedFieldsView>::signed32(self)
     }
 
     fn signed64(&self) -> i64 {
-        (**self).signed64()
+        <V as SignedFieldsView>::signed64(self)
     }
 
     fn signed128(&self) -> i128 {
-        (**self).signed128()
+        <V as SignedFieldsView>::signed128(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -172,23 +172,23 @@ impl SignedFieldsView for super::SignedFieldsRef<'_> {
 
 impl SignedFieldsView for super::SignedFieldsBuf {
     fn signed8(&self) -> i8 {
-        self.as_ref().signed8()
+        super::SignedFieldsRef::signed8(&self.as_ref())
     }
 
     fn signed16(&self) -> i16 {
-        self.as_ref().signed16()
+        super::SignedFieldsRef::signed16(&self.as_ref())
     }
 
     fn signed32(&self) -> i32 {
-        self.as_ref().signed32()
+        super::SignedFieldsRef::signed32(&self.as_ref())
     }
 
     fn signed64(&self) -> i64 {
-        self.as_ref().signed64()
+        super::SignedFieldsRef::signed64(&self.as_ref())
     }
 
     fn signed128(&self) -> i128 {
-        self.as_ref().signed128()
+        super::SignedFieldsRef::signed128(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -202,23 +202,23 @@ impl SignedFieldsView for super::SignedFieldsBuf {
 
 impl SignedFieldsView for super::SignedFieldsMut<'_> {
     fn signed8(&self) -> i8 {
-        self.as_ref().signed8()
+        super::SignedFieldsRef::signed8(&self.as_ref())
     }
 
     fn signed16(&self) -> i16 {
-        self.as_ref().signed16()
+        super::SignedFieldsRef::signed16(&self.as_ref())
     }
 
     fn signed32(&self) -> i32 {
-        self.as_ref().signed32()
+        super::SignedFieldsRef::signed32(&self.as_ref())
     }
 
     fn signed64(&self) -> i64 {
-        self.as_ref().signed64()
+        super::SignedFieldsRef::signed64(&self.as_ref())
     }
 
     fn signed128(&self) -> i128 {
-        self.as_ref().signed128()
+        super::SignedFieldsRef::signed128(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

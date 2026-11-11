@@ -118,11 +118,11 @@ impl ListCases {
 impl Ord for ListCases {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Blob(a), Self::Blob(b)) => a.cmp(b),
-            (Self::Numbers(a), Self::Numbers(b)) => a.cmp(b),
-            (Self::Texts(a), Self::Texts(b)) => a.cmp(b),
-            (Self::Points(a), Self::Points(b)) => a.cmp(b),
-            (Self::Number(a), Self::Number(b)) => a.cmp(b),
+            (Self::Blob(a), Self::Blob(b)) => Ord::cmp(a, b),
+            (Self::Numbers(a), Self::Numbers(b)) => Ord::cmp(a, b),
+            (Self::Texts(a), Self::Texts(b)) => Ord::cmp(a, b),
+            (Self::Points(a), Self::Points(b)) => Ord::cmp(a, b),
+            (Self::Number(a), Self::Number(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -131,7 +131,7 @@ impl Ord for ListCases {
 
 impl PartialOrd for ListCases {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

@@ -84,16 +84,15 @@ impl LoopMessage {
 
 impl Ord for LoopMessage {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.value
-            .cmp(&other.value)
-            .then_with(|| self.next.cmp(&other.next))
+        Ord::cmp(&self.value, &other.value)
+            .then_with(|| Ord::cmp(&self.next, &other.next))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for LoopMessage {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

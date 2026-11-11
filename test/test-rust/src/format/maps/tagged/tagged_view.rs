@@ -43,11 +43,11 @@ pub trait TaggedView {
 
 impl<V: TaggedView> TaggedView for &V {
     fn id(&self) -> u64 {
-        (**self).id()
+        <V as TaggedView>::id(self)
     }
 
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
-        (**self).key()
+        <V as TaggedView>::key(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -61,11 +61,11 @@ impl<V: TaggedView> TaggedView for &V {
 
 impl<V: TaggedView> TaggedView for &mut V {
     fn id(&self) -> u64 {
-        (**self).id()
+        <V as TaggedView>::id(self)
     }
 
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
-        (**self).key()
+        <V as TaggedView>::key(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -120,11 +120,11 @@ impl TaggedView for super::TaggedRef<'_> {
 
 impl TaggedView for super::TaggedBuf {
     fn id(&self) -> u64 {
-        self.as_ref().id()
+        super::TaggedRef::id(&self.as_ref())
     }
 
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
-        self.as_ref().key()
+        super::TaggedRef::key(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -138,11 +138,11 @@ impl TaggedView for super::TaggedBuf {
 
 impl TaggedView for super::TaggedMut<'_> {
     fn id(&self) -> u64 {
-        self.as_ref().id()
+        super::TaggedRef::id(&self.as_ref())
     }
 
     fn key(&self) -> impl crate::format::maps::NewerKeyView {
-        self.as_ref().key()
+        super::TaggedRef::key(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

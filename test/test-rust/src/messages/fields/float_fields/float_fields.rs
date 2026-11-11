@@ -78,16 +78,15 @@ impl FloatFields {
 
 impl Ord for FloatFields {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.float32
-            .cmp(&other.float32)
-            .then_with(|| self.float64.cmp(&other.float64))
+        Ord::cmp(&self.float32, &other.float32)
+            .then_with(|| Ord::cmp(&self.float64, &other.float64))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for FloatFields {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

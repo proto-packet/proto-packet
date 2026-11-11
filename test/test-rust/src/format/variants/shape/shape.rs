@@ -92,8 +92,8 @@ impl Shape {
 impl Ord for Shape {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Circle(a), Self::Circle(b)) => a.cmp(b),
-            (Self::Square(a), Self::Square(b)) => a.cmp(b),
+            (Self::Circle(a), Self::Circle(b)) => Ord::cmp(a, b),
+            (Self::Square(a), Self::Square(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -102,7 +102,7 @@ impl Ord for Shape {
 
 impl PartialOrd for Shape {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

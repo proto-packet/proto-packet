@@ -62,11 +62,11 @@ pub trait KeywordMessageView {
 
 impl<V: KeywordMessageView> KeywordMessageView for &V {
     fn r#type(&self) -> Option<u32> {
-        (**self).r#type()
+        <V as KeywordMessageView>::r#type(self)
     }
 
     fn self_(&self) -> Option<u32> {
-        (**self).self_()
+        <V as KeywordMessageView>::self_(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -80,11 +80,11 @@ impl<V: KeywordMessageView> KeywordMessageView for &V {
 
 impl<V: KeywordMessageView> KeywordMessageView for &mut V {
     fn r#type(&self) -> Option<u32> {
-        (**self).r#type()
+        <V as KeywordMessageView>::r#type(self)
     }
 
     fn self_(&self) -> Option<u32> {
-        (**self).self_()
+        <V as KeywordMessageView>::self_(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -139,11 +139,11 @@ impl KeywordMessageView for super::KeywordMessageRef<'_> {
 
 impl KeywordMessageView for super::KeywordMessageBuf {
     fn r#type(&self) -> Option<u32> {
-        self.as_ref().r#type()
+        super::KeywordMessageRef::r#type(&self.as_ref())
     }
 
     fn self_(&self) -> Option<u32> {
-        self.as_ref().self_()
+        super::KeywordMessageRef::self_(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -157,11 +157,11 @@ impl KeywordMessageView for super::KeywordMessageBuf {
 
 impl KeywordMessageView for super::KeywordMessageMut<'_> {
     fn r#type(&self) -> Option<u32> {
-        self.as_ref().r#type()
+        super::KeywordMessageRef::r#type(&self.as_ref())
     }
 
     fn self_(&self) -> Option<u32> {
-        self.as_ref().self_()
+        super::KeywordMessageRef::self_(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

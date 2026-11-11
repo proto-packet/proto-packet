@@ -40,11 +40,11 @@ pub trait ImportedFieldsView {
 
 impl<V: ImportedFieldsView> ImportedFieldsView for &V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as ImportedFieldsView>::point(self)
     }
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
-        (**self).child()
+        <V as ImportedFieldsView>::child(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -58,11 +58,11 @@ impl<V: ImportedFieldsView> ImportedFieldsView for &V {
 
 impl<V: ImportedFieldsView> ImportedFieldsView for &mut V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as ImportedFieldsView>::point(self)
     }
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
-        (**self).child()
+        <V as ImportedFieldsView>::child(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -112,11 +112,11 @@ impl ImportedFieldsView for super::ImportedFieldsRef<'_> {
 
 impl ImportedFieldsView for super::ImportedFieldsBuf {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::ImportedFieldsRef::point(&self.as_ref())
     }
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
-        self.as_ref().child()
+        super::ImportedFieldsRef::child(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -130,11 +130,11 @@ impl ImportedFieldsView for super::ImportedFieldsBuf {
 
 impl ImportedFieldsView for super::ImportedFieldsMut<'_> {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::ImportedFieldsRef::point(&self.as_ref())
     }
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
-        self.as_ref().child()
+        super::ImportedFieldsRef::child(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

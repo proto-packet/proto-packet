@@ -84,15 +84,15 @@ pub trait AbsentChildView {
 
 impl<V: AbsentChildView> AbsentChildView for &V {
     fn first(&self) -> Option<impl crate::format::examples::EntryView> {
-        (**self).first()
+        <V as AbsentChildView>::first(self)
     }
 
     fn second(&self) -> impl crate::format::examples::EntryView {
-        (**self).second()
+        <V as AbsentChildView>::second(self)
     }
 
     fn text(&self) -> &str {
-        (**self).text()
+        <V as AbsentChildView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,15 +106,15 @@ impl<V: AbsentChildView> AbsentChildView for &V {
 
 impl<V: AbsentChildView> AbsentChildView for &mut V {
     fn first(&self) -> Option<impl crate::format::examples::EntryView> {
-        (**self).first()
+        <V as AbsentChildView>::first(self)
     }
 
     fn second(&self) -> impl crate::format::examples::EntryView {
-        (**self).second()
+        <V as AbsentChildView>::second(self)
     }
 
     fn text(&self) -> &str {
-        (**self).text()
+        <V as AbsentChildView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -177,15 +177,15 @@ impl AbsentChildView for super::AbsentChildRef<'_> {
 
 impl AbsentChildView for super::AbsentChildBuf {
     fn first(&self) -> Option<impl crate::format::examples::EntryView> {
-        self.as_ref().first()
+        super::AbsentChildRef::first(&self.as_ref())
     }
 
     fn second(&self) -> impl crate::format::examples::EntryView {
-        self.as_ref().second()
+        super::AbsentChildRef::second(&self.as_ref())
     }
 
     fn text(&self) -> &str {
-        self.as_ref().text()
+        super::AbsentChildRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -199,15 +199,15 @@ impl AbsentChildView for super::AbsentChildBuf {
 
 impl AbsentChildView for super::AbsentChildMut<'_> {
     fn first(&self) -> Option<impl crate::format::examples::EntryView> {
-        self.as_ref().first()
+        super::AbsentChildRef::first(&self.as_ref())
     }
 
     fn second(&self) -> impl crate::format::examples::EntryView {
-        self.as_ref().second()
+        super::AbsentChildRef::second(&self.as_ref())
     }
 
     fn text(&self) -> &str {
-        self.as_ref().text()
+        super::AbsentChildRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

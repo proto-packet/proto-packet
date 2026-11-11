@@ -36,7 +36,7 @@ pub trait TypeView {
 
 impl<V: TypeView> TypeView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as TypeView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: TypeView> TypeView for &V {
 
 impl<V: TypeView> TypeView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as TypeView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl TypeView for super::TypeRef<'_> {
 
 impl TypeView for super::TypeBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::TypeRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl TypeView for super::TypeBuf {
 
 impl TypeView for super::TypeMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::TypeRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

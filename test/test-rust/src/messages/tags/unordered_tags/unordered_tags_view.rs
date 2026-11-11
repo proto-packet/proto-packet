@@ -74,15 +74,15 @@ pub trait UnorderedTagsView {
 
 impl<V: UnorderedTagsView> UnorderedTagsView for &V {
     fn three(&self) -> Option<u32> {
-        (**self).three()
+        <V as UnorderedTagsView>::three(self)
     }
 
     fn one(&self) -> Option<u32> {
-        (**self).one()
+        <V as UnorderedTagsView>::one(self)
     }
 
     fn two(&self) -> Option<u32> {
-        (**self).two()
+        <V as UnorderedTagsView>::two(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -96,15 +96,15 @@ impl<V: UnorderedTagsView> UnorderedTagsView for &V {
 
 impl<V: UnorderedTagsView> UnorderedTagsView for &mut V {
     fn three(&self) -> Option<u32> {
-        (**self).three()
+        <V as UnorderedTagsView>::three(self)
     }
 
     fn one(&self) -> Option<u32> {
-        (**self).one()
+        <V as UnorderedTagsView>::one(self)
     }
 
     fn two(&self) -> Option<u32> {
-        (**self).two()
+        <V as UnorderedTagsView>::two(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -167,15 +167,15 @@ impl UnorderedTagsView for super::UnorderedTagsRef<'_> {
 
 impl UnorderedTagsView for super::UnorderedTagsBuf {
     fn three(&self) -> Option<u32> {
-        self.as_ref().three()
+        super::UnorderedTagsRef::three(&self.as_ref())
     }
 
     fn one(&self) -> Option<u32> {
-        self.as_ref().one()
+        super::UnorderedTagsRef::one(&self.as_ref())
     }
 
     fn two(&self) -> Option<u32> {
-        self.as_ref().two()
+        super::UnorderedTagsRef::two(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -189,15 +189,15 @@ impl UnorderedTagsView for super::UnorderedTagsBuf {
 
 impl UnorderedTagsView for super::UnorderedTagsMut<'_> {
     fn three(&self) -> Option<u32> {
-        self.as_ref().three()
+        super::UnorderedTagsRef::three(&self.as_ref())
     }
 
     fn one(&self) -> Option<u32> {
-        self.as_ref().one()
+        super::UnorderedTagsRef::one(&self.as_ref())
     }
 
     fn two(&self) -> Option<u32> {
-        self.as_ref().two()
+        super::UnorderedTagsRef::two(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

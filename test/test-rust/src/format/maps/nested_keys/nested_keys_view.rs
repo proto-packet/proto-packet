@@ -170,7 +170,7 @@ impl<V: NestedKeysView> NestedKeysView for &V {
         Key = impl crate::format::maps::TaggedView,
         Value = impl crate::format::examples::EntryView,
     > {
-        (**self).by_struct()
+        <V as NestedKeysView>::by_struct(self)
     }
 
     fn by_list(
@@ -180,7 +180,7 @@ impl<V: NestedKeysView> NestedKeysView for &V {
         Key = impl proto_packet::io::ListView<Item = impl crate::format::maps::NewerKeyView>,
         Value = u8,
     > {
-        (**self).by_list()
+        <V as NestedKeysView>::by_list(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -200,7 +200,7 @@ impl<V: NestedKeysView> NestedKeysView for &mut V {
         Key = impl crate::format::maps::TaggedView,
         Value = impl crate::format::examples::EntryView,
     > {
-        (**self).by_struct()
+        <V as NestedKeysView>::by_struct(self)
     }
 
     fn by_list(
@@ -210,7 +210,7 @@ impl<V: NestedKeysView> NestedKeysView for &mut V {
         Key = impl proto_packet::io::ListView<Item = impl crate::format::maps::NewerKeyView>,
         Value = u8,
     > {
-        (**self).by_list()
+        <V as NestedKeysView>::by_list(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -295,7 +295,7 @@ impl NestedKeysView for super::NestedKeysBuf {
         Key = impl crate::format::maps::TaggedView,
         Value = impl crate::format::examples::EntryView,
     > {
-        self.as_ref().by_struct()
+        super::NestedKeysRef::by_struct(&self.as_ref())
     }
 
     fn by_list(
@@ -305,7 +305,7 @@ impl NestedKeysView for super::NestedKeysBuf {
         Key = impl proto_packet::io::ListView<Item = impl crate::format::maps::NewerKeyView>,
         Value = u8,
     > {
-        self.as_ref().by_list()
+        super::NestedKeysRef::by_list(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -325,7 +325,7 @@ impl NestedKeysView for super::NestedKeysMut<'_> {
         Key = impl crate::format::maps::TaggedView,
         Value = impl crate::format::examples::EntryView,
     > {
-        self.as_ref().by_struct()
+        super::NestedKeysRef::by_struct(&self.as_ref())
     }
 
     fn by_list(
@@ -335,7 +335,7 @@ impl NestedKeysView for super::NestedKeysMut<'_> {
         Key = impl proto_packet::io::ListView<Item = impl crate::format::maps::NewerKeyView>,
         Value = u8,
     > {
-        self.as_ref().by_list()
+        super::NestedKeysRef::by_list(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

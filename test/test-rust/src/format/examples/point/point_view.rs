@@ -40,11 +40,11 @@ pub trait PointView {
 
 impl<V: PointView> PointView for &V {
     fn x(&self) -> u32 {
-        (**self).x()
+        <V as PointView>::x(self)
     }
 
     fn y(&self) -> u32 {
-        (**self).y()
+        <V as PointView>::y(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -58,11 +58,11 @@ impl<V: PointView> PointView for &V {
 
 impl<V: PointView> PointView for &mut V {
     fn x(&self) -> u32 {
-        (**self).x()
+        <V as PointView>::x(self)
     }
 
     fn y(&self) -> u32 {
-        (**self).y()
+        <V as PointView>::y(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -112,11 +112,11 @@ impl PointView for super::PointRef<'_> {
 
 impl PointView for super::PointBuf {
     fn x(&self) -> u32 {
-        self.as_ref().x()
+        super::PointRef::x(&self.as_ref())
     }
 
     fn y(&self) -> u32 {
-        self.as_ref().y()
+        super::PointRef::y(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -130,11 +130,11 @@ impl PointView for super::PointBuf {
 
 impl PointView for super::PointMut<'_> {
     fn x(&self) -> u32 {
-        self.as_ref().x()
+        super::PointRef::x(&self.as_ref())
     }
 
     fn y(&self) -> u32 {
-        self.as_ref().y()
+        super::PointRef::y(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

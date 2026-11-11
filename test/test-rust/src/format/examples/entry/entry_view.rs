@@ -43,11 +43,11 @@ pub trait EntryView {
 
 impl<V: EntryView> EntryView for &V {
     fn id(&self) -> u64 {
-        (**self).id()
+        <V as EntryView>::id(self)
     }
 
     fn text(&self) -> &str {
-        (**self).text()
+        <V as EntryView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -61,11 +61,11 @@ impl<V: EntryView> EntryView for &V {
 
 impl<V: EntryView> EntryView for &mut V {
     fn id(&self) -> u64 {
-        (**self).id()
+        <V as EntryView>::id(self)
     }
 
     fn text(&self) -> &str {
-        (**self).text()
+        <V as EntryView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -120,11 +120,11 @@ impl EntryView for super::EntryRef<'_> {
 
 impl EntryView for super::EntryBuf {
     fn id(&self) -> u64 {
-        self.as_ref().id()
+        super::EntryRef::id(&self.as_ref())
     }
 
     fn text(&self) -> &str {
-        self.as_ref().text()
+        super::EntryRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -138,11 +138,11 @@ impl EntryView for super::EntryBuf {
 
 impl EntryView for super::EntryMut<'_> {
     fn id(&self) -> u64 {
-        self.as_ref().id()
+        super::EntryRef::id(&self.as_ref())
     }
 
     fn text(&self) -> &str {
-        self.as_ref().text()
+        super::EntryRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

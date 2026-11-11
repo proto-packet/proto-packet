@@ -60,7 +60,7 @@ pub trait OptionalTextsView {
 
 impl<V: OptionalTextsView> OptionalTextsView for &V {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = Option<&str>> {
-        (**self).texts()
+        <V as OptionalTextsView>::texts(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -74,7 +74,7 @@ impl<V: OptionalTextsView> OptionalTextsView for &V {
 
 impl<V: OptionalTextsView> OptionalTextsView for &mut V {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = Option<&str>> {
-        (**self).texts()
+        <V as OptionalTextsView>::texts(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -121,7 +121,7 @@ impl OptionalTextsView for super::OptionalTextsRef<'_> {
 
 impl OptionalTextsView for super::OptionalTextsBuf {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = Option<&str>> {
-        self.as_ref().texts()
+        super::OptionalTextsRef::texts(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -135,7 +135,7 @@ impl OptionalTextsView for super::OptionalTextsBuf {
 
 impl OptionalTextsView for super::OptionalTextsMut<'_> {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = Option<&str>> {
-        self.as_ref().texts()
+        super::OptionalTextsRef::texts(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -110,27 +110,27 @@ pub trait PrimitiveFieldsView {
 
 impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &V {
     fn boolean(&self) -> Option<bool> {
-        (**self).boolean()
+        <V as PrimitiveFieldsView>::boolean(self)
     }
 
     fn unsigned8(&self) -> Option<u8> {
-        (**self).unsigned8()
+        <V as PrimitiveFieldsView>::unsigned8(self)
     }
 
     fn unsigned16(&self) -> Option<u16> {
-        (**self).unsigned16()
+        <V as PrimitiveFieldsView>::unsigned16(self)
     }
 
     fn unsigned32(&self) -> Option<u32> {
-        (**self).unsigned32()
+        <V as PrimitiveFieldsView>::unsigned32(self)
     }
 
     fn unsigned64(&self) -> Option<u64> {
-        (**self).unsigned64()
+        <V as PrimitiveFieldsView>::unsigned64(self)
     }
 
     fn unsigned128(&self) -> Option<u128> {
-        (**self).unsigned128()
+        <V as PrimitiveFieldsView>::unsigned128(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -144,27 +144,27 @@ impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &V {
 
 impl<V: PrimitiveFieldsView> PrimitiveFieldsView for &mut V {
     fn boolean(&self) -> Option<bool> {
-        (**self).boolean()
+        <V as PrimitiveFieldsView>::boolean(self)
     }
 
     fn unsigned8(&self) -> Option<u8> {
-        (**self).unsigned8()
+        <V as PrimitiveFieldsView>::unsigned8(self)
     }
 
     fn unsigned16(&self) -> Option<u16> {
-        (**self).unsigned16()
+        <V as PrimitiveFieldsView>::unsigned16(self)
     }
 
     fn unsigned32(&self) -> Option<u32> {
-        (**self).unsigned32()
+        <V as PrimitiveFieldsView>::unsigned32(self)
     }
 
     fn unsigned64(&self) -> Option<u64> {
-        (**self).unsigned64()
+        <V as PrimitiveFieldsView>::unsigned64(self)
     }
 
     fn unsigned128(&self) -> Option<u128> {
-        (**self).unsigned128()
+        <V as PrimitiveFieldsView>::unsigned128(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -251,27 +251,27 @@ impl PrimitiveFieldsView for super::PrimitiveFieldsRef<'_> {
 
 impl PrimitiveFieldsView for super::PrimitiveFieldsBuf {
     fn boolean(&self) -> Option<bool> {
-        self.as_ref().boolean()
+        super::PrimitiveFieldsRef::boolean(&self.as_ref())
     }
 
     fn unsigned8(&self) -> Option<u8> {
-        self.as_ref().unsigned8()
+        super::PrimitiveFieldsRef::unsigned8(&self.as_ref())
     }
 
     fn unsigned16(&self) -> Option<u16> {
-        self.as_ref().unsigned16()
+        super::PrimitiveFieldsRef::unsigned16(&self.as_ref())
     }
 
     fn unsigned32(&self) -> Option<u32> {
-        self.as_ref().unsigned32()
+        super::PrimitiveFieldsRef::unsigned32(&self.as_ref())
     }
 
     fn unsigned64(&self) -> Option<u64> {
-        self.as_ref().unsigned64()
+        super::PrimitiveFieldsRef::unsigned64(&self.as_ref())
     }
 
     fn unsigned128(&self) -> Option<u128> {
-        self.as_ref().unsigned128()
+        super::PrimitiveFieldsRef::unsigned128(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -285,27 +285,27 @@ impl PrimitiveFieldsView for super::PrimitiveFieldsBuf {
 
 impl PrimitiveFieldsView for super::PrimitiveFieldsMut<'_> {
     fn boolean(&self) -> Option<bool> {
-        self.as_ref().boolean()
+        super::PrimitiveFieldsRef::boolean(&self.as_ref())
     }
 
     fn unsigned8(&self) -> Option<u8> {
-        self.as_ref().unsigned8()
+        super::PrimitiveFieldsRef::unsigned8(&self.as_ref())
     }
 
     fn unsigned16(&self) -> Option<u16> {
-        self.as_ref().unsigned16()
+        super::PrimitiveFieldsRef::unsigned16(&self.as_ref())
     }
 
     fn unsigned32(&self) -> Option<u32> {
-        self.as_ref().unsigned32()
+        super::PrimitiveFieldsRef::unsigned32(&self.as_ref())
     }
 
     fn unsigned64(&self) -> Option<u64> {
-        self.as_ref().unsigned64()
+        super::PrimitiveFieldsRef::unsigned64(&self.as_ref())
     }
 
     fn unsigned128(&self) -> Option<u128> {
-        self.as_ref().unsigned128()
+        super::PrimitiveFieldsRef::unsigned128(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

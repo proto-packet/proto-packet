@@ -45,15 +45,15 @@ pub trait FloatKindsView {
 
 impl<V: FloatKindsView> FloatKindsView for &V {
     fn a(&self) -> proto_packet::types::Float32 {
-        (**self).a()
+        <V as FloatKindsView>::a(self)
     }
 
     fn b(&self) -> proto_packet::types::Float64 {
-        (**self).b()
+        <V as FloatKindsView>::b(self)
     }
 
     fn c(&self) -> Option<proto_packet::types::Float32> {
-        (**self).c()
+        <V as FloatKindsView>::c(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -67,15 +67,15 @@ impl<V: FloatKindsView> FloatKindsView for &V {
 
 impl<V: FloatKindsView> FloatKindsView for &mut V {
     fn a(&self) -> proto_packet::types::Float32 {
-        (**self).a()
+        <V as FloatKindsView>::a(self)
     }
 
     fn b(&self) -> proto_packet::types::Float64 {
-        (**self).b()
+        <V as FloatKindsView>::b(self)
     }
 
     fn c(&self) -> Option<proto_packet::types::Float32> {
-        (**self).c()
+        <V as FloatKindsView>::c(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -133,15 +133,15 @@ impl FloatKindsView for super::FloatKindsRef<'_> {
 
 impl FloatKindsView for super::FloatKindsBuf {
     fn a(&self) -> proto_packet::types::Float32 {
-        self.as_ref().a()
+        super::FloatKindsRef::a(&self.as_ref())
     }
 
     fn b(&self) -> proto_packet::types::Float64 {
-        self.as_ref().b()
+        super::FloatKindsRef::b(&self.as_ref())
     }
 
     fn c(&self) -> Option<proto_packet::types::Float32> {
-        self.as_ref().c()
+        super::FloatKindsRef::c(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -155,15 +155,15 @@ impl FloatKindsView for super::FloatKindsBuf {
 
 impl FloatKindsView for super::FloatKindsMut<'_> {
     fn a(&self) -> proto_packet::types::Float32 {
-        self.as_ref().a()
+        super::FloatKindsRef::a(&self.as_ref())
     }
 
     fn b(&self) -> proto_packet::types::Float64 {
-        self.as_ref().b()
+        super::FloatKindsRef::b(&self.as_ref())
     }
 
     fn c(&self) -> Option<proto_packet::types::Float32> {
-        self.as_ref().c()
+        super::FloatKindsRef::c(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

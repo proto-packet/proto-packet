@@ -7,10 +7,11 @@ fn gen_partial_ord(prelude: Prelude, type_name: &str) -> String {
     format!(
         "impl {partial_ord} for {type_name} {{
     fn partial_cmp(&self, other: &Self) -> {option}<std::cmp::Ordering> {{
-        Some(self.cmp(other))
+        Some({ord}::cmp(self, other))
     }}
 }}
 ",
+        ord = prelude.path(PreludeName::Ord),
         partial_ord = prelude.path(PreludeName::PartialOrd),
         option = prelude.path(PreludeName::Option),
         type_name = type_name,
@@ -23,14 +24,15 @@ fn gen_partial_ord(prelude: Prelude, type_name: &str) -> String {
 /// - The order is by tag number, since the declaration order can change in the schema.
 /// - An absent field comes before a present one, & the unknown fields are compared last.
 pub(crate) fn gen_message_ord(prelude: Prelude, type_name: &str, fields: &[String]) -> String {
+    let ord: &str = prelude.path(PreludeName::Ord);
     let mut compare: String = match fields.first() {
-        Some(field) => format!("self.{}.cmp(&other.{})", field, field),
+        Some(field) => format!("{}::cmp(&self.{}, &other.{})", ord, field, field),
         None => "self.unknown_fields.cmp(&other.unknown_fields)".to_string(),
     };
     for field in fields.iter().skip(1) {
         compare.push_str(&format!(
-            ".then_with(|| self.{}.cmp(&other.{}))",
-            field, field
+            ".then_with(|| {}::cmp(&self.{}, &other.{}))",
+            ord, field, field
         ));
     }
     if !fields.is_empty() {
@@ -44,7 +46,7 @@ pub(crate) fn gen_message_ord(prelude: Prelude, type_name: &str, fields: &[Strin
 }}
 
 {partial_ord}",
-        ord = prelude.path(PreludeName::Ord),
+        ord = ord,
         type_name = type_name,
         compare = compare,
         partial_ord = gen_partial_ord(prelude, type_name),
@@ -57,6 +59,7 @@ pub(crate) fn gen_message_ord(prelude: Prelude, type_name: &str, fields: &[Strin
 /// - The order is by tag number, then by the value, since the declaration order can change in the
 ///   schema.
 pub(crate) fn gen_variant_ord(prelude: Prelude, type_name: &str, cases: &[String]) -> String {
+    let ord: &str = prelude.path(PreludeName::Ord);
     let compare: String = if cases.is_empty() {
         "let (Self::Unrecognized(a), Self::Unrecognized(b)) = (self, other);
         a.cmp(b)"
@@ -64,7 +67,12 @@ pub(crate) fn gen_variant_ord(prelude: Prelude, type_name: &str, cases: &[String
     } else {
         let arms: Vec<String> = cases
             .iter()
-            .map(|case| format!("(Self::{}(a), Self::{}(b)) => a.cmp(b),", case, case))
+            .map(|case| {
+                format!(
+                    "(Self::{}(a), Self::{}(b)) => {}::cmp(a, b),",
+                    case, case, ord
+                )
+            })
             .collect();
         format!(
             "match (self, other) {{
@@ -83,7 +91,7 @@ pub(crate) fn gen_variant_ord(prelude: Prelude, type_name: &str, cases: &[String
 }}
 
 {partial_ord}",
-        ord = prelude.path(PreludeName::Ord),
+        ord = ord,
         type_name = type_name,
         compare = compare,
         partial_ord = gen_partial_ord(prelude, type_name),

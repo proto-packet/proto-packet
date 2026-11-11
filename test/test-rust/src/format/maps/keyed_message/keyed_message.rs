@@ -162,17 +162,16 @@ impl KeyedMessage {
 
 impl Ord for KeyedMessage {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.by_point
-            .cmp(&other.by_point)
-            .then_with(|| self.rounds.cmp(&other.rounds))
-            .then_with(|| self.nested.cmp(&other.nested))
+        Ord::cmp(&self.by_point, &other.by_point)
+            .then_with(|| Ord::cmp(&self.rounds, &other.rounds))
+            .then_with(|| Ord::cmp(&self.nested, &other.nested))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for KeyedMessage {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

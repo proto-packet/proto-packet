@@ -122,33 +122,33 @@ pub trait ArrayKindsView {
 
 impl<V: ArrayKindsView> ArrayKindsView for &V {
     fn bytes(&self) -> &[u8; 4] {
-        (**self).bytes()
+        <V as ArrayKindsView>::bytes(self)
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool> {
-        (**self).flags()
+        <V as ArrayKindsView>::flags(self)
     }
 
     fn longs(&self) -> impl proto_packet::io::ListView<Item = u64> {
-        (**self).longs()
+        <V as ArrayKindsView>::longs(self)
     }
 
     fn colors(&self) -> impl proto_packet::io::ListView<Item = crate::format::arrays::Shade> {
-        (**self).colors()
+        <V as ArrayKindsView>::colors(self)
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView> {
-        (**self).points()
+        <V as ArrayKindsView>::points(self)
     }
 
     fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
-        (**self).grid()
+        <V as ArrayKindsView>::grid(self)
     }
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
-        (**self).maybe()
+        <V as ArrayKindsView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -162,33 +162,33 @@ impl<V: ArrayKindsView> ArrayKindsView for &V {
 
 impl<V: ArrayKindsView> ArrayKindsView for &mut V {
     fn bytes(&self) -> &[u8; 4] {
-        (**self).bytes()
+        <V as ArrayKindsView>::bytes(self)
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool> {
-        (**self).flags()
+        <V as ArrayKindsView>::flags(self)
     }
 
     fn longs(&self) -> impl proto_packet::io::ListView<Item = u64> {
-        (**self).longs()
+        <V as ArrayKindsView>::longs(self)
     }
 
     fn colors(&self) -> impl proto_packet::io::ListView<Item = crate::format::arrays::Shade> {
-        (**self).colors()
+        <V as ArrayKindsView>::colors(self)
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView> {
-        (**self).points()
+        <V as ArrayKindsView>::points(self)
     }
 
     fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
-        (**self).grid()
+        <V as ArrayKindsView>::grid(self)
     }
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
-        (**self).maybe()
+        <V as ArrayKindsView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -282,33 +282,33 @@ impl ArrayKindsView for super::ArrayKindsRef<'_> {
 
 impl ArrayKindsView for super::ArrayKindsBuf {
     fn bytes(&self) -> &[u8; 4] {
-        self.as_ref().bytes()
+        super::ArrayKindsRef::bytes(&self.as_ref())
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool> {
-        self.as_ref().flags()
+        super::ArrayKindsRef::flags(&self.as_ref())
     }
 
     fn longs(&self) -> impl proto_packet::io::ListView<Item = u64> {
-        self.as_ref().longs()
+        super::ArrayKindsRef::longs(&self.as_ref())
     }
 
     fn colors(&self) -> impl proto_packet::io::ListView<Item = crate::format::arrays::Shade> {
-        self.as_ref().colors()
+        super::ArrayKindsRef::colors(&self.as_ref())
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView> {
-        self.as_ref().points()
+        super::ArrayKindsRef::points(&self.as_ref())
     }
 
     fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
-        self.as_ref().grid()
+        super::ArrayKindsRef::grid(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
-        self.as_ref().maybe()
+        super::ArrayKindsRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -322,33 +322,33 @@ impl ArrayKindsView for super::ArrayKindsBuf {
 
 impl ArrayKindsView for super::ArrayKindsMut<'_> {
     fn bytes(&self) -> &[u8; 4] {
-        self.as_ref().bytes()
+        super::ArrayKindsRef::bytes(&self.as_ref())
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool> {
-        self.as_ref().flags()
+        super::ArrayKindsRef::flags(&self.as_ref())
     }
 
     fn longs(&self) -> impl proto_packet::io::ListView<Item = u64> {
-        self.as_ref().longs()
+        super::ArrayKindsRef::longs(&self.as_ref())
     }
 
     fn colors(&self) -> impl proto_packet::io::ListView<Item = crate::format::arrays::Shade> {
-        self.as_ref().colors()
+        super::ArrayKindsRef::colors(&self.as_ref())
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView> {
-        self.as_ref().points()
+        super::ArrayKindsRef::points(&self.as_ref())
     }
 
     fn grid(&self) -> impl proto_packet::io::ListView<Item = &[u8; 3]> {
-        self.as_ref().grid()
+        super::ArrayKindsRef::grid(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
-        self.as_ref().maybe()
+        super::ArrayKindsRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

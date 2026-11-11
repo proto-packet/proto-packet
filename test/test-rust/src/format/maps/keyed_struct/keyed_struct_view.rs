@@ -146,7 +146,7 @@ impl<V: KeyedStructView> KeyedStructView for &V {
         Key = impl crate::format::examples::PointView,
         Value = u8,
     > {
-        (**self).by_point()
+        <V as KeyedStructView>::by_point(self)
     }
 
     fn maybe(
@@ -158,7 +158,7 @@ impl<V: KeyedStructView> KeyedStructView for &V {
             Value = u8,
         >,
     > {
-        (**self).maybe()
+        <V as KeyedStructView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -178,7 +178,7 @@ impl<V: KeyedStructView> KeyedStructView for &mut V {
         Key = impl crate::format::examples::PointView,
         Value = u8,
     > {
-        (**self).by_point()
+        <V as KeyedStructView>::by_point(self)
     }
 
     fn maybe(
@@ -190,7 +190,7 @@ impl<V: KeyedStructView> KeyedStructView for &mut V {
             Value = u8,
         >,
     > {
-        (**self).maybe()
+        <V as KeyedStructView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -279,7 +279,7 @@ impl KeyedStructView for super::KeyedStructBuf {
         Key = impl crate::format::examples::PointView,
         Value = u8,
     > {
-        self.as_ref().by_point()
+        super::KeyedStructRef::by_point(&self.as_ref())
     }
 
     fn maybe(
@@ -291,7 +291,7 @@ impl KeyedStructView for super::KeyedStructBuf {
             Value = u8,
         >,
     > {
-        self.as_ref().maybe()
+        super::KeyedStructRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -311,7 +311,7 @@ impl KeyedStructView for super::KeyedStructMut<'_> {
         Key = impl crate::format::examples::PointView,
         Value = u8,
     > {
-        self.as_ref().by_point()
+        super::KeyedStructRef::by_point(&self.as_ref())
     }
 
     fn maybe(
@@ -323,7 +323,7 @@ impl KeyedStructView for super::KeyedStructMut<'_> {
             Value = u8,
         >,
     > {
-        self.as_ref().maybe()
+        super::KeyedStructRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

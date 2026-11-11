@@ -36,7 +36,7 @@ pub trait MarkdownStructView {
 
 impl<V: MarkdownStructView> MarkdownStructView for &V {
     fn only(&self) -> u32 {
-        (**self).only()
+        <V as MarkdownStructView>::only(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: MarkdownStructView> MarkdownStructView for &V {
 
 impl<V: MarkdownStructView> MarkdownStructView for &mut V {
     fn only(&self) -> u32 {
-        (**self).only()
+        <V as MarkdownStructView>::only(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl MarkdownStructView for super::MarkdownStructRef<'_> {
 
 impl MarkdownStructView for super::MarkdownStructBuf {
     fn only(&self) -> u32 {
-        self.as_ref().only()
+        super::MarkdownStructRef::only(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl MarkdownStructView for super::MarkdownStructBuf {
 
 impl MarkdownStructView for super::MarkdownStructMut<'_> {
     fn only(&self) -> u32 {
-        self.as_ref().only()
+        super::MarkdownStructRef::only(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -177,19 +177,18 @@ impl SignedFields {
 
 impl Ord for SignedFields {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.signed8
-            .cmp(&other.signed8)
-            .then_with(|| self.signed16.cmp(&other.signed16))
-            .then_with(|| self.signed32.cmp(&other.signed32))
-            .then_with(|| self.signed64.cmp(&other.signed64))
-            .then_with(|| self.signed128.cmp(&other.signed128))
+        Ord::cmp(&self.signed8, &other.signed8)
+            .then_with(|| Ord::cmp(&self.signed16, &other.signed16))
+            .then_with(|| Ord::cmp(&self.signed32, &other.signed32))
+            .then_with(|| Ord::cmp(&self.signed64, &other.signed64))
+            .then_with(|| Ord::cmp(&self.signed128, &other.signed128))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for SignedFields {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

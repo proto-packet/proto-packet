@@ -37,7 +37,7 @@ pub trait HTTPServerView {
 
 impl<V: HTTPServerView> HTTPServerView for &V {
     fn maxConnections(&self) -> u32 {
-        (**self).maxConnections()
+        <V as HTTPServerView>::maxConnections(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -51,7 +51,7 @@ impl<V: HTTPServerView> HTTPServerView for &V {
 
 impl<V: HTTPServerView> HTTPServerView for &mut V {
     fn maxConnections(&self) -> u32 {
-        (**self).maxConnections()
+        <V as HTTPServerView>::maxConnections(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -93,7 +93,7 @@ impl HTTPServerView for super::HTTPServerRef<'_> {
 
 impl HTTPServerView for super::HTTPServerBuf {
     fn maxConnections(&self) -> u32 {
-        self.as_ref().maxConnections()
+        super::HTTPServerRef::maxConnections(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -107,7 +107,7 @@ impl HTTPServerView for super::HTTPServerBuf {
 
 impl HTTPServerView for super::HTTPServerMut<'_> {
     fn maxConnections(&self) -> u32 {
-        self.as_ref().maxConnections()
+        super::HTTPServerRef::maxConnections(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

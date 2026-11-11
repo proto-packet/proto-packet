@@ -50,7 +50,7 @@ pub trait LabelView {
 
 impl<V: LabelView> LabelView for &V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as LabelView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -64,7 +64,7 @@ impl<V: LabelView> LabelView for &V {
 
 impl<V: LabelView> LabelView for &mut V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as LabelView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -111,7 +111,7 @@ impl LabelView for super::LabelRef<'_> {
 
 impl LabelView for super::LabelBuf {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::LabelRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -125,7 +125,7 @@ impl LabelView for super::LabelBuf {
 
 impl LabelView for super::LabelMut<'_> {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::LabelRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -36,7 +36,7 @@ pub trait MoveStructView {
 
 impl<V: MoveStructView> MoveStructView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as MoveStructView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: MoveStructView> MoveStructView for &V {
 
 impl<V: MoveStructView> MoveStructView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as MoveStructView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl MoveStructView for super::MoveStructRef<'_> {
 
 impl MoveStructView for super::MoveStructBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::MoveStructRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl MoveStructView for super::MoveStructBuf {
 
 impl MoveStructView for super::MoveStructMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::MoveStructRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -78,16 +78,15 @@ impl WithMaps {
 
 impl Ord for WithMaps {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.scores
-            .cmp(&other.scores)
-            .then_with(|| self.rounds.cmp(&other.rounds))
+        Ord::cmp(&self.scores, &other.scores)
+            .then_with(|| Ord::cmp(&self.rounds, &other.rounds))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for WithMaps {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

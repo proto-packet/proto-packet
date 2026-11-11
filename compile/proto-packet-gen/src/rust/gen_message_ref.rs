@@ -152,6 +152,9 @@ fn gen_getter(typing: Typing<'_>, tagged: TaggedField<'_>) -> Function {
     if field.is_non_snake_case() {
         function.add_attribute("allow(non_snake_case)");
     }
+    if field.is_trait_shaped("Option") {
+        function.add_attribute("allow(clippy::should_implement_trait)");
+    }
     function
 }
 

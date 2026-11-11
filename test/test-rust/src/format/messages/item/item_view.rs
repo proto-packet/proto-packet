@@ -61,11 +61,11 @@ pub trait ItemView {
 
 impl<V: ItemView> ItemView for &V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as ItemView>::text(self)
     }
 
     fn id(&self) -> Option<u32> {
-        (**self).id()
+        <V as ItemView>::id(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -79,11 +79,11 @@ impl<V: ItemView> ItemView for &V {
 
 impl<V: ItemView> ItemView for &mut V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as ItemView>::text(self)
     }
 
     fn id(&self) -> Option<u32> {
-        (**self).id()
+        <V as ItemView>::id(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -138,11 +138,11 @@ impl ItemView for super::ItemRef<'_> {
 
 impl ItemView for super::ItemBuf {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::ItemRef::text(&self.as_ref())
     }
 
     fn id(&self) -> Option<u32> {
-        self.as_ref().id()
+        super::ItemRef::id(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -156,11 +156,11 @@ impl ItemView for super::ItemBuf {
 
 impl ItemView for super::ItemMut<'_> {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::ItemRef::text(&self.as_ref())
     }
 
     fn id(&self) -> Option<u32> {
-        self.as_ref().id()
+        super::ItemRef::id(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

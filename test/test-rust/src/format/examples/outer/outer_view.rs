@@ -44,15 +44,15 @@ pub trait OuterView {
 
 impl<V: OuterView> OuterView for &V {
     fn m(&self) -> impl crate::format::examples::MixedView {
-        (**self).m()
+        <V as OuterView>::m(self)
     }
 
     fn x(&self) -> u32 {
-        (**self).x()
+        <V as OuterView>::x(self)
     }
 
     fn y(&self) -> u8 {
-        (**self).y()
+        <V as OuterView>::y(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -66,15 +66,15 @@ impl<V: OuterView> OuterView for &V {
 
 impl<V: OuterView> OuterView for &mut V {
     fn m(&self) -> impl crate::format::examples::MixedView {
-        (**self).m()
+        <V as OuterView>::m(self)
     }
 
     fn x(&self) -> u32 {
-        (**self).x()
+        <V as OuterView>::x(self)
     }
 
     fn y(&self) -> u8 {
-        (**self).y()
+        <V as OuterView>::y(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -132,15 +132,15 @@ impl OuterView for super::OuterRef<'_> {
 
 impl OuterView for super::OuterBuf {
     fn m(&self) -> impl crate::format::examples::MixedView {
-        self.as_ref().m()
+        super::OuterRef::m(&self.as_ref())
     }
 
     fn x(&self) -> u32 {
-        self.as_ref().x()
+        super::OuterRef::x(&self.as_ref())
     }
 
     fn y(&self) -> u8 {
-        self.as_ref().y()
+        super::OuterRef::y(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -154,15 +154,15 @@ impl OuterView for super::OuterBuf {
 
 impl OuterView for super::OuterMut<'_> {
     fn m(&self) -> impl crate::format::examples::MixedView {
-        self.as_ref().m()
+        super::OuterRef::m(&self.as_ref())
     }
 
     fn x(&self) -> u32 {
-        self.as_ref().x()
+        super::OuterRef::x(&self.as_ref())
     }
 
     fn y(&self) -> u8 {
-        self.as_ref().y()
+        super::OuterRef::y(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

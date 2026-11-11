@@ -58,7 +58,7 @@ pub trait OptionalNumbersView {
 
 impl<V: OptionalNumbersView> OptionalNumbersView for &V {
     fn numbers(&self) -> impl proto_packet::io::ListView<Item = Option<u32>> {
-        (**self).numbers()
+        <V as OptionalNumbersView>::numbers(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -72,7 +72,7 @@ impl<V: OptionalNumbersView> OptionalNumbersView for &V {
 
 impl<V: OptionalNumbersView> OptionalNumbersView for &mut V {
     fn numbers(&self) -> impl proto_packet::io::ListView<Item = Option<u32>> {
-        (**self).numbers()
+        <V as OptionalNumbersView>::numbers(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -119,7 +119,7 @@ impl OptionalNumbersView for super::OptionalNumbersRef<'_> {
 
 impl OptionalNumbersView for super::OptionalNumbersBuf {
     fn numbers(&self) -> impl proto_packet::io::ListView<Item = Option<u32>> {
-        self.as_ref().numbers()
+        super::OptionalNumbersRef::numbers(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -133,7 +133,7 @@ impl OptionalNumbersView for super::OptionalNumbersBuf {
 
 impl OptionalNumbersView for super::OptionalNumbersMut<'_> {
     fn numbers(&self) -> impl proto_packet::io::ListView<Item = Option<u32>> {
-        self.as_ref().numbers()
+        super::OptionalNumbersRef::numbers(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

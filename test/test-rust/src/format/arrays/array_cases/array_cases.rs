@@ -105,10 +105,10 @@ impl ArrayCases {
 impl Ord for ArrayCases {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Origin(a), Self::Origin(b)) => a.cmp(b),
-            (Self::Numbers(a), Self::Numbers(b)) => a.cmp(b),
-            (Self::Scores(a), Self::Scores(b)) => a.cmp(b),
-            (Self::Number(a), Self::Number(b)) => a.cmp(b),
+            (Self::Origin(a), Self::Origin(b)) => Ord::cmp(a, b),
+            (Self::Numbers(a), Self::Numbers(b)) => Ord::cmp(a, b),
+            (Self::Scores(a), Self::Scores(b)) => Ord::cmp(a, b),
+            (Self::Number(a), Self::Number(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -117,7 +117,7 @@ impl Ord for ArrayCases {
 
 impl PartialOrd for ArrayCases {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

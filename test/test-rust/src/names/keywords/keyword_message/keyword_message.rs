@@ -78,16 +78,15 @@ impl KeywordMessage {
 
 impl Ord for KeywordMessage {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.r#type
-            .cmp(&other.r#type)
-            .then_with(|| self.self_.cmp(&other.self_))
+        Ord::cmp(&self.r#type, &other.r#type)
+            .then_with(|| Ord::cmp(&self.self_, &other.self_))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for KeywordMessage {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

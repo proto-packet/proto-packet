@@ -44,15 +44,15 @@ pub trait LineView {
 
 impl<V: LineView> LineView for &V {
     fn start(&self) -> impl crate::format::examples::PointView {
-        (**self).start()
+        <V as LineView>::start(self)
     }
 
     fn end(&self) -> impl crate::format::examples::PointView {
-        (**self).end()
+        <V as LineView>::end(self)
     }
 
     fn width(&self) -> u8 {
-        (**self).width()
+        <V as LineView>::width(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -66,15 +66,15 @@ impl<V: LineView> LineView for &V {
 
 impl<V: LineView> LineView for &mut V {
     fn start(&self) -> impl crate::format::examples::PointView {
-        (**self).start()
+        <V as LineView>::start(self)
     }
 
     fn end(&self) -> impl crate::format::examples::PointView {
-        (**self).end()
+        <V as LineView>::end(self)
     }
 
     fn width(&self) -> u8 {
-        (**self).width()
+        <V as LineView>::width(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -132,15 +132,15 @@ impl LineView for super::LineRef<'_> {
 
 impl LineView for super::LineBuf {
     fn start(&self) -> impl crate::format::examples::PointView {
-        self.as_ref().start()
+        super::LineRef::start(&self.as_ref())
     }
 
     fn end(&self) -> impl crate::format::examples::PointView {
-        self.as_ref().end()
+        super::LineRef::end(&self.as_ref())
     }
 
     fn width(&self) -> u8 {
-        self.as_ref().width()
+        super::LineRef::width(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -154,15 +154,15 @@ impl LineView for super::LineBuf {
 
 impl LineView for super::LineMut<'_> {
     fn start(&self) -> impl crate::format::examples::PointView {
-        self.as_ref().start()
+        super::LineRef::start(&self.as_ref())
     }
 
     fn end(&self) -> impl crate::format::examples::PointView {
-        self.as_ref().end()
+        super::LineRef::end(&self.as_ref())
     }
 
     fn width(&self) -> u8 {
-        self.as_ref().width()
+        super::LineRef::width(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

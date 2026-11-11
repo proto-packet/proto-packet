@@ -61,23 +61,23 @@ pub trait BoxedFieldsView {
 
 impl<V: BoxedFieldsView> BoxedFieldsView for &V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as BoxedFieldsView>::point(self)
     }
 
     fn person(&self) -> impl crate::types::PersonView {
-        (**self).person()
+        <V as BoxedFieldsView>::person(self)
     }
 
     fn label(&self) -> impl crate::types::LabelView {
-        (**self).label()
+        <V as BoxedFieldsView>::label(self)
     }
 
     fn color(&self) -> crate::types::Color {
-        (**self).color()
+        <V as BoxedFieldsView>::color(self)
     }
 
     fn shape(&self) -> impl crate::types::ShapeView {
-        (**self).shape()
+        <V as BoxedFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -91,23 +91,23 @@ impl<V: BoxedFieldsView> BoxedFieldsView for &V {
 
 impl<V: BoxedFieldsView> BoxedFieldsView for &mut V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as BoxedFieldsView>::point(self)
     }
 
     fn person(&self) -> impl crate::types::PersonView {
-        (**self).person()
+        <V as BoxedFieldsView>::person(self)
     }
 
     fn label(&self) -> impl crate::types::LabelView {
-        (**self).label()
+        <V as BoxedFieldsView>::label(self)
     }
 
     fn color(&self) -> crate::types::Color {
-        (**self).color()
+        <V as BoxedFieldsView>::color(self)
     }
 
     fn shape(&self) -> impl crate::types::ShapeView {
-        (**self).shape()
+        <V as BoxedFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -186,23 +186,23 @@ impl BoxedFieldsView for super::BoxedFieldsRef<'_> {
 
 impl BoxedFieldsView for super::BoxedFieldsBuf {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::BoxedFieldsRef::point(&self.as_ref())
     }
 
     fn person(&self) -> impl crate::types::PersonView {
-        self.as_ref().person()
+        super::BoxedFieldsRef::person(&self.as_ref())
     }
 
     fn label(&self) -> impl crate::types::LabelView {
-        self.as_ref().label()
+        super::BoxedFieldsRef::label(&self.as_ref())
     }
 
     fn color(&self) -> crate::types::Color {
-        self.as_ref().color()
+        super::BoxedFieldsRef::color(&self.as_ref())
     }
 
     fn shape(&self) -> impl crate::types::ShapeView {
-        self.as_ref().shape()
+        super::BoxedFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -216,23 +216,23 @@ impl BoxedFieldsView for super::BoxedFieldsBuf {
 
 impl BoxedFieldsView for super::BoxedFieldsMut<'_> {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::BoxedFieldsRef::point(&self.as_ref())
     }
 
     fn person(&self) -> impl crate::types::PersonView {
-        self.as_ref().person()
+        super::BoxedFieldsRef::person(&self.as_ref())
     }
 
     fn label(&self) -> impl crate::types::LabelView {
-        self.as_ref().label()
+        super::BoxedFieldsRef::label(&self.as_ref())
     }
 
     fn color(&self) -> crate::types::Color {
-        self.as_ref().color()
+        super::BoxedFieldsRef::color(&self.as_ref())
     }
 
     fn shape(&self) -> impl crate::types::ShapeView {
-        self.as_ref().shape()
+        super::BoxedFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

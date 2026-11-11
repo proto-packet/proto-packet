@@ -373,59 +373,59 @@ pub trait ListKindsView {
 
 impl<V: ListKindsView> ListKindsView for &V {
     fn bytes(&self) -> &[u8] {
-        (**self).bytes()
+        <V as ListKindsView>::bytes(self)
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool> {
-        (**self).flags()
+        <V as ListKindsView>::flags(self)
     }
 
     fn signed(&self) -> impl proto_packet::io::ListView<Item = i64> {
-        (**self).signed()
+        <V as ListKindsView>::signed(self)
     }
 
     fn floats(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float64> {
-        (**self).floats()
+        <V as ListKindsView>::floats(self)
     }
 
     fn ids(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Uuid> {
-        (**self).ids()
+        <V as ListKindsView>::ids(self)
     }
 
     fn colors(&self) -> impl proto_packet::io::ListView<Item = crate::format::examples::Color> {
-        (**self).colors()
+        <V as ListKindsView>::colors(self)
     }
 
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
-        (**self).texts()
+        <V as ListKindsView>::texts(self)
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView> {
-        (**self).points()
+        <V as ListKindsView>::points(self)
     }
 
     fn entries(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::EntryView> {
-        (**self).entries()
+        <V as ListKindsView>::entries(self)
     }
 
     fn items(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::messages::ItemView> {
-        (**self).items()
+        <V as ListKindsView>::items(self)
     }
 
     fn shapes(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::variants::ShapeView> {
-        (**self).shapes()
+        <V as ListKindsView>::shapes(self)
     }
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
-        (**self).maybe()
+        <V as ListKindsView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -439,59 +439,59 @@ impl<V: ListKindsView> ListKindsView for &V {
 
 impl<V: ListKindsView> ListKindsView for &mut V {
     fn bytes(&self) -> &[u8] {
-        (**self).bytes()
+        <V as ListKindsView>::bytes(self)
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool> {
-        (**self).flags()
+        <V as ListKindsView>::flags(self)
     }
 
     fn signed(&self) -> impl proto_packet::io::ListView<Item = i64> {
-        (**self).signed()
+        <V as ListKindsView>::signed(self)
     }
 
     fn floats(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float64> {
-        (**self).floats()
+        <V as ListKindsView>::floats(self)
     }
 
     fn ids(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Uuid> {
-        (**self).ids()
+        <V as ListKindsView>::ids(self)
     }
 
     fn colors(&self) -> impl proto_packet::io::ListView<Item = crate::format::examples::Color> {
-        (**self).colors()
+        <V as ListKindsView>::colors(self)
     }
 
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
-        (**self).texts()
+        <V as ListKindsView>::texts(self)
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView> {
-        (**self).points()
+        <V as ListKindsView>::points(self)
     }
 
     fn entries(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::EntryView> {
-        (**self).entries()
+        <V as ListKindsView>::entries(self)
     }
 
     fn items(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::messages::ItemView> {
-        (**self).items()
+        <V as ListKindsView>::items(self)
     }
 
     fn shapes(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::variants::ShapeView> {
-        (**self).shapes()
+        <V as ListKindsView>::shapes(self)
     }
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
-        (**self).maybe()
+        <V as ListKindsView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -642,59 +642,59 @@ impl ListKindsView for super::ListKindsRef<'_> {
 
 impl ListKindsView for super::ListKindsBuf {
     fn bytes(&self) -> &[u8] {
-        self.as_ref().bytes()
+        super::ListKindsRef::bytes(&self.as_ref())
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool> {
-        self.as_ref().flags()
+        super::ListKindsRef::flags(&self.as_ref())
     }
 
     fn signed(&self) -> impl proto_packet::io::ListView<Item = i64> {
-        self.as_ref().signed()
+        super::ListKindsRef::signed(&self.as_ref())
     }
 
     fn floats(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float64> {
-        self.as_ref().floats()
+        super::ListKindsRef::floats(&self.as_ref())
     }
 
     fn ids(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Uuid> {
-        self.as_ref().ids()
+        super::ListKindsRef::ids(&self.as_ref())
     }
 
     fn colors(&self) -> impl proto_packet::io::ListView<Item = crate::format::examples::Color> {
-        self.as_ref().colors()
+        super::ListKindsRef::colors(&self.as_ref())
     }
 
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
-        self.as_ref().texts()
+        super::ListKindsRef::texts(&self.as_ref())
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView> {
-        self.as_ref().points()
+        super::ListKindsRef::points(&self.as_ref())
     }
 
     fn entries(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::EntryView> {
-        self.as_ref().entries()
+        super::ListKindsRef::entries(&self.as_ref())
     }
 
     fn items(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::messages::ItemView> {
-        self.as_ref().items()
+        super::ListKindsRef::items(&self.as_ref())
     }
 
     fn shapes(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::variants::ShapeView> {
-        self.as_ref().shapes()
+        super::ListKindsRef::shapes(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
-        self.as_ref().maybe()
+        super::ListKindsRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -708,59 +708,59 @@ impl ListKindsView for super::ListKindsBuf {
 
 impl ListKindsView for super::ListKindsMut<'_> {
     fn bytes(&self) -> &[u8] {
-        self.as_ref().bytes()
+        super::ListKindsRef::bytes(&self.as_ref())
     }
 
     fn flags(&self) -> impl proto_packet::io::ListView<Item = bool> {
-        self.as_ref().flags()
+        super::ListKindsRef::flags(&self.as_ref())
     }
 
     fn signed(&self) -> impl proto_packet::io::ListView<Item = i64> {
-        self.as_ref().signed()
+        super::ListKindsRef::signed(&self.as_ref())
     }
 
     fn floats(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Float64> {
-        self.as_ref().floats()
+        super::ListKindsRef::floats(&self.as_ref())
     }
 
     fn ids(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Uuid> {
-        self.as_ref().ids()
+        super::ListKindsRef::ids(&self.as_ref())
     }
 
     fn colors(&self) -> impl proto_packet::io::ListView<Item = crate::format::examples::Color> {
-        self.as_ref().colors()
+        super::ListKindsRef::colors(&self.as_ref())
     }
 
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
-        self.as_ref().texts()
+        super::ListKindsRef::texts(&self.as_ref())
     }
 
     fn points(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView> {
-        self.as_ref().points()
+        super::ListKindsRef::points(&self.as_ref())
     }
 
     fn entries(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::EntryView> {
-        self.as_ref().entries()
+        super::ListKindsRef::entries(&self.as_ref())
     }
 
     fn items(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::messages::ItemView> {
-        self.as_ref().items()
+        super::ListKindsRef::items(&self.as_ref())
     }
 
     fn shapes(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::variants::ShapeView> {
-        self.as_ref().shapes()
+        super::ListKindsRef::shapes(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<impl proto_packet::io::ListView<Item = u16>> {
-        self.as_ref().maybe()
+        super::ListKindsRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

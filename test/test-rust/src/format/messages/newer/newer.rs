@@ -183,19 +183,18 @@ impl Newer {
 
 impl Ord for Newer {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.id
-            .cmp(&other.id)
-            .then_with(|| self.name.cmp(&other.name))
-            .then_with(|| self.nickname.cmp(&other.nickname))
-            .then_with(|| self.age.cmp(&other.age))
-            .then_with(|| self.entry.cmp(&other.entry))
+        Ord::cmp(&self.id, &other.id)
+            .then_with(|| Ord::cmp(&self.name, &other.name))
+            .then_with(|| Ord::cmp(&self.nickname, &other.nickname))
+            .then_with(|| Ord::cmp(&self.age, &other.age))
+            .then_with(|| Ord::cmp(&self.entry, &other.entry))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for Newer {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

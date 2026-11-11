@@ -79,23 +79,23 @@ pub trait StringsView {
 
 impl<V: StringsView> StringsView for &V {
     fn number(&self) -> u8 {
-        (**self).number()
+        <V as StringsView>::number(self)
     }
 
     fn first(&self) -> &str {
-        (**self).first()
+        <V as StringsView>::first(self)
     }
 
     fn entry(&self) -> impl crate::format::examples::EntryView {
-        (**self).entry()
+        <V as StringsView>::entry(self)
     }
 
     fn second(&self) -> Option<&str> {
-        (**self).second()
+        <V as StringsView>::second(self)
     }
 
     fn third(&self) -> &str {
-        (**self).third()
+        <V as StringsView>::third(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -109,23 +109,23 @@ impl<V: StringsView> StringsView for &V {
 
 impl<V: StringsView> StringsView for &mut V {
     fn number(&self) -> u8 {
-        (**self).number()
+        <V as StringsView>::number(self)
     }
 
     fn first(&self) -> &str {
-        (**self).first()
+        <V as StringsView>::first(self)
     }
 
     fn entry(&self) -> impl crate::format::examples::EntryView {
-        (**self).entry()
+        <V as StringsView>::entry(self)
     }
 
     fn second(&self) -> Option<&str> {
-        (**self).second()
+        <V as StringsView>::second(self)
     }
 
     fn third(&self) -> &str {
-        (**self).third()
+        <V as StringsView>::third(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -204,23 +204,23 @@ impl StringsView for super::StringsRef<'_> {
 
 impl StringsView for super::StringsBuf {
     fn number(&self) -> u8 {
-        self.as_ref().number()
+        super::StringsRef::number(&self.as_ref())
     }
 
     fn first(&self) -> &str {
-        self.as_ref().first()
+        super::StringsRef::first(&self.as_ref())
     }
 
     fn entry(&self) -> impl crate::format::examples::EntryView {
-        self.as_ref().entry()
+        super::StringsRef::entry(&self.as_ref())
     }
 
     fn second(&self) -> Option<&str> {
-        self.as_ref().second()
+        super::StringsRef::second(&self.as_ref())
     }
 
     fn third(&self) -> &str {
-        self.as_ref().third()
+        super::StringsRef::third(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -234,23 +234,23 @@ impl StringsView for super::StringsBuf {
 
 impl StringsView for super::StringsMut<'_> {
     fn number(&self) -> u8 {
-        self.as_ref().number()
+        super::StringsRef::number(&self.as_ref())
     }
 
     fn first(&self) -> &str {
-        self.as_ref().first()
+        super::StringsRef::first(&self.as_ref())
     }
 
     fn entry(&self) -> impl crate::format::examples::EntryView {
-        self.as_ref().entry()
+        super::StringsRef::entry(&self.as_ref())
     }
 
     fn second(&self) -> Option<&str> {
-        self.as_ref().second()
+        super::StringsRef::second(&self.as_ref())
     }
 
     fn third(&self) -> &str {
-        self.as_ref().third()
+        super::StringsRef::third(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

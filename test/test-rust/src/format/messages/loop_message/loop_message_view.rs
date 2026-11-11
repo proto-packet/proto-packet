@@ -65,11 +65,11 @@ pub trait LoopMessageView {
 
 impl<V: LoopMessageView> LoopMessageView for &V {
     fn value(&self) -> Option<u32> {
-        (**self).value()
+        <V as LoopMessageView>::value(self)
     }
 
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
-        (**self).next()
+        <V as LoopMessageView>::next(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -83,11 +83,11 @@ impl<V: LoopMessageView> LoopMessageView for &V {
 
 impl<V: LoopMessageView> LoopMessageView for &mut V {
     fn value(&self) -> Option<u32> {
-        (**self).value()
+        <V as LoopMessageView>::value(self)
     }
 
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
-        (**self).next()
+        <V as LoopMessageView>::next(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -142,11 +142,11 @@ impl LoopMessageView for super::LoopMessageRef<'_> {
 
 impl LoopMessageView for super::LoopMessageBuf {
     fn value(&self) -> Option<u32> {
-        self.as_ref().value()
+        super::LoopMessageRef::value(&self.as_ref())
     }
 
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
-        self.as_ref().next()
+        super::LoopMessageRef::next(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -160,11 +160,11 @@ impl LoopMessageView for super::LoopMessageBuf {
 
 impl LoopMessageView for super::LoopMessageMut<'_> {
     fn value(&self) -> Option<u32> {
-        self.as_ref().value()
+        super::LoopMessageRef::value(&self.as_ref())
     }
 
     fn next(&self) -> Option<impl crate::format::messages::LoopStructView> {
-        self.as_ref().next()
+        super::LoopMessageRef::next(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

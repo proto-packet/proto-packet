@@ -61,23 +61,23 @@ pub trait FixedKindsView {
 
 impl<V: FixedKindsView> FixedKindsView for &V {
     fn id(&self) -> proto_packet::types::Uuid {
-        (**self).id()
+        <V as FixedKindsView>::id(self)
     }
 
     fn color(&self) -> crate::format::examples::Color {
-        (**self).color()
+        <V as FixedKindsView>::color(self)
     }
 
     fn point(&self) -> impl crate::format::examples::PointView {
-        (**self).point()
+        <V as FixedKindsView>::point(self)
     }
 
     fn maybe_point(&self) -> Option<impl crate::format::examples::PointView> {
-        (**self).maybe_point()
+        <V as FixedKindsView>::maybe_point(self)
     }
 
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
-        (**self).maybe_color()
+        <V as FixedKindsView>::maybe_color(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -91,23 +91,23 @@ impl<V: FixedKindsView> FixedKindsView for &V {
 
 impl<V: FixedKindsView> FixedKindsView for &mut V {
     fn id(&self) -> proto_packet::types::Uuid {
-        (**self).id()
+        <V as FixedKindsView>::id(self)
     }
 
     fn color(&self) -> crate::format::examples::Color {
-        (**self).color()
+        <V as FixedKindsView>::color(self)
     }
 
     fn point(&self) -> impl crate::format::examples::PointView {
-        (**self).point()
+        <V as FixedKindsView>::point(self)
     }
 
     fn maybe_point(&self) -> Option<impl crate::format::examples::PointView> {
-        (**self).maybe_point()
+        <V as FixedKindsView>::maybe_point(self)
     }
 
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
-        (**self).maybe_color()
+        <V as FixedKindsView>::maybe_color(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -181,23 +181,23 @@ impl FixedKindsView for super::FixedKindsRef<'_> {
 
 impl FixedKindsView for super::FixedKindsBuf {
     fn id(&self) -> proto_packet::types::Uuid {
-        self.as_ref().id()
+        super::FixedKindsRef::id(&self.as_ref())
     }
 
     fn color(&self) -> crate::format::examples::Color {
-        self.as_ref().color()
+        super::FixedKindsRef::color(&self.as_ref())
     }
 
     fn point(&self) -> impl crate::format::examples::PointView {
-        self.as_ref().point()
+        super::FixedKindsRef::point(&self.as_ref())
     }
 
     fn maybe_point(&self) -> Option<impl crate::format::examples::PointView> {
-        self.as_ref().maybe_point()
+        super::FixedKindsRef::maybe_point(&self.as_ref())
     }
 
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
-        self.as_ref().maybe_color()
+        super::FixedKindsRef::maybe_color(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -211,23 +211,23 @@ impl FixedKindsView for super::FixedKindsBuf {
 
 impl FixedKindsView for super::FixedKindsMut<'_> {
     fn id(&self) -> proto_packet::types::Uuid {
-        self.as_ref().id()
+        super::FixedKindsRef::id(&self.as_ref())
     }
 
     fn color(&self) -> crate::format::examples::Color {
-        self.as_ref().color()
+        super::FixedKindsRef::color(&self.as_ref())
     }
 
     fn point(&self) -> impl crate::format::examples::PointView {
-        self.as_ref().point()
+        super::FixedKindsRef::point(&self.as_ref())
     }
 
     fn maybe_point(&self) -> Option<impl crate::format::examples::PointView> {
-        self.as_ref().maybe_point()
+        super::FixedKindsRef::maybe_point(&self.as_ref())
     }
 
     fn maybe_color(&self) -> Option<crate::format::examples::Color> {
-        self.as_ref().maybe_color()
+        super::FixedKindsRef::maybe_color(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

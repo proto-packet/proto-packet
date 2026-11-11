@@ -492,28 +492,27 @@ impl AllKinds {
 
 impl Ord for AllKinds {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.flag
-            .cmp(&other.flag)
-            .then_with(|| self.byte.cmp(&other.byte))
-            .then_with(|| self.large.cmp(&other.large))
-            .then_with(|| self.id.cmp(&other.id))
-            .then_with(|| self.color.cmp(&other.color))
-            .then_with(|| self.text.cmp(&other.text))
-            .then_with(|| self.point.cmp(&other.point))
-            .then_with(|| self.entry.cmp(&other.entry))
-            .then_with(|| self.item.cmp(&other.item))
-            .then_with(|| self.boxed_color.cmp(&other.boxed_color))
-            .then_with(|| self.signed.cmp(&other.signed))
-            .then_with(|| self.float.cmp(&other.float))
-            .then_with(|| self.at.cmp(&other.at))
-            .then_with(|| self.price.cmp(&other.price))
+        Ord::cmp(&self.flag, &other.flag)
+            .then_with(|| Ord::cmp(&self.byte, &other.byte))
+            .then_with(|| Ord::cmp(&self.large, &other.large))
+            .then_with(|| Ord::cmp(&self.id, &other.id))
+            .then_with(|| Ord::cmp(&self.color, &other.color))
+            .then_with(|| Ord::cmp(&self.text, &other.text))
+            .then_with(|| Ord::cmp(&self.point, &other.point))
+            .then_with(|| Ord::cmp(&self.entry, &other.entry))
+            .then_with(|| Ord::cmp(&self.item, &other.item))
+            .then_with(|| Ord::cmp(&self.boxed_color, &other.boxed_color))
+            .then_with(|| Ord::cmp(&self.signed, &other.signed))
+            .then_with(|| Ord::cmp(&self.float, &other.float))
+            .then_with(|| Ord::cmp(&self.at, &other.at))
+            .then_with(|| Ord::cmp(&self.price, &other.price))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for AllKinds {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

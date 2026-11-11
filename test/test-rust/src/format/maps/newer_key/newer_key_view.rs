@@ -74,15 +74,15 @@ pub trait NewerKeyView {
 
 impl<V: NewerKeyView> NewerKeyView for &V {
     fn a(&self) -> Option<u32> {
-        (**self).a()
+        <V as NewerKeyView>::a(self)
     }
 
     fn b(&self) -> Option<u32> {
-        (**self).b()
+        <V as NewerKeyView>::b(self)
     }
 
     fn c(&self) -> Option<u32> {
-        (**self).c()
+        <V as NewerKeyView>::c(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -96,15 +96,15 @@ impl<V: NewerKeyView> NewerKeyView for &V {
 
 impl<V: NewerKeyView> NewerKeyView for &mut V {
     fn a(&self) -> Option<u32> {
-        (**self).a()
+        <V as NewerKeyView>::a(self)
     }
 
     fn b(&self) -> Option<u32> {
-        (**self).b()
+        <V as NewerKeyView>::b(self)
     }
 
     fn c(&self) -> Option<u32> {
-        (**self).c()
+        <V as NewerKeyView>::c(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -167,15 +167,15 @@ impl NewerKeyView for super::NewerKeyRef<'_> {
 
 impl NewerKeyView for super::NewerKeyBuf {
     fn a(&self) -> Option<u32> {
-        self.as_ref().a()
+        super::NewerKeyRef::a(&self.as_ref())
     }
 
     fn b(&self) -> Option<u32> {
-        self.as_ref().b()
+        super::NewerKeyRef::b(&self.as_ref())
     }
 
     fn c(&self) -> Option<u32> {
-        self.as_ref().c()
+        super::NewerKeyRef::c(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -189,15 +189,15 @@ impl NewerKeyView for super::NewerKeyBuf {
 
 impl NewerKeyView for super::NewerKeyMut<'_> {
     fn a(&self) -> Option<u32> {
-        self.as_ref().a()
+        super::NewerKeyRef::a(&self.as_ref())
     }
 
     fn b(&self) -> Option<u32> {
-        self.as_ref().b()
+        super::NewerKeyRef::b(&self.as_ref())
     }
 
     fn c(&self) -> Option<u32> {
-        self.as_ref().c()
+        super::NewerKeyRef::c(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

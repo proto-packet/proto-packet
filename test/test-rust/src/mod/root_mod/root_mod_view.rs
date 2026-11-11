@@ -36,7 +36,7 @@ pub trait RootModView {
 
 impl<V: RootModView> RootModView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as RootModView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: RootModView> RootModView for &V {
 
 impl<V: RootModView> RootModView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as RootModView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl RootModView for super::RootModRef<'_> {
 
 impl RootModView for super::RootModBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::RootModRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl RootModView for super::RootModBuf {
 
 impl RootModView for super::RootModMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::RootModRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

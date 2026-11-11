@@ -74,15 +74,15 @@ pub trait BoxedFieldsView {
 
 impl<V: BoxedFieldsView> BoxedFieldsView for &V {
     fn point(&self) -> Option<impl crate::types::PointView> {
-        (**self).point()
+        <V as BoxedFieldsView>::point(self)
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        (**self).label()
+        <V as BoxedFieldsView>::label(self)
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        (**self).shape()
+        <V as BoxedFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -96,15 +96,15 @@ impl<V: BoxedFieldsView> BoxedFieldsView for &V {
 
 impl<V: BoxedFieldsView> BoxedFieldsView for &mut V {
     fn point(&self) -> Option<impl crate::types::PointView> {
-        (**self).point()
+        <V as BoxedFieldsView>::point(self)
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        (**self).label()
+        <V as BoxedFieldsView>::label(self)
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        (**self).shape()
+        <V as BoxedFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -167,15 +167,15 @@ impl BoxedFieldsView for super::BoxedFieldsRef<'_> {
 
 impl BoxedFieldsView for super::BoxedFieldsBuf {
     fn point(&self) -> Option<impl crate::types::PointView> {
-        self.as_ref().point()
+        super::BoxedFieldsRef::point(&self.as_ref())
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        self.as_ref().label()
+        super::BoxedFieldsRef::label(&self.as_ref())
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        self.as_ref().shape()
+        super::BoxedFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -189,15 +189,15 @@ impl BoxedFieldsView for super::BoxedFieldsBuf {
 
 impl BoxedFieldsView for super::BoxedFieldsMut<'_> {
     fn point(&self) -> Option<impl crate::types::PointView> {
-        self.as_ref().point()
+        super::BoxedFieldsRef::point(&self.as_ref())
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        self.as_ref().label()
+        super::BoxedFieldsRef::label(&self.as_ref())
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        self.as_ref().shape()
+        super::BoxedFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

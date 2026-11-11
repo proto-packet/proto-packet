@@ -61,23 +61,23 @@ pub trait NamedFieldsView {
 
 impl<V: NamedFieldsView> NamedFieldsView for &V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as NamedFieldsView>::point(self)
     }
 
     fn person(&self) -> impl crate::types::PersonView {
-        (**self).person()
+        <V as NamedFieldsView>::person(self)
     }
 
     fn label(&self) -> impl crate::types::LabelView {
-        (**self).label()
+        <V as NamedFieldsView>::label(self)
     }
 
     fn color(&self) -> crate::types::Color {
-        (**self).color()
+        <V as NamedFieldsView>::color(self)
     }
 
     fn shape(&self) -> impl crate::types::ShapeView {
-        (**self).shape()
+        <V as NamedFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -91,23 +91,23 @@ impl<V: NamedFieldsView> NamedFieldsView for &V {
 
 impl<V: NamedFieldsView> NamedFieldsView for &mut V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as NamedFieldsView>::point(self)
     }
 
     fn person(&self) -> impl crate::types::PersonView {
-        (**self).person()
+        <V as NamedFieldsView>::person(self)
     }
 
     fn label(&self) -> impl crate::types::LabelView {
-        (**self).label()
+        <V as NamedFieldsView>::label(self)
     }
 
     fn color(&self) -> crate::types::Color {
-        (**self).color()
+        <V as NamedFieldsView>::color(self)
     }
 
     fn shape(&self) -> impl crate::types::ShapeView {
-        (**self).shape()
+        <V as NamedFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -186,23 +186,23 @@ impl NamedFieldsView for super::NamedFieldsRef<'_> {
 
 impl NamedFieldsView for super::NamedFieldsBuf {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::NamedFieldsRef::point(&self.as_ref())
     }
 
     fn person(&self) -> impl crate::types::PersonView {
-        self.as_ref().person()
+        super::NamedFieldsRef::person(&self.as_ref())
     }
 
     fn label(&self) -> impl crate::types::LabelView {
-        self.as_ref().label()
+        super::NamedFieldsRef::label(&self.as_ref())
     }
 
     fn color(&self) -> crate::types::Color {
-        self.as_ref().color()
+        super::NamedFieldsRef::color(&self.as_ref())
     }
 
     fn shape(&self) -> impl crate::types::ShapeView {
-        self.as_ref().shape()
+        super::NamedFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -216,23 +216,23 @@ impl NamedFieldsView for super::NamedFieldsBuf {
 
 impl NamedFieldsView for super::NamedFieldsMut<'_> {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::NamedFieldsRef::point(&self.as_ref())
     }
 
     fn person(&self) -> impl crate::types::PersonView {
-        self.as_ref().person()
+        super::NamedFieldsRef::person(&self.as_ref())
     }
 
     fn label(&self) -> impl crate::types::LabelView {
-        self.as_ref().label()
+        super::NamedFieldsRef::label(&self.as_ref())
     }
 
     fn color(&self) -> crate::types::Color {
-        self.as_ref().color()
+        super::NamedFieldsRef::color(&self.as_ref())
     }
 
     fn shape(&self) -> impl crate::types::ShapeView {
-        self.as_ref().shape()
+        super::NamedFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

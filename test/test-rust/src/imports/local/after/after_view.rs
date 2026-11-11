@@ -36,7 +36,7 @@ pub trait AfterView {
 
 impl<V: AfterView> AfterView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as AfterView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: AfterView> AfterView for &V {
 
 impl<V: AfterView> AfterView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as AfterView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl AfterView for super::AfterRef<'_> {
 
 impl AfterView for super::AfterBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::AfterRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl AfterView for super::AfterBuf {
 
 impl AfterView for super::AfterMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::AfterRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

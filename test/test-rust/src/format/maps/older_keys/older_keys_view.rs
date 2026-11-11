@@ -139,7 +139,7 @@ impl<V: OlderKeysView> OlderKeysView for &V {
         Key = impl crate::format::maps::OlderKeyView,
         Value = u8,
     > {
-        (**self).by_message()
+        <V as OlderKeysView>::by_message(self)
     }
 
     fn by_variant(
@@ -149,7 +149,7 @@ impl<V: OlderKeysView> OlderKeysView for &V {
         Key = impl crate::format::variants::OlderCasesView,
         Value = u8,
     > {
-        (**self).by_variant()
+        <V as OlderKeysView>::by_variant(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -169,7 +169,7 @@ impl<V: OlderKeysView> OlderKeysView for &mut V {
         Key = impl crate::format::maps::OlderKeyView,
         Value = u8,
     > {
-        (**self).by_message()
+        <V as OlderKeysView>::by_message(self)
     }
 
     fn by_variant(
@@ -179,7 +179,7 @@ impl<V: OlderKeysView> OlderKeysView for &mut V {
         Key = impl crate::format::variants::OlderCasesView,
         Value = u8,
     > {
-        (**self).by_variant()
+        <V as OlderKeysView>::by_variant(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -264,7 +264,7 @@ impl OlderKeysView for super::OlderKeysBuf {
         Key = impl crate::format::maps::OlderKeyView,
         Value = u8,
     > {
-        self.as_ref().by_message()
+        super::OlderKeysRef::by_message(&self.as_ref())
     }
 
     fn by_variant(
@@ -274,7 +274,7 @@ impl OlderKeysView for super::OlderKeysBuf {
         Key = impl crate::format::variants::OlderCasesView,
         Value = u8,
     > {
-        self.as_ref().by_variant()
+        super::OlderKeysRef::by_variant(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -294,7 +294,7 @@ impl OlderKeysView for super::OlderKeysMut<'_> {
         Key = impl crate::format::maps::OlderKeyView,
         Value = u8,
     > {
-        self.as_ref().by_message()
+        super::OlderKeysRef::by_message(&self.as_ref())
     }
 
     fn by_variant(
@@ -304,7 +304,7 @@ impl OlderKeysView for super::OlderKeysMut<'_> {
         Key = impl crate::format::variants::OlderCasesView,
         Value = u8,
     > {
-        self.as_ref().by_variant()
+        super::OlderKeysRef::by_variant(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

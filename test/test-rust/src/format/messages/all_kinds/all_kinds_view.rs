@@ -222,59 +222,59 @@ pub trait AllKindsView {
 
 impl<V: AllKindsView> AllKindsView for &V {
     fn flag(&self) -> Option<bool> {
-        (**self).flag()
+        <V as AllKindsView>::flag(self)
     }
 
     fn byte(&self) -> Option<u8> {
-        (**self).byte()
+        <V as AllKindsView>::byte(self)
     }
 
     fn large(&self) -> Option<u128> {
-        (**self).large()
+        <V as AllKindsView>::large(self)
     }
 
     fn id(&self) -> Option<proto_packet::types::Uuid> {
-        (**self).id()
+        <V as AllKindsView>::id(self)
     }
 
     fn color(&self) -> Option<crate::format::examples::Color> {
-        (**self).color()
+        <V as AllKindsView>::color(self)
     }
 
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as AllKindsView>::text(self)
     }
 
     fn point(&self) -> Option<impl crate::format::examples::PointView> {
-        (**self).point()
+        <V as AllKindsView>::point(self)
     }
 
     fn entry(&self) -> Option<impl crate::format::examples::EntryView> {
-        (**self).entry()
+        <V as AllKindsView>::entry(self)
     }
 
     fn item(&self) -> Option<impl crate::format::messages::ItemView> {
-        (**self).item()
+        <V as AllKindsView>::item(self)
     }
 
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
-        (**self).boxed_color()
+        <V as AllKindsView>::boxed_color(self)
     }
 
     fn signed(&self) -> Option<i64> {
-        (**self).signed()
+        <V as AllKindsView>::signed(self)
     }
 
     fn float(&self) -> Option<proto_packet::types::Float64> {
-        (**self).float()
+        <V as AllKindsView>::float(self)
     }
 
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
-        (**self).at()
+        <V as AllKindsView>::at(self)
     }
 
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
-        (**self).price()
+        <V as AllKindsView>::price(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -288,59 +288,59 @@ impl<V: AllKindsView> AllKindsView for &V {
 
 impl<V: AllKindsView> AllKindsView for &mut V {
     fn flag(&self) -> Option<bool> {
-        (**self).flag()
+        <V as AllKindsView>::flag(self)
     }
 
     fn byte(&self) -> Option<u8> {
-        (**self).byte()
+        <V as AllKindsView>::byte(self)
     }
 
     fn large(&self) -> Option<u128> {
-        (**self).large()
+        <V as AllKindsView>::large(self)
     }
 
     fn id(&self) -> Option<proto_packet::types::Uuid> {
-        (**self).id()
+        <V as AllKindsView>::id(self)
     }
 
     fn color(&self) -> Option<crate::format::examples::Color> {
-        (**self).color()
+        <V as AllKindsView>::color(self)
     }
 
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as AllKindsView>::text(self)
     }
 
     fn point(&self) -> Option<impl crate::format::examples::PointView> {
-        (**self).point()
+        <V as AllKindsView>::point(self)
     }
 
     fn entry(&self) -> Option<impl crate::format::examples::EntryView> {
-        (**self).entry()
+        <V as AllKindsView>::entry(self)
     }
 
     fn item(&self) -> Option<impl crate::format::messages::ItemView> {
-        (**self).item()
+        <V as AllKindsView>::item(self)
     }
 
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
-        (**self).boxed_color()
+        <V as AllKindsView>::boxed_color(self)
     }
 
     fn signed(&self) -> Option<i64> {
-        (**self).signed()
+        <V as AllKindsView>::signed(self)
     }
 
     fn float(&self) -> Option<proto_packet::types::Float64> {
-        (**self).float()
+        <V as AllKindsView>::float(self)
     }
 
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
-        (**self).at()
+        <V as AllKindsView>::at(self)
     }
 
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
-        (**self).price()
+        <V as AllKindsView>::price(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -491,59 +491,59 @@ impl AllKindsView for super::AllKindsRef<'_> {
 
 impl AllKindsView for super::AllKindsBuf {
     fn flag(&self) -> Option<bool> {
-        self.as_ref().flag()
+        super::AllKindsRef::flag(&self.as_ref())
     }
 
     fn byte(&self) -> Option<u8> {
-        self.as_ref().byte()
+        super::AllKindsRef::byte(&self.as_ref())
     }
 
     fn large(&self) -> Option<u128> {
-        self.as_ref().large()
+        super::AllKindsRef::large(&self.as_ref())
     }
 
     fn id(&self) -> Option<proto_packet::types::Uuid> {
-        self.as_ref().id()
+        super::AllKindsRef::id(&self.as_ref())
     }
 
     fn color(&self) -> Option<crate::format::examples::Color> {
-        self.as_ref().color()
+        super::AllKindsRef::color(&self.as_ref())
     }
 
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::AllKindsRef::text(&self.as_ref())
     }
 
     fn point(&self) -> Option<impl crate::format::examples::PointView> {
-        self.as_ref().point()
+        super::AllKindsRef::point(&self.as_ref())
     }
 
     fn entry(&self) -> Option<impl crate::format::examples::EntryView> {
-        self.as_ref().entry()
+        super::AllKindsRef::entry(&self.as_ref())
     }
 
     fn item(&self) -> Option<impl crate::format::messages::ItemView> {
-        self.as_ref().item()
+        super::AllKindsRef::item(&self.as_ref())
     }
 
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
-        self.as_ref().boxed_color()
+        super::AllKindsRef::boxed_color(&self.as_ref())
     }
 
     fn signed(&self) -> Option<i64> {
-        self.as_ref().signed()
+        super::AllKindsRef::signed(&self.as_ref())
     }
 
     fn float(&self) -> Option<proto_packet::types::Float64> {
-        self.as_ref().float()
+        super::AllKindsRef::float(&self.as_ref())
     }
 
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
-        self.as_ref().at()
+        super::AllKindsRef::at(&self.as_ref())
     }
 
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
-        self.as_ref().price()
+        super::AllKindsRef::price(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -557,59 +557,59 @@ impl AllKindsView for super::AllKindsBuf {
 
 impl AllKindsView for super::AllKindsMut<'_> {
     fn flag(&self) -> Option<bool> {
-        self.as_ref().flag()
+        super::AllKindsRef::flag(&self.as_ref())
     }
 
     fn byte(&self) -> Option<u8> {
-        self.as_ref().byte()
+        super::AllKindsRef::byte(&self.as_ref())
     }
 
     fn large(&self) -> Option<u128> {
-        self.as_ref().large()
+        super::AllKindsRef::large(&self.as_ref())
     }
 
     fn id(&self) -> Option<proto_packet::types::Uuid> {
-        self.as_ref().id()
+        super::AllKindsRef::id(&self.as_ref())
     }
 
     fn color(&self) -> Option<crate::format::examples::Color> {
-        self.as_ref().color()
+        super::AllKindsRef::color(&self.as_ref())
     }
 
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::AllKindsRef::text(&self.as_ref())
     }
 
     fn point(&self) -> Option<impl crate::format::examples::PointView> {
-        self.as_ref().point()
+        super::AllKindsRef::point(&self.as_ref())
     }
 
     fn entry(&self) -> Option<impl crate::format::examples::EntryView> {
-        self.as_ref().entry()
+        super::AllKindsRef::entry(&self.as_ref())
     }
 
     fn item(&self) -> Option<impl crate::format::messages::ItemView> {
-        self.as_ref().item()
+        super::AllKindsRef::item(&self.as_ref())
     }
 
     fn boxed_color(&self) -> Option<crate::format::examples::Color> {
-        self.as_ref().boxed_color()
+        super::AllKindsRef::boxed_color(&self.as_ref())
     }
 
     fn signed(&self) -> Option<i64> {
-        self.as_ref().signed()
+        super::AllKindsRef::signed(&self.as_ref())
     }
 
     fn float(&self) -> Option<proto_packet::types::Float64> {
-        self.as_ref().float()
+        super::AllKindsRef::float(&self.as_ref())
     }
 
     fn at(&self) -> Option<proto_packet::types::Timestamp> {
-        self.as_ref().at()
+        super::AllKindsRef::at(&self.as_ref())
     }
 
     fn price(&self) -> Option<proto_packet::types::Decimal<2>> {
-        self.as_ref().price()
+        super::AllKindsRef::price(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

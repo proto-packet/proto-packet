@@ -36,7 +36,7 @@ pub trait ResultView {
 
 impl<V: ResultView> ResultView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as ResultView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: ResultView> ResultView for &V {
 
 impl<V: ResultView> ResultView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as ResultView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl ResultView for super::ResultRef<'_> {
 
 impl ResultView for super::ResultBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::ResultRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl ResultView for super::ResultBuf {
 
 impl ResultView for super::ResultMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::ResultRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -61,11 +61,11 @@ pub trait EdgeTagsView {
 
 impl<V: EdgeTagsView> EdgeTagsView for &V {
     fn min(&self) -> Option<u32> {
-        (**self).min()
+        <V as EdgeTagsView>::min(self)
     }
 
     fn max(&self) -> Option<u32> {
-        (**self).max()
+        <V as EdgeTagsView>::max(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -79,11 +79,11 @@ impl<V: EdgeTagsView> EdgeTagsView for &V {
 
 impl<V: EdgeTagsView> EdgeTagsView for &mut V {
     fn min(&self) -> Option<u32> {
-        (**self).min()
+        <V as EdgeTagsView>::min(self)
     }
 
     fn max(&self) -> Option<u32> {
-        (**self).max()
+        <V as EdgeTagsView>::max(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -138,11 +138,11 @@ impl EdgeTagsView for super::EdgeTagsRef<'_> {
 
 impl EdgeTagsView for super::EdgeTagsBuf {
     fn min(&self) -> Option<u32> {
-        self.as_ref().min()
+        super::EdgeTagsRef::min(&self.as_ref())
     }
 
     fn max(&self) -> Option<u32> {
-        self.as_ref().max()
+        super::EdgeTagsRef::max(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -156,11 +156,11 @@ impl EdgeTagsView for super::EdgeTagsBuf {
 
 impl EdgeTagsView for super::EdgeTagsMut<'_> {
     fn min(&self) -> Option<u32> {
-        self.as_ref().min()
+        super::EdgeTagsRef::min(&self.as_ref())
     }
 
     fn max(&self) -> Option<u32> {
-        self.as_ref().max()
+        super::EdgeTagsRef::max(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

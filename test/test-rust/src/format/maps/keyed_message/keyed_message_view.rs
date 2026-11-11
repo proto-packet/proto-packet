@@ -188,7 +188,7 @@ impl<V: KeyedMessageView> KeyedMessageView for &V {
             Value = u8,
         >,
     > {
-        (**self).by_point()
+        <V as KeyedMessageView>::by_point(self)
     }
 
     fn rounds(
@@ -202,7 +202,7 @@ impl<V: KeyedMessageView> KeyedMessageView for &V {
             >,
         >,
     > {
-        (**self).rounds()
+        <V as KeyedMessageView>::rounds(self)
     }
 
     fn nested(
@@ -218,7 +218,7 @@ impl<V: KeyedMessageView> KeyedMessageView for &V {
             >,
         >,
     > {
-        (**self).nested()
+        <V as KeyedMessageView>::nested(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -240,7 +240,7 @@ impl<V: KeyedMessageView> KeyedMessageView for &mut V {
             Value = u8,
         >,
     > {
-        (**self).by_point()
+        <V as KeyedMessageView>::by_point(self)
     }
 
     fn rounds(
@@ -254,7 +254,7 @@ impl<V: KeyedMessageView> KeyedMessageView for &mut V {
             >,
         >,
     > {
-        (**self).rounds()
+        <V as KeyedMessageView>::rounds(self)
     }
 
     fn nested(
@@ -270,7 +270,7 @@ impl<V: KeyedMessageView> KeyedMessageView for &mut V {
             >,
         >,
     > {
-        (**self).nested()
+        <V as KeyedMessageView>::nested(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -401,7 +401,7 @@ impl KeyedMessageView for super::KeyedMessageBuf {
             Value = u8,
         >,
     > {
-        self.as_ref().by_point()
+        super::KeyedMessageRef::by_point(&self.as_ref())
     }
 
     fn rounds(
@@ -415,7 +415,7 @@ impl KeyedMessageView for super::KeyedMessageBuf {
             >,
         >,
     > {
-        self.as_ref().rounds()
+        super::KeyedMessageRef::rounds(&self.as_ref())
     }
 
     fn nested(
@@ -431,7 +431,7 @@ impl KeyedMessageView for super::KeyedMessageBuf {
             >,
         >,
     > {
-        self.as_ref().nested()
+        super::KeyedMessageRef::nested(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -453,7 +453,7 @@ impl KeyedMessageView for super::KeyedMessageMut<'_> {
             Value = u8,
         >,
     > {
-        self.as_ref().by_point()
+        super::KeyedMessageRef::by_point(&self.as_ref())
     }
 
     fn rounds(
@@ -467,7 +467,7 @@ impl KeyedMessageView for super::KeyedMessageMut<'_> {
             >,
         >,
     > {
-        self.as_ref().rounds()
+        super::KeyedMessageRef::rounds(&self.as_ref())
     }
 
     fn nested(
@@ -483,7 +483,7 @@ impl KeyedMessageView for super::KeyedMessageMut<'_> {
             >,
         >,
     > {
-        self.as_ref().nested()
+        super::KeyedMessageRef::nested(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

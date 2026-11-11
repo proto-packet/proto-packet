@@ -36,7 +36,7 @@ pub trait SelfStructView {
 
 impl<V: SelfStructView> SelfStructView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as SelfStructView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: SelfStructView> SelfStructView for &V {
 
 impl<V: SelfStructView> SelfStructView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as SelfStructView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl SelfStructView for super::SelfStructRef<'_> {
 
 impl SelfStructView for super::SelfStructBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::SelfStructRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl SelfStructView for super::SelfStructBuf {
 
 impl SelfStructView for super::SelfStructMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::SelfStructRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -36,7 +36,7 @@ pub trait NestedLibView {
 
 impl<V: NestedLibView> NestedLibView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as NestedLibView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: NestedLibView> NestedLibView for &V {
 
 impl<V: NestedLibView> NestedLibView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as NestedLibView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl NestedLibView for super::NestedLibRef<'_> {
 
 impl NestedLibView for super::NestedLibBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::NestedLibRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl NestedLibView for super::NestedLibBuf {
 
 impl NestedLibView for super::NestedLibMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::NestedLibRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

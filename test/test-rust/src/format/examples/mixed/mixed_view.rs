@@ -48,19 +48,19 @@ pub trait MixedView {
 
 impl<V: MixedView> MixedView for &V {
     fn a(&self) -> u8 {
-        (**self).a()
+        <V as MixedView>::a(self)
     }
 
     fn b(&self) -> u64 {
-        (**self).b()
+        <V as MixedView>::b(self)
     }
 
     fn c(&self) -> u16 {
-        (**self).c()
+        <V as MixedView>::c(self)
     }
 
     fn d(&self) -> bool {
-        (**self).d()
+        <V as MixedView>::d(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -74,19 +74,19 @@ impl<V: MixedView> MixedView for &V {
 
 impl<V: MixedView> MixedView for &mut V {
     fn a(&self) -> u8 {
-        (**self).a()
+        <V as MixedView>::a(self)
     }
 
     fn b(&self) -> u64 {
-        (**self).b()
+        <V as MixedView>::b(self)
     }
 
     fn c(&self) -> u16 {
-        (**self).c()
+        <V as MixedView>::c(self)
     }
 
     fn d(&self) -> bool {
-        (**self).d()
+        <V as MixedView>::d(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -152,19 +152,19 @@ impl MixedView for super::MixedRef<'_> {
 
 impl MixedView for super::MixedBuf {
     fn a(&self) -> u8 {
-        self.as_ref().a()
+        super::MixedRef::a(&self.as_ref())
     }
 
     fn b(&self) -> u64 {
-        self.as_ref().b()
+        super::MixedRef::b(&self.as_ref())
     }
 
     fn c(&self) -> u16 {
-        self.as_ref().c()
+        super::MixedRef::c(&self.as_ref())
     }
 
     fn d(&self) -> bool {
-        self.as_ref().d()
+        super::MixedRef::d(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -178,19 +178,19 @@ impl MixedView for super::MixedBuf {
 
 impl MixedView for super::MixedMut<'_> {
     fn a(&self) -> u8 {
-        self.as_ref().a()
+        super::MixedRef::a(&self.as_ref())
     }
 
     fn b(&self) -> u64 {
-        self.as_ref().b()
+        super::MixedRef::b(&self.as_ref())
     }
 
     fn c(&self) -> u16 {
-        self.as_ref().c()
+        super::MixedRef::c(&self.as_ref())
     }
 
     fn d(&self) -> bool {
-        self.as_ref().d()
+        super::MixedRef::d(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

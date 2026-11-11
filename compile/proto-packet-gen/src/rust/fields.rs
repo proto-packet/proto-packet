@@ -166,6 +166,27 @@ impl Field<'_> {
         !is_snake_case(&self.name)
     }
 
+    /// Checks if the getter of the field with the `result` type is shaped like a trait method.
+    ///
+    /// # Note
+    /// - Clippy warns about such a getter. (ex: `fn clone(&self) -> u32`)
+    pub(crate) fn is_trait_shaped(self, result: &str) -> bool {
+        match self.name.value() {
+            "clone" => true,
+            "as_ref" | "borrow" | "deref" => result.starts_with('&'),
+            _ => false,
+        }
+    }
+
+    /// Checks if the field is named like a conversion that takes no `&self`. (ex: `into_iter`)
+    ///
+    /// # Note
+    /// - Clippy warns about the getter of such a field in a trait.
+    pub(crate) fn is_conversion_named(self) -> bool {
+        let name: &str = self.name.value();
+        name.starts_with("from_") || name.starts_with("into_")
+    }
+
     /// Generates the impl block with the getter, setter & builder of the field.
     pub(crate) fn gen_impl(self, typing: Typing<'_>, type_name: &str) -> ImplBlock {
         let mut functions: [Function; 3] = [
@@ -189,14 +210,19 @@ impl Field<'_> {
     /// Generates the getter of the field.
     fn gen_getter(self, typing: Typing<'_>) -> Function {
         let (result, expr): (RustType, String) = self.getter(typing);
+        let is_trait_shaped: bool = self.is_trait_shaped(&result.to_string());
         let signature: Signature = Signature::from(ident(&self.name))
             .with_receiver(Receiver::Borrowed)
             .with_result(result);
-        Function::from(signature)
+        let mut function: Function = Function::from(signature)
             .with_comment(format!(" Gets the field: `{}`.", self.name))
             .with_attribute("must_use")
             .with_access(Access::Public)
-            .with_literal(expr)
+            .with_literal(expr);
+        if is_trait_shaped {
+            function.add_attribute("allow(clippy::should_implement_trait)");
+        }
+        function
     }
 
     /// Generates the setter of the field. (it returns the previous value)

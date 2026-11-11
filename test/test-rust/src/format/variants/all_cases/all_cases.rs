@@ -288,21 +288,21 @@ impl AllCases {
 impl Ord for AllCases {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Flag(a), Self::Flag(b)) => a.cmp(b),
-            (Self::Byte(a), Self::Byte(b)) => a.cmp(b),
-            (Self::Large(a), Self::Large(b)) => a.cmp(b),
-            (Self::Id(a), Self::Id(b)) => a.cmp(b),
-            (Self::Color(a), Self::Color(b)) => a.cmp(b),
-            (Self::Text(a), Self::Text(b)) => a.cmp(b),
-            (Self::Point(a), Self::Point(b)) => a.cmp(b),
-            (Self::Entry(a), Self::Entry(b)) => a.cmp(b),
-            (Self::Item(a), Self::Item(b)) => a.cmp(b),
-            (Self::Shape(a), Self::Shape(b)) => a.cmp(b),
-            (Self::BoxedColor(a), Self::BoxedColor(b)) => a.cmp(b),
-            (Self::Signed(a), Self::Signed(b)) => a.cmp(b),
-            (Self::Float(a), Self::Float(b)) => a.cmp(b),
-            (Self::At(a), Self::At(b)) => a.cmp(b),
-            (Self::Price(a), Self::Price(b)) => a.cmp(b),
+            (Self::Flag(a), Self::Flag(b)) => Ord::cmp(a, b),
+            (Self::Byte(a), Self::Byte(b)) => Ord::cmp(a, b),
+            (Self::Large(a), Self::Large(b)) => Ord::cmp(a, b),
+            (Self::Id(a), Self::Id(b)) => Ord::cmp(a, b),
+            (Self::Color(a), Self::Color(b)) => Ord::cmp(a, b),
+            (Self::Text(a), Self::Text(b)) => Ord::cmp(a, b),
+            (Self::Point(a), Self::Point(b)) => Ord::cmp(a, b),
+            (Self::Entry(a), Self::Entry(b)) => Ord::cmp(a, b),
+            (Self::Item(a), Self::Item(b)) => Ord::cmp(a, b),
+            (Self::Shape(a), Self::Shape(b)) => Ord::cmp(a, b),
+            (Self::BoxedColor(a), Self::BoxedColor(b)) => Ord::cmp(a, b),
+            (Self::Signed(a), Self::Signed(b)) => Ord::cmp(a, b),
+            (Self::Float(a), Self::Float(b)) => Ord::cmp(a, b),
+            (Self::At(a), Self::At(b)) => Ord::cmp(a, b),
+            (Self::Price(a), Self::Price(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -311,7 +311,7 @@ impl Ord for AllCases {
 
 impl PartialOrd for AllCases {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

@@ -43,11 +43,11 @@ pub trait PersonView {
 
 impl<V: PersonView> PersonView for &V {
     fn name(&self) -> &str {
-        (**self).name()
+        <V as PersonView>::name(self)
     }
 
     fn age(&self) -> u8 {
-        (**self).age()
+        <V as PersonView>::age(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -61,11 +61,11 @@ impl<V: PersonView> PersonView for &V {
 
 impl<V: PersonView> PersonView for &mut V {
     fn name(&self) -> &str {
-        (**self).name()
+        <V as PersonView>::name(self)
     }
 
     fn age(&self) -> u8 {
-        (**self).age()
+        <V as PersonView>::age(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -120,11 +120,11 @@ impl PersonView for super::PersonRef<'_> {
 
 impl PersonView for super::PersonBuf {
     fn name(&self) -> &str {
-        self.as_ref().name()
+        super::PersonRef::name(&self.as_ref())
     }
 
     fn age(&self) -> u8 {
-        self.as_ref().age()
+        super::PersonRef::age(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -138,11 +138,11 @@ impl PersonView for super::PersonBuf {
 
 impl PersonView for super::PersonMut<'_> {
     fn name(&self) -> &str {
-        self.as_ref().name()
+        super::PersonRef::name(&self.as_ref())
     }
 
     fn age(&self) -> u8 {
-        self.as_ref().age()
+        super::PersonRef::age(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

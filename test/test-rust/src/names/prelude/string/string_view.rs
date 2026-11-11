@@ -50,7 +50,7 @@ pub trait StringView {
 
 impl<V: StringView> StringView for &V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as StringView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -64,7 +64,7 @@ impl<V: StringView> StringView for &V {
 
 impl<V: StringView> StringView for &mut V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as StringView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -111,7 +111,7 @@ impl StringView for super::StringRef<'_> {
 
 impl StringView for super::StringBuf {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::StringRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -125,7 +125,7 @@ impl StringView for super::StringBuf {
 
 impl StringView for super::StringMut<'_> {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::StringRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -68,7 +68,7 @@ impl<V: LinesView> LinesView for &V {
     fn lines(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
-        (**self).lines()
+        <V as LinesView>::lines(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -84,7 +84,7 @@ impl<V: LinesView> LinesView for &mut V {
     fn lines(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
-        (**self).lines()
+        <V as LinesView>::lines(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -137,7 +137,7 @@ impl LinesView for super::LinesBuf {
     fn lines(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
-        self.as_ref().lines()
+        super::LinesRef::lines(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -153,7 +153,7 @@ impl LinesView for super::LinesMut<'_> {
     fn lines(
         &self,
     ) -> impl proto_packet::io::ListView<Item = impl crate::format::examples::LineView> {
-        self.as_ref().lines()
+        super::LinesRef::lines(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -142,31 +142,31 @@ pub trait TimeKindsView {
 
 impl<V: TimeKindsView> TimeKindsView for &V {
     fn at(&self) -> proto_packet::types::Timestamp {
-        (**self).at()
+        <V as TimeKindsView>::at(self)
     }
 
     fn micro(&self) -> proto_packet::types::Microtime {
-        (**self).micro()
+        <V as TimeKindsView>::micro(self)
     }
 
     fn nano(&self) -> proto_packet::types::Nanotime {
-        (**self).nano()
+        <V as TimeKindsView>::nano(self)
     }
 
     fn day(&self) -> proto_packet::types::Date {
-        (**self).day()
+        <V as TimeKindsView>::day(self)
     }
 
     fn span(&self) -> proto_packet::types::Duration {
-        (**self).span()
+        <V as TimeKindsView>::span(self)
     }
 
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
-        (**self).maybe()
+        <V as TimeKindsView>::maybe(self)
     }
 
     fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
-        (**self).days()
+        <V as TimeKindsView>::days(self)
     }
 
     fn spans(
@@ -176,7 +176,7 @@ impl<V: TimeKindsView> TimeKindsView for &V {
         Key = proto_packet::types::Date,
         Value = proto_packet::types::Duration,
     > {
-        (**self).spans()
+        <V as TimeKindsView>::spans(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -190,31 +190,31 @@ impl<V: TimeKindsView> TimeKindsView for &V {
 
 impl<V: TimeKindsView> TimeKindsView for &mut V {
     fn at(&self) -> proto_packet::types::Timestamp {
-        (**self).at()
+        <V as TimeKindsView>::at(self)
     }
 
     fn micro(&self) -> proto_packet::types::Microtime {
-        (**self).micro()
+        <V as TimeKindsView>::micro(self)
     }
 
     fn nano(&self) -> proto_packet::types::Nanotime {
-        (**self).nano()
+        <V as TimeKindsView>::nano(self)
     }
 
     fn day(&self) -> proto_packet::types::Date {
-        (**self).day()
+        <V as TimeKindsView>::day(self)
     }
 
     fn span(&self) -> proto_packet::types::Duration {
-        (**self).span()
+        <V as TimeKindsView>::span(self)
     }
 
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
-        (**self).maybe()
+        <V as TimeKindsView>::maybe(self)
     }
 
     fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
-        (**self).days()
+        <V as TimeKindsView>::days(self)
     }
 
     fn spans(
@@ -224,7 +224,7 @@ impl<V: TimeKindsView> TimeKindsView for &mut V {
         Key = proto_packet::types::Date,
         Value = proto_packet::types::Duration,
     > {
-        (**self).spans()
+        <V as TimeKindsView>::spans(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -339,31 +339,31 @@ impl TimeKindsView for super::TimeKindsRef<'_> {
 
 impl TimeKindsView for super::TimeKindsBuf {
     fn at(&self) -> proto_packet::types::Timestamp {
-        self.as_ref().at()
+        super::TimeKindsRef::at(&self.as_ref())
     }
 
     fn micro(&self) -> proto_packet::types::Microtime {
-        self.as_ref().micro()
+        super::TimeKindsRef::micro(&self.as_ref())
     }
 
     fn nano(&self) -> proto_packet::types::Nanotime {
-        self.as_ref().nano()
+        super::TimeKindsRef::nano(&self.as_ref())
     }
 
     fn day(&self) -> proto_packet::types::Date {
-        self.as_ref().day()
+        super::TimeKindsRef::day(&self.as_ref())
     }
 
     fn span(&self) -> proto_packet::types::Duration {
-        self.as_ref().span()
+        super::TimeKindsRef::span(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
-        self.as_ref().maybe()
+        super::TimeKindsRef::maybe(&self.as_ref())
     }
 
     fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
-        self.as_ref().days()
+        super::TimeKindsRef::days(&self.as_ref())
     }
 
     fn spans(
@@ -373,7 +373,7 @@ impl TimeKindsView for super::TimeKindsBuf {
         Key = proto_packet::types::Date,
         Value = proto_packet::types::Duration,
     > {
-        self.as_ref().spans()
+        super::TimeKindsRef::spans(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -387,31 +387,31 @@ impl TimeKindsView for super::TimeKindsBuf {
 
 impl TimeKindsView for super::TimeKindsMut<'_> {
     fn at(&self) -> proto_packet::types::Timestamp {
-        self.as_ref().at()
+        super::TimeKindsRef::at(&self.as_ref())
     }
 
     fn micro(&self) -> proto_packet::types::Microtime {
-        self.as_ref().micro()
+        super::TimeKindsRef::micro(&self.as_ref())
     }
 
     fn nano(&self) -> proto_packet::types::Nanotime {
-        self.as_ref().nano()
+        super::TimeKindsRef::nano(&self.as_ref())
     }
 
     fn day(&self) -> proto_packet::types::Date {
-        self.as_ref().day()
+        super::TimeKindsRef::day(&self.as_ref())
     }
 
     fn span(&self) -> proto_packet::types::Duration {
-        self.as_ref().span()
+        super::TimeKindsRef::span(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<proto_packet::types::Timestamp> {
-        self.as_ref().maybe()
+        super::TimeKindsRef::maybe(&self.as_ref())
     }
 
     fn days(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Date> {
-        self.as_ref().days()
+        super::TimeKindsRef::days(&self.as_ref())
     }
 
     fn spans(
@@ -421,7 +421,7 @@ impl TimeKindsView for super::TimeKindsMut<'_> {
         Key = proto_packet::types::Date,
         Value = proto_packet::types::Duration,
     > {
-        self.as_ref().spans()
+        super::TimeKindsRef::spans(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

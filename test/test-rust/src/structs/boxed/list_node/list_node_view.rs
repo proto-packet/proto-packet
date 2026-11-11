@@ -60,11 +60,11 @@ pub trait ListNodeView {
 
 impl<V: ListNodeView> ListNodeView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as ListNodeView>::value(self)
     }
 
     fn next(&self) -> Option<impl crate::structs::boxed::ListNodeView> {
-        (**self).next()
+        <V as ListNodeView>::next(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -78,11 +78,11 @@ impl<V: ListNodeView> ListNodeView for &V {
 
 impl<V: ListNodeView> ListNodeView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as ListNodeView>::value(self)
     }
 
     fn next(&self) -> Option<impl crate::structs::boxed::ListNodeView> {
-        (**self).next()
+        <V as ListNodeView>::next(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -137,11 +137,11 @@ impl ListNodeView for super::ListNodeRef<'_> {
 
 impl ListNodeView for super::ListNodeBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::ListNodeRef::value(&self.as_ref())
     }
 
     fn next(&self) -> Option<impl crate::structs::boxed::ListNodeView> {
-        self.as_ref().next()
+        super::ListNodeRef::next(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -155,11 +155,11 @@ impl ListNodeView for super::ListNodeBuf {
 
 impl ListNodeView for super::ListNodeMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::ListNodeRef::value(&self.as_ref())
     }
 
     fn next(&self) -> Option<impl crate::structs::boxed::ListNodeView> {
-        self.as_ref().next()
+        super::ListNodeRef::next(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

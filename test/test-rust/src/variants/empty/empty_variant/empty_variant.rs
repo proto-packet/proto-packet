@@ -58,7 +58,7 @@ impl Ord for EmptyVariant {
 
 impl PartialOrd for EmptyVariant {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

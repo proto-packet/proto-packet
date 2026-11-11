@@ -47,11 +47,11 @@ pub trait SumView {
 
 impl<V: SumView> SumView for &V {
     fn left(&self) -> impl crate::variants::boxed::ExprView {
-        (**self).left()
+        <V as SumView>::left(self)
     }
 
     fn right(&self) -> impl crate::variants::boxed::ExprView {
-        (**self).right()
+        <V as SumView>::right(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -65,11 +65,11 @@ impl<V: SumView> SumView for &V {
 
 impl<V: SumView> SumView for &mut V {
     fn left(&self) -> impl crate::variants::boxed::ExprView {
-        (**self).left()
+        <V as SumView>::left(self)
     }
 
     fn right(&self) -> impl crate::variants::boxed::ExprView {
-        (**self).right()
+        <V as SumView>::right(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -124,11 +124,11 @@ impl SumView for super::SumRef<'_> {
 
 impl SumView for super::SumBuf {
     fn left(&self) -> impl crate::variants::boxed::ExprView {
-        self.as_ref().left()
+        super::SumRef::left(&self.as_ref())
     }
 
     fn right(&self) -> impl crate::variants::boxed::ExprView {
-        self.as_ref().right()
+        super::SumRef::right(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -142,11 +142,11 @@ impl SumView for super::SumBuf {
 
 impl SumView for super::SumMut<'_> {
     fn left(&self) -> impl crate::variants::boxed::ExprView {
-        self.as_ref().left()
+        super::SumRef::left(&self.as_ref())
     }
 
     fn right(&self) -> impl crate::variants::boxed::ExprView {
-        self.as_ref().right()
+        super::SumRef::right(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

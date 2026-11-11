@@ -66,7 +66,7 @@ impl KeywordVariant {
 impl Ord for KeywordVariant {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Self_(a), Self::Self_(b)) => a.cmp(b),
+            (Self::Self_(a), Self::Self_(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -75,7 +75,7 @@ impl Ord for KeywordVariant {
 
 impl PartialOrd for KeywordVariant {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

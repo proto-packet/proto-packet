@@ -67,7 +67,7 @@ pub trait OptionalScoresView {
 
 impl<V: OptionalScoresView> OptionalScoresView for &V {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>> {
-        (**self).scores()
+        <V as OptionalScoresView>::scores(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -81,7 +81,7 @@ impl<V: OptionalScoresView> OptionalScoresView for &V {
 
 impl<V: OptionalScoresView> OptionalScoresView for &mut V {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>> {
-        (**self).scores()
+        <V as OptionalScoresView>::scores(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -128,7 +128,7 @@ impl OptionalScoresView for super::OptionalScoresRef<'_> {
 
 impl OptionalScoresView for super::OptionalScoresBuf {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>> {
-        self.as_ref().scores()
+        super::OptionalScoresRef::scores(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -142,7 +142,7 @@ impl OptionalScoresView for super::OptionalScoresBuf {
 
 impl OptionalScoresView for super::OptionalScoresMut<'_> {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>> {
-        self.as_ref().scores()
+        super::OptionalScoresRef::scores(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

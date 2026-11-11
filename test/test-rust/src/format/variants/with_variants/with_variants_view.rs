@@ -62,19 +62,19 @@ pub trait WithVariantsView {
 
 impl<V: WithVariantsView> WithVariantsView for &V {
     fn before(&self) -> &str {
-        (**self).before()
+        <V as WithVariantsView>::before(self)
     }
 
     fn shape(&self) -> impl crate::format::variants::ShapeView {
-        (**self).shape()
+        <V as WithVariantsView>::shape(self)
     }
 
     fn number(&self) -> u64 {
-        (**self).number()
+        <V as WithVariantsView>::number(self)
     }
 
     fn maybe(&self) -> Option<impl crate::format::variants::ShapeView> {
-        (**self).maybe()
+        <V as WithVariantsView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -88,19 +88,19 @@ impl<V: WithVariantsView> WithVariantsView for &V {
 
 impl<V: WithVariantsView> WithVariantsView for &mut V {
     fn before(&self) -> &str {
-        (**self).before()
+        <V as WithVariantsView>::before(self)
     }
 
     fn shape(&self) -> impl crate::format::variants::ShapeView {
-        (**self).shape()
+        <V as WithVariantsView>::shape(self)
     }
 
     fn number(&self) -> u64 {
-        (**self).number()
+        <V as WithVariantsView>::number(self)
     }
 
     fn maybe(&self) -> Option<impl crate::format::variants::ShapeView> {
-        (**self).maybe()
+        <V as WithVariantsView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -171,19 +171,19 @@ impl WithVariantsView for super::WithVariantsRef<'_> {
 
 impl WithVariantsView for super::WithVariantsBuf {
     fn before(&self) -> &str {
-        self.as_ref().before()
+        super::WithVariantsRef::before(&self.as_ref())
     }
 
     fn shape(&self) -> impl crate::format::variants::ShapeView {
-        self.as_ref().shape()
+        super::WithVariantsRef::shape(&self.as_ref())
     }
 
     fn number(&self) -> u64 {
-        self.as_ref().number()
+        super::WithVariantsRef::number(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<impl crate::format::variants::ShapeView> {
-        self.as_ref().maybe()
+        super::WithVariantsRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -197,19 +197,19 @@ impl WithVariantsView for super::WithVariantsBuf {
 
 impl WithVariantsView for super::WithVariantsMut<'_> {
     fn before(&self) -> &str {
-        self.as_ref().before()
+        super::WithVariantsRef::before(&self.as_ref())
     }
 
     fn shape(&self) -> impl crate::format::variants::ShapeView {
-        self.as_ref().shape()
+        super::WithVariantsRef::shape(&self.as_ref())
     }
 
     fn number(&self) -> u64 {
-        self.as_ref().number()
+        super::WithVariantsRef::number(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<impl crate::format::variants::ShapeView> {
-        self.as_ref().maybe()
+        super::WithVariantsRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

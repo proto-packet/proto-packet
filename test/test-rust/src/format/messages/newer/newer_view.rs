@@ -102,23 +102,23 @@ pub trait NewerView {
 
 impl<V: NewerView> NewerView for &V {
     fn id(&self) -> Option<u64> {
-        (**self).id()
+        <V as NewerView>::id(self)
     }
 
     fn name(&self) -> Option<&str> {
-        (**self).name()
+        <V as NewerView>::name(self)
     }
 
     fn nickname(&self) -> Option<&str> {
-        (**self).nickname()
+        <V as NewerView>::nickname(self)
     }
 
     fn age(&self) -> Option<u32> {
-        (**self).age()
+        <V as NewerView>::age(self)
     }
 
     fn entry(&self) -> Option<impl crate::format::examples::EntryView> {
-        (**self).entry()
+        <V as NewerView>::entry(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -132,23 +132,23 @@ impl<V: NewerView> NewerView for &V {
 
 impl<V: NewerView> NewerView for &mut V {
     fn id(&self) -> Option<u64> {
-        (**self).id()
+        <V as NewerView>::id(self)
     }
 
     fn name(&self) -> Option<&str> {
-        (**self).name()
+        <V as NewerView>::name(self)
     }
 
     fn nickname(&self) -> Option<&str> {
-        (**self).nickname()
+        <V as NewerView>::nickname(self)
     }
 
     fn age(&self) -> Option<u32> {
-        (**self).age()
+        <V as NewerView>::age(self)
     }
 
     fn entry(&self) -> Option<impl crate::format::examples::EntryView> {
-        (**self).entry()
+        <V as NewerView>::entry(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -227,23 +227,23 @@ impl NewerView for super::NewerRef<'_> {
 
 impl NewerView for super::NewerBuf {
     fn id(&self) -> Option<u64> {
-        self.as_ref().id()
+        super::NewerRef::id(&self.as_ref())
     }
 
     fn name(&self) -> Option<&str> {
-        self.as_ref().name()
+        super::NewerRef::name(&self.as_ref())
     }
 
     fn nickname(&self) -> Option<&str> {
-        self.as_ref().nickname()
+        super::NewerRef::nickname(&self.as_ref())
     }
 
     fn age(&self) -> Option<u32> {
-        self.as_ref().age()
+        super::NewerRef::age(&self.as_ref())
     }
 
     fn entry(&self) -> Option<impl crate::format::examples::EntryView> {
-        self.as_ref().entry()
+        super::NewerRef::entry(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -257,23 +257,23 @@ impl NewerView for super::NewerBuf {
 
 impl NewerView for super::NewerMut<'_> {
     fn id(&self) -> Option<u64> {
-        self.as_ref().id()
+        super::NewerRef::id(&self.as_ref())
     }
 
     fn name(&self) -> Option<&str> {
-        self.as_ref().name()
+        super::NewerRef::name(&self.as_ref())
     }
 
     fn nickname(&self) -> Option<&str> {
-        self.as_ref().nickname()
+        super::NewerRef::nickname(&self.as_ref())
     }
 
     fn age(&self) -> Option<u32> {
-        self.as_ref().age()
+        super::NewerRef::age(&self.as_ref())
     }
 
     fn entry(&self) -> Option<impl crate::format::examples::EntryView> {
-        self.as_ref().entry()
+        super::NewerRef::entry(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

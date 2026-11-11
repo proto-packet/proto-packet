@@ -78,16 +78,15 @@ impl Item {
 
 impl Ord for Item {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.text
-            .cmp(&other.text)
-            .then_with(|| self.id.cmp(&other.id))
+        Ord::cmp(&self.text, &other.text)
+            .then_with(|| Ord::cmp(&self.id, &other.id))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for Item {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

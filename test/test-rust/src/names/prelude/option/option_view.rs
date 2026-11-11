@@ -67,11 +67,11 @@ pub trait OptionView {
 
 impl<V: OptionView> OptionView for &V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as OptionView>::text(self)
     }
 
     fn next(&self) -> Option<impl crate::names::prelude::OptionView> {
-        (**self).next()
+        <V as OptionView>::next(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -85,11 +85,11 @@ impl<V: OptionView> OptionView for &V {
 
 impl<V: OptionView> OptionView for &mut V {
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as OptionView>::text(self)
     }
 
     fn next(&self) -> Option<impl crate::names::prelude::OptionView> {
-        (**self).next()
+        <V as OptionView>::next(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -144,11 +144,11 @@ impl OptionView for super::OptionRef<'_> {
 
 impl OptionView for super::OptionBuf {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::OptionRef::text(&self.as_ref())
     }
 
     fn next(&self) -> Option<impl crate::names::prelude::OptionView> {
-        self.as_ref().next()
+        super::OptionRef::next(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -162,11 +162,11 @@ impl OptionView for super::OptionBuf {
 
 impl OptionView for super::OptionMut<'_> {
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::OptionRef::text(&self.as_ref())
     }
 
     fn next(&self) -> Option<impl crate::names::prelude::OptionView> {
-        self.as_ref().next()
+        super::OptionRef::next(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

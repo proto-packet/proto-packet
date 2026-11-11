@@ -36,7 +36,7 @@ pub trait DefaultFieldView {
 
 impl<V: DefaultFieldView> DefaultFieldView for &V {
     fn default(&self) -> u32 {
-        (**self).default()
+        <V as DefaultFieldView>::default(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: DefaultFieldView> DefaultFieldView for &V {
 
 impl<V: DefaultFieldView> DefaultFieldView for &mut V {
     fn default(&self) -> u32 {
-        (**self).default()
+        <V as DefaultFieldView>::default(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl DefaultFieldView for super::DefaultFieldRef<'_> {
 
 impl DefaultFieldView for super::DefaultFieldBuf {
     fn default(&self) -> u32 {
-        self.as_ref().default()
+        super::DefaultFieldRef::default(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl DefaultFieldView for super::DefaultFieldBuf {
 
 impl DefaultFieldView for super::DefaultFieldMut<'_> {
     fn default(&self) -> u32 {
-        self.as_ref().default()
+        super::DefaultFieldRef::default(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

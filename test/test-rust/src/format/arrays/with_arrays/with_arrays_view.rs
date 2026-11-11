@@ -203,18 +203,18 @@ impl<V: WithArraysView> WithArraysView for &V {
     fn origin(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = proto_packet::types::Float32>> {
-        (**self).origin()
+        <V as WithArraysView>::origin(self)
     }
 
     fn slots(&self) -> Option<impl proto_packet::io::ListView<Item = Option<u32>>> {
-        (**self).slots()
+        <V as WithArraysView>::slots(self)
     }
 
     fn rows(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u16>>>
     {
-        (**self).rows()
+        <V as WithArraysView>::rows(self)
     }
 
     fn entries(
@@ -222,17 +222,17 @@ impl<V: WithArraysView> WithArraysView for &V {
     ) -> Option<
         impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::EntryView>>,
     > {
-        (**self).entries()
+        <V as WithArraysView>::entries(self)
     }
 
     fn scores(
         &self,
     ) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>>> {
-        (**self).scores()
+        <V as WithArraysView>::scores(self)
     }
 
     fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
-        (**self).by_id()
+        <V as WithArraysView>::by_id(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -248,18 +248,18 @@ impl<V: WithArraysView> WithArraysView for &mut V {
     fn origin(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = proto_packet::types::Float32>> {
-        (**self).origin()
+        <V as WithArraysView>::origin(self)
     }
 
     fn slots(&self) -> Option<impl proto_packet::io::ListView<Item = Option<u32>>> {
-        (**self).slots()
+        <V as WithArraysView>::slots(self)
     }
 
     fn rows(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u16>>>
     {
-        (**self).rows()
+        <V as WithArraysView>::rows(self)
     }
 
     fn entries(
@@ -267,17 +267,17 @@ impl<V: WithArraysView> WithArraysView for &mut V {
     ) -> Option<
         impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::EntryView>>,
     > {
-        (**self).entries()
+        <V as WithArraysView>::entries(self)
     }
 
     fn scores(
         &self,
     ) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>>> {
-        (**self).scores()
+        <V as WithArraysView>::scores(self)
     }
 
     fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
-        (**self).by_id()
+        <V as WithArraysView>::by_id(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -388,18 +388,18 @@ impl WithArraysView for super::WithArraysBuf {
     fn origin(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = proto_packet::types::Float32>> {
-        self.as_ref().origin()
+        super::WithArraysRef::origin(&self.as_ref())
     }
 
     fn slots(&self) -> Option<impl proto_packet::io::ListView<Item = Option<u32>>> {
-        self.as_ref().slots()
+        super::WithArraysRef::slots(&self.as_ref())
     }
 
     fn rows(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u16>>>
     {
-        self.as_ref().rows()
+        super::WithArraysRef::rows(&self.as_ref())
     }
 
     fn entries(
@@ -407,17 +407,17 @@ impl WithArraysView for super::WithArraysBuf {
     ) -> Option<
         impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::EntryView>>,
     > {
-        self.as_ref().entries()
+        super::WithArraysRef::entries(&self.as_ref())
     }
 
     fn scores(
         &self,
     ) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>>> {
-        self.as_ref().scores()
+        super::WithArraysRef::scores(&self.as_ref())
     }
 
     fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
-        self.as_ref().by_id()
+        super::WithArraysRef::by_id(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -433,18 +433,18 @@ impl WithArraysView for super::WithArraysMut<'_> {
     fn origin(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = proto_packet::types::Float32>> {
-        self.as_ref().origin()
+        super::WithArraysRef::origin(&self.as_ref())
     }
 
     fn slots(&self) -> Option<impl proto_packet::io::ListView<Item = Option<u32>>> {
-        self.as_ref().slots()
+        super::WithArraysRef::slots(&self.as_ref())
     }
 
     fn rows(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl proto_packet::io::ListView<Item = u16>>>
     {
-        self.as_ref().rows()
+        super::WithArraysRef::rows(&self.as_ref())
     }
 
     fn entries(
@@ -452,17 +452,17 @@ impl WithArraysView for super::WithArraysMut<'_> {
     ) -> Option<
         impl proto_packet::io::ListView<Item = Option<impl crate::format::examples::EntryView>>,
     > {
-        self.as_ref().entries()
+        super::WithArraysRef::entries(&self.as_ref())
     }
 
     fn scores(
         &self,
     ) -> Option<impl proto_packet::io::MapView<String, Key = &str, Value = Option<u32>>> {
-        self.as_ref().scores()
+        super::WithArraysRef::scores(&self.as_ref())
     }
 
     fn by_id(&self) -> Option<impl proto_packet::io::MapView<[u8; 2], Key = &[u8; 2], Value = u8>> {
-        self.as_ref().by_id()
+        super::WithArraysRef::by_id(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

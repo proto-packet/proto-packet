@@ -181,36 +181,36 @@ pub trait WithListsView {
 
 impl<V: WithListsView> WithListsView for &V {
     fn bytes(&self) -> Option<&[u8]> {
-        (**self).bytes()
+        <V as WithListsView>::bytes(self)
     }
 
     fn numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
-        (**self).numbers()
+        <V as WithListsView>::numbers(self)
     }
 
     fn texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
-        (**self).texts()
+        <V as WithListsView>::texts(self)
     }
 
     fn points(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
     {
-        (**self).points()
+        <V as WithListsView>::points(self)
     }
 
     fn entries(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::EntryView>>
     {
-        (**self).entries()
+        <V as WithListsView>::entries(self)
     }
 
     fn children(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::lists::WithListsView>>
     {
-        (**self).children()
+        <V as WithListsView>::children(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -224,36 +224,36 @@ impl<V: WithListsView> WithListsView for &V {
 
 impl<V: WithListsView> WithListsView for &mut V {
     fn bytes(&self) -> Option<&[u8]> {
-        (**self).bytes()
+        <V as WithListsView>::bytes(self)
     }
 
     fn numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
-        (**self).numbers()
+        <V as WithListsView>::numbers(self)
     }
 
     fn texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
-        (**self).texts()
+        <V as WithListsView>::texts(self)
     }
 
     fn points(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
     {
-        (**self).points()
+        <V as WithListsView>::points(self)
     }
 
     fn entries(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::EntryView>>
     {
-        (**self).entries()
+        <V as WithListsView>::entries(self)
     }
 
     fn children(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::lists::WithListsView>>
     {
-        (**self).children()
+        <V as WithListsView>::children(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -358,36 +358,36 @@ impl WithListsView for super::WithListsRef<'_> {
 
 impl WithListsView for super::WithListsBuf {
     fn bytes(&self) -> Option<&[u8]> {
-        self.as_ref().bytes()
+        super::WithListsRef::bytes(&self.as_ref())
     }
 
     fn numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
-        self.as_ref().numbers()
+        super::WithListsRef::numbers(&self.as_ref())
     }
 
     fn texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
-        self.as_ref().texts()
+        super::WithListsRef::texts(&self.as_ref())
     }
 
     fn points(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
     {
-        self.as_ref().points()
+        super::WithListsRef::points(&self.as_ref())
     }
 
     fn entries(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::EntryView>>
     {
-        self.as_ref().entries()
+        super::WithListsRef::entries(&self.as_ref())
     }
 
     fn children(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::lists::WithListsView>>
     {
-        self.as_ref().children()
+        super::WithListsRef::children(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -401,36 +401,36 @@ impl WithListsView for super::WithListsBuf {
 
 impl WithListsView for super::WithListsMut<'_> {
     fn bytes(&self) -> Option<&[u8]> {
-        self.as_ref().bytes()
+        super::WithListsRef::bytes(&self.as_ref())
     }
 
     fn numbers(&self) -> Option<impl proto_packet::io::ListView<Item = u32>> {
-        self.as_ref().numbers()
+        super::WithListsRef::numbers(&self.as_ref())
     }
 
     fn texts(&self) -> Option<impl proto_packet::io::ListView<Item = &str>> {
-        self.as_ref().texts()
+        super::WithListsRef::texts(&self.as_ref())
     }
 
     fn points(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::PointView>>
     {
-        self.as_ref().points()
+        super::WithListsRef::points(&self.as_ref())
     }
 
     fn entries(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::examples::EntryView>>
     {
-        self.as_ref().entries()
+        super::WithListsRef::entries(&self.as_ref())
     }
 
     fn children(
         &self,
     ) -> Option<impl proto_packet::io::ListView<Item = impl crate::format::lists::WithListsView>>
     {
-        self.as_ref().children()
+        super::WithListsRef::children(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

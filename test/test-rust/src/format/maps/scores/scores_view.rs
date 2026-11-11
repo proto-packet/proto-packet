@@ -67,7 +67,7 @@ pub trait ScoresView {
 
 impl<V: ScoresView> ScoresView for &V {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
-        (**self).scores()
+        <V as ScoresView>::scores(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -81,7 +81,7 @@ impl<V: ScoresView> ScoresView for &V {
 
 impl<V: ScoresView> ScoresView for &mut V {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
-        (**self).scores()
+        <V as ScoresView>::scores(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -128,7 +128,7 @@ impl ScoresView for super::ScoresRef<'_> {
 
 impl ScoresView for super::ScoresBuf {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
-        self.as_ref().scores()
+        super::ScoresRef::scores(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -142,7 +142,7 @@ impl ScoresView for super::ScoresBuf {
 
 impl ScoresView for super::ScoresMut<'_> {
     fn scores(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = u32> {
-        self.as_ref().scores()
+        super::ScoresRef::scores(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

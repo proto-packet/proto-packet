@@ -111,17 +111,16 @@ impl UnorderedTags {
 
 impl Ord for UnorderedTags {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.one
-            .cmp(&other.one)
-            .then_with(|| self.two.cmp(&other.two))
-            .then_with(|| self.three.cmp(&other.three))
+        Ord::cmp(&self.one, &other.one)
+            .then_with(|| Ord::cmp(&self.two, &other.two))
+            .then_with(|| Ord::cmp(&self.three, &other.three))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for UnorderedTags {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

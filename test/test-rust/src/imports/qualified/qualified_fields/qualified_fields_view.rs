@@ -52,23 +52,23 @@ pub trait QualifiedFieldsView {
 
 impl<V: QualifiedFieldsView> QualifiedFieldsView for &V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as QualifiedFieldsView>::point(self)
     }
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
-        (**self).child()
+        <V as QualifiedFieldsView>::child(self)
     }
 
     fn raw(&self) -> impl crate::names::r#move::MoveStructView {
-        (**self).raw()
+        <V as QualifiedFieldsView>::raw(self)
     }
 
     fn non_raw(&self) -> impl crate::names::r#type::self_::SelfStructView {
-        (**self).non_raw()
+        <V as QualifiedFieldsView>::non_raw(self)
     }
 
     fn local(&self) -> impl crate::imports::qualified::LocalView {
-        (**self).local()
+        <V as QualifiedFieldsView>::local(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -82,23 +82,23 @@ impl<V: QualifiedFieldsView> QualifiedFieldsView for &V {
 
 impl<V: QualifiedFieldsView> QualifiedFieldsView for &mut V {
     fn point(&self) -> impl crate::types::PointView {
-        (**self).point()
+        <V as QualifiedFieldsView>::point(self)
     }
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
-        (**self).child()
+        <V as QualifiedFieldsView>::child(self)
     }
 
     fn raw(&self) -> impl crate::names::r#move::MoveStructView {
-        (**self).raw()
+        <V as QualifiedFieldsView>::raw(self)
     }
 
     fn non_raw(&self) -> impl crate::names::r#type::self_::SelfStructView {
-        (**self).non_raw()
+        <V as QualifiedFieldsView>::non_raw(self)
     }
 
     fn local(&self) -> impl crate::imports::qualified::LocalView {
-        (**self).local()
+        <V as QualifiedFieldsView>::local(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -172,23 +172,23 @@ impl QualifiedFieldsView for super::QualifiedFieldsRef<'_> {
 
 impl QualifiedFieldsView for super::QualifiedFieldsBuf {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::QualifiedFieldsRef::point(&self.as_ref())
     }
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
-        self.as_ref().child()
+        super::QualifiedFieldsRef::child(&self.as_ref())
     }
 
     fn raw(&self) -> impl crate::names::r#move::MoveStructView {
-        self.as_ref().raw()
+        super::QualifiedFieldsRef::raw(&self.as_ref())
     }
 
     fn non_raw(&self) -> impl crate::names::r#type::self_::SelfStructView {
-        self.as_ref().non_raw()
+        super::QualifiedFieldsRef::non_raw(&self.as_ref())
     }
 
     fn local(&self) -> impl crate::imports::qualified::LocalView {
-        self.as_ref().local()
+        super::QualifiedFieldsRef::local(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -202,23 +202,23 @@ impl QualifiedFieldsView for super::QualifiedFieldsBuf {
 
 impl QualifiedFieldsView for super::QualifiedFieldsMut<'_> {
     fn point(&self) -> impl crate::types::PointView {
-        self.as_ref().point()
+        super::QualifiedFieldsRef::point(&self.as_ref())
     }
 
     fn child(&self) -> impl crate::mods::parent::child::ChildView {
-        self.as_ref().child()
+        super::QualifiedFieldsRef::child(&self.as_ref())
     }
 
     fn raw(&self) -> impl crate::names::r#move::MoveStructView {
-        self.as_ref().raw()
+        super::QualifiedFieldsRef::raw(&self.as_ref())
     }
 
     fn non_raw(&self) -> impl crate::names::r#type::self_::SelfStructView {
-        self.as_ref().non_raw()
+        super::QualifiedFieldsRef::non_raw(&self.as_ref())
     }
 
     fn local(&self) -> impl crate::imports::qualified::LocalView {
-        self.as_ref().local()
+        super::QualifiedFieldsRef::local(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

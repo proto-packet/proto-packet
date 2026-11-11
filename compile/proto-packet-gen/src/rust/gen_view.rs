@@ -42,9 +42,15 @@ pub(crate) fn gen_view(
         .with_generic(RustType::from("'_"));
     let buf_type: String = format!("super::{}", buf_name(schema_name));
     let generic: String = format!("V: {}", name);
-    let forward = |getter: &str| format!("(**self).{}", getter);
-    let own = |getter: &str| format!("self.{}", getter);
-    let encoded = |getter: &str| format!("self.as_ref().{}", getter);
+    let forward = |getter: &str| format!("<V as {}>::{}(self)", name, getter);
+    let own = |getter: &str| format!("self.{}()", getter);
+    let encoded = |getter: &str| {
+        format!(
+            "super::{}::{}(&self.as_ref())",
+            ref_name(schema_name),
+            getter
+        )
+    };
     let overrides = |form: ViewForm<'_>| gen_view_overrides(form, encoding.is_level);
     let native: String = format!("super::{}", type_name);
     Block::default()
@@ -109,6 +115,9 @@ fn gen_trait(
     if fields.iter().any(|field| field.is_non_snake_case()) {
         result.add_attribute("allow(non_snake_case)");
     }
+    if fields.iter().any(|field| field.is_conversion_named()) {
+        result.add_attribute("allow(clippy::wrong_self_convention)");
+    }
     result.set_access(Access::Public);
     for field in fields {
         let signature_dec: SignatureDec = SignatureDec::from(gen_signature(typing, *field))
@@ -123,7 +132,11 @@ fn gen_trait(
 
 /// Generates the impl block of the `View` trait with the `name` for the `target`.
 ///
-/// Each getter's body is the `body` of the call to the field's getter. (ex: `x()`)
+/// Each getter's body is the `body` of the call to the field's getter. (ex: `x`)
+///
+/// # Note
+/// - The getter of another form is called by its path, since a field can be named like a method
+///   that every type has. (ex: `into`)
 fn gen_impl<T, F>(
     typing: Typing<'_>,
     fields: &[Field<'_>],
@@ -137,9 +150,8 @@ where
 {
     let mut result: ImplBlock = ImplBlock::from(target).with_for_trait(name);
     for field in fields {
-        let getter: String = format!("{}()", ident(&field.name));
         result.add_function(
-            Function::from(gen_signature(typing, *field)).with_literal(body(&getter)),
+            Function::from(gen_signature(typing, *field)).with_literal(body(&ident(&field.name))),
         );
     }
     result

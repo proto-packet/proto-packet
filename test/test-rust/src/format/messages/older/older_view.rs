@@ -61,11 +61,11 @@ pub trait OlderView {
 
 impl<V: OlderView> OlderView for &V {
     fn name(&self) -> Option<&str> {
-        (**self).name()
+        <V as OlderView>::name(self)
     }
 
     fn age(&self) -> Option<u32> {
-        (**self).age()
+        <V as OlderView>::age(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -79,11 +79,11 @@ impl<V: OlderView> OlderView for &V {
 
 impl<V: OlderView> OlderView for &mut V {
     fn name(&self) -> Option<&str> {
-        (**self).name()
+        <V as OlderView>::name(self)
     }
 
     fn age(&self) -> Option<u32> {
-        (**self).age()
+        <V as OlderView>::age(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -138,11 +138,11 @@ impl OlderView for super::OlderRef<'_> {
 
 impl OlderView for super::OlderBuf {
     fn name(&self) -> Option<&str> {
-        self.as_ref().name()
+        super::OlderRef::name(&self.as_ref())
     }
 
     fn age(&self) -> Option<u32> {
-        self.as_ref().age()
+        super::OlderRef::age(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -156,11 +156,11 @@ impl OlderView for super::OlderBuf {
 
 impl OlderView for super::OlderMut<'_> {
     fn name(&self) -> Option<&str> {
-        self.as_ref().name()
+        super::OlderRef::name(&self.as_ref())
     }
 
     fn age(&self) -> Option<u32> {
-        self.as_ref().age()
+        super::OlderRef::age(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

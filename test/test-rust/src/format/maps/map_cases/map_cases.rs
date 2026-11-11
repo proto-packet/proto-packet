@@ -79,8 +79,8 @@ impl MapCases {
 impl Ord for MapCases {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Scores(a), Self::Scores(b)) => a.cmp(b),
-            (Self::Number(a), Self::Number(b)) => a.cmp(b),
+            (Self::Scores(a), Self::Scores(b)) => Ord::cmp(a, b),
+            (Self::Number(a), Self::Number(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -89,7 +89,7 @@ impl Ord for MapCases {
 
 impl PartialOrd for MapCases {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

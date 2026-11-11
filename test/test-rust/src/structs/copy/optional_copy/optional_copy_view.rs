@@ -44,11 +44,11 @@ pub trait OptionalCopyView {
 
 impl<V: OptionalCopyView> OptionalCopyView for &V {
     fn count(&self) -> Option<u32> {
-        (**self).count()
+        <V as OptionalCopyView>::count(self)
     }
 
     fn point(&self) -> Option<impl crate::types::PointView> {
-        (**self).point()
+        <V as OptionalCopyView>::point(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -62,11 +62,11 @@ impl<V: OptionalCopyView> OptionalCopyView for &V {
 
 impl<V: OptionalCopyView> OptionalCopyView for &mut V {
     fn count(&self) -> Option<u32> {
-        (**self).count()
+        <V as OptionalCopyView>::count(self)
     }
 
     fn point(&self) -> Option<impl crate::types::PointView> {
-        (**self).point()
+        <V as OptionalCopyView>::point(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -116,11 +116,11 @@ impl OptionalCopyView for super::OptionalCopyRef<'_> {
 
 impl OptionalCopyView for super::OptionalCopyBuf {
     fn count(&self) -> Option<u32> {
-        self.as_ref().count()
+        super::OptionalCopyRef::count(&self.as_ref())
     }
 
     fn point(&self) -> Option<impl crate::types::PointView> {
-        self.as_ref().point()
+        super::OptionalCopyRef::point(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -134,11 +134,11 @@ impl OptionalCopyView for super::OptionalCopyBuf {
 
 impl OptionalCopyView for super::OptionalCopyMut<'_> {
     fn count(&self) -> Option<u32> {
-        self.as_ref().count()
+        super::OptionalCopyRef::count(&self.as_ref())
     }
 
     fn point(&self) -> Option<impl crate::types::PointView> {
-        self.as_ref().point()
+        super::OptionalCopyRef::point(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

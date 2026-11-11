@@ -79,15 +79,15 @@ pub trait PairView {
 
 impl<V: PairView> PairView for &V {
     fn first(&self) -> impl crate::format::examples::EntryView {
-        (**self).first()
+        <V as PairView>::first(self)
     }
 
     fn second(&self) -> impl crate::format::examples::EntryView {
-        (**self).second()
+        <V as PairView>::second(self)
     }
 
     fn note(&self) -> &str {
-        (**self).note()
+        <V as PairView>::note(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -101,15 +101,15 @@ impl<V: PairView> PairView for &V {
 
 impl<V: PairView> PairView for &mut V {
     fn first(&self) -> impl crate::format::examples::EntryView {
-        (**self).first()
+        <V as PairView>::first(self)
     }
 
     fn second(&self) -> impl crate::format::examples::EntryView {
-        (**self).second()
+        <V as PairView>::second(self)
     }
 
     fn note(&self) -> &str {
-        (**self).note()
+        <V as PairView>::note(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -172,15 +172,15 @@ impl PairView for super::PairRef<'_> {
 
 impl PairView for super::PairBuf {
     fn first(&self) -> impl crate::format::examples::EntryView {
-        self.as_ref().first()
+        super::PairRef::first(&self.as_ref())
     }
 
     fn second(&self) -> impl crate::format::examples::EntryView {
-        self.as_ref().second()
+        super::PairRef::second(&self.as_ref())
     }
 
     fn note(&self) -> &str {
-        self.as_ref().note()
+        super::PairRef::note(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -194,15 +194,15 @@ impl PairView for super::PairBuf {
 
 impl PairView for super::PairMut<'_> {
     fn first(&self) -> impl crate::format::examples::EntryView {
-        self.as_ref().first()
+        super::PairRef::first(&self.as_ref())
     }
 
     fn second(&self) -> impl crate::format::examples::EntryView {
-        self.as_ref().second()
+        super::PairRef::second(&self.as_ref())
     }
 
     fn note(&self) -> &str {
-        self.as_ref().note()
+        super::PairRef::note(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -108,35 +108,35 @@ pub trait OptionalFieldsView {
 
 impl<V: OptionalFieldsView> OptionalFieldsView for &V {
     fn count(&self) -> Option<u32> {
-        (**self).count()
+        <V as OptionalFieldsView>::count(self)
     }
 
     fn id(&self) -> Option<proto_packet::types::Uuid> {
-        (**self).id()
+        <V as OptionalFieldsView>::id(self)
     }
 
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as OptionalFieldsView>::text(self)
     }
 
     fn point(&self) -> Option<impl crate::types::PointView> {
-        (**self).point()
+        <V as OptionalFieldsView>::point(self)
     }
 
     fn person(&self) -> Option<impl crate::types::PersonView> {
-        (**self).person()
+        <V as OptionalFieldsView>::person(self)
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        (**self).label()
+        <V as OptionalFieldsView>::label(self)
     }
 
     fn color(&self) -> Option<crate::types::Color> {
-        (**self).color()
+        <V as OptionalFieldsView>::color(self)
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        (**self).shape()
+        <V as OptionalFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -150,35 +150,35 @@ impl<V: OptionalFieldsView> OptionalFieldsView for &V {
 
 impl<V: OptionalFieldsView> OptionalFieldsView for &mut V {
     fn count(&self) -> Option<u32> {
-        (**self).count()
+        <V as OptionalFieldsView>::count(self)
     }
 
     fn id(&self) -> Option<proto_packet::types::Uuid> {
-        (**self).id()
+        <V as OptionalFieldsView>::id(self)
     }
 
     fn text(&self) -> Option<&str> {
-        (**self).text()
+        <V as OptionalFieldsView>::text(self)
     }
 
     fn point(&self) -> Option<impl crate::types::PointView> {
-        (**self).point()
+        <V as OptionalFieldsView>::point(self)
     }
 
     fn person(&self) -> Option<impl crate::types::PersonView> {
-        (**self).person()
+        <V as OptionalFieldsView>::person(self)
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        (**self).label()
+        <V as OptionalFieldsView>::label(self)
     }
 
     fn color(&self) -> Option<crate::types::Color> {
-        (**self).color()
+        <V as OptionalFieldsView>::color(self)
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        (**self).shape()
+        <V as OptionalFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -281,35 +281,35 @@ impl OptionalFieldsView for super::OptionalFieldsRef<'_> {
 
 impl OptionalFieldsView for super::OptionalFieldsBuf {
     fn count(&self) -> Option<u32> {
-        self.as_ref().count()
+        super::OptionalFieldsRef::count(&self.as_ref())
     }
 
     fn id(&self) -> Option<proto_packet::types::Uuid> {
-        self.as_ref().id()
+        super::OptionalFieldsRef::id(&self.as_ref())
     }
 
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::OptionalFieldsRef::text(&self.as_ref())
     }
 
     fn point(&self) -> Option<impl crate::types::PointView> {
-        self.as_ref().point()
+        super::OptionalFieldsRef::point(&self.as_ref())
     }
 
     fn person(&self) -> Option<impl crate::types::PersonView> {
-        self.as_ref().person()
+        super::OptionalFieldsRef::person(&self.as_ref())
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        self.as_ref().label()
+        super::OptionalFieldsRef::label(&self.as_ref())
     }
 
     fn color(&self) -> Option<crate::types::Color> {
-        self.as_ref().color()
+        super::OptionalFieldsRef::color(&self.as_ref())
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        self.as_ref().shape()
+        super::OptionalFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -323,35 +323,35 @@ impl OptionalFieldsView for super::OptionalFieldsBuf {
 
 impl OptionalFieldsView for super::OptionalFieldsMut<'_> {
     fn count(&self) -> Option<u32> {
-        self.as_ref().count()
+        super::OptionalFieldsRef::count(&self.as_ref())
     }
 
     fn id(&self) -> Option<proto_packet::types::Uuid> {
-        self.as_ref().id()
+        super::OptionalFieldsRef::id(&self.as_ref())
     }
 
     fn text(&self) -> Option<&str> {
-        self.as_ref().text()
+        super::OptionalFieldsRef::text(&self.as_ref())
     }
 
     fn point(&self) -> Option<impl crate::types::PointView> {
-        self.as_ref().point()
+        super::OptionalFieldsRef::point(&self.as_ref())
     }
 
     fn person(&self) -> Option<impl crate::types::PersonView> {
-        self.as_ref().person()
+        super::OptionalFieldsRef::person(&self.as_ref())
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        self.as_ref().label()
+        super::OptionalFieldsRef::label(&self.as_ref())
     }
 
     fn color(&self) -> Option<crate::types::Color> {
-        self.as_ref().color()
+        super::OptionalFieldsRef::color(&self.as_ref())
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        self.as_ref().shape()
+        super::OptionalFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

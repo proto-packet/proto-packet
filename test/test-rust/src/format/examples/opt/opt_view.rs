@@ -64,23 +64,23 @@ pub trait OptView {
 
 impl<V: OptView> OptView for &V {
     fn a(&self) -> bool {
-        (**self).a()
+        <V as OptView>::a(self)
     }
 
     fn b(&self) -> Option<u32> {
-        (**self).b()
+        <V as OptView>::b(self)
     }
 
     fn c(&self) -> Option<bool> {
-        (**self).c()
+        <V as OptView>::c(self)
     }
 
     fn d(&self) -> Option<&str> {
-        (**self).d()
+        <V as OptView>::d(self)
     }
 
     fn e(&self) -> Option<crate::format::examples::Color> {
-        (**self).e()
+        <V as OptView>::e(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -94,23 +94,23 @@ impl<V: OptView> OptView for &V {
 
 impl<V: OptView> OptView for &mut V {
     fn a(&self) -> bool {
-        (**self).a()
+        <V as OptView>::a(self)
     }
 
     fn b(&self) -> Option<u32> {
-        (**self).b()
+        <V as OptView>::b(self)
     }
 
     fn c(&self) -> Option<bool> {
-        (**self).c()
+        <V as OptView>::c(self)
     }
 
     fn d(&self) -> Option<&str> {
-        (**self).d()
+        <V as OptView>::d(self)
     }
 
     fn e(&self) -> Option<crate::format::examples::Color> {
-        (**self).e()
+        <V as OptView>::e(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -189,23 +189,23 @@ impl OptView for super::OptRef<'_> {
 
 impl OptView for super::OptBuf {
     fn a(&self) -> bool {
-        self.as_ref().a()
+        super::OptRef::a(&self.as_ref())
     }
 
     fn b(&self) -> Option<u32> {
-        self.as_ref().b()
+        super::OptRef::b(&self.as_ref())
     }
 
     fn c(&self) -> Option<bool> {
-        self.as_ref().c()
+        super::OptRef::c(&self.as_ref())
     }
 
     fn d(&self) -> Option<&str> {
-        self.as_ref().d()
+        super::OptRef::d(&self.as_ref())
     }
 
     fn e(&self) -> Option<crate::format::examples::Color> {
-        self.as_ref().e()
+        super::OptRef::e(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -219,23 +219,23 @@ impl OptView for super::OptBuf {
 
 impl OptView for super::OptMut<'_> {
     fn a(&self) -> bool {
-        self.as_ref().a()
+        super::OptRef::a(&self.as_ref())
     }
 
     fn b(&self) -> Option<u32> {
-        self.as_ref().b()
+        super::OptRef::b(&self.as_ref())
     }
 
     fn c(&self) -> Option<bool> {
-        self.as_ref().c()
+        super::OptRef::c(&self.as_ref())
     }
 
     fn d(&self) -> Option<&str> {
-        self.as_ref().d()
+        super::OptRef::d(&self.as_ref())
     }
 
     fn e(&self) -> Option<crate::format::examples::Color> {
-        self.as_ref().e()
+        super::OptRef::e(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

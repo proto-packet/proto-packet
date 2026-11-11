@@ -36,7 +36,7 @@ pub trait SameView {
 
 impl<V: SameView> SameView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as SameView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: SameView> SameView for &V {
 
 impl<V: SameView> SameView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as SameView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl SameView for super::SameRef<'_> {
 
 impl SameView for super::SameBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::SameRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl SameView for super::SameBuf {
 
 impl SameView for super::SameMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::SameRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

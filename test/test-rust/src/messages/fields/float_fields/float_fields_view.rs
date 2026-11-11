@@ -62,11 +62,11 @@ pub trait FloatFieldsView {
 
 impl<V: FloatFieldsView> FloatFieldsView for &V {
     fn float32(&self) -> Option<proto_packet::types::Float32> {
-        (**self).float32()
+        <V as FloatFieldsView>::float32(self)
     }
 
     fn float64(&self) -> Option<proto_packet::types::Float64> {
-        (**self).float64()
+        <V as FloatFieldsView>::float64(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -80,11 +80,11 @@ impl<V: FloatFieldsView> FloatFieldsView for &V {
 
 impl<V: FloatFieldsView> FloatFieldsView for &mut V {
     fn float32(&self) -> Option<proto_packet::types::Float32> {
-        (**self).float32()
+        <V as FloatFieldsView>::float32(self)
     }
 
     fn float64(&self) -> Option<proto_packet::types::Float64> {
-        (**self).float64()
+        <V as FloatFieldsView>::float64(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -139,11 +139,11 @@ impl FloatFieldsView for super::FloatFieldsRef<'_> {
 
 impl FloatFieldsView for super::FloatFieldsBuf {
     fn float32(&self) -> Option<proto_packet::types::Float32> {
-        self.as_ref().float32()
+        super::FloatFieldsRef::float32(&self.as_ref())
     }
 
     fn float64(&self) -> Option<proto_packet::types::Float64> {
-        self.as_ref().float64()
+        super::FloatFieldsRef::float64(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -157,11 +157,11 @@ impl FloatFieldsView for super::FloatFieldsBuf {
 
 impl FloatFieldsView for super::FloatFieldsMut<'_> {
     fn float32(&self) -> Option<proto_packet::types::Float32> {
-        self.as_ref().float32()
+        super::FloatFieldsRef::float32(&self.as_ref())
     }
 
     fn float64(&self) -> Option<proto_packet::types::Float64> {
-        self.as_ref().float64()
+        super::FloatFieldsRef::float64(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

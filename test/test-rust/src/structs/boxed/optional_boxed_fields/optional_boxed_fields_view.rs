@@ -87,23 +87,23 @@ pub trait OptionalBoxedFieldsView {
 
 impl<V: OptionalBoxedFieldsView> OptionalBoxedFieldsView for &V {
     fn point(&self) -> Option<impl crate::types::PointView> {
-        (**self).point()
+        <V as OptionalBoxedFieldsView>::point(self)
     }
 
     fn person(&self) -> Option<impl crate::types::PersonView> {
-        (**self).person()
+        <V as OptionalBoxedFieldsView>::person(self)
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        (**self).label()
+        <V as OptionalBoxedFieldsView>::label(self)
     }
 
     fn color(&self) -> Option<crate::types::Color> {
-        (**self).color()
+        <V as OptionalBoxedFieldsView>::color(self)
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        (**self).shape()
+        <V as OptionalBoxedFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -117,23 +117,23 @@ impl<V: OptionalBoxedFieldsView> OptionalBoxedFieldsView for &V {
 
 impl<V: OptionalBoxedFieldsView> OptionalBoxedFieldsView for &mut V {
     fn point(&self) -> Option<impl crate::types::PointView> {
-        (**self).point()
+        <V as OptionalBoxedFieldsView>::point(self)
     }
 
     fn person(&self) -> Option<impl crate::types::PersonView> {
-        (**self).person()
+        <V as OptionalBoxedFieldsView>::person(self)
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        (**self).label()
+        <V as OptionalBoxedFieldsView>::label(self)
     }
 
     fn color(&self) -> Option<crate::types::Color> {
-        (**self).color()
+        <V as OptionalBoxedFieldsView>::color(self)
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        (**self).shape()
+        <V as OptionalBoxedFieldsView>::shape(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -212,23 +212,23 @@ impl OptionalBoxedFieldsView for super::OptionalBoxedFieldsRef<'_> {
 
 impl OptionalBoxedFieldsView for super::OptionalBoxedFieldsBuf {
     fn point(&self) -> Option<impl crate::types::PointView> {
-        self.as_ref().point()
+        super::OptionalBoxedFieldsRef::point(&self.as_ref())
     }
 
     fn person(&self) -> Option<impl crate::types::PersonView> {
-        self.as_ref().person()
+        super::OptionalBoxedFieldsRef::person(&self.as_ref())
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        self.as_ref().label()
+        super::OptionalBoxedFieldsRef::label(&self.as_ref())
     }
 
     fn color(&self) -> Option<crate::types::Color> {
-        self.as_ref().color()
+        super::OptionalBoxedFieldsRef::color(&self.as_ref())
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        self.as_ref().shape()
+        super::OptionalBoxedFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -242,23 +242,23 @@ impl OptionalBoxedFieldsView for super::OptionalBoxedFieldsBuf {
 
 impl OptionalBoxedFieldsView for super::OptionalBoxedFieldsMut<'_> {
     fn point(&self) -> Option<impl crate::types::PointView> {
-        self.as_ref().point()
+        super::OptionalBoxedFieldsRef::point(&self.as_ref())
     }
 
     fn person(&self) -> Option<impl crate::types::PersonView> {
-        self.as_ref().person()
+        super::OptionalBoxedFieldsRef::person(&self.as_ref())
     }
 
     fn label(&self) -> Option<impl crate::types::LabelView> {
-        self.as_ref().label()
+        super::OptionalBoxedFieldsRef::label(&self.as_ref())
     }
 
     fn color(&self) -> Option<crate::types::Color> {
-        self.as_ref().color()
+        super::OptionalBoxedFieldsRef::color(&self.as_ref())
     }
 
     fn shape(&self) -> Option<impl crate::types::ShapeView> {
-        self.as_ref().shape()
+        super::OptionalBoxedFieldsRef::shape(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

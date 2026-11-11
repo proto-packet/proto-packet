@@ -124,30 +124,30 @@ pub trait PricesView {
 
 impl<V: PricesView> PricesView for &V {
     fn price(&self) -> proto_packet::types::Decimal<2> {
-        (**self).price()
+        <V as PricesView>::price(self)
     }
 
     fn rate(&self) -> proto_packet::types::Decimal<6> {
-        (**self).rate()
+        <V as PricesView>::rate(self)
     }
 
     fn count(&self) -> proto_packet::types::Decimal<0> {
-        (**self).count()
+        <V as PricesView>::count(self)
     }
 
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
-        (**self).maybe()
+        <V as PricesView>::maybe(self)
     }
 
     fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
-        (**self).list()
+        <V as PricesView>::list(self)
     }
 
     fn named(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
     {
-        (**self).named()
+        <V as PricesView>::named(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -161,30 +161,30 @@ impl<V: PricesView> PricesView for &V {
 
 impl<V: PricesView> PricesView for &mut V {
     fn price(&self) -> proto_packet::types::Decimal<2> {
-        (**self).price()
+        <V as PricesView>::price(self)
     }
 
     fn rate(&self) -> proto_packet::types::Decimal<6> {
-        (**self).rate()
+        <V as PricesView>::rate(self)
     }
 
     fn count(&self) -> proto_packet::types::Decimal<0> {
-        (**self).count()
+        <V as PricesView>::count(self)
     }
 
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
-        (**self).maybe()
+        <V as PricesView>::maybe(self)
     }
 
     fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
-        (**self).list()
+        <V as PricesView>::list(self)
     }
 
     fn named(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
     {
-        (**self).named()
+        <V as PricesView>::named(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -277,30 +277,30 @@ impl PricesView for super::PricesRef<'_> {
 
 impl PricesView for super::PricesBuf {
     fn price(&self) -> proto_packet::types::Decimal<2> {
-        self.as_ref().price()
+        super::PricesRef::price(&self.as_ref())
     }
 
     fn rate(&self) -> proto_packet::types::Decimal<6> {
-        self.as_ref().rate()
+        super::PricesRef::rate(&self.as_ref())
     }
 
     fn count(&self) -> proto_packet::types::Decimal<0> {
-        self.as_ref().count()
+        super::PricesRef::count(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
-        self.as_ref().maybe()
+        super::PricesRef::maybe(&self.as_ref())
     }
 
     fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
-        self.as_ref().list()
+        super::PricesRef::list(&self.as_ref())
     }
 
     fn named(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
     {
-        self.as_ref().named()
+        super::PricesRef::named(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -314,30 +314,30 @@ impl PricesView for super::PricesBuf {
 
 impl PricesView for super::PricesMut<'_> {
     fn price(&self) -> proto_packet::types::Decimal<2> {
-        self.as_ref().price()
+        super::PricesRef::price(&self.as_ref())
     }
 
     fn rate(&self) -> proto_packet::types::Decimal<6> {
-        self.as_ref().rate()
+        super::PricesRef::rate(&self.as_ref())
     }
 
     fn count(&self) -> proto_packet::types::Decimal<0> {
-        self.as_ref().count()
+        super::PricesRef::count(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<proto_packet::types::Decimal<2>> {
-        self.as_ref().maybe()
+        super::PricesRef::maybe(&self.as_ref())
     }
 
     fn list(&self) -> impl proto_packet::io::ListView<Item = proto_packet::types::Decimal<2>> {
-        self.as_ref().list()
+        super::PricesRef::list(&self.as_ref())
     }
 
     fn named(
         &self,
     ) -> impl proto_packet::io::MapView<String, Key = &str, Value = proto_packet::types::Decimal<2>>
     {
-        self.as_ref().named()
+        super::PricesRef::named(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

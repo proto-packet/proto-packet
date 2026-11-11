@@ -18,7 +18,7 @@ impl Ord for EmptyMessage {
 
 impl PartialOrd for EmptyMessage {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

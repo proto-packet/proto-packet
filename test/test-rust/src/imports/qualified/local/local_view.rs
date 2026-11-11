@@ -36,7 +36,7 @@ pub trait LocalView {
 
 impl<V: LocalView> LocalView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as LocalView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: LocalView> LocalView for &V {
 
 impl<V: LocalView> LocalView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as LocalView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl LocalView for super::LocalRef<'_> {
 
 impl LocalView for super::LocalBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::LocalRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl LocalView for super::LocalBuf {
 
 impl LocalView for super::LocalMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::LocalRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

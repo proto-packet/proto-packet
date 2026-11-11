@@ -36,7 +36,7 @@ pub trait VecView {
 
 impl<V: VecView> VecView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as VecView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: VecView> VecView for &V {
 
 impl<V: VecView> VecView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as VecView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl VecView for super::VecRef<'_> {
 
 impl VecView for super::VecBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::VecRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl VecView for super::VecBuf {
 
 impl VecView for super::VecMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::VecRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

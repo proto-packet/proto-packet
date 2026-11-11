@@ -311,7 +311,7 @@ pub trait MapKindsView {
 
 impl<V: MapKindsView> MapKindsView for &V {
     fn by_number(&self) -> impl proto_packet::io::MapView<u32, Key = u32, Value = bool> {
-        (**self).by_number()
+        <V as MapKindsView>::by_number(self)
     }
 
     fn by_color(
@@ -321,7 +321,7 @@ impl<V: MapKindsView> MapKindsView for &V {
         Key = crate::format::examples::Color,
         Value = &str,
     > {
-        (**self).by_color()
+        <V as MapKindsView>::by_color(self)
     }
 
     fn by_point(
@@ -331,11 +331,11 @@ impl<V: MapKindsView> MapKindsView for &V {
         Key = impl crate::format::examples::PointView,
         Value = impl crate::format::examples::EntryView,
     > {
-        (**self).by_point()
+        <V as MapKindsView>::by_point(self)
     }
 
     fn lists(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = &[u8]> {
-        (**self).lists()
+        <V as MapKindsView>::lists(self)
     }
 
     fn maps(
@@ -345,14 +345,14 @@ impl<V: MapKindsView> MapKindsView for &V {
         Key = u8,
         Value = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>,
     > {
-        (**self).maps()
+        <V as MapKindsView>::maps(self)
     }
 
     fn maybe(
         &self,
     ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>
     {
-        (**self).maybe()
+        <V as MapKindsView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -366,7 +366,7 @@ impl<V: MapKindsView> MapKindsView for &V {
 
 impl<V: MapKindsView> MapKindsView for &mut V {
     fn by_number(&self) -> impl proto_packet::io::MapView<u32, Key = u32, Value = bool> {
-        (**self).by_number()
+        <V as MapKindsView>::by_number(self)
     }
 
     fn by_color(
@@ -376,7 +376,7 @@ impl<V: MapKindsView> MapKindsView for &mut V {
         Key = crate::format::examples::Color,
         Value = &str,
     > {
-        (**self).by_color()
+        <V as MapKindsView>::by_color(self)
     }
 
     fn by_point(
@@ -386,11 +386,11 @@ impl<V: MapKindsView> MapKindsView for &mut V {
         Key = impl crate::format::examples::PointView,
         Value = impl crate::format::examples::EntryView,
     > {
-        (**self).by_point()
+        <V as MapKindsView>::by_point(self)
     }
 
     fn lists(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = &[u8]> {
-        (**self).lists()
+        <V as MapKindsView>::lists(self)
     }
 
     fn maps(
@@ -400,14 +400,14 @@ impl<V: MapKindsView> MapKindsView for &mut V {
         Key = u8,
         Value = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>,
     > {
-        (**self).maps()
+        <V as MapKindsView>::maps(self)
     }
 
     fn maybe(
         &self,
     ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>
     {
-        (**self).maybe()
+        <V as MapKindsView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -536,7 +536,7 @@ impl MapKindsView for super::MapKindsRef<'_> {
 
 impl MapKindsView for super::MapKindsBuf {
     fn by_number(&self) -> impl proto_packet::io::MapView<u32, Key = u32, Value = bool> {
-        self.as_ref().by_number()
+        super::MapKindsRef::by_number(&self.as_ref())
     }
 
     fn by_color(
@@ -546,7 +546,7 @@ impl MapKindsView for super::MapKindsBuf {
         Key = crate::format::examples::Color,
         Value = &str,
     > {
-        self.as_ref().by_color()
+        super::MapKindsRef::by_color(&self.as_ref())
     }
 
     fn by_point(
@@ -556,11 +556,11 @@ impl MapKindsView for super::MapKindsBuf {
         Key = impl crate::format::examples::PointView,
         Value = impl crate::format::examples::EntryView,
     > {
-        self.as_ref().by_point()
+        super::MapKindsRef::by_point(&self.as_ref())
     }
 
     fn lists(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = &[u8]> {
-        self.as_ref().lists()
+        super::MapKindsRef::lists(&self.as_ref())
     }
 
     fn maps(
@@ -570,14 +570,14 @@ impl MapKindsView for super::MapKindsBuf {
         Key = u8,
         Value = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>,
     > {
-        self.as_ref().maps()
+        super::MapKindsRef::maps(&self.as_ref())
     }
 
     fn maybe(
         &self,
     ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>
     {
-        self.as_ref().maybe()
+        super::MapKindsRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -591,7 +591,7 @@ impl MapKindsView for super::MapKindsBuf {
 
 impl MapKindsView for super::MapKindsMut<'_> {
     fn by_number(&self) -> impl proto_packet::io::MapView<u32, Key = u32, Value = bool> {
-        self.as_ref().by_number()
+        super::MapKindsRef::by_number(&self.as_ref())
     }
 
     fn by_color(
@@ -601,7 +601,7 @@ impl MapKindsView for super::MapKindsMut<'_> {
         Key = crate::format::examples::Color,
         Value = &str,
     > {
-        self.as_ref().by_color()
+        super::MapKindsRef::by_color(&self.as_ref())
     }
 
     fn by_point(
@@ -611,11 +611,11 @@ impl MapKindsView for super::MapKindsMut<'_> {
         Key = impl crate::format::examples::PointView,
         Value = impl crate::format::examples::EntryView,
     > {
-        self.as_ref().by_point()
+        super::MapKindsRef::by_point(&self.as_ref())
     }
 
     fn lists(&self) -> impl proto_packet::io::MapView<String, Key = &str, Value = &[u8]> {
-        self.as_ref().lists()
+        super::MapKindsRef::lists(&self.as_ref())
     }
 
     fn maps(
@@ -625,14 +625,14 @@ impl MapKindsView for super::MapKindsMut<'_> {
         Key = u8,
         Value = impl proto_packet::io::MapView<u8, Key = u8, Value = u8>,
     > {
-        self.as_ref().maps()
+        super::MapKindsRef::maps(&self.as_ref())
     }
 
     fn maybe(
         &self,
     ) -> Option<impl proto_packet::io::MapView<i64, Key = i64, Value = proto_packet::types::Float64>>
     {
-        self.as_ref().maybe()
+        super::MapKindsRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -78,16 +78,15 @@ impl Older {
 
 impl Ord for Older {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.name
-            .cmp(&other.name)
-            .then_with(|| self.age.cmp(&other.age))
+        Ord::cmp(&self.name, &other.name)
+            .then_with(|| Ord::cmp(&self.age, &other.age))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for Older {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

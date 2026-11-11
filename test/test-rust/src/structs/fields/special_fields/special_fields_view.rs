@@ -43,11 +43,11 @@ pub trait SpecialFieldsView {
 
 impl<V: SpecialFieldsView> SpecialFieldsView for &V {
     fn id(&self) -> proto_packet::types::Uuid {
-        (**self).id()
+        <V as SpecialFieldsView>::id(self)
     }
 
     fn text(&self) -> &str {
-        (**self).text()
+        <V as SpecialFieldsView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -61,11 +61,11 @@ impl<V: SpecialFieldsView> SpecialFieldsView for &V {
 
 impl<V: SpecialFieldsView> SpecialFieldsView for &mut V {
     fn id(&self) -> proto_packet::types::Uuid {
-        (**self).id()
+        <V as SpecialFieldsView>::id(self)
     }
 
     fn text(&self) -> &str {
-        (**self).text()
+        <V as SpecialFieldsView>::text(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -120,11 +120,11 @@ impl SpecialFieldsView for super::SpecialFieldsRef<'_> {
 
 impl SpecialFieldsView for super::SpecialFieldsBuf {
     fn id(&self) -> proto_packet::types::Uuid {
-        self.as_ref().id()
+        super::SpecialFieldsRef::id(&self.as_ref())
     }
 
     fn text(&self) -> &str {
-        self.as_ref().text()
+        super::SpecialFieldsRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -138,11 +138,11 @@ impl SpecialFieldsView for super::SpecialFieldsBuf {
 
 impl SpecialFieldsView for super::SpecialFieldsMut<'_> {
     fn id(&self) -> proto_packet::types::Uuid {
-        self.as_ref().id()
+        super::SpecialFieldsRef::id(&self.as_ref())
     }
 
     fn text(&self) -> &str {
-        self.as_ref().text()
+        super::SpecialFieldsRef::text(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

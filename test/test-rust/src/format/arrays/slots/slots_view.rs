@@ -43,7 +43,7 @@ pub trait SlotsView {
 
 impl<V: SlotsView> SlotsView for &V {
     fn slots(&self) -> impl proto_packet::io::ListView<Item = Option<u32>> {
-        (**self).slots()
+        <V as SlotsView>::slots(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -57,7 +57,7 @@ impl<V: SlotsView> SlotsView for &V {
 
 impl<V: SlotsView> SlotsView for &mut V {
     fn slots(&self) -> impl proto_packet::io::ListView<Item = Option<u32>> {
-        (**self).slots()
+        <V as SlotsView>::slots(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -99,7 +99,7 @@ impl SlotsView for super::SlotsRef<'_> {
 
 impl SlotsView for super::SlotsBuf {
     fn slots(&self) -> impl proto_packet::io::ListView<Item = Option<u32>> {
-        self.as_ref().slots()
+        super::SlotsRef::slots(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -113,7 +113,7 @@ impl SlotsView for super::SlotsBuf {
 
 impl SlotsView for super::SlotsMut<'_> {
     fn slots(&self) -> impl proto_packet::io::ListView<Item = Option<u32>> {
-        self.as_ref().slots()
+        super::SlotsRef::slots(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

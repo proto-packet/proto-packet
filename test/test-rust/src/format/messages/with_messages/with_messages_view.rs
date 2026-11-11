@@ -62,19 +62,19 @@ pub trait WithMessagesView {
 
 impl<V: WithMessagesView> WithMessagesView for &V {
     fn before(&self) -> &str {
-        (**self).before()
+        <V as WithMessagesView>::before(self)
     }
 
     fn item(&self) -> impl crate::format::messages::ItemView {
-        (**self).item()
+        <V as WithMessagesView>::item(self)
     }
 
     fn number(&self) -> u64 {
-        (**self).number()
+        <V as WithMessagesView>::number(self)
     }
 
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
-        (**self).maybe()
+        <V as WithMessagesView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -88,19 +88,19 @@ impl<V: WithMessagesView> WithMessagesView for &V {
 
 impl<V: WithMessagesView> WithMessagesView for &mut V {
     fn before(&self) -> &str {
-        (**self).before()
+        <V as WithMessagesView>::before(self)
     }
 
     fn item(&self) -> impl crate::format::messages::ItemView {
-        (**self).item()
+        <V as WithMessagesView>::item(self)
     }
 
     fn number(&self) -> u64 {
-        (**self).number()
+        <V as WithMessagesView>::number(self)
     }
 
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
-        (**self).maybe()
+        <V as WithMessagesView>::maybe(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -171,19 +171,19 @@ impl WithMessagesView for super::WithMessagesRef<'_> {
 
 impl WithMessagesView for super::WithMessagesBuf {
     fn before(&self) -> &str {
-        self.as_ref().before()
+        super::WithMessagesRef::before(&self.as_ref())
     }
 
     fn item(&self) -> impl crate::format::messages::ItemView {
-        self.as_ref().item()
+        super::WithMessagesRef::item(&self.as_ref())
     }
 
     fn number(&self) -> u64 {
-        self.as_ref().number()
+        super::WithMessagesRef::number(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
-        self.as_ref().maybe()
+        super::WithMessagesRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -197,19 +197,19 @@ impl WithMessagesView for super::WithMessagesBuf {
 
 impl WithMessagesView for super::WithMessagesMut<'_> {
     fn before(&self) -> &str {
-        self.as_ref().before()
+        super::WithMessagesRef::before(&self.as_ref())
     }
 
     fn item(&self) -> impl crate::format::messages::ItemView {
-        self.as_ref().item()
+        super::WithMessagesRef::item(&self.as_ref())
     }
 
     fn number(&self) -> u64 {
-        self.as_ref().number()
+        super::WithMessagesRef::number(&self.as_ref())
     }
 
     fn maybe(&self) -> Option<impl crate::format::messages::ItemView> {
-        self.as_ref().maybe()
+        super::WithMessagesRef::maybe(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

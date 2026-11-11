@@ -36,7 +36,7 @@ pub trait BeforeView {
 
 impl<V: BeforeView> BeforeView for &V {
     fn after(&self) -> impl crate::imports::local::AfterView {
-        (**self).after()
+        <V as BeforeView>::after(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: BeforeView> BeforeView for &V {
 
 impl<V: BeforeView> BeforeView for &mut V {
     fn after(&self) -> impl crate::imports::local::AfterView {
-        (**self).after()
+        <V as BeforeView>::after(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl BeforeView for super::BeforeRef<'_> {
 
 impl BeforeView for super::BeforeBuf {
     fn after(&self) -> impl crate::imports::local::AfterView {
-        self.as_ref().after()
+        super::BeforeRef::after(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl BeforeView for super::BeforeBuf {
 
 impl BeforeView for super::BeforeMut<'_> {
     fn after(&self) -> impl crate::imports::local::AfterView {
-        self.as_ref().after()
+        super::BeforeRef::after(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

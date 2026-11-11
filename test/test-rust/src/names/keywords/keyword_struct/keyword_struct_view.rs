@@ -47,15 +47,15 @@ pub trait KeywordStructView {
 
 impl<V: KeywordStructView> KeywordStructView for &V {
     fn r#type(&self) -> u32 {
-        (**self).r#type()
+        <V as KeywordStructView>::r#type(self)
     }
 
     fn r#match(&self) -> &str {
-        (**self).r#match()
+        <V as KeywordStructView>::r#match(self)
     }
 
     fn self_(&self) -> u32 {
-        (**self).self_()
+        <V as KeywordStructView>::self_(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -69,15 +69,15 @@ impl<V: KeywordStructView> KeywordStructView for &V {
 
 impl<V: KeywordStructView> KeywordStructView for &mut V {
     fn r#type(&self) -> u32 {
-        (**self).r#type()
+        <V as KeywordStructView>::r#type(self)
     }
 
     fn r#match(&self) -> &str {
-        (**self).r#match()
+        <V as KeywordStructView>::r#match(self)
     }
 
     fn self_(&self) -> u32 {
-        (**self).self_()
+        <V as KeywordStructView>::self_(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -140,15 +140,15 @@ impl KeywordStructView for super::KeywordStructRef<'_> {
 
 impl KeywordStructView for super::KeywordStructBuf {
     fn r#type(&self) -> u32 {
-        self.as_ref().r#type()
+        super::KeywordStructRef::r#type(&self.as_ref())
     }
 
     fn r#match(&self) -> &str {
-        self.as_ref().r#match()
+        super::KeywordStructRef::r#match(&self.as_ref())
     }
 
     fn self_(&self) -> u32 {
-        self.as_ref().self_()
+        super::KeywordStructRef::self_(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -162,15 +162,15 @@ impl KeywordStructView for super::KeywordStructBuf {
 
 impl KeywordStructView for super::KeywordStructMut<'_> {
     fn r#type(&self) -> u32 {
-        self.as_ref().r#type()
+        super::KeywordStructRef::r#type(&self.as_ref())
     }
 
     fn r#match(&self) -> &str {
-        self.as_ref().r#match()
+        super::KeywordStructRef::r#match(&self.as_ref())
     }
 
     fn self_(&self) -> u32 {
-        self.as_ref().self_()
+        super::KeywordStructRef::self_(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

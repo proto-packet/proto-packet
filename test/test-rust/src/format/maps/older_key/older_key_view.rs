@@ -61,11 +61,11 @@ pub trait OlderKeyView {
 
 impl<V: OlderKeyView> OlderKeyView for &V {
     fn a(&self) -> Option<u32> {
-        (**self).a()
+        <V as OlderKeyView>::a(self)
     }
 
     fn c(&self) -> Option<u32> {
-        (**self).c()
+        <V as OlderKeyView>::c(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -79,11 +79,11 @@ impl<V: OlderKeyView> OlderKeyView for &V {
 
 impl<V: OlderKeyView> OlderKeyView for &mut V {
     fn a(&self) -> Option<u32> {
-        (**self).a()
+        <V as OlderKeyView>::a(self)
     }
 
     fn c(&self) -> Option<u32> {
-        (**self).c()
+        <V as OlderKeyView>::c(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -138,11 +138,11 @@ impl OlderKeyView for super::OlderKeyRef<'_> {
 
 impl OlderKeyView for super::OlderKeyBuf {
     fn a(&self) -> Option<u32> {
-        self.as_ref().a()
+        super::OlderKeyRef::a(&self.as_ref())
     }
 
     fn c(&self) -> Option<u32> {
-        self.as_ref().c()
+        super::OlderKeyRef::c(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -156,11 +156,11 @@ impl OlderKeyView for super::OlderKeyBuf {
 
 impl OlderKeyView for super::OlderKeyMut<'_> {
     fn a(&self) -> Option<u32> {
-        self.as_ref().a()
+        super::OlderKeyRef::a(&self.as_ref())
     }
 
     fn c(&self) -> Option<u32> {
-        self.as_ref().c()
+        super::OlderKeyRef::c(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

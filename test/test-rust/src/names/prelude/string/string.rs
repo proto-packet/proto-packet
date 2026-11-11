@@ -45,15 +45,14 @@ impl String {
 
 impl std::cmp::Ord for String {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.text
-            .cmp(&other.text)
+        std::cmp::Ord::cmp(&self.text, &other.text)
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl std::cmp::PartialOrd for String {
     fn partial_cmp(&self, other: &Self) -> std::option::Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(std::cmp::Ord::cmp(self, other))
     }
 }
 

@@ -201,19 +201,18 @@ impl NamedFields {
 
 impl Ord for NamedFields {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.point
-            .cmp(&other.point)
-            .then_with(|| self.person.cmp(&other.person))
-            .then_with(|| self.label.cmp(&other.label))
-            .then_with(|| self.color.cmp(&other.color))
-            .then_with(|| self.shape.cmp(&other.shape))
+        Ord::cmp(&self.point, &other.point)
+            .then_with(|| Ord::cmp(&self.person, &other.person))
+            .then_with(|| Ord::cmp(&self.label, &other.label))
+            .then_with(|| Ord::cmp(&self.color, &other.color))
+            .then_with(|| Ord::cmp(&self.shape, &other.shape))
             .then_with(|| self.unknown_fields.cmp(&other.unknown_fields))
     }
 }
 
 impl PartialOrd for NamedFields {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

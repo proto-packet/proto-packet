@@ -60,11 +60,11 @@ pub trait LoopByteView {
 
 impl<V: LoopByteView> LoopByteView for &V {
     fn value(&self) -> u8 {
-        (**self).value()
+        <V as LoopByteView>::value(self)
     }
 
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
-        (**self).next()
+        <V as LoopByteView>::next(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -78,11 +78,11 @@ impl<V: LoopByteView> LoopByteView for &V {
 
 impl<V: LoopByteView> LoopByteView for &mut V {
     fn value(&self) -> u8 {
-        (**self).value()
+        <V as LoopByteView>::value(self)
     }
 
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
-        (**self).next()
+        <V as LoopByteView>::next(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -137,11 +137,11 @@ impl LoopByteView for super::LoopByteRef<'_> {
 
 impl LoopByteView for super::LoopByteBuf {
     fn value(&self) -> u8 {
-        self.as_ref().value()
+        super::LoopByteRef::value(&self.as_ref())
     }
 
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
-        self.as_ref().next()
+        super::LoopByteRef::next(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -155,11 +155,11 @@ impl LoopByteView for super::LoopByteBuf {
 
 impl LoopByteView for super::LoopByteMut<'_> {
     fn value(&self) -> u8 {
-        self.as_ref().value()
+        super::LoopByteRef::value(&self.as_ref())
     }
 
     fn next(&self) -> Option<impl crate::format::edges::LoopLongView> {
-        self.as_ref().next()
+        super::LoopByteRef::next(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

@@ -57,27 +57,27 @@ pub trait SignedKindsView {
 
 impl<V: SignedKindsView> SignedKindsView for &V {
     fn a(&self) -> i8 {
-        (**self).a()
+        <V as SignedKindsView>::a(self)
     }
 
     fn b(&self) -> i16 {
-        (**self).b()
+        <V as SignedKindsView>::b(self)
     }
 
     fn c(&self) -> i32 {
-        (**self).c()
+        <V as SignedKindsView>::c(self)
     }
 
     fn d(&self) -> i64 {
-        (**self).d()
+        <V as SignedKindsView>::d(self)
     }
 
     fn e(&self) -> i128 {
-        (**self).e()
+        <V as SignedKindsView>::e(self)
     }
 
     fn f(&self) -> Option<i16> {
-        (**self).f()
+        <V as SignedKindsView>::f(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -91,27 +91,27 @@ impl<V: SignedKindsView> SignedKindsView for &V {
 
 impl<V: SignedKindsView> SignedKindsView for &mut V {
     fn a(&self) -> i8 {
-        (**self).a()
+        <V as SignedKindsView>::a(self)
     }
 
     fn b(&self) -> i16 {
-        (**self).b()
+        <V as SignedKindsView>::b(self)
     }
 
     fn c(&self) -> i32 {
-        (**self).c()
+        <V as SignedKindsView>::c(self)
     }
 
     fn d(&self) -> i64 {
-        (**self).d()
+        <V as SignedKindsView>::d(self)
     }
 
     fn e(&self) -> i128 {
-        (**self).e()
+        <V as SignedKindsView>::e(self)
     }
 
     fn f(&self) -> Option<i16> {
-        (**self).f()
+        <V as SignedKindsView>::f(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -193,27 +193,27 @@ impl SignedKindsView for super::SignedKindsRef<'_> {
 
 impl SignedKindsView for super::SignedKindsBuf {
     fn a(&self) -> i8 {
-        self.as_ref().a()
+        super::SignedKindsRef::a(&self.as_ref())
     }
 
     fn b(&self) -> i16 {
-        self.as_ref().b()
+        super::SignedKindsRef::b(&self.as_ref())
     }
 
     fn c(&self) -> i32 {
-        self.as_ref().c()
+        super::SignedKindsRef::c(&self.as_ref())
     }
 
     fn d(&self) -> i64 {
-        self.as_ref().d()
+        super::SignedKindsRef::d(&self.as_ref())
     }
 
     fn e(&self) -> i128 {
-        self.as_ref().e()
+        super::SignedKindsRef::e(&self.as_ref())
     }
 
     fn f(&self) -> Option<i16> {
-        self.as_ref().f()
+        super::SignedKindsRef::f(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -227,27 +227,27 @@ impl SignedKindsView for super::SignedKindsBuf {
 
 impl SignedKindsView for super::SignedKindsMut<'_> {
     fn a(&self) -> i8 {
-        self.as_ref().a()
+        super::SignedKindsRef::a(&self.as_ref())
     }
 
     fn b(&self) -> i16 {
-        self.as_ref().b()
+        super::SignedKindsRef::b(&self.as_ref())
     }
 
     fn c(&self) -> i32 {
-        self.as_ref().c()
+        super::SignedKindsRef::c(&self.as_ref())
     }
 
     fn d(&self) -> i64 {
-        self.as_ref().d()
+        super::SignedKindsRef::d(&self.as_ref())
     }
 
     fn e(&self) -> i128 {
-        self.as_ref().e()
+        super::SignedKindsRef::e(&self.as_ref())
     }
 
     fn f(&self) -> Option<i16> {
-        self.as_ref().f()
+        super::SignedKindsRef::f(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

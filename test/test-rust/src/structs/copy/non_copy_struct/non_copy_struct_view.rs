@@ -39,7 +39,7 @@ pub trait NonCopyStructView {
 
 impl<V: NonCopyStructView> NonCopyStructView for &V {
     fn person(&self) -> impl crate::types::PersonView {
-        (**self).person()
+        <V as NonCopyStructView>::person(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -53,7 +53,7 @@ impl<V: NonCopyStructView> NonCopyStructView for &V {
 
 impl<V: NonCopyStructView> NonCopyStructView for &mut V {
     fn person(&self) -> impl crate::types::PersonView {
-        (**self).person()
+        <V as NonCopyStructView>::person(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -100,7 +100,7 @@ impl NonCopyStructView for super::NonCopyStructRef<'_> {
 
 impl NonCopyStructView for super::NonCopyStructBuf {
     fn person(&self) -> impl crate::types::PersonView {
-        self.as_ref().person()
+        super::NonCopyStructRef::person(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -114,7 +114,7 @@ impl NonCopyStructView for super::NonCopyStructBuf {
 
 impl NonCopyStructView for super::NonCopyStructMut<'_> {
     fn person(&self) -> impl crate::types::PersonView {
-        self.as_ref().person()
+        super::NonCopyStructRef::person(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

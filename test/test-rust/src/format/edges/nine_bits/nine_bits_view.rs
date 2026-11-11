@@ -70,39 +70,39 @@ pub trait NineBitsView {
 
 impl<V: NineBitsView> NineBitsView for &V {
     fn a(&self) -> bool {
-        (**self).a()
+        <V as NineBitsView>::a(self)
     }
 
     fn b(&self) -> bool {
-        (**self).b()
+        <V as NineBitsView>::b(self)
     }
 
     fn c(&self) -> bool {
-        (**self).c()
+        <V as NineBitsView>::c(self)
     }
 
     fn d(&self) -> bool {
-        (**self).d()
+        <V as NineBitsView>::d(self)
     }
 
     fn e(&self) -> bool {
-        (**self).e()
+        <V as NineBitsView>::e(self)
     }
 
     fn f(&self) -> bool {
-        (**self).f()
+        <V as NineBitsView>::f(self)
     }
 
     fn g(&self) -> bool {
-        (**self).g()
+        <V as NineBitsView>::g(self)
     }
 
     fn h(&self) -> bool {
-        (**self).h()
+        <V as NineBitsView>::h(self)
     }
 
     fn i(&self) -> bool {
-        (**self).i()
+        <V as NineBitsView>::i(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -116,39 +116,39 @@ impl<V: NineBitsView> NineBitsView for &V {
 
 impl<V: NineBitsView> NineBitsView for &mut V {
     fn a(&self) -> bool {
-        (**self).a()
+        <V as NineBitsView>::a(self)
     }
 
     fn b(&self) -> bool {
-        (**self).b()
+        <V as NineBitsView>::b(self)
     }
 
     fn c(&self) -> bool {
-        (**self).c()
+        <V as NineBitsView>::c(self)
     }
 
     fn d(&self) -> bool {
-        (**self).d()
+        <V as NineBitsView>::d(self)
     }
 
     fn e(&self) -> bool {
-        (**self).e()
+        <V as NineBitsView>::e(self)
     }
 
     fn f(&self) -> bool {
-        (**self).f()
+        <V as NineBitsView>::f(self)
     }
 
     fn g(&self) -> bool {
-        (**self).g()
+        <V as NineBitsView>::g(self)
     }
 
     fn h(&self) -> bool {
-        (**self).h()
+        <V as NineBitsView>::h(self)
     }
 
     fn i(&self) -> bool {
-        (**self).i()
+        <V as NineBitsView>::i(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -254,39 +254,39 @@ impl NineBitsView for super::NineBitsRef<'_> {
 
 impl NineBitsView for super::NineBitsBuf {
     fn a(&self) -> bool {
-        self.as_ref().a()
+        super::NineBitsRef::a(&self.as_ref())
     }
 
     fn b(&self) -> bool {
-        self.as_ref().b()
+        super::NineBitsRef::b(&self.as_ref())
     }
 
     fn c(&self) -> bool {
-        self.as_ref().c()
+        super::NineBitsRef::c(&self.as_ref())
     }
 
     fn d(&self) -> bool {
-        self.as_ref().d()
+        super::NineBitsRef::d(&self.as_ref())
     }
 
     fn e(&self) -> bool {
-        self.as_ref().e()
+        super::NineBitsRef::e(&self.as_ref())
     }
 
     fn f(&self) -> bool {
-        self.as_ref().f()
+        super::NineBitsRef::f(&self.as_ref())
     }
 
     fn g(&self) -> bool {
-        self.as_ref().g()
+        super::NineBitsRef::g(&self.as_ref())
     }
 
     fn h(&self) -> bool {
-        self.as_ref().h()
+        super::NineBitsRef::h(&self.as_ref())
     }
 
     fn i(&self) -> bool {
-        self.as_ref().i()
+        super::NineBitsRef::i(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -300,39 +300,39 @@ impl NineBitsView for super::NineBitsBuf {
 
 impl NineBitsView for super::NineBitsMut<'_> {
     fn a(&self) -> bool {
-        self.as_ref().a()
+        super::NineBitsRef::a(&self.as_ref())
     }
 
     fn b(&self) -> bool {
-        self.as_ref().b()
+        super::NineBitsRef::b(&self.as_ref())
     }
 
     fn c(&self) -> bool {
-        self.as_ref().c()
+        super::NineBitsRef::c(&self.as_ref())
     }
 
     fn d(&self) -> bool {
-        self.as_ref().d()
+        super::NineBitsRef::d(&self.as_ref())
     }
 
     fn e(&self) -> bool {
-        self.as_ref().e()
+        super::NineBitsRef::e(&self.as_ref())
     }
 
     fn f(&self) -> bool {
-        self.as_ref().f()
+        super::NineBitsRef::f(&self.as_ref())
     }
 
     fn g(&self) -> bool {
-        self.as_ref().g()
+        super::NineBitsRef::g(&self.as_ref())
     }
 
     fn h(&self) -> bool {
-        self.as_ref().h()
+        super::NineBitsRef::h(&self.as_ref())
     }
 
     fn i(&self) -> bool {
-        self.as_ref().i()
+        super::NineBitsRef::i(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

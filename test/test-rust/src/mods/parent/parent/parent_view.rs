@@ -36,7 +36,7 @@ pub trait ParentView {
 
 impl<V: ParentView> ParentView for &V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as ParentView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -50,7 +50,7 @@ impl<V: ParentView> ParentView for &V {
 
 impl<V: ParentView> ParentView for &mut V {
     fn value(&self) -> u32 {
-        (**self).value()
+        <V as ParentView>::value(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -92,7 +92,7 @@ impl ParentView for super::ParentRef<'_> {
 
 impl ParentView for super::ParentBuf {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::ParentRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -106,7 +106,7 @@ impl ParentView for super::ParentBuf {
 
 impl ParentView for super::ParentMut<'_> {
     fn value(&self) -> u32 {
-        self.as_ref().value()
+        super::ParentRef::value(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

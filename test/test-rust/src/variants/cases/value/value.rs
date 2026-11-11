@@ -210,15 +210,15 @@ impl Value {
 impl Ord for Value {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Boolean(a), Self::Boolean(b)) => a.cmp(b),
-            (Self::Unsigned64(a), Self::Unsigned64(b)) => a.cmp(b),
-            (Self::Id(a), Self::Id(b)) => a.cmp(b),
-            (Self::Text(a), Self::Text(b)) => a.cmp(b),
-            (Self::Point(a), Self::Point(b)) => a.cmp(b),
-            (Self::Person(a), Self::Person(b)) => a.cmp(b),
-            (Self::Label(a), Self::Label(b)) => a.cmp(b),
-            (Self::Color(a), Self::Color(b)) => a.cmp(b),
-            (Self::Shape(a), Self::Shape(b)) => a.cmp(b),
+            (Self::Boolean(a), Self::Boolean(b)) => Ord::cmp(a, b),
+            (Self::Unsigned64(a), Self::Unsigned64(b)) => Ord::cmp(a, b),
+            (Self::Id(a), Self::Id(b)) => Ord::cmp(a, b),
+            (Self::Text(a), Self::Text(b)) => Ord::cmp(a, b),
+            (Self::Point(a), Self::Point(b)) => Ord::cmp(a, b),
+            (Self::Person(a), Self::Person(b)) => Ord::cmp(a, b),
+            (Self::Label(a), Self::Label(b)) => Ord::cmp(a, b),
+            (Self::Color(a), Self::Color(b)) => Ord::cmp(a, b),
+            (Self::Shape(a), Self::Shape(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -227,7 +227,7 @@ impl Ord for Value {
 
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 

@@ -45,15 +45,15 @@ pub trait PaddedView {
 
 impl<V: PaddedView> PaddedView for &V {
     fn a(&self) -> impl crate::format::examples::LineView {
-        (**self).a()
+        <V as PaddedView>::a(self)
     }
 
     fn x(&self) -> u32 {
-        (**self).x()
+        <V as PaddedView>::x(self)
     }
 
     fn b(&self) -> impl crate::format::examples::LineView {
-        (**self).b()
+        <V as PaddedView>::b(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -67,15 +67,15 @@ impl<V: PaddedView> PaddedView for &V {
 
 impl<V: PaddedView> PaddedView for &mut V {
     fn a(&self) -> impl crate::format::examples::LineView {
-        (**self).a()
+        <V as PaddedView>::a(self)
     }
 
     fn x(&self) -> u32 {
-        (**self).x()
+        <V as PaddedView>::x(self)
     }
 
     fn b(&self) -> impl crate::format::examples::LineView {
-        (**self).b()
+        <V as PaddedView>::b(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -133,15 +133,15 @@ impl PaddedView for super::PaddedRef<'_> {
 
 impl PaddedView for super::PaddedBuf {
     fn a(&self) -> impl crate::format::examples::LineView {
-        self.as_ref().a()
+        super::PaddedRef::a(&self.as_ref())
     }
 
     fn x(&self) -> u32 {
-        self.as_ref().x()
+        super::PaddedRef::x(&self.as_ref())
     }
 
     fn b(&self) -> impl crate::format::examples::LineView {
-        self.as_ref().b()
+        super::PaddedRef::b(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -155,15 +155,15 @@ impl PaddedView for super::PaddedBuf {
 
 impl PaddedView for super::PaddedMut<'_> {
     fn a(&self) -> impl crate::format::examples::LineView {
-        self.as_ref().a()
+        super::PaddedRef::a(&self.as_ref())
     }
 
     fn x(&self) -> u32 {
-        self.as_ref().x()
+        super::PaddedRef::x(&self.as_ref())
     }
 
     fn b(&self) -> impl crate::format::examples::LineView {
-        self.as_ref().b()
+        super::PaddedRef::b(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

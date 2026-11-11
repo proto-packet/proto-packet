@@ -64,7 +64,7 @@ pub trait TextsView {
 
 impl<V: TextsView> TextsView for &V {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
-        (**self).texts()
+        <V as TextsView>::texts(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -78,7 +78,7 @@ impl<V: TextsView> TextsView for &V {
 
 impl<V: TextsView> TextsView for &mut V {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
-        (**self).texts()
+        <V as TextsView>::texts(self)
     }
 
     fn encoded_len(&self) -> usize {
@@ -125,7 +125,7 @@ impl TextsView for super::TextsRef<'_> {
 
 impl TextsView for super::TextsBuf {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
-        self.as_ref().texts()
+        super::TextsRef::texts(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {
@@ -139,7 +139,7 @@ impl TextsView for super::TextsBuf {
 
 impl TextsView for super::TextsMut<'_> {
     fn texts(&self) -> impl proto_packet::io::ListView<Item = &str> {
-        self.as_ref().texts()
+        super::TextsRef::texts(&self.as_ref())
     }
 
     fn encoded_len(&self) -> usize {

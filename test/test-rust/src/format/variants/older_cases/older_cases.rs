@@ -66,7 +66,7 @@ impl OlderCases {
 impl Ord for OlderCases {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Text(a), Self::Text(b)) => a.cmp(b),
+            (Self::Text(a), Self::Text(b)) => Ord::cmp(a, b),
             (Self::Unrecognized(a), Self::Unrecognized(b)) => a.cmp(b),
             _ => self.tag_number().cmp(&other.tag_number()),
         }
@@ -75,7 +75,7 @@ impl Ord for OlderCases {
 
 impl PartialOrd for OlderCases {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(Ord::cmp(self, other))
     }
 }
 
