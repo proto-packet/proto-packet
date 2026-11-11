@@ -24,23 +24,20 @@ in the linker & make `link(self)` take no file) (`proto-packet-link/src/linker/s
 
 ### Naming Conflicts
 
-Some schema names generate Rust that doesn't compile, or that hides other items.
+A field named like a method of a trait keeps its name, so its getter & the method share it. (ex:
+rename the getter, like `self_` for the field `self`) (`fields.rs`)
 
-- A service call named like a method `Arc<S>` already has through a prelude trait (ex: `clone`,
-  `into`, `to_owned`, `as_ref`) calls that method in the router, since the router calls
-  `service.{call}(request)` on an `Arc<S>`. The generated code doesn't compile. (ex: call it fully
-  qualified, `<S as Svc>::clone(&service, request)`) (`gen_service.rs`)
-- A service named `S` is shadowed by the router's type parameter `S`, in `where S: S + 'static`. The
-  generated code doesn't compile. (`gen_service.rs`)
-- A top-level mod named `lib` generates both `src/lib.rs` & `src/lib/mod.rs`, which doesn't compile.
-  The check compares child mods to `mod`, the parent's file, but the root's file is `lib.rs`, so a
-  harmless root mod named `mod` is rejected instead. (`generate.rs`)
-- A field named like a prelude trait method (ex: `clone`, `eq`, `cmp`, `into`, `max`) gets a getter
-  that hides the trait method, since inherent methods win. (ex: `a.clone()` returns the field, &
-  `a.eq(&b)` stops compiling) A non-`Copy` field named `deref` or `borrow` fails clippy's
-  `should_implement_trait`. Only the names of generated methods are reserved. (`fields.rs`)
-- The errors for a conflict with a child mod name the Rust folder, not the schema mod path: empty at
-  the root, & `self_` instead of `self`. (`generate.rs`)
+- A method that borrows is hidden by the getter. (ex: `a.clone()` returns the field `clone`, so the
+  value is cloned with `Clone::clone(&a)`)
+- A method that takes the value hides the getter. (ex: `a.max()` is `Ord::max`, so the field `max`
+  is read with `A::max(&a)`)
+- A field named `from` makes `ABuf::from(&a)` ambiguous, since the `View` trait has a getter of that
+  name.
+
+### Large Variant Cases
+
+A variant with a case much larger than its others fails clippy's `large_enum_variant` in the
+generated code, until the case is a `box` in the schema. (`gen_variant.rs`)
 
 ### Variant `u128` & `i128` Cases
 
