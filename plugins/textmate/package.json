@@ -1,0 +1,30 @@
+{
+  "name": "proto-packet",
+  "displayName": "ProtoPacket",
+  "description": "The syntax of ProtoPacket schema files.",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": "https://github.com/proto-packet/proto-packet",
+  "contributes": {
+    "languages": [
+      {
+        "id": "pps",
+        "aliases": [
+          "ProtoPacket Schema",
+          "pps"
+        ],
+        "extensions": [
+          ".pps"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pps",
+        "scopeName": "source.pps",
+        "path": "./syntaxes/pps.tmLanguage.json"
+      }
+    ]
+  }
+}
