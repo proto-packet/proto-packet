@@ -15,7 +15,7 @@ pub trait Send: std::marker::Send + std::marker::Sync {
 /// Creates the axum router of the `Send` service.
 pub fn send_router<S>(service: std::sync::Arc<S>) -> proto_packet::axum::Router
 where
-    S: Send + 'static,
+    S: self::Send + 'static,
 {
     proto_packet::axum::Router::new().route(
         "/names.prelude.Send/call",
@@ -28,7 +28,9 @@ where
                 let service = service.clone();
                 async move {
                     let proto_packet::axum::Json(request) = request?;
-                    service.call(request).await.map(proto_packet::axum::Json)
+                    <S as self::Send>::call(&service, request)
+                        .await
+                        .map(proto_packet::axum::Json)
                 }
             }
         }),

@@ -18,7 +18,7 @@ pub trait KeywordService: Send + Sync {
 /// Creates the axum router of the `KeywordService` service.
 pub fn keyword_service_router<S>(service: std::sync::Arc<S>) -> proto_packet::axum::Router
 where
-    S: KeywordService + 'static,
+    S: self::KeywordService + 'static,
 {
     proto_packet::axum::Router::new()
         .route(
@@ -32,7 +32,9 @@ where
                     let service = service.clone();
                     async move {
                         let proto_packet::axum::Json(request) = request?;
-                        service.r#type(request).await.map(proto_packet::axum::Json)
+                        <S as self::KeywordService>::r#type(&service, request)
+                            .await
+                            .map(proto_packet::axum::Json)
                     }
                 }
             }),
@@ -48,7 +50,9 @@ where
                     let service = service.clone();
                     async move {
                         let proto_packet::axum::Json(request) = request?;
-                        service.self_(request).await.map(proto_packet::axum::Json)
+                        <S as self::KeywordService>::self_(&service, request)
+                            .await
+                            .map(proto_packet::axum::Json)
                     }
                 }
             }),

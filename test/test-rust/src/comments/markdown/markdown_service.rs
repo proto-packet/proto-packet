@@ -54,7 +54,7 @@ pub trait MarkdownService: Send + Sync {
 /// Creates the axum router of the `MarkdownService` service.
 pub fn markdown_service_router<S>(service: std::sync::Arc<S>) -> proto_packet::axum::Router
 where
-    S: MarkdownService + 'static,
+    S: self::MarkdownService + 'static,
 {
     proto_packet::axum::Router::new().route(
         "/comments.markdown.MarkdownService/only",
@@ -67,7 +67,9 @@ where
                 let service = service.clone();
                 async move {
                     let proto_packet::axum::Json(request) = request?;
-                    service.only(request).await.map(proto_packet::axum::Json)
+                    <S as self::MarkdownService>::only(&service, request)
+                        .await
+                        .map(proto_packet::axum::Json)
                 }
             }
         }),

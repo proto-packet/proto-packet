@@ -72,6 +72,10 @@ fn gen_signature(typing: Typing<'_>, call: &ServiceCall) -> Signature {
 ///
 /// Each call is routed as a JSON `POST` to `/{mod_path}.{Service}/{call}`. A request body that
 /// isn't valid JSON for the call is a service error.
+///
+/// # Note
+/// - The trait is named by its path, since a service named `S` is hidden by the type parameter.
+/// - A call is made by its path, since a call named like a method of an `Arc` would call that.
 fn gen_router(typing: Typing<'_>, mod_path: ModPathRef<'_>, service: &Service) -> Function {
     let service_type: String = ident(&service.type_name());
     let param: &str = if service.calls().is_empty() {
@@ -81,7 +85,10 @@ fn gen_router(typing: Typing<'_>, mod_path: ModPathRef<'_>, service: &Service) -
     };
     let signature: Signature =
         Signature::from(format!("{}_router", snake_case(&service.type_name())))
-            .with_generic(Var::from(("S", format!("{} + 'static", service_type))))
+            .with_generic(Var::from((
+                "S",
+                format!("self::{} + 'static", service_type),
+            )))
             .with_param(Var::from((
                 param,
                 RustType::from("std::sync::Arc").with_generic("S"),
@@ -104,13 +111,14 @@ fn gen_router(typing: Typing<'_>, mod_path: ModPathRef<'_>, service: &Service) -
                     let service = service.clone(); \
                     async move {{ \
                         let proto_packet::axum::Json(request) = request?; \
-                        service.{}(request).await.map(proto_packet::axum::Json) \
+                        <S as self::{}>::{}(&service, request).await.map(proto_packet::axum::Json) \
                     }} \
                 }} \
             }}))",
             path,
             typing.prelude(PreludeName::Result),
             typing.rust_type(call.request()),
+            service_type,
             ident(&call.call_name())
         ));
     }

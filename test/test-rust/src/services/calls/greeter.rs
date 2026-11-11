@@ -33,7 +33,7 @@ pub trait Greeter: Send + Sync {
 /// Creates the axum router of the `Greeter` service.
 pub fn greeter_router<S>(service: std::sync::Arc<S>) -> proto_packet::axum::Router
 where
-    S: Greeter + 'static,
+    S: self::Greeter + 'static,
 {
     proto_packet::axum::Router::new()
         .route(
@@ -47,7 +47,9 @@ where
                     let service = service.clone();
                     async move {
                         let proto_packet::axum::Json(request) = request?;
-                        service.greet(request).await.map(proto_packet::axum::Json)
+                        <S as self::Greeter>::greet(&service, request)
+                            .await
+                            .map(proto_packet::axum::Json)
                     }
                 }
             }),
@@ -63,7 +65,9 @@ where
                     let service = service.clone();
                     async move {
                         let proto_packet::axum::Json(request) = request?;
-                        service.step(request).await.map(proto_packet::axum::Json)
+                        <S as self::Greeter>::step(&service, request)
+                            .await
+                            .map(proto_packet::axum::Json)
                     }
                 }
             }),
@@ -79,7 +83,9 @@ where
                     let service = service.clone();
                     async move {
                         let proto_packet::axum::Json(request) = request?;
-                        service.color(request).await.map(proto_packet::axum::Json)
+                        <S as self::Greeter>::color(&service, request)
+                            .await
+                            .map(proto_packet::axum::Json)
                     }
                 }
             }),
