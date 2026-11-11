@@ -107,19 +107,14 @@ overflow the stack) (`gen_struct.rs`, `gen_message.rs` & `gen_variant.rs`)
 
 ## Compile
 
-### Target Folder
+### Target Mode
 
-Compiling replaces the target folder with the generated files.
-(`proto-packet-compile/src/compile.rs`)
+The config's `target_mode` only has `replace`, which clears the target folder & fails if the folder
+holds a file that was not generated. (`proto-packet-compile/src/target_mode.rs`)
 
-- Any existing target folder is emptied. Only a target containing the source or a schema file is
-  refused, so a typo like `compile rust schemas src` instead of `src/generated` silently deletes a
-  handwritten `src/`.
-  (ex: refuse a non-empty target unless every file starts with the generated header, or use a marker
-  file)
-- Replacing the target isn't atomic: the old files are deleted first, then the new ones are written
-  one at a time. A write error partway through leaves a partial target, & the old output is gone.
-  (ex: write to a temporary sibling folder, then rename it into place)
+- A folder shared with handwritten files can't be a target. (ex: a mode that writes its files &
+  deletes nothing, like `protoc`)
+- A file that an editor or the system adds to the target fails the compile. (ex: `.DS_Store`)
 
 ### Schema Extension
 
