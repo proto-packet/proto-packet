@@ -1,0 +1,262 @@
+// Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+// A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+//
+//     let indented = "is not a code block";
+//
+// # Not a heading.
+// - Not a list.
+// + Not a list.
+// 1. Not a list.
+// > Not a quote.
+// *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+// Not | a
+// --- | ---
+// table | here
+// ===
+// Not an entity &amp; &#35; or an escape \* or code `unmatched.
+// ```
+// fn not_a_doctest() { this is not rust }
+// ```
+// <script>alert(1)</script> <br> <unclosed
+// [Not a link](http://example.com) ![or an image](x.png) [^note]
+// A tab	is a space.
+enum MarkdownEnum {
+
+    // Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+    // A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+    //
+    //     let indented = "is not a code block";
+    //
+    // # Not a heading.
+    // - Not a list.
+    // + Not a list.
+    // 1. Not a list.
+    // > Not a quote.
+    // *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+    // Not | a
+    // --- | ---
+    // table | here
+    // ===
+    // Not an entity &amp; &#35; or an escape \* or code `unmatched.
+    // ```
+    // fn not_a_doctest() { this is not rust }
+    // ```
+    // <script>alert(1)</script> <br> <unclosed
+    // [Not a link](http://example.com) ![or an image](x.png) [^note]
+    // A tab	is a space.
+    Only = 1;
+}
+
+// Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+// A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+//
+//     let indented = "is not a code block";
+//
+// # Not a heading.
+// - Not a list.
+// + Not a list.
+// 1. Not a list.
+// > Not a quote.
+// *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+// Not | a
+// --- | ---
+// table | here
+// ===
+// Not an entity &amp; &#35; or an escape \* or code `unmatched.
+// ```
+// fn not_a_doctest() { this is not rust }
+// ```
+// <script>alert(1)</script> <br> <unclosed
+// [Not a link](http://example.com) ![or an image](x.png) [^note]
+// A tab	is a space.
+variant MarkdownVariant {
+
+    // Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+    // A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+    //
+    //     let indented = "is not a code block";
+    //
+    // # Not a heading.
+    // - Not a list.
+    // + Not a list.
+    // 1. Not a list.
+    // > Not a quote.
+    // *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+    // Not | a
+    // --- | ---
+    // table | here
+    // ===
+    // Not an entity &amp; &#35; or an escape \* or code `unmatched.
+    // ```
+    // fn not_a_doctest() { this is not rust }
+    // ```
+    // <script>alert(1)</script> <br> <unclosed
+    // [Not a link](http://example.com) ![or an image](x.png) [^note]
+    // A tab	is a space.
+    Only: u32 = 1;
+}
+
+// Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+// A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+//
+//     let indented = "is not a code block";
+//
+// # Not a heading.
+// - Not a list.
+// + Not a list.
+// 1. Not a list.
+// > Not a quote.
+// *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+// Not | a
+// --- | ---
+// table | here
+// ===
+// Not an entity &amp; &#35; or an escape \* or code `unmatched.
+// ```
+// fn not_a_doctest() { this is not rust }
+// ```
+// <script>alert(1)</script> <br> <unclosed
+// [Not a link](http://example.com) ![or an image](x.png) [^note]
+// A tab	is a space.
+struct MarkdownStruct {
+
+    // Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+    // A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+    //
+    //     let indented = "is not a code block";
+    //
+    // # Not a heading.
+    // - Not a list.
+    // + Not a list.
+    // 1. Not a list.
+    // > Not a quote.
+    // *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+    // Not | a
+    // --- | ---
+    // table | here
+    // ===
+    // Not an entity &amp; &#35; or an escape \* or code `unmatched.
+    // ```
+    // fn not_a_doctest() { this is not rust }
+    // ```
+    // <script>alert(1)</script> <br> <unclosed
+    // [Not a link](http://example.com) ![or an image](x.png) [^note]
+    // A tab	is a space.
+    only: u32;
+}
+
+// Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+// A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+//
+//     let indented = "is not a code block";
+//
+// # Not a heading.
+// - Not a list.
+// + Not a list.
+// 1. Not a list.
+// > Not a quote.
+// *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+// Not | a
+// --- | ---
+// table | here
+// ===
+// Not an entity &amp; &#35; or an escape \* or code `unmatched.
+// ```
+// fn not_a_doctest() { this is not rust }
+// ```
+// <script>alert(1)</script> <br> <unclosed
+// [Not a link](http://example.com) ![or an image](x.png) [^note]
+// A tab	is a space.
+message MarkdownMessage {
+
+    // Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+    // A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+    //
+    //     let indented = "is not a code block";
+    //
+    // # Not a heading.
+    // - Not a list.
+    // + Not a list.
+    // 1. Not a list.
+    // > Not a quote.
+    // *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+    // Not | a
+    // --- | ---
+    // table | here
+    // ===
+    // Not an entity &amp; &#35; or an escape \* or code `unmatched.
+    // ```
+    // fn not_a_doctest() { this is not rust }
+    // ```
+    // <script>alert(1)</script> <br> <unclosed
+    // [Not a link](http://example.com) ![or an image](x.png) [^note]
+    // A tab	is a space.
+    only: u32 = 1;
+}
+
+// Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+// A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+//
+//     let indented = "is not a code block";
+//
+// # Not a heading.
+// - Not a list.
+// + Not a list.
+// 1. Not a list.
+// > Not a quote.
+// *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+// Not | a
+// --- | ---
+// table | here
+// ===
+// Not an entity &amp; &#35; or an escape \* or code `unmatched.
+// ```
+// fn not_a_doctest() { this is not rust }
+// ```
+// <script>alert(1)</script> <br> <unclosed
+// [Not a link](http://example.com) ![or an image](x.png) [^note]
+// A tab	is a space.
+service MarkdownService {
+
+    // Text like Vec<u32> & [Thing] is not HTML or a link, but `Vec<u32>` & `[Thing]` are code.
+    // A URL like https://example.com/a_b?c=d&e=f is a link. (so is http://example.com/x_(y))
+    //
+    //     let indented = "is not a code block";
+    //
+    // # Not a heading.
+    // - Not a list.
+    // + Not a list.
+    // 1. Not a list.
+    // > Not a quote.
+    // *Not emphasis* & _not emphasis_ & ~~not struck~~ & __init__.
+    // Not | a
+    // --- | ---
+    // table | here
+    // ===
+    // Not an entity &amp; &#35; or an escape \* or code `unmatched.
+    // ```
+    // fn not_a_doctest() { this is not rust }
+    // ```
+    // <script>alert(1)</script> <br> <unclosed
+    // [Not a link](http://example.com) ![or an image](x.png) [^note]
+    // A tab	is a space.
+    only: u32 returns u32;
+}
+
+//
+enum BlankComment {
+
+    //
+    Only = 1;
+}
+
+//
+// An enum with blank lines around its comment.
+//
+enum PaddedComment {
+
+    //
+    // The only case.
+    //
+    Only = 1;
+}
