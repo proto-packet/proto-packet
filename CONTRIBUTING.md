@@ -34,7 +34,9 @@ The folders:
 - `[dep/{language}]`: the runtime libraries, if working on a specific language.
 - `[test]`: the end-to-end tests, if working on the tests as a whole.
 - `[test/{language}]`: the end-to-end tests, if working on a specific language.
+- `[plugins]`: the editor plugins, if working on the plugins as a whole.
+- `[plugins/{plugin}]`: the editor plugins, if working on a specific plugin.
 
 A `{slice}` is a compiler crate's name without `proto-packet-`. (ex: `[compile/parse]` for
 `proto-packet-parse`) A `{language}` is a language folder's name without `dep-` or `test-`. (ex:
-`[dep/rust]` for `dep/dep-rust`)
+`[dep/rust]` for `dep/dep-rust`) A `{plugin}` is a plugin folder's name. (ex: `[plugins/textmate]`)
