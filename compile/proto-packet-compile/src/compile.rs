@@ -39,9 +39,9 @@ impl Language {
 
 /// Compiles the project in the `source` folder to `language` code in the `target` folder.
 ///
-/// The code is generated in memory first. Only if that succeeds are the contents of the `target`
-/// folder deleted & the generated files written to it. A `target` folder inside the `source` folder
-/// is fine, as long as it has no schema files.
+/// The code is generated in memory first. Only if that succeeds are the generated files written to
+/// the `target` folder, by the target mode of the config. A `target` folder inside the `source`
+/// folder is fine, as long as it has no schema files.
 pub fn compile(language: Language, source: &Path, target: &Path) -> Result<(), Report> {
     check_target(source, target)?;
     let config: Config = Config::read(source)?;
@@ -49,7 +49,7 @@ pub fn compile(language: Language, source: &Path, target: &Path) -> Result<(), R
     check_schema_files(&sources, target)?;
     let project: Project = check_sources(&sources)?;
     let files: Vec<GeneratedFile> = generate(language, &project)?;
-    write_files(target, &files)
+    config.target_mode.write(target, &files)
 }
 
 /// Generates the `language` code of the linked `project`, in memory.
@@ -100,39 +100,6 @@ fn check_schema_files(sources: &[SchemaSource], target: &Path) -> Result<(), Rep
                 "the target folder would delete a schema file",
             ))
             .with_entry(properties));
-        }
-    }
-    Ok(())
-}
-
-/// Replaces the contents of the `target` folder with the generated `files`.
-///
-/// The folder itself is kept, so a target of `.` or a symlink to a folder works.
-fn write_files(target: &Path, files: &[GeneratedFile]) -> Result<(), Report> {
-    let write_error = |path: &Path, error| {
-        path_report("C_WRITE_TARGET", "could not write the target", path, error)
-    };
-    if target.exists() {
-        clear_folder(target).map_err(|error| write_error(target, error))?;
-    }
-    for file in files {
-        let path: PathBuf = target.join(&file.path);
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).map_err(|error| write_error(parent, error))?;
-        }
-        std::fs::write(&path, &file.code).map_err(|error| write_error(&path, error))?;
-    }
-    Ok(())
-}
-
-/// Deletes the contents of the `folder`. (symlinks are deleted, not followed)
-fn clear_folder(folder: &Path) -> std::io::Result<()> {
-    for entry in std::fs::read_dir(folder)? {
-        let entry: std::fs::DirEntry = entry?;
-        if entry.file_type()?.is_dir() {
-            std::fs::remove_dir_all(entry.path())?;
-        } else {
-            std::fs::remove_file(entry.path())?;
         }
     }
     Ok(())

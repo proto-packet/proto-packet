@@ -1,3 +1,4 @@
+use crate::TargetMode;
 use crate::report::path_report;
 use clerr::{Code, Properties, Report};
 use serde::Deserialize;
@@ -9,12 +10,16 @@ use std::path::{Path, PathBuf};
 pub struct Config {
     /// The schema file extension. (default: `.pps`)
     pub schema_extension: String,
+
+    /// What a compile does with the files already in its target folder. (default: `replace`)
+    pub target_mode: TargetMode,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             schema_extension: ".pps".to_string(),
+            target_mode: TargetMode::default(),
         }
     }
 }
