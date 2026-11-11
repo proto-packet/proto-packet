@@ -8,4 +8,5 @@ generated code is checked & tested.
 - `schema/`: the test schema project, with a folder per feature.
 - `test-rust/`: the Rust project.
 
-Run `build.sh` to compile the schema, then format, lint & test each project.
+Run `build.sh` to compile the schema, then lint, format & test each project. The generated code is
+linted before it is formatted, since a project may not format it.
