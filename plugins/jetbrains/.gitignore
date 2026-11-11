@@ -1,0 +1,12 @@
+# Mac
+.DS_Store
+
+# JetBrains
+.idea/*
+!.idea/dictionaries/
+*.iml
+
+# Gradle
+.gradle/
+.intellijPlatform/
+build/

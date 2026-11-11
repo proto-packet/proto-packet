@@ -1,0 +1,24 @@
+<idea-plugin>
+    <id>io.github.protopacket</id>
+    <name>ProtoPacket</name>
+    <vendor url="https://github.com/proto-packet/proto-packet">ProtoPacket</vendor>
+    <description><![CDATA[
+        Support for ProtoPacket schema files.
+        <ul>
+            <li>Highlights the syntax of the <code>.pps</code> files.</li>
+            <li>Shows the errors of a schema file as it is edited, from the language server of the
+                <code>packet</code> compiler.</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lsp</depends>
+    <depends>org.jetbrains.plugins.textmate</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <textmate.bundleProvider
+                implementation="io.github.protopacket.jetbrains.SchemaBundleProvider"/>
+        <platform.lsp.integrationProvider
+                implementation="io.github.protopacket.jetbrains.SchemaLspProvider"/>
+    </extensions>
+</idea-plugin>
