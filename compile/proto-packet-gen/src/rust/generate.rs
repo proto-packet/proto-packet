@@ -19,7 +19,7 @@ pub fn generate(project: &Project) -> Result<Vec<GeneratedFile>, GenError> {
         node.schema_file = Some((mod_path.to_ref(), schema_file));
     }
     let mut files: Vec<GeneratedFile> = Vec::default();
-    root.generate(project, "", &mut files)?;
+    root.generate(project, "", "", &mut files)?;
     Ok(files)
 }
 
@@ -32,12 +32,18 @@ struct ModNode<'a> {
 
 impl ModNode<'_> {
     /// Generates the files of the node & its descendants in the `dir`. (empty for the root)
+    ///
+    /// # Note
+    /// - The `path` is the schema mod path of the node, which names it in an error.
+    /// - A child can't be named like the file of the node, which is `lib` in the root.
     fn generate(
         &self,
         project: &Project,
+        path: &str,
         dir: &str,
         files: &mut Vec<GeneratedFile>,
     ) -> Result<(), GenError> {
+        let own_file: &str = if dir.is_empty() { "lib" } else { "mod" };
         let mut code: String = header();
         let mut mod_names: BTreeSet<String> = BTreeSet::default();
         if let Some((mod_path, schema_file)) = self.schema_file {
@@ -45,8 +51,8 @@ impl ModNode<'_> {
             let mut mods: String = String::default();
             for type_dec in schema_file.type_decs() {
                 let mod_name: String = snake_case(&type_dec.type_name());
-                if mod_name == "mod" || !mod_names.insert(mod_name.clone()) {
-                    return Err(conflict(mod_path.as_ref(), &mod_name));
+                if mod_name == own_file || !mod_names.insert(mod_name.clone()) {
+                    return Err(conflict(path, &mod_name));
                 }
                 uses.push_str(&format!("pub use {}::*;\n", ident(&mod_name)));
                 if mod_path
@@ -69,8 +75,8 @@ impl ModNode<'_> {
             code.push('\n');
         }
         for (mod_name, child) in &self.children {
-            if mod_name == "mod" || !mod_names.insert(mod_name.clone()) {
-                return Err(conflict(dir.trim_end_matches('/'), mod_name));
+            if mod_name == own_file || !mod_names.insert(mod_name.clone()) {
+                return Err(conflict(path, mod_name));
             }
             if !is_snake_case(mod_name) {
                 code.push_str("#[allow(non_snake_case)]\n");
@@ -80,8 +86,13 @@ impl ModNode<'_> {
                 code.push_str("#[allow(clippy::module_inception)]\n");
             }
             code.push_str(&format!("pub mod {};\n", ident(mod_name)));
+            let child_path: String = if path.is_empty() {
+                mod_name.clone()
+            } else {
+                format!("{}.{}", path, mod_name)
+            };
             let child_dir: String = format!("{}{}/", dir, child_file_name);
-            child.generate(project, &child_dir, files)?;
+            child.generate(project, &child_path, &child_dir, files)?;
         }
         let path: String = if dir.is_empty() {
             "lib.rs".to_string()
@@ -156,10 +167,10 @@ fn file_name(mod_name: &str) -> String {
     ident(mod_name).trim_start_matches("r#").to_string()
 }
 
-/// Creates the error for the conflicting `mod_name` in the `mod_path`.
+/// Creates the error for the conflicting `mod_name` in the schema `mod_path`.
 fn conflict(mod_path: &str, mod_name: &str) -> GenError {
     GenError::ModNameConflict {
-        mod_path: mod_path.replace('/', "."),
+        mod_path: mod_path.to_string(),
         mod_name: mod_name.to_string(),
     }
 }
