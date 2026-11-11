@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 use clerr::Report;
 use proto_packet_compile::{Language, path_report};
+use proto_packet_lsp::LanguageServer;
 use proto_packet_parse::SchemaFileTree;
 use proto_packet_tree::SchemaFile;
 use std::path::{Path, PathBuf};
@@ -52,6 +53,11 @@ enum Command {
         /// The target folder.
         target: PathBuf,
     },
+
+    /// Runs the language server on the standard input & output.
+    ///
+    /// An editor starts it to show the errors of the schema files that are open.
+    Lsp,
 }
 
 fn main() -> ExitCode {
@@ -64,6 +70,7 @@ fn main() -> ExitCode {
             source,
             target,
         } => proto_packet_compile::compile(language, &source, &target),
+        Command::Lsp => LanguageServer::serve_stdio(),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,

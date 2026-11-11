@@ -10,6 +10,7 @@ repository.workspace = true
 
 [dependencies]
 proto-packet-compile = { workspace = true }
+proto-packet-lsp = { workspace = true }
 proto-packet-parse = { workspace = true }
 proto-packet-tree = { workspace = true }
 proto-packet-validate = { workspace = true }
