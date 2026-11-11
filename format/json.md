@@ -30,13 +30,14 @@ element of a list or an array is `null`, & so is an absent value of a map. (ex: 
 ## Numbers In Strings
 
 Many JSON parsers read a plain number as a float, which can't hold every number. So these types are
-strings, & readers reject a plain number for one.
+strings, & readers reject a plain number for one, except for a float.
 
 - A `u64`, `i64`, `u128` or `i128` is its digits. (ex: `"18446744073709551615"`)
 - A time other than a `date` is the integer it is stored as. (ex: `"1700000000000"` for a
   `timestamp`)
 - A float is the shortest number that reads back as the same float. (ex: `"1.5"`) A float that
-  isn't finite is `"NaN"`, `"Infinity"` or `"-Infinity"`.
+  isn't finite is `"NaN"`, `"Infinity"` or `"-Infinity"`. Readers also take a plain number, for
+  JSON written before floats were strings. It is only as exact as the parser that reads it.
 - A decimal has all `S` of its fraction digits. (ex: `"1.50"`) A reader takes fewer fraction digits
   than its scale, but not more. (ex: `"1.5"`)
 
@@ -100,7 +101,7 @@ Readers reject JSON when:
 - A tag-numbered value isn't valid for a field or case the reader knows.
 - Base-64 isn't valid, or doesn't have its padding.
 - A number in a string isn't written as JSON writes a number, or is out of the range of its type.
-- A type that is a number in a string is a plain number.
+- A type that is a number in a string, other than a float, is a plain number.
 - A map is an object where its key isn't text, or an array where it is.
 - A map repeats a key, or an entry of an array isn't a key & a value.
 - An array doesn't have exactly its length of elements, or of bytes.

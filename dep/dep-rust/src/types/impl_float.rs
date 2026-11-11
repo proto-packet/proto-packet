@@ -176,7 +176,8 @@ macro_rules! impl_float {
             ///
             /// # Note
             /// - The text is parsed here, so it reads back the exact float that was written.
-            /// - A plain number is rejected, since it is only as exact as the parser that read it.
+            /// - A plain number is also read, for JSON written before floats were text. It is only
+            ///   as exact as the parser that read it.
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::Deserializer<'de>,
@@ -187,7 +188,33 @@ macro_rules! impl_float {
                     type Value = $name;
 
                     fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        f.write_str("a float as text")
+                        f.write_str("a float as text, or a number")
+                    }
+
+                    fn visit_f64<E>(self, value: f64) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        let float: $float = value as $float;
+                        if float.is_finite() {
+                            Ok($name::new(float))
+                        } else {
+                            Err(E::invalid_value(serde::de::Unexpected::Float(value), &self))
+                        }
+                    }
+
+                    fn visit_i64<E>(self, value: i64) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        Ok($name::new(value as $float))
+                    }
+
+                    fn visit_u64<E>(self, value: u64) -> Result<$name, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        Ok($name::new(value as $float))
                     }
 
                     fn visit_str<E>(self, text: &str) -> Result<$name, E>
@@ -212,7 +239,7 @@ macro_rules! impl_float {
                     }
                 }
 
-                deserializer.deserialize_str(FloatVisitor)
+                deserializer.deserialize_any(FloatVisitor)
             }
         }
     };

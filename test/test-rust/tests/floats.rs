@@ -142,11 +142,23 @@ fn json_reads_back_the_exact_float() {
 }
 
 #[test]
+fn json_reads_a_plain_number() {
+    for (json, float32, float64) in [
+        (r#"{"float32":1.5,"float64":-2.25}"#, 1.5, -2.25),
+        (r#"{"float32":2,"float64":-3}"#, 2.0, -3.0),
+        (r#"{"float32":1e-7,"float64":1e300}"#, 1e-7, 1e300),
+    ] {
+        let read: FloatFields = serde_json::from_str(json).unwrap();
+        assert_eq!(read.float32(), Float32::new(float32), "{}", json);
+        assert_eq!(read.float64(), Float64::new(float64), "{}", json);
+    }
+}
+
+#[test]
 fn json_rejects_invalid_floats() {
     for json in [
-        r#"{"float32":1.5,"float64":"0"}"#,     // a plain number
-        r#"{"float32":"0","float64":2}"#,       // a plain whole number
         r#"{"float32":"1e100","float64":"0"}"#, // out of the range of an `f32`
+        r#"{"float32":1e100,"float64":"0"}"#,   // a plain number out of the range of an `f32`
         r#"{"float32":"0","float64":"1e999"}"#, // out of the range of an `f64`
         r#"{"float32":"nan","float64":"0"}"#,   // not one of the names
         r#"{"float32":"inf","float64":"0"}"#,   // another name the standard parser takes
