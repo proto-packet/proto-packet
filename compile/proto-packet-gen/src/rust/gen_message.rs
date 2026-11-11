@@ -343,7 +343,7 @@ fn gen_json(
         {serde}::ser::SerializeMap::end(map)",
         serde = SERDE,
         types = TYPES,
-        fields = serialize.join(" "),
+        fields = serialize.join("\n"),
     );
     format!(
         "{serde_impls}
@@ -378,6 +378,6 @@ impl {types}::JsonMessage for {type_name} {{
         name_param = name_param,
         map_param = map_param,
         read_body = read_body,
-        merge = merge.join(" "),
+        merge = merge.join("\n"),
     )
 }
