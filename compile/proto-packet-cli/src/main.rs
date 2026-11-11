@@ -39,7 +39,8 @@ enum Command {
 
     /// Compiles the project in the source folder to code in the target folder.
     ///
-    /// The contents of the target folder are replaced once the code is generated.
+    /// The contents of the target folder are replaced once the code is generated. The compile
+    /// fails if the folder holds a file that was not generated.
     Compile {
         /// The target language. (rust)
         #[arg(value_parser = parse_language)]
