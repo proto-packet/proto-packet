@@ -3,6 +3,7 @@ use proto_packet::axum::body::{Body, to_bytes};
 use proto_packet::axum::http::{Request, StatusCode};
 use proto_packet::service::{ServiceError, ServiceErrorReason};
 use proto_packet_test::names::keywords::{KeywordService, keyword_service_router};
+use proto_packet_test::names::methods::{S, s_router};
 use proto_packet_test::services::calls::{GreetRequest, GreetResponse, Greeter, greeter_router};
 use proto_packet_test::types::{Color, Point};
 use std::sync::Arc;
@@ -36,6 +37,27 @@ impl KeywordService for TestKeywordService {
 
     async fn self_(&self, request: u32) -> Result<u32, ServiceError> {
         Ok(request + 2)
+    }
+}
+
+/// The test service with calls named like methods.
+struct TestMethodService;
+
+impl S for TestMethodService {
+    async fn clone(&self, request: u32) -> Result<u32, ServiceError> {
+        Ok(request + 1)
+    }
+
+    async fn into(&self, request: u32) -> Result<u32, ServiceError> {
+        Ok(request + 2)
+    }
+
+    async fn to_owned(&self, request: u32) -> Result<u32, ServiceError> {
+        Ok(request + 3)
+    }
+
+    async fn as_ref(&self, request: u32) -> Result<u32, ServiceError> {
+        Ok(request + 4)
     }
 }
 
@@ -121,6 +143,21 @@ async fn keyword_calls() {
 
     let result = post(router, "/names.keywords.KeywordService/self", "1").await;
     assert_eq!(result, (StatusCode::OK, "3".to_string()));
+}
+
+#[tokio::test]
+async fn method_calls() {
+    let router: Router = s_router(Arc::new(TestMethodService));
+    for (call, response) in [
+        ("clone", "2"),
+        ("into", "3"),
+        ("to_owned", "4"),
+        ("as_ref", "5"),
+    ] {
+        let path: String = format!("/names.methods.S/{}", call);
+        let result = post(router.clone(), &path, "1").await;
+        assert_eq!(result, (StatusCode::OK, response.to_string()));
+    }
 }
 
 #[tokio::test]

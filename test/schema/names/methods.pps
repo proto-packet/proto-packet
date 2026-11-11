@@ -4,3 +4,19 @@ struct DefaultField {
     // The field named like the message constructor.
     default: u32;
 }
+
+// A service named like the type parameter of its router.
+service S {
+
+    // A call named like a method of the router's shared service. (`Arc::clone`)
+    clone: u32 returns u32;
+
+    // A call named like a prelude trait method. (`Into::into`)
+    into: u32 returns u32;
+
+    // A call named like a prelude trait method. (`ToOwned::to_owned`)
+    to_owned: u32 returns u32;
+
+    // A call named like a prelude trait method. (`AsRef::as_ref`)
+    as_ref: u32 returns u32;
+}
